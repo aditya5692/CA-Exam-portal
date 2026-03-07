@@ -1,6 +1,5 @@
 "use client";
 
-import StudentLayout from "@/components/student/layout";
 import {
     GraduationCap,
     ArrowRight,
@@ -30,7 +29,6 @@ const RECENT_MOCKS = [
 
 export default function StudentExamsPage() {
     return (
-        <StudentLayout>
             <div className="space-y-12 pb-20">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
@@ -162,7 +160,6 @@ export default function StudentExamsPage() {
                     </div>
                 </div>
             </div>
-        </StudentLayout>
     );
 }
 

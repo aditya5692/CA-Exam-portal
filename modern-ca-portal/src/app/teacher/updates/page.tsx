@@ -2,11 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getTeacherUpdates, postAnnouncement } from "@/actions/batch-actions";
-import { Bell, CheckCheck, Megaphone, Send, Users } from "lucide-react";
+import { Bell, CheckCheck, Megaphone, Send, ShieldCheck, Users } from "lucide-react";
 
 type BatchTarget = {
     id: string;
     name: string;
+    teacher?: {
+        id: string;
+        fullName: string | null;
+        email: string | null;
+    };
     _count: { enrollments: number };
 };
 
@@ -14,15 +19,26 @@ type AnnouncementItem = {
     id: string;
     content: string;
     createdAt: string | Date;
+    teacher?: {
+        id: string;
+        fullName: string | null;
+        email: string | null;
+    };
     batch: {
         id: string;
         name: string;
+        teacher?: {
+            id: string;
+            fullName: string | null;
+            email: string | null;
+        };
     };
 };
 
 export default function TeacherUpdatesPage() {
     const [batches, setBatches] = useState<BatchTarget[]>([]);
     const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
+    const [isAdminView, setIsAdminView] = useState(false);
     const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
     const [sendToAll, setSendToAll] = useState(false);
     const [content, setContent] = useState("");
@@ -31,10 +47,13 @@ export default function TeacherUpdatesPage() {
 
     const load = async () => {
         const res = await getTeacherUpdates();
-        if (res.success) {
-            setBatches((res.batches ?? []) as BatchTarget[]);
-            setAnnouncements((res.announcements ?? []) as AnnouncementItem[]);
+        if (!res.success) {
+            return;
         }
+
+        setBatches((res.batches ?? []) as BatchTarget[]);
+        setAnnouncements((res.announcements ?? []) as AnnouncementItem[]);
+        setIsAdminView(Boolean(res.isAdminView));
     };
 
     useEffect(() => {
@@ -48,6 +67,7 @@ export default function TeacherUpdatesPage() {
 
             setBatches((res.batches ?? []) as BatchTarget[]);
             setAnnouncements((res.announcements ?? []) as AnnouncementItem[]);
+            setIsAdminView(Boolean(res.isAdminView));
         })();
 
         return () => {
@@ -57,14 +77,14 @@ export default function TeacherUpdatesPage() {
 
     const selectedBatchCount = useMemo(
         () => (sendToAll ? batches.length : selectedBatchIds.length),
-        [batches.length, selectedBatchIds.length, sendToAll]
+        [batches.length, selectedBatchIds.length, sendToAll],
     );
 
     const toggleBatch = (batchId: string) => {
         setSelectedBatchIds((current) =>
             current.includes(batchId)
                 ? current.filter((id) => id !== batchId)
-                : [...current, batchId]
+                : [...current, batchId],
         );
     };
 
@@ -86,7 +106,7 @@ export default function TeacherUpdatesPage() {
             setSelectedBatchIds([]);
             setSendToAll(false);
             setStatusMessage(`Posted successfully to ${res.postedCount} batch${res.postedCount === 1 ? "" : "es"}.`);
-            load();
+            void load();
         } else {
             setStatusMessage(res.message || "Failed to post update.");
         }
@@ -104,12 +124,21 @@ export default function TeacherUpdatesPage() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">
                         Updates
                     </h1>
-                    <p className="text-gray-500 mt-1">Post targeted batch updates or send a general announcement to all your batches.</p>
+                    <p className="text-gray-500 mt-1">
+                        {isAdminView
+                            ? "Post and review academy-wide announcements from the same teacher update workflow."
+                            : "Post targeted batch updates or send a general announcement to all your batches."}
+                    </p>
                 </div>
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-3 text-sm text-indigo-700">
-                    Posting target:
-                    {" "}
-                    <span className="font-bold">{sendToAll ? "All batches" : `${selectedBatchCount} selected`}</span>
+                <div className="flex items-center gap-3">
+                    {isAdminView && (
+                        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 inline-flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4" /> Academy-wide admin view
+                        </div>
+                    )}
+                    <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-3 text-sm text-indigo-700">
+                        Posting target: <span className="font-bold">{sendToAll ? "All batches" : `${selectedBatchCount} selected`}</span>
+                    </div>
                 </div>
             </div>
 
@@ -129,7 +158,9 @@ export default function TeacherUpdatesPage() {
                         />
                         <div>
                             <p className="font-medium text-gray-900">General update</p>
-                            <p className="text-sm text-gray-500">Send the same announcement to all of your batches.</p>
+                            <p className="text-sm text-gray-500">
+                                {isAdminView ? "Send the same announcement to every visible batch in the academy." : "Send the same announcement to all of your batches."}
+                            </p>
                         </div>
                     </label>
 
@@ -154,6 +185,11 @@ export default function TeacherUpdatesPage() {
                                             <div>
                                                 <p className="font-medium text-gray-900">{batch.name}</p>
                                                 <p className="text-xs text-gray-500 mt-1">{batch._count.enrollments} students linked</p>
+                                                {isAdminView && (
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        Teacher: {batch.teacher?.fullName || batch.teacher?.email || "Educator"}
+                                                    </p>
+                                                )}
                                             </div>
                                             {isSelected && <CheckCheck className="w-4 h-4 text-indigo-600" />}
                                         </div>
@@ -205,13 +241,23 @@ export default function TeacherUpdatesPage() {
                             {announcements.map((announcement) => (
                                 <div key={announcement.id} className="rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4">
                                     <div className="flex items-center justify-between gap-4">
-                                        <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                                        <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 flex-wrap">
                                             <Users className="w-3.5 h-3.5" />
                                             {announcement.batch.name}
+                                            {isAdminView && (
+                                                <span className="normal-case text-gray-500 font-medium tracking-normal">
+                                                    Teacher: {announcement.batch.teacher?.fullName || announcement.batch.teacher?.email || "Educator"}
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="text-xs text-gray-400">{formatTime(announcement.createdAt)}</span>
                                     </div>
                                     <p className="mt-3 text-sm leading-relaxed text-gray-800">{announcement.content}</p>
+                                    {isAdminView && (
+                                        <p className="mt-3 text-xs text-gray-500">
+                                            Posted by {announcement.teacher?.fullName || announcement.teacher?.email || "Educator"}
+                                        </p>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -221,3 +267,5 @@ export default function TeacherUpdatesPage() {
         </div>
     );
 }
+
+

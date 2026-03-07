@@ -1,4 +1,3 @@
-import StudentLayout from "@/components/student/layout";
 import {
     Calendar,
     ArrowRight,
@@ -24,7 +23,6 @@ const RECENT_RESULTS = [
 
 export default function StudentDashboardPage() {
     return (
-        <StudentLayout>
             <div className="space-y-12 pb-20">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
@@ -139,6 +137,5 @@ export default function StudentDashboardPage() {
                     </div>
                 </div>
             </div>
-        </StudentLayout>
     );
 }

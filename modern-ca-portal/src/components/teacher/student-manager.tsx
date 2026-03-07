@@ -7,8 +7,9 @@ import {
     CaretDown,
     CaretUp,
     MagnifyingGlass,
-    User
+    User,
 } from "@phosphor-icons/react";
+import { ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type StudentDirectoryRow = {
@@ -19,6 +20,7 @@ type StudentDirectoryRow = {
     department: string;
     batchNames: string[];
     batchCodes: string[];
+    batchOwners: string[];
     attemptDue: string;
     status: string;
     joinedAt: string | Date;
@@ -26,7 +28,7 @@ type StudentDirectoryRow = {
 
 type SortKey = "name" | "registrationNumber" | "department" | "batch" | "attemptDue" | "status" | "joinedAt";
 
-const FILTERABLE_COLUMNS: Array<{ key: keyof Omit<StudentDirectoryRow, "id" | "batchNames" | "batchCodes"> | "batch"; label: string }> = [
+const FILTERABLE_COLUMNS: Array<{ key: keyof Omit<StudentDirectoryRow, "id" | "batchNames" | "batchCodes" | "batchOwners"> | "batch"; label: string }> = [
     { key: "name", label: "Student" },
     { key: "registrationNumber", label: "Registration" },
     { key: "department", label: "Department" },
@@ -38,6 +40,7 @@ const FILTERABLE_COLUMNS: Array<{ key: keyof Omit<StudentDirectoryRow, "id" | "b
 
 export function StudentManager() {
     const [students, setStudents] = useState<StudentDirectoryRow[]>([]);
+    const [isAdminView, setIsAdminView] = useState(false);
     const [globalQuery, setGlobalQuery] = useState("");
     const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
     const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -53,6 +56,7 @@ export function StudentManager() {
             }
 
             setStudents((res.students ?? []) as StudentDirectoryRow[]);
+            setIsAdminView(Boolean(res.isAdminView));
         })();
 
         return () => {
@@ -78,6 +82,7 @@ export function StudentManager() {
                 student.department,
                 student.batchNames.join(" "),
                 student.batchCodes.join(" "),
+                student.batchOwners.join(" "),
                 student.status,
             ].some((value) => value.toLowerCase().includes(normalizedQuery));
 
@@ -92,7 +97,7 @@ export function StudentManager() {
                 }
 
                 const fieldValue = key === "batch"
-                    ? `${student.batchNames.join(" ")} ${student.batchCodes.join(" ")}`
+                    ? `${student.batchNames.join(" ")} ${student.batchCodes.join(" ")} ${student.batchOwners.join(" ")}`
                     : key === "joinedAt"
                         ? new Date(student.joinedAt).toLocaleDateString("en-IN")
                         : String(student[key as keyof StudentDirectoryRow] ?? "");
@@ -101,7 +106,7 @@ export function StudentManager() {
             });
         });
 
-        const sorted = [...filtered].sort((left, right) => {
+        return [...filtered].sort((left, right) => {
             const leftValue = sortKey === "batch"
                 ? left.batchNames.join(", ")
                 : sortKey === "joinedAt"
@@ -120,8 +125,6 @@ export function StudentManager() {
             const compare = String(leftValue).localeCompare(String(rightValue), undefined, { sensitivity: "base" });
             return sortDirection === "asc" ? compare : -compare;
         });
-
-        return sorted;
     }, [columnFilters, globalQuery, sortDirection, sortKey, students]);
 
     const handleSort = (key: SortKey) => {
@@ -141,13 +144,24 @@ export function StudentManager() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 font-outfit tracking-tight">Student Directory</h1>
-                    <p className="text-gray-500 text-sm mt-1">Real student directory built from your batch enrollments, with per-column filtering.</p>
+                    <h1 className="text-3xl font-bold text-gray-900 font-outfit tracking-tight">
+                        {isAdminView ? "Academy Student Directory" : "Student Directory"}
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">
+                        {isAdminView
+                            ? "Search all students and see which teacher-owned batches they belong to."
+                            : "Real student directory built from your batch enrollments, with per-column filtering."}
+                    </p>
                 </div>
-                <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
-                    Total enrolled students:
-                    {" "}
-                    <span className="font-bold">{students.length}</span>
+                <div className="flex items-center gap-3">
+                    {isAdminView && (
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-xs font-semibold text-indigo-700 inline-flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4" /> Academy-wide admin view
+                        </div>
+                    )}
+                    <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                        Total enrolled students: <span className="font-bold">{students.length}</span>
+                    </div>
                 </div>
             </div>
 
@@ -159,7 +173,7 @@ export function StudentManager() {
                             type="text"
                             value={globalQuery}
                             onChange={(event) => setGlobalQuery(event.target.value)}
-                            placeholder="Search by name, email, registration no, batch or code..."
+                            placeholder="Search by name, email, registration no, batch, code or teacher..."
                             className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:bg-white focus:border-indigo-500/30 transition-all"
                         />
                     </div>
@@ -194,9 +208,7 @@ export function StudentManager() {
                                         </th>
                                     );
                                 })}
-                                <th className="p-4 text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">
-                                    Action
-                                </th>
+                                <th className="p-4 text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -225,9 +237,14 @@ export function StudentManager() {
                                         <td className="p-4">
                                             <div className="space-y-1">
                                                 {student.batchNames.map((batchName, index) => (
-                                                    <div key={`${student.id}-${batchName}`} className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                                                    <div key={`${student.id}-${batchName}-${index}`} className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">
                                                         <span className="font-semibold">{batchName}</span>
-                                                        <span className="text-gray-400"> · {student.batchCodes[index] ?? ""}</span>
+                                                        <span className="text-gray-400"> � {student.batchCodes[index] ?? ""}</span>
+                                                        {isAdminView && (
+                                                            <div className="text-[10px] text-gray-500 mt-1">
+                                                                Teacher: {student.batchOwners[index] ?? "Educator"}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -242,7 +259,7 @@ export function StudentManager() {
                                                 "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border",
                                                 student.status === "Active"
                                                     ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                                    : "bg-gray-50 text-gray-600 border-gray-200"
+                                                    : "bg-gray-50 text-gray-600 border-gray-200",
                                             )}>
                                                 {student.status}
                                             </span>
@@ -258,22 +275,6 @@ export function StudentManager() {
                             )}
                         </tbody>
                     </table>
-                </div>
-
-                <div className="mt-6 flex items-center justify-between gap-4">
-                    <p className="text-xs text-gray-400 font-bold">
-                        Showing {visibleStudents.length} of {students.length} enrolled students
-                    </p>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setGlobalQuery("");
-                            setColumnFilters({});
-                        }}
-                        className="px-4 py-2 rounded-lg bg-white border border-gray-100 text-gray-500 text-xs font-bold hover:bg-gray-50 hover:text-gray-700 transition-all uppercase tracking-widest active:scale-95"
-                    >
-                        Clear Filters
-                    </button>
                 </div>
             </div>
         </div>

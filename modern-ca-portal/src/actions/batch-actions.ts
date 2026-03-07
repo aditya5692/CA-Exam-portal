@@ -12,24 +12,90 @@ function generateJoinCode(name: string): string {
     return `${slug}-${rand}`;
 }
 
+function isAdminUser(user: { role: string }) {
+    return user.role === "ADMIN";
+}
+
+function revalidateBatchSurfaces() {
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/teacher/batches");
+    revalidatePath("/teacher/students");
+    revalidatePath("/teacher/updates");
+    revalidatePath("/student/updates");
+}
+
+async function getEducatorOptions() {
+    return prisma.user.findMany({
+        where: {
+            role: {
+                in: ["TEACHER", "ADMIN"],
+            },
+        },
+        select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true,
+        },
+        orderBy: [
+            { fullName: "asc" },
+            { email: "asc" },
+        ],
+    });
+}
+
+async function resolveManagedEducatorId(actor: { id: string; role: string }, requestedEducatorId: string | null) {
+    if (!isAdminUser(actor)) {
+        return actor.id;
+    }
+
+    if (!requestedEducatorId) {
+        return actor.id;
+    }
+
+    const educator = await prisma.user.findFirst({
+        where: {
+            id: requestedEducatorId,
+            role: {
+                in: ["TEACHER", "ADMIN"],
+            },
+        },
+        select: { id: true },
+    });
+
+    if (!educator) {
+        throw new Error("Selected educator was not found.");
+    }
+
+    return educator.id;
+}
+
 export async function getOrCreateMockTeacherB() {
     return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 }
 
 export async function createBatch(formData: FormData) {
     try {
-        const name = formData.get("name") as string;
-        if (!name?.trim()) throw new Error("Batch name is required.");
+        const name = String(formData.get("name") ?? "").trim();
+        if (!name) throw new Error("Batch name is required.");
 
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "create");
-        const uniqueJoinCode = generateJoinCode(name);
+
+        const ownerId = await resolveManagedEducatorId(
+            teacher,
+            String(formData.get("teacherId") ?? "").trim() || null,
+        );
 
         const batch = await prisma.batch.create({
-            data: { name, uniqueJoinCode, teacherId: teacher.id }
+            data: {
+                name,
+                uniqueJoinCode: generateJoinCode(name),
+                teacherId: ownerId,
+            },
         });
 
-        revalidatePath("/teacher/batches");
+        revalidateBatchSurfaces();
         return { success: true, batch };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to create batch." };
@@ -41,9 +107,17 @@ export async function getTeacherBatches() {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "read");
 
+        const isAdminView = isAdminUser(teacher);
         const batches = await prisma.batch.findMany({
-            where: { teacherId: teacher.id },
+            where: isAdminView ? undefined : { teacherId: teacher.id },
             include: {
+                teacher: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                    },
+                },
                 enrollments: {
                     include: {
                         student: {
@@ -52,20 +126,35 @@ export async function getTeacherBatches() {
                                 fullName: true,
                                 email: true,
                                 registrationNumber: true,
-                            }
-                        }
+                            },
+                        },
                     },
-                    orderBy: { joinedAt: "desc" }
+                    orderBy: { joinedAt: "desc" },
                 },
                 announcements: {
+                    include: {
+                        teacher: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                                email: true,
+                            },
+                        },
+                    },
                     orderBy: { createdAt: "desc" },
                     take: 5,
                 },
                 _count: { select: { enrollments: true, announcements: true } },
             },
-            orderBy: { createdAt: "desc" }
+            orderBy: [{ createdAt: "desc" }],
         });
-        return { success: true, batches };
+
+        return {
+            success: true,
+            batches,
+            isAdminView,
+            availableTeachers: isAdminView ? await getEducatorOptions() : [],
+        };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to fetch batches." };
     }
@@ -73,43 +162,46 @@ export async function getTeacherBatches() {
 
 export async function postAnnouncement(formData: FormData) {
     try {
-        const content = formData.get("content") as string;
+        const content = String(formData.get("content") ?? "").trim();
         const sendToAll = formData.get("sendToAll") === "true";
         const selectedBatchIds = formData.getAll("batchIds").map((value) => String(value));
-        if (!content?.trim()) throw new Error("Update content is required.");
+        if (!content) throw new Error("Update content is required.");
 
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_UPDATES", "share");
 
-        const teacherBatches = await prisma.batch.findMany({
-            where: { teacherId: teacher.id },
-            select: { id: true, name: true }
+        const isAdminView = isAdminUser(teacher);
+        const visibleBatches = await prisma.batch.findMany({
+            where: isAdminView ? undefined : { teacherId: teacher.id },
+            select: { id: true, name: true },
         });
 
         const targetBatchIds = sendToAll
-            ? teacherBatches.map((batch) => batch.id)
+            ? visibleBatches.map((batch) => batch.id)
             : selectedBatchIds;
 
         if (targetBatchIds.length === 0) {
             throw new Error("Select at least one batch or choose general update.");
         }
 
-        const teacherBatchIds = new Set(teacherBatches.map((batch) => batch.id));
-        if (targetBatchIds.some((batchId) => !teacherBatchIds.has(batchId))) {
-            throw new Error("One or more selected batches do not belong to this teacher.");
+        const visibleBatchIds = new Set(visibleBatches.map((batch) => batch.id));
+        if (targetBatchIds.some((batchId) => !visibleBatchIds.has(batchId))) {
+            throw new Error(
+                isAdminView
+                    ? "One or more selected batches are unavailable."
+                    : "One or more selected batches do not belong to this teacher.",
+            );
         }
 
         const announcements = await prisma.$transaction(
             targetBatchIds.map((batchId) =>
                 prisma.announcement.create({
-                    data: { batchId, content, teacherId: teacher.id }
-                })
-            )
+                    data: { batchId, content, teacherId: teacher.id },
+                }),
+            ),
         );
 
-        revalidatePath("/teacher/updates");
-        revalidatePath("/teacher/batches");
-        revalidatePath("/student/updates");
+        revalidateBatchSurfaces();
         return { success: true, announcements, postedCount: announcements.length };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to post." };
@@ -118,26 +210,36 @@ export async function postAnnouncement(formData: FormData) {
 
 export async function updateBatch(formData: FormData) {
     try {
-        const batchId = String(formData.get("batchId") ?? "");
+        const batchId = String(formData.get("batchId") ?? "").trim();
         const name = String(formData.get("name") ?? "").trim();
         if (!batchId || !name) throw new Error("Batch name is required.");
 
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "update");
 
+        const isAdminView = isAdminUser(teacher);
         const existingBatch = await prisma.batch.findFirst({
-            where: { id: batchId, teacherId: teacher.id },
-            select: { id: true }
+            where: isAdminView ? { id: batchId } : { id: batchId, teacherId: teacher.id },
+            select: { id: true, teacherId: true },
         });
         if (!existingBatch) throw new Error("Batch not found.");
 
+        const nextTeacherId = isAdminView
+            ? await resolveManagedEducatorId(
+                teacher,
+                String(formData.get("teacherId") ?? "").trim() || existingBatch.teacherId,
+            )
+            : existingBatch.teacherId;
+
         const batch = await prisma.batch.update({
             where: { id: batchId },
-            data: { name }
+            data: {
+                name,
+                teacherId: nextTeacherId,
+            },
         });
 
-        revalidatePath("/teacher/batches");
-        revalidatePath("/teacher/updates");
+        revalidateBatchSurfaces();
         return { success: true, batch };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to update batch." };
@@ -146,15 +248,16 @@ export async function updateBatch(formData: FormData) {
 
 export async function deleteBatch(formData: FormData) {
     try {
-        const batchId = String(formData.get("batchId") ?? "");
+        const batchId = String(formData.get("batchId") ?? "").trim();
         if (!batchId) throw new Error("Batch id is required.");
 
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "delete");
 
+        const isAdminView = isAdminUser(teacher);
         const existingBatch = await prisma.batch.findFirst({
-            where: { id: batchId, teacherId: teacher.id },
-            select: { id: true }
+            where: isAdminView ? { id: batchId } : { id: batchId, teacherId: teacher.id },
+            select: { id: true },
         });
         if (!existingBatch) throw new Error("Batch not found.");
 
@@ -162,9 +265,7 @@ export async function deleteBatch(formData: FormData) {
             where: { id: batchId },
         });
 
-        revalidatePath("/teacher/batches");
-        revalidatePath("/teacher/updates");
-        revalidatePath("/student/updates");
+        revalidateBatchSurfaces();
         return { success: true };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to delete batch." };
@@ -176,33 +277,55 @@ export async function getTeacherUpdates() {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_UPDATES", "read");
 
+        const isAdminView = isAdminUser(teacher);
         const batches = await prisma.batch.findMany({
-            where: { teacherId: teacher.id },
+            where: isAdminView ? undefined : { teacherId: teacher.id },
             select: {
                 id: true,
                 name: true,
+                teacher: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                    },
+                },
                 _count: {
-                    select: { enrollments: true }
-                }
+                    select: { enrollments: true },
+                },
             },
-            orderBy: { name: "asc" }
+            orderBy: [{ name: "asc" }],
         });
 
         const announcements = await prisma.announcement.findMany({
-            where: { teacherId: teacher.id },
+            where: isAdminView ? undefined : { teacherId: teacher.id },
             include: {
+                teacher: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                    },
+                },
                 batch: {
                     select: {
                         id: true,
                         name: true,
-                    }
-                }
+                        teacher: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
             },
             orderBy: { createdAt: "desc" },
             take: 20,
         });
 
-        return { success: true, batches, announcements };
+        return { success: true, batches, announcements, isAdminView };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to load updates." };
     }
@@ -213,12 +336,15 @@ export async function getTeacherStudents() {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "read");
 
+        const isAdminView = isAdminUser(teacher);
         const enrollments = await prisma.enrollment.findMany({
-            where: {
-                batch: {
-                    teacherId: teacher.id,
-                }
-            },
+            where: isAdminView
+                ? undefined
+                : {
+                    batch: {
+                        teacherId: teacher.id,
+                    },
+                },
             include: {
                 student: {
                     select: {
@@ -228,17 +354,23 @@ export async function getTeacherStudents() {
                         registrationNumber: true,
                         department: true,
                         createdAt: true,
-                    }
+                    },
                 },
                 batch: {
                     select: {
                         id: true,
                         name: true,
                         uniqueJoinCode: true,
-                    }
-                }
+                        teacher: {
+                            select: {
+                                fullName: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
             },
-            orderBy: { joinedAt: "desc" }
+            orderBy: { joinedAt: "desc" },
         });
 
         const studentsMap = new Map<string, {
@@ -251,11 +383,13 @@ export async function getTeacherStudents() {
             joinedAt: Date;
             batchNames: string[];
             batchCodes: string[];
+            batchOwners: string[];
             attemptDue: string;
         }>();
 
         for (const enrollment of enrollments) {
             const studentId = enrollment.student.id;
+            const ownerLabel = enrollment.batch.teacher.fullName ?? enrollment.batch.teacher.email ?? "Educator";
             const existing = studentsMap.get(studentId);
 
             if (!existing) {
@@ -269,6 +403,7 @@ export async function getTeacherStudents() {
                     joinedAt: enrollment.joinedAt,
                     batchNames: [enrollment.batch.name],
                     batchCodes: [enrollment.batch.uniqueJoinCode],
+                    batchOwners: [ownerLabel],
                     attemptDue: "--",
                 });
                 continue;
@@ -276,6 +411,7 @@ export async function getTeacherStudents() {
 
             existing.batchNames.push(enrollment.batch.name);
             existing.batchCodes.push(enrollment.batch.uniqueJoinCode);
+            existing.batchOwners.push(ownerLabel);
             if (new Date(enrollment.joinedAt).getTime() > new Date(existing.joinedAt).getTime()) {
                 existing.joinedAt = enrollment.joinedAt;
             }
@@ -283,11 +419,8 @@ export async function getTeacherStudents() {
 
         return {
             success: true,
-            students: Array.from(studentsMap.values()).map((student) => ({
-                ...student,
-                batchNames: Array.from(new Set(student.batchNames)),
-                batchCodes: Array.from(new Set(student.batchCodes)),
-            })),
+            isAdminView,
+            students: Array.from(studentsMap.values()),
         };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to load students." };
@@ -300,22 +433,26 @@ export async function getOrCreateMockStudentB() {
 
 export async function joinBatch(formData: FormData) {
     try {
-        const code = (formData.get("code") as string)?.trim().toUpperCase();
+        const code = String(formData.get("code") ?? "").trim().toUpperCase();
         if (!code) throw new Error("Please enter a join code.");
-
-        const batch = await prisma.batch.findUnique({ where: { uniqueJoinCode: code } });
-        if (!batch) throw new Error(`No batch found with code "${code}". Please check and try again.`);
 
         const student = await getOrCreateMockStudentB();
         await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "create");
 
+        if (isAdminUser(student)) {
+            throw new Error("Admin cannot join batches from the student feed. Use batch mapping in admin controls.");
+        }
+
+        const batch = await prisma.batch.findUnique({ where: { uniqueJoinCode: code } });
+        if (!batch) throw new Error(`No batch found with code "${code}". Please check and try again.`);
+
         const existing = await prisma.enrollment.findUnique({
-            where: { studentId_batchId: { studentId: student.id, batchId: batch.id } }
+            where: { studentId_batchId: { studentId: student.id, batchId: batch.id } },
         });
         if (existing) throw new Error(`You are already enrolled in "${batch.name}".`);
 
         await prisma.enrollment.create({
-            data: { studentId: student.id, batchId: batch.id }
+            data: { studentId: student.id, batchId: batch.id },
         });
 
         revalidatePath("/student/updates");
@@ -330,36 +467,67 @@ export async function getStudentFeed() {
         const student = await getOrCreateMockStudentB();
         await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "read");
 
-        const enrollments = await prisma.enrollment.findMany({
-            where: { studentId: student.id },
+        const isAdminView = isAdminUser(student);
+        const batches = await prisma.batch.findMany({
+            where: isAdminView
+                ? undefined
+                : {
+                    enrollments: {
+                        some: {
+                            studentId: student.id,
+                        },
+                    },
+                },
             include: {
-                batch: {
+                teacher: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                    },
+                },
+                announcements: {
                     include: {
-                        teacher: { select: { fullName: true } },
-                        announcements: { orderBy: { createdAt: "desc" } }
-                    }
-                }
-            }
+                        teacher: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                                email: true,
+                            },
+                        },
+                    },
+                    orderBy: { createdAt: "desc" },
+                },
+            },
+            orderBy: [{ name: "asc" }],
         });
 
-        const feedItems = enrollments.flatMap((enrollment) =>
-            enrollment.batch.announcements.map((announcement) => ({
-                id: announcement.id,
-                content: announcement.content,
-                createdAt: announcement.createdAt,
-                batchName: enrollment.batch.name,
-                teacherName: enrollment.batch.teacher.fullName ?? "Educator",
-            }))
-        ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const feedItems = batches
+            .flatMap((batch) =>
+                batch.announcements.map((announcement) => ({
+                    id: announcement.id,
+                    content: announcement.content,
+                    createdAt: announcement.createdAt,
+                    batchName: batch.name,
+                    teacherName:
+                        announcement.teacher.fullName ??
+                        announcement.teacher.email ??
+                        batch.teacher.fullName ??
+                        batch.teacher.email ??
+                        "Educator",
+                })),
+            )
+            .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
-        const myBatches = enrollments.map((enrollment) => ({
-            id: enrollment.batch.id,
-            name: enrollment.batch.name,
-            teacherName: enrollment.batch.teacher.fullName ?? "Educator",
+        const myBatches = batches.map((batch) => ({
+            id: batch.id,
+            name: batch.name,
+            teacherName: batch.teacher.fullName ?? batch.teacher.email ?? "Educator",
         }));
 
-        return { success: true, feedItems, myBatches };
+        return { success: true, feedItems, myBatches, isAdminView };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to load feed." };
     }
 }
+

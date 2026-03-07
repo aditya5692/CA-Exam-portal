@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createBatch, deleteBatch, getTeacherBatches, updateBatch } from "@/actions/batch-actions";
-import { CalendarDays, Copy, PencilLine, Plus, Trash2, UserRound, Users, X } from "lucide-react";
+import { CalendarDays, Copy, PencilLine, Plus, ShieldCheck, Trash2, UserRound, Users, X } from "lucide-react";
 
 type Student = {
     id: string;
@@ -21,35 +21,64 @@ type Announcement = {
     id: string;
     content: string;
     createdAt: string | Date;
+    teacher?: {
+        id: string;
+        fullName: string | null;
+        email: string | null;
+    };
+};
+
+type EducatorSummary = {
+    id: string;
+    fullName: string | null;
+    email: string | null;
 };
 
 type Batch = {
     id: string;
+    teacherId: string;
     name: string;
     uniqueJoinCode: string;
     createdAt: string | Date;
+    teacher?: EducatorSummary;
     enrollments: Enrollment[];
     announcements: Announcement[];
     _count: { enrollments: number; announcements: number };
 };
 
+type EducatorOption = {
+    id: string;
+    fullName: string | null;
+    email: string | null;
+    role: string;
+};
+
 export default function TeacherBatchesPage() {
     const [batches, setBatches] = useState<Batch[]>([]);
+    const [availableTeachers, setAvailableTeachers] = useState<EducatorOption[]>([]);
+    const [isAdminView, setIsAdminView] = useState(false);
     const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
     const [batchName, setBatchName] = useState("");
+    const [selectedOwnerId, setSelectedOwnerId] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
     const load = async () => {
         const res = await getTeacherBatches();
-        if (res.success) {
-            const loadedBatches = (res.batches ?? []) as Batch[];
-            setBatches(loadedBatches);
-            setSelectedBatchId((current) => current ?? loadedBatches[0]?.id ?? null);
+        if (!res.success) {
+            return;
         }
+
+        const loadedBatches = (res.batches ?? []) as Batch[];
+        const nextTeachers = (res.availableTeachers ?? []) as EducatorOption[];
+        setBatches(loadedBatches);
+        setAvailableTeachers(nextTeachers);
+        setIsAdminView(Boolean(res.isAdminView));
+        setSelectedBatchId((current) => (loadedBatches.some((batch) => batch.id === current) ? current : loadedBatches[0]?.id ?? null));
+        setSelectedOwnerId((current) => current || nextTeachers[0]?.id || "");
     };
 
     useEffect(() => {
@@ -62,8 +91,12 @@ export default function TeacherBatchesPage() {
             }
 
             const loadedBatches = (res.batches ?? []) as Batch[];
+            const nextTeachers = (res.availableTeachers ?? []) as EducatorOption[];
             setBatches(loadedBatches);
-            setSelectedBatchId((current) => current ?? loadedBatches[0]?.id ?? null);
+            setAvailableTeachers(nextTeachers);
+            setIsAdminView(Boolean(res.isAdminView));
+            setSelectedBatchId((current) => (loadedBatches.some((batch) => batch.id === current) ? current : loadedBatches[0]?.id ?? null));
+            setSelectedOwnerId((current) => current || nextTeachers[0]?.id || "");
         })();
 
         return () => {
@@ -73,18 +106,20 @@ export default function TeacherBatchesPage() {
 
     const selectedBatch = useMemo(
         () => batches.find((batch) => batch.id === selectedBatchId) ?? null,
-        [batches, selectedBatchId]
+        [batches, selectedBatchId],
     );
 
     const openCreateModal = () => {
         setEditingBatch(null);
         setBatchName("");
+        setSelectedOwnerId(availableTeachers[0]?.id || "");
         setShowCreateModal(true);
     };
 
     const openEditModal = (batch: Batch) => {
         setEditingBatch(batch);
         setBatchName(batch.name);
+        setSelectedOwnerId(batch.teacher?.id || batch.teacherId || availableTeachers[0]?.id || "");
         setShowCreateModal(true);
     };
 
@@ -92,6 +127,7 @@ export default function TeacherBatchesPage() {
         setShowCreateModal(false);
         setEditingBatch(null);
         setBatchName("");
+        setSelectedOwnerId(availableTeachers[0]?.id || "");
     };
 
     const handleSaveBatch = async (event: React.FormEvent) => {
@@ -99,6 +135,9 @@ export default function TeacherBatchesPage() {
         setIsSaving(true);
         const formData = new FormData();
         formData.append("name", batchName);
+        if (isAdminView) {
+            formData.append("teacherId", selectedOwnerId);
+        }
 
         const res = editingBatch
             ? (() => {
@@ -112,9 +151,9 @@ export default function TeacherBatchesPage() {
 
         if (response.success) {
             closeModal();
-            load();
+            void load();
         } else {
-            alert(response.message);
+            alert(response.message || "Unable to save batch.");
         }
     };
 
@@ -135,14 +174,14 @@ export default function TeacherBatchesPage() {
                 const nextBatch = batches.find((batch) => batch.id !== batchId);
                 setSelectedBatchId(nextBatch?.id ?? null);
             }
-            load();
+            void load();
         } else {
-            alert(res.message);
+            alert(res.message || "Unable to delete batch.");
         }
     };
 
     const copyCode = (code: string) => {
-        navigator.clipboard.writeText(code);
+        void navigator.clipboard.writeText(code);
         setCopiedCode(code);
         window.setTimeout(() => setCopiedCode(null), 1800);
     };
@@ -155,26 +194,40 @@ export default function TeacherBatchesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                        My Batches
+                        {isAdminView ? "Academy Batches" : "My Batches"}
                     </h1>
-                    <p className="text-gray-500 mt-1">Create, manage, edit, and inspect linked students inside each batch.</p>
+                    <p className="text-gray-500 mt-1">
+                        {isAdminView
+                            ? "Manage batches across all teachers from the same batch surface."
+                            : "Create, manage, edit, and inspect linked students inside each batch."}
+                    </p>
                 </div>
-                <button
-                    onClick={openCreateModal}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
-                >
-                    <Plus className="w-4 h-4" /> Create Batch
-                </button>
+                <div className="flex items-center gap-3">
+                    {isAdminView && (
+                        <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700">
+                            <ShieldCheck className="w-4 h-4" /> Academy-wide admin view
+                        </div>
+                    )}
+                    <button
+                        onClick={openCreateModal}
+                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                    >
+                        <Plus className="w-4 h-4" /> Create Batch
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] gap-6">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="font-semibold text-gray-700">Your Batches <span className="text-sm font-normal text-gray-400">({batches.length})</span></h2>
+                        <h2 className="font-semibold text-gray-700">
+                            {isAdminView ? "Visible Batches" : "Your Batches"}
+                            <span className="text-sm font-normal text-gray-400"> ({batches.length})</span>
+                        </h2>
                     </div>
                     {batches.length === 0 ? (
                         <div className="py-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                            No batches yet. Create your first batch to get started.
+                            {isAdminView ? "No batches have been created yet." : "No batches yet. Create your first batch to get started."}
                         </div>
                     ) : (
                         batches.map((batch) => (
@@ -190,6 +243,11 @@ export default function TeacherBatchesPage() {
                                             <Users className="w-3.5 h-3.5" />
                                             {batch._count.enrollments} students linked
                                         </div>
+                                        {isAdminView && (
+                                            <p className="mt-2 text-xs text-gray-500">
+                                                Teacher: {batch.teacher?.fullName || batch.teacher?.email || "Educator"}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
@@ -207,7 +265,7 @@ export default function TeacherBatchesPage() {
                                             type="button"
                                             onClick={(event) => {
                                                 event.stopPropagation();
-                                                handleDeleteBatch(batch.id);
+                                                void handleDeleteBatch(batch.id);
                                             }}
                                             className="rounded-lg bg-gray-100 p-2 text-gray-500 hover:bg-white hover:text-rose-600"
                                             title="Delete batch"
@@ -242,6 +300,11 @@ export default function TeacherBatchesPage() {
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-900">{selectedBatch.name}</h2>
                                     <p className="mt-1 text-sm text-gray-500">Detailed batch view with linked students and management info.</p>
+                                    {isAdminView && (
+                                        <p className="mt-2 text-sm text-gray-500">
+                                            Owner: {selectedBatch.teacher?.fullName || selectedBatch.teacher?.email || "Educator"}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
                                     <CalendarDays className="w-4 h-4" />
@@ -316,6 +379,11 @@ export default function TeacherBatchesPage() {
                                                 <div key={announcement.id} className="rounded-xl border border-white bg-white px-4 py-4 shadow-sm">
                                                     <p className="text-sm leading-relaxed text-gray-800">{announcement.content}</p>
                                                     <p className="mt-3 text-xs text-gray-400">{formatDate(announcement.createdAt)}</p>
+                                                    {isAdminView && (
+                                                        <p className="mt-1 text-xs text-gray-500">
+                                                            Posted by {announcement.teacher?.fullName || announcement.teacher?.email || "Educator"}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -341,6 +409,24 @@ export default function TeacherBatchesPage() {
                             </button>
                         </div>
                         <form onSubmit={handleSaveBatch} className="p-6 space-y-5">
+                            {isAdminView && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5">Batch Owner</label>
+                                    <select
+                                        value={selectedOwnerId}
+                                        onChange={(event) => setSelectedOwnerId(event.target.value)}
+                                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    >
+                                        <option value="">Select educator</option>
+                                        {availableTeachers.map((teacher) => (
+                                            <option key={teacher.id} value={teacher.id}>
+                                                {(teacher.fullName || teacher.email || "Educator") + (teacher.role === "ADMIN" ? " (Admin)" : "")}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs text-gray-400 mt-2">The batch stays inside this educator's teacher workflow after you save it.</p>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm font-medium mb-1.5">Batch Name</label>
                                 <input
@@ -356,10 +442,10 @@ export default function TeacherBatchesPage() {
                             </div>
                             <button
                                 type="submit"
-                                disabled={isSaving || !batchName.trim()}
+                                disabled={isSaving || !batchName.trim() || (isAdminView && !selectedOwnerId)}
                                 className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all active:scale-95"
                             >
-                                {isSaving ? "Saving..." : editingBatch ? "Save Changes" : "Generate Batch & Code"}
+                                {isSaving ? "Saving..." : editingBatch ? "Save Changes" : "Generate Batch and Code"}
                             </button>
                         </form>
                     </div>

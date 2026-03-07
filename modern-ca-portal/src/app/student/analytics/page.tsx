@@ -1,10 +1,8 @@
-import StudentLayout from "@/components/student/layout";
 import { StudentAnalyticsOverview } from "@/components/student/analytics/performance-overview";
 import { Sparkle, Info } from "@phosphor-icons/react/dist/ssr";
 
 export default function StudentAnalyticsPage() {
     return (
-        <StudentLayout>
             <div className="space-y-12 pb-20">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div className="space-y-1">
@@ -35,6 +33,5 @@ export default function StudentAnalyticsPage() {
                     </button>
                 </div>
             </div>
-        </StudentLayout>
     );
 }

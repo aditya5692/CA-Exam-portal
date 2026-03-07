@@ -1,4 +1,3 @@
-import TeacherLayout from "@/components/teacher/layout";
 import { TopicMasteryHeatmap } from "@/components/teacher/analytics/topic-mastery";
 import { Warning, ArrowRight, UserFocus, ChartBar, Target } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -18,7 +17,6 @@ const AT_RISK_STUDENTS: AtRiskStudent[] = [
 
 export default function TeacherAnalyticsPage() {
     return (
-        <TeacherLayout>
             <div className="space-y-12 pb-20">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div>
@@ -117,6 +115,5 @@ export default function TeacherAnalyticsPage() {
                     </div>
                 </div>
             </div>
-        </TeacherLayout>
     );
 }
