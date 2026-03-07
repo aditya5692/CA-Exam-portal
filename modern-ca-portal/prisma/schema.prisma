@@ -7,83 +7,86 @@ generator client {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  email            String?           @unique
-  fullName         String?
-  registrationNumber String?         @unique
-  department       String?
-  phone            String?
-  preferredLanguage String?
-  timezone         String?
-  bio              String?
-  designation      String?
-  expertise        String?
-  examTarget       String?
-  role             String            @default("STUDENT") // STUDENT, TEACHER, ADMIN
-  storageUsed      Int               @default(0)
-  storageLimit     Int               @default(52428800) // 50MB default
-  plan             String            @default("FREE")
-  passwordHash     String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  
+  id                 String              @id @default(cuid())
+  email              String?             @unique
+  fullName           String?
+  registrationNumber String?             @unique
+  department         String?
+  phone              String?
+  preferredLanguage  String?
+  timezone           String?
+  bio                String?
+  designation        String?
+  expertise          String?
+  examTarget         String?
+  role               String              @default("STUDENT") // STUDENT, TEACHER, ADMIN
+  storageUsed        Int                 @default(0)
+  storageLimit       Int                 @default(52428800) // 50MB default
+  plan               String              @default("FREE")
+  passwordHash       String?
+  isBlocked          Boolean             @default(false)
+  blockedReason      String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
   // Relations
-  materialsUploaded StudyMaterial[]  @relation("UploadedMaterials")
-  folders           Folder[]
-  materialAccess    MaterialAccess[]
+  materialsUploaded  StudyMaterial[]     @relation("UploadedMaterials")
+  folders            Folder[]
+  materialAccess     MaterialAccess[]
+  featureOverrides   UserFeatureAccess[]
 
   // Phase 2 Relations
-  batchesTeaching   Batch[]          @relation("TeacherBatches")
-  enrollments       Enrollment[]
-  announcements     Announcement[]   @relation("TeacherAnnouncements")
-  draftMCQs         DraftMCQ[]       @relation("DraftMCQs")
+  batchesTeaching    Batch[]             @relation("TeacherBatches")
+  enrollments        Enrollment[]
+  announcements      Announcement[]      @relation("TeacherAnnouncements")
+  draftMCQs          DraftMCQ[]          @relation("DraftMCQs")
 }
 
 model StudyMaterial {
-  id              String            @id @default(cuid())
-  title           String
-  description     String?
-  fileUrl         String
-  fileType        String
-  sizeInBytes     Int
-  isPublic        Boolean           @default(false)
-  isProtected     Boolean           @default(true)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id            String           @id @default(cuid())
+  title         String
+  description   String?
+  fileUrl       String
+  fileType      String
+  sizeInBytes   Int
+  isPublic      Boolean          @default(false)
+  isProtected   Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   // Relations
-  uploadedById    String
-  uploadedBy      User              @relation("UploadedMaterials", fields: [uploadedById], references: [id])
-  folderId        String?
-  folder          Folder?           @relation(fields: [folderId], references: [id])
-  accessedBy      MaterialAccess[]
+  uploadedById  String
+  uploadedBy    User             @relation("UploadedMaterials", fields: [uploadedById], references: [id])
+  folderId      String?
+  folder        Folder?          @relation(fields: [folderId], references: [id])
+  accessedBy    MaterialAccess[]
 }
 
 model Folder {
-  id              String            @id @default(cuid())
-  name            String
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id          String            @id @default(cuid())
+  name        String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   // Relations
-  ownerId         String
-  owner           User              @relation(fields: [ownerId], references: [id])
-  parentId        String?
-  parent          Folder?           @relation("SubFolders", fields: [parentId], references: [id])
-  subFolders      Folder[]          @relation("SubFolders")
-  materials       StudyMaterial[]
+  ownerId     String
+  owner       User              @relation(fields: [ownerId], references: [id])
+  parentId    String?
+  parent      Folder?           @relation("SubFolders", fields: [parentId], references: [id])
+  subFolders  Folder[]          @relation("SubFolders")
+  materials   StudyMaterial[]
 }
 
 model MaterialAccess {
-  id              String            @id @default(cuid())
-  grantedAt       DateTime          @default(now())
-  accessType      String            @default("FREE_BATCH_MATERIAL")
+  id          String            @id @default(cuid())
+  grantedAt   DateTime          @default(now())
+  accessType  String            @default("FREE_BATCH_MATERIAL")
 
   // Relations
-  studentId       String
-  student         User              @relation(fields: [studentId], references: [id])
-  materialId      String
-  material        StudyMaterial     @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User              @relation(fields: [studentId], references: [id])
+  materialId  String
+  material    StudyMaterial     @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, materialId])
 }
@@ -97,44 +100,64 @@ model Batch {
 
   teacherId       String
   teacher         User           @relation("TeacherBatches", fields: [teacherId], references: [id])
-  
+
   enrollments     Enrollment[]
   announcements   Announcement[]
 }
 
 model Enrollment {
-  id              String         @id @default(cuid())
-  joinedAt        DateTime       @default(now())
+  id         String             @id @default(cuid())
+  joinedAt   DateTime           @default(now())
 
-  studentId       String
-  student         User           @relation(fields: [studentId], references: [id])
-  
-  batchId         String
-  batch           Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    User               @relation(fields: [studentId], references: [id])
+
+  batchId    String
+  batch      Batch              @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, batchId])
 }
 
 model Announcement {
-  id              String         @id @default(cuid())
-  content         String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id         String             @id @default(cuid())
+  content    String
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 
-  batchId         String
-  batch           Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  
-  teacherId       String
-  teacher         User           @relation("TeacherAnnouncements", fields: [teacherId], references: [id])
+  batchId    String
+  batch      Batch              @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  teacherId  String
+  teacher    User               @relation("TeacherAnnouncements", fields: [teacherId], references: [id])
 }
 
 model DraftMCQ {
-  id              String         @id @default(cuid())
-  question        String
-  options         String
-  answer          String
-  createdAt       DateTime       @default(now())
+  id         String             @id @default(cuid())
+  question   String
+  options    String
+  answer     String
+  createdAt  DateTime           @default(now())
 
-  teacherId       String
-  teacher         User           @relation("DraftMCQs", fields: [teacherId], references: [id])
+  teacherId  String
+  teacher    User               @relation("DraftMCQs", fields: [teacherId], references: [id])
+}
+
+model UserFeatureAccess {
+  id            String   @id @default(cuid())
+  featureKey    String
+  isEnabled     Boolean  @default(true)
+  isRestricted  Boolean  @default(false)
+  canRead       Boolean  @default(true)
+  canCreate     Boolean  @default(false)
+  canUpdate     Boolean  @default(false)
+  canDelete     Boolean  @default(false)
+  canShare      Boolean  @default(false)
+  note          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, featureKey])
 }

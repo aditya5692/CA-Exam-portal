@@ -1,17 +1,19 @@
 "use server";
 
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
 import { revalidatePath } from "next/cache";
 
 type ProfileRole = "TEACHER" | "STUDENT";
 
 async function getOrCreateProfile(role: ProfileRole) {
-    return getCurrentUserOrDemoUser(role);
+    return getCurrentUserOrDemoUser(role, [role, "ADMIN"]);
 }
 
 async function getProfile(role: ProfileRole) {
     const user = await getOrCreateProfile(role);
+    await assertUserCanAccessFeature(user.id, role === "TEACHER" ? "TEACHER_PROFILE" : "STUDENT_PROFILE", "read");
     return {
         success: true,
         profile: user,
@@ -21,6 +23,8 @@ async function getProfile(role: ProfileRole) {
 async function updateProfile(role: ProfileRole, formData: FormData) {
     try {
         const user = await getOrCreateProfile(role);
+        await assertUserCanAccessFeature(user.id, role === "TEACHER" ? "TEACHER_PROFILE" : "STUDENT_PROFILE", "update");
+
         const fullName = String(formData.get("fullName") ?? "").trim();
         const email = String(formData.get("email") ?? "").trim();
         const registrationNumber = String(formData.get("registrationNumber") ?? "").trim();

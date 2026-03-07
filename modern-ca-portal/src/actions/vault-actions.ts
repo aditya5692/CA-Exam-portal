@@ -1,13 +1,14 @@
 "use server";
 
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
 
 async function getOrCreateMockUser() {
-    return getCurrentUserOrDemoUser("STUDENT");
+    return getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
 }
 
 export async function checkStorageQuota(userId: string, incomingSize: number) {
@@ -31,17 +32,13 @@ export async function uploadPersonalMaterial(formData: FormData) {
         if (!file) throw new Error("No file provided");
 
         const user = await getOrCreateMockUser();
-
+        await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "create");
         await checkStorageQuota(user.id, file.size);
 
-        // Save locally to public/uploads
         const uploadDir = join(process.cwd(), "public", "uploads");
-
-        // Ensure directory exists
         try {
             await mkdir(uploadDir, { recursive: true });
         } catch {
-            // Ignore if exists
         }
 
         const fileExt = file.name.split('.').pop() || 'tmp';
@@ -55,7 +52,6 @@ export async function uploadPersonalMaterial(formData: FormData) {
 
         const fileUrl = `/uploads/${fileName}`;
 
-        // Create Database Record and update quota
         const [material] = await prisma.$transaction([
             prisma.studyMaterial.create({
                 data: {
@@ -64,7 +60,7 @@ export async function uploadPersonalMaterial(formData: FormData) {
                     fileType: file.type,
                     sizeInBytes: file.size,
                     isPublic: false,
-                    isProtected: false, // Personal files are not strictly protected like teacher files
+                    isProtected: false,
                     uploadedById: user.id
                 }
             }),
@@ -89,16 +85,14 @@ export async function uploadPersonalMaterial(formData: FormData) {
 export async function getMyVaultMaterials() {
     try {
         const user = await getOrCreateMockUser();
+        await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "read");
 
-        // Fetch personal uploads strictly
         const personalMaterials = await prisma.studyMaterial.findMany({
             where: {
                 uploadedById: user.id
             },
             orderBy: { createdAt: 'desc' }
         });
-
-        // Add shared teacher materials here later if applicable
 
         return { success: true, materials: personalMaterials, storageUsed: user.storageUsed, storageLimit: user.storageLimit };
     } catch (error: unknown) {
@@ -110,6 +104,7 @@ export async function getMyVaultMaterials() {
 export async function deletePersonalMaterial(materialId: string) {
     try {
         const user = await getOrCreateMockUser();
+        await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "delete");
 
         const material = await prisma.studyMaterial.findUnique({
             where: { id: materialId }
@@ -118,8 +113,6 @@ export async function deletePersonalMaterial(materialId: string) {
         if (!material || material.uploadedById !== user.id) {
             throw new Error("Unauthorized or not found");
         }
-
-        // In a real app we'd also delete the actual physical file from public/uploads here.
 
         await prisma.$transaction([
             prisma.studyMaterial.delete({

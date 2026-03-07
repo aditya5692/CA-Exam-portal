@@ -5,7 +5,7 @@ import { Bell, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 
 export default async function StudentLayout({ children }: { children: ReactNode }) {
-    const student = await getCurrentUserOrDemoUser("STUDENT");
+    const student = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
     const initials = (student.fullName ?? "Student")
         .split(" ")
         .map((word) => word[0] ?? "")
@@ -15,7 +15,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
 
     return (
         <div className="flex min-h-screen bg-[#fafafa]">
-            <StudentSidebar />
+            <StudentSidebar showAdminLink={student.role === "ADMIN"} />
             <main className="flex-1 flex flex-col">
                 {/* Top Navigation */}
                 <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-40">
@@ -60,3 +60,5 @@ export default async function StudentLayout({ children }: { children: ReactNode 
         </div>
     );
 }
+
+

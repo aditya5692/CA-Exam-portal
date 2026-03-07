@@ -26,7 +26,7 @@ const STUDENT_NAV = [
     { label: "History", href: "/student/history", icon: ClockCounterClockwise },
 ];
 
-export function StudentSidebar() {
+export function StudentSidebar({ showAdminLink = false }: { showAdminLink?: boolean }) {
     const pathname = usePathname();
 
     return (
@@ -80,8 +80,8 @@ export function StudentSidebar() {
                         <Sparkle size={16} weight="fill" className="text-indigo-600 animate-pulse" />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600">CA Pass PRO</span>
                     </div>
-                    <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest leading-tight mb-3">Get unlimited reattempts for only ₹399/yr!</p>
-                    <Link href="/pricing" className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest hover:underline">Upgrade Now →</Link>
+                    <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest leading-tight mb-3">Get unlimited reattempts for only Rs 399/yr!</p>
+                    <Link href="/pricing" className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest hover:underline">Upgrade Now</Link>
                 </div>
 
                 <div className="space-y-1">
@@ -92,6 +92,15 @@ export function StudentSidebar() {
                         <IdentificationBadge size={20} />
                         <span className="text-sm">My Profile</span>
                     </Link>
+                    {showAdminLink ? (
+                        <Link
+                            href="/admin/dashboard"
+                            className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all font-medium"
+                        >
+                            <IdentificationBadge size={20} />
+                            <span className="text-sm">Admin Center</span>
+                        </Link>
+                    ) : null}
                     <Link
                         href="/"
                         className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-500/70 hover:text-rose-600 hover:bg-rose-50 transition-all font-medium"
@@ -104,3 +113,5 @@ export function StudentSidebar() {
         </aside>
     );
 }
+
+

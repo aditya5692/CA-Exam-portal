@@ -28,7 +28,7 @@ const NAV_ITEMS = [
     { label: "Academy", href: "/teacher/academy", icon: GraduationCap },
 ];
 
-export function TeacherSidebar() {
+export function TeacherSidebar({ showAdminLink = false }: { showAdminLink?: boolean }) {
     const pathname = usePathname();
 
     return (
@@ -91,6 +91,15 @@ export function TeacherSidebar() {
                     <Gear size={20} />
                     <span className="text-sm">Settings</span>
                 </Link>
+                {showAdminLink ? (
+                    <Link
+                        href="/admin/dashboard"
+                        className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all font-medium"
+                    >
+                        <IdentificationBadge size={20} />
+                        <span className="text-sm">Admin Center</span>
+                    </Link>
+                ) : null}
                 <Link
                     href="/"
                     className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-500/70 hover:text-rose-600 hover:bg-rose-50 transition-all font-medium"

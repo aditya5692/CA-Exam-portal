@@ -1,6 +1,7 @@
 "use server";
 
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
@@ -11,10 +12,8 @@ function generateJoinCode(name: string): string {
     return `${slug}-${rand}`;
 }
 
-// --- TEACHER ACTIONS ---
-
 export async function getOrCreateMockTeacherB() {
-    return getCurrentUserOrDemoUser("TEACHER");
+    return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 }
 
 export async function createBatch(formData: FormData) {
@@ -23,6 +22,7 @@ export async function createBatch(formData: FormData) {
         if (!name?.trim()) throw new Error("Batch name is required.");
 
         const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "create");
         const uniqueJoinCode = generateJoinCode(name);
 
         const batch = await prisma.batch.create({
@@ -39,6 +39,8 @@ export async function createBatch(formData: FormData) {
 export async function getTeacherBatches() {
     try {
         const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "read");
+
         const batches = await prisma.batch.findMany({
             where: { teacherId: teacher.id },
             include: {
@@ -77,6 +79,8 @@ export async function postAnnouncement(formData: FormData) {
         if (!content?.trim()) throw new Error("Update content is required.");
 
         const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_UPDATES", "share");
+
         const teacherBatches = await prisma.batch.findMany({
             where: { teacherId: teacher.id },
             select: { id: true, name: true }
@@ -119,6 +123,8 @@ export async function updateBatch(formData: FormData) {
         if (!batchId || !name) throw new Error("Batch name is required.");
 
         const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "update");
+
         const existingBatch = await prisma.batch.findFirst({
             where: { id: batchId, teacherId: teacher.id },
             select: { id: true }
@@ -144,6 +150,8 @@ export async function deleteBatch(formData: FormData) {
         if (!batchId) throw new Error("Batch id is required.");
 
         const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "delete");
+
         const existingBatch = await prisma.batch.findFirst({
             where: { id: batchId, teacherId: teacher.id },
             select: { id: true }
@@ -166,6 +174,8 @@ export async function deleteBatch(formData: FormData) {
 export async function getTeacherUpdates() {
     try {
         const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_UPDATES", "read");
+
         const batches = await prisma.batch.findMany({
             where: { teacherId: teacher.id },
             select: {
@@ -201,6 +211,8 @@ export async function getTeacherUpdates() {
 export async function getTeacherStudents() {
     try {
         const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "read");
+
         const enrollments = await prisma.enrollment.findMany({
             where: {
                 batch: {
@@ -282,10 +294,8 @@ export async function getTeacherStudents() {
     }
 }
 
-// --- STUDENT ACTIONS ---
-
 export async function getOrCreateMockStudentB() {
-    return getCurrentUserOrDemoUser("STUDENT");
+    return getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
 }
 
 export async function joinBatch(formData: FormData) {
@@ -297,8 +307,8 @@ export async function joinBatch(formData: FormData) {
         if (!batch) throw new Error(`No batch found with code "${code}". Please check and try again.`);
 
         const student = await getOrCreateMockStudentB();
+        await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "create");
 
-        // Prevent double-enrollment
         const existing = await prisma.enrollment.findUnique({
             where: { studentId_batchId: { studentId: student.id, batchId: batch.id } }
         });
@@ -318,8 +328,8 @@ export async function joinBatch(formData: FormData) {
 export async function getStudentFeed() {
     try {
         const student = await getOrCreateMockStudentB();
+        await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "read");
 
-        // Get all batches the student is enrolled in
         const enrollments = await prisma.enrollment.findMany({
             where: { studentId: student.id },
             include: {
@@ -332,21 +342,20 @@ export async function getStudentFeed() {
             }
         });
 
-        // Flatten announcements from all batches into a single timeline
-        const feedItems = enrollments.flatMap(e =>
-            e.batch.announcements.map(ann => ({
-                id: ann.id,
-                content: ann.content,
-                createdAt: ann.createdAt,
-                batchName: e.batch.name,
-                teacherName: e.batch.teacher.fullName ?? "Educator",
+        const feedItems = enrollments.flatMap((enrollment) =>
+            enrollment.batch.announcements.map((announcement) => ({
+                id: announcement.id,
+                content: announcement.content,
+                createdAt: announcement.createdAt,
+                batchName: enrollment.batch.name,
+                teacherName: enrollment.batch.teacher.fullName ?? "Educator",
             }))
         ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-        const myBatches = enrollments.map(e => ({
-            id: e.batch.id,
-            name: e.batch.name,
-            teacherName: e.batch.teacher.fullName ?? "Educator",
+        const myBatches = enrollments.map((enrollment) => ({
+            id: enrollment.batch.id,
+            name: enrollment.batch.name,
+            teacherName: enrollment.batch.teacher.fullName ?? "Educator",
         }));
 
         return { success: true, feedItems, myBatches };

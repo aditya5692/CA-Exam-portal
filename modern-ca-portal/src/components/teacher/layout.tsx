@@ -5,11 +5,11 @@ import { Bell, MagnifyingGlass, UserCircle } from "@phosphor-icons/react/dist/ss
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
-    const teacher = await getCurrentUserOrDemoUser("TEACHER");
+    const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc]">
-            <TeacherSidebar />
+            <TeacherSidebar showAdminLink={teacher.role === "ADMIN"} />
             <div className="flex-1 flex flex-col">
                 <header className="h-16 border-b border-gray-100 bg-white/70 backdrop-blur-md sticky top-0 z-40 px-8 flex items-center justify-between">
                     <div className="relative w-96">
@@ -52,3 +52,5 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
         </div>
     );
 }
+
+

@@ -1,30 +1,25 @@
 "use server";
 
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
 
-const MCQ_PRICE_PER_QUESTION = 5; // Rs.
+const MCQ_PRICE_PER_QUESTION = 5;
 
-// Get or create the mock teacher (shared helper)
 async function getMockTeacher() {
-    return getCurrentUserOrDemoUser("TEACHER");
+    return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 }
 
-// Mocked AI parser - simulates what Gemini Vision / GPT-4o would do.
-// In production, replace body of this function with a real API call.
 async function parseQuestionsFromFileAI(
     fileBuffer: Buffer,
     fileType: string
 ): Promise<Array<{ question: string; options: string; answer: string }>> {
     console.log(`[Mock AI] Parsing file of type: ${fileType} (${fileBuffer.byteLength} bytes)`);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // Simulated delay to mimic API response time
-    await new Promise(r => setTimeout(r, 1500));
-
-    // Return 5 mock questions for the prototype
     return [
         { question: "Which section deals with tax audit under Income Tax Act?", options: JSON.stringify(["Section 42", "Section 44AB", "Section 80C", "Section 10"]), answer: "Section 44AB" },
         { question: "What is the full form of ICAI?", options: JSON.stringify(["Indian Council of Accountants India", "Institute of Chartered Accountants of India", "Indian Chartered Audit Institution", "None of the above"]), answer: "Institute of Chartered Accountants of India" },
@@ -40,8 +35,8 @@ export async function analyzePdfForMCQs(formData: FormData) {
         if (!file) throw new Error("No file provided.");
 
         const teacher = await getMockTeacher();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "create");
 
-        // Save file locally for reference
         const uploadDir = join(process.cwd(), "public", "uploads", "mcq_drafts");
         await mkdir(uploadDir, { recursive: true }).catch(() => { });
         const fileName = `${randomUUID()}.${file.name.split('.').pop()}`;
@@ -49,18 +44,15 @@ export async function analyzePdfForMCQs(formData: FormData) {
         const buffer = Buffer.from(bytes);
         await writeFile(join(uploadDir, fileName), buffer);
 
-        // Run the AI parser (mocked)
         const extractedQuestions = await parseQuestionsFromFileAI(buffer, file.type);
 
-        // Delete old drafts from this teacher before saving new ones (keeps things clean)
         await prisma.draftMCQ.deleteMany({ where: { teacherId: teacher.id } });
 
-        // Save the extracted questions as DraftMCQs
         await prisma.draftMCQ.createMany({
-            data: extractedQuestions.map(q => ({
-                question: q.question,
-                options: q.options,
-                answer: q.answer,
+            data: extractedQuestions.map((question) => ({
+                question: question.question,
+                options: question.options,
+                answer: question.answer,
                 teacherId: teacher.id,
             }))
         });
@@ -82,6 +74,7 @@ export async function analyzePdfForMCQs(formData: FormData) {
 export async function getMyDraftMCQs() {
     try {
         const teacher = await getMockTeacher();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "read");
         const drafts = await prisma.draftMCQ.findMany({
             where: { teacherId: teacher.id },
             orderBy: { createdAt: "desc" }
@@ -93,17 +86,14 @@ export async function getMyDraftMCQs() {
     }
 }
 
-// Called AFTER payment is confirmed. In production this would be called
-// from a Razorpay/Stripe webhook after payment verification.
 export async function confirmAndImportMCQs() {
     try {
         const teacher = await getMockTeacher();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "share");
         const drafts = await prisma.draftMCQ.findMany({ where: { teacherId: teacher.id } });
 
         if (drafts.length === 0) throw new Error("No draft MCQs to import.");
 
-        // TODO: In production, create records in the actual Question Bank table here.
-        // For now, we just clear the drafts to simulate a successful import.
         await prisma.draftMCQ.deleteMany({ where: { teacherId: teacher.id } });
 
         return { success: true, imported: drafts.length };

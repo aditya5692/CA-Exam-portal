@@ -86,8 +86,11 @@ export async function getCurrentUser(role?: AppRole | AppRole[]) {
     return user;
 }
 
-export async function getCurrentUserOrDemoUser(role: AppRole) {
-    const sessionUser = await getCurrentUser(role);
+export async function getCurrentUserOrDemoUser(
+    role: AppRole,
+    allowedRoles?: AppRole | AppRole[]
+) {
+    const sessionUser = await getCurrentUser(allowedRoles ?? role);
     if (sessionUser) return sessionUser;
 
     const demoUser = await getDefaultDemoUser(role);
@@ -97,3 +100,4 @@ export async function getCurrentUserOrDemoUser(role: AppRole) {
 
     return demoUser;
 }
+

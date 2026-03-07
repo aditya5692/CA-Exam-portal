@@ -56,7 +56,11 @@ export default function LoginPage() {
             return;
         }
 
-        router.push(result.redirectTo);
+        const redirectTo =
+            result.redirectTo ??
+            (role === "admin" ? "/admin/dashboard" : role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
+
+        router.push(redirectTo);
         router.refresh();
     }
 

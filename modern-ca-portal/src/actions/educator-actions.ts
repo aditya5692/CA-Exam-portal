@@ -1,6 +1,7 @@
-"use server";
+﻿"use server";
 
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -8,7 +9,7 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 
 async function getOrCreateMockTeacher() {
-    return getCurrentUserOrDemoUser("TEACHER");
+    return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 }
 
 export async function publishMaterial(formData: FormData) {
@@ -21,8 +22,8 @@ export async function publishMaterial(formData: FormData) {
         if (!file) throw new Error("No file provided");
 
         const teacher = await getOrCreateMockTeacher();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "share");
 
-        // 1. Save file locally
         const uploadDir = join(process.cwd(), "public", "uploads", "teacher_materials");
         await mkdir(uploadDir, { recursive: true }).catch(() => { });
 
@@ -35,7 +36,6 @@ export async function publishMaterial(formData: FormData) {
 
         const fileUrl = `/uploads/teacher_materials/${fileName}`;
 
-        // 2. Create the protected study material record
         const material = await prisma.studyMaterial.create({
             data: {
                 title,
@@ -43,32 +43,43 @@ export async function publishMaterial(formData: FormData) {
                 fileType: file.type,
                 sizeInBytes: file.size,
                 isPublic: false,
-                isProtected, // Prevent downloads
+                isProtected,
                 uploadedById: teacher.id
             }
         });
 
-        // 3. Grant access to explicitly listed students
         if (studentEmailsStr) {
-            const emails = studentEmailsStr.split(',').map(e => e.trim());
+            const emails = studentEmailsStr.split(',').map((email) => email.trim()).filter(Boolean);
             const students = await prisma.user.findMany({
                 where: { email: { in: emails } }
             });
 
             if (students.length > 0) {
-                const accessData = students.map(student => ({
-                    studentId: student.id,
-                    materialId: material.id,
-                    accessType: "FREE_BATCH_MATERIAL"
-                }));
-
-                await prisma.materialAccess.createMany({
-                    data: accessData
-                });
+                await prisma.$transaction(
+                    students.map((student) =>
+                        prisma.materialAccess.upsert({
+                            where: {
+                                studentId_materialId: {
+                                    studentId: student.id,
+                                    materialId: material.id,
+                                },
+                            },
+                            update: {
+                                accessType: "FREE_BATCH_MATERIAL",
+                            },
+                            create: {
+                                studentId: student.id,
+                                materialId: material.id,
+                                accessType: "FREE_BATCH_MATERIAL",
+                            },
+                        })
+                    )
+                );
             }
         }
 
-        revalidatePath('/teacher/hub');
+        revalidatePath('/teacher/materials');
+        revalidatePath('/student/materials');
         return { success: true, material };
 
     } catch (error: unknown) {
@@ -80,6 +91,7 @@ export async function publishMaterial(formData: FormData) {
 export async function getTeacherMaterials() {
     try {
         const teacher = await getOrCreateMockTeacher();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "read");
 
         const materials = await prisma.studyMaterial.findMany({
             where: {
@@ -106,9 +118,10 @@ export async function getStudentSharedMaterials(studentId?: string) {
     try {
         const student = studentId
             ? await prisma.user.findUnique({ where: { id: studentId } })
-            : await getCurrentUserOrDemoUser("STUDENT");
+            : await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
 
         if (!student) throw new Error("Student not found");
+        await assertUserCanAccessFeature(student.id, "STUDENT_MATERIALS", "read");
 
         const accesses = await prisma.materialAccess.findMany({
             where: { studentId: student.id },
@@ -122,8 +135,9 @@ export async function getStudentSharedMaterials(studentId?: string) {
             orderBy: { grantedAt: 'desc' }
         });
 
-        return { success: true, materials: accesses.map(a => a.material) };
+        return { success: true, materials: accesses.map((access) => access.material) };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to fetch shared materials." };
     }
 }
+
