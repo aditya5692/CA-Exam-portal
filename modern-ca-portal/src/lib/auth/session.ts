@@ -10,6 +10,7 @@ type SessionPayload = {
     role: AppRole;
     fullName: string | null;
     registrationNumber: string | null;
+    plan: string;
 };
 
 const SESSION_COOKIE_NAME = "modern_ca_portal_session";
@@ -44,6 +45,7 @@ export async function setAuthSession(user: User) {
             role: user.role as AppRole,
             fullName: user.fullName ?? null,
             registrationNumber: user.registrationNumber ?? null,
+            plan: user.plan,
         }),
         {
             httpOnly: true,

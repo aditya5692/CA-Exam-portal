@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout } from "@/actions/auth-actions";
 import { cn } from "@/lib/utils";
 import {
     House,
@@ -13,7 +14,8 @@ import {
     IdentificationBadge,
     SignOut,
     Sparkle,
-    Bell
+    Bell,
+    Files
 } from "@phosphor-icons/react";
 
 const STUDENT_NAV = [
@@ -21,13 +23,22 @@ const STUDENT_NAV = [
     { label: "My Analytics", href: "/student/analytics", icon: ChartLineUp },
     { label: "Mock Exams", href: "/student/exams", icon: PlayCircle },
     { label: "Study Materials", href: "/student/materials", icon: BookOpen },
+    { label: "Free Resources", href: "/student/free-resources", icon: Sparkle },
+    { label: "Past Year Questions", href: "/student/past-year-questions", icon: Files },
     { label: "Updates Feed", href: "/student/updates", icon: Bell },
-    { label: "Certifications", href: "/student/certs", icon: GraduationCap },
     { label: "History", href: "/student/history", icon: ClockCounterClockwise },
+    { label: "My Plan", href: "/student/plan", icon: Sparkle },
 ];
 
 export function StudentSidebar({ showAdminLink = false }: { showAdminLink?: boolean }) {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push("/");
+        router.refresh();
+    };
 
     return (
         <aside className="w-64 bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0 shadow-[1px_0_10px_rgba(0,0,0,0.02)]">
@@ -101,13 +112,13 @@ export function StudentSidebar({ showAdminLink = false }: { showAdminLink?: bool
                             <span className="text-sm">Admin Center</span>
                         </Link>
                     ) : null}
-                    <Link
-                        href="/"
+                    <button
+                        onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-500/70 hover:text-rose-600 hover:bg-rose-50 transition-all font-medium"
                     >
                         <SignOut size={20} weight="bold" />
                         <span className="text-sm">Logout</span>
-                    </Link>
+                    </button>
                 </div>
             </div>
         </aside>

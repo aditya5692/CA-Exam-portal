@@ -66,6 +66,8 @@ export async function publishMaterial(formData: FormData) {
     try {
         const file = formData.get("file") as File | null;
         const studentEmailsStr = String(formData.get("studentEmails") ?? "");
+        // New: comma-separated batch IDs for batch-based distribution
+        const batchIdsStr = String(formData.get("batchIds") ?? "");
         const title = String(formData.get("title") ?? file?.name ?? "").trim();
         const isProtected = formData.get("isProtected") === "true";
 
@@ -103,35 +105,56 @@ export async function publishMaterial(formData: FormData) {
             },
         });
 
-        if (studentEmailsStr) {
+        // ── Batch-based distribution (preferred over email) ─────────────────
+        if (batchIdsStr) {
+            const batchIds = batchIdsStr.split(",").map((id) => id.trim()).filter(Boolean);
+
+            // Verify teacher owns these batches (admin can use any)
+            const validBatches = await prisma.batch.findMany({
+                where: {
+                    id: { in: batchIds },
+                    ...(isAdminUser(teacher) ? {} : { teacherId: teacher.id }),
+                },
+                select: { id: true },
+            });
+            const validBatchIds = validBatches.map((b) => b.id);
+
+            if (validBatchIds.length > 0) {
+                // Get all students enrolled in these batches
+                const enrollments = await prisma.enrollment.findMany({
+                    where: { batchId: { in: validBatchIds } },
+                    select: { studentId: true },
+                });
+                const studentIds = [...new Set(enrollments.map((e) => e.studentId))];
+
+                if (studentIds.length > 0) {
+                    await prisma.$transaction(
+                        studentIds.map((studentId) =>
+                            prisma.materialAccess.upsert({
+                                where: { studentId_materialId: { studentId, materialId: material.id } },
+                                update: { accessType: "FREE_BATCH_MATERIAL" },
+                                create: { studentId, materialId: material.id, accessType: "FREE_BATCH_MATERIAL" },
+                            }),
+                        ),
+                    );
+                }
+            }
+        } else if (studentEmailsStr) {
+            // ── Fallback: email-based distribution ──────────────────────────
             const emails = studentEmailsStr
                 .split(",")
                 .map((email) => email.trim())
                 .filter(Boolean);
-            const students = await prisma.user.findMany({
-                where: {
-                    email: { in: emails },
-                },
-            });
+
+            const students = await prisma.user.findMany({ where: { email: { in: emails } } });
 
             if (students.length > 0) {
                 await prisma.$transaction(
                     students.map((student) =>
                         prisma.materialAccess.upsert({
-                            where: {
-                                studentId_materialId: {
-                                    studentId: student.id,
-                                    materialId: material.id,
-                                },
-                            },
-                            update: {
-                                accessType: "FREE_BATCH_MATERIAL",
-                            },
-                            create: {
-                                studentId: student.id,
-                                materialId: material.id,
-                                accessType: "FREE_BATCH_MATERIAL",
-                            },
+                            where: { studentId_materialId: { studentId: student.id, materialId: material.id } },
+                            update: { accessType: "FREE_BATCH_MATERIAL" },
+                            create: { studentId: student.id, materialId: material.id, accessType: "FREE_BATCH_MATERIAL" },
                         }),
                     ),
                 );
@@ -145,6 +168,28 @@ export async function publishMaterial(formData: FormData) {
     } catch (error: unknown) {
         console.error("Publish error:", error);
         return { success: false, message: error instanceof Error ? error.message : "Failed to publish material." };
+    }
+}
+
+// ── Get teacher's batches for the material publish picker ─────────────────────
+export async function getTeacherBatchesForMaterials() {
+    try {
+        const teacher = await getOrCreateMockTeacher();
+        const batches = await prisma.batch.findMany({
+            where: isAdminUser(teacher) ? undefined : { teacherId: teacher.id },
+            select: {
+                id: true,
+                name: true,
+                _count: { select: { enrollments: true } },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+        return {
+            success: true,
+            batches: batches.map((b) => ({ id: b.id, name: b.name, studentCount: b._count.enrollments })),
+        };
+    } catch {
+        return { success: false, batches: [] };
     }
 }
 

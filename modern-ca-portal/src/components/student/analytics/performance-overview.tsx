@@ -1,8 +1,7 @@
 "use client";
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, Cell } from "recharts";
-import { Sparkle, TrendUp, Target, Brain, Info, ArrowRight } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { Sparkle, TrendUp, Target, Brain, ArrowRight } from "@phosphor-icons/react";
 
 const TREND_DATA = [
     { date: "Oct", score: 45 },

@@ -2,10 +2,14 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { StudentSidebar } from "../sidebar";
 import { Bell, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 
 export default async function StudentLayout({ children }: { children: ReactNode }) {
-    const student = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+    const student = await getCurrentUser(["STUDENT", "ADMIN"]);
+    if (!student) {
+        redirect("/auth/login");
+    }
     const initials = (student.fullName ?? "Student")
         .split(" ")
         .map((word) => word[0] ?? "")

@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { GraduationCap, ArrowRight, Envelope, Lock, User, IdentificationBadge, Sparkle, CheckCircle } from "@phosphor-icons/react";
-import { useState } from "react";
+import { GraduationCap, ArrowRight, Envelope, Lock, User, Sparkle, CheckCircle } from "@phosphor-icons/react";
 
 export default function SignupPage() {
     return (

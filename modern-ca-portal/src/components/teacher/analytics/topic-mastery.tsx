@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Info, Users, BookOpen, TrendUp, ShieldCheck } from "@phosphor-icons/react";
+import { Info, Users, BookOpen, TrendUp } from "@phosphor-icons/react";
 
 const TOPICS = [
     "Corporate Law",

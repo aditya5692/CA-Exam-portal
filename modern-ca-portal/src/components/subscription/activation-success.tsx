@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle, ArrowRight, Sparkle, Confetti } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { CheckCircle, ArrowRight, Sparkle } from "@phosphor-icons/react";
 
 export function ActivationSuccess({ planName }: { planName: string }) {
     return (

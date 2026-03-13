@@ -3,8 +3,9 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, CreditCard, ShieldCheck, Spinner, Sparkle, ArrowRight } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
 import { ActivationSuccess } from "./activation-success";
+import { activateProPlan } from "@/actions/subscription-actions";
+import { useRouter } from "next/navigation";
 
 interface CheckoutModalProps {
     plan: {
@@ -17,16 +18,21 @@ interface CheckoutModalProps {
 }
 
 export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
+    const router = useRouter();
     const [status, setStatus] = useState<"idle" | "processing" | "success">("idle");
 
     if (!plan) return null;
 
-    const handleActivate = () => {
+    const handleActivate = async () => {
         setStatus("processing");
-        // Simulate API call
-        setTimeout(() => {
+        const result = await activateProPlan();
+        if (result.success) {
             setStatus("success");
-        }, 2000);
+            router.refresh(); // Refresh the page to immediately reflect the session update
+        } else {
+            alert(result.message);
+            setStatus("idle");
+        }
     };
 
     return (

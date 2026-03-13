@@ -354,6 +354,7 @@ export default function TeacherBatchesPage() {
                                                             <div>
                                                                 <p className="font-medium text-gray-900">{enrollment.student.fullName ?? "Unnamed student"}</p>
                                                                 <p className="text-sm text-gray-500">{enrollment.student.email ?? "No email added"}</p>
+                                                                <p className="text-slate-500 text-sm mt-1 font-medium italic">&quot;Empowering students with quality education&quot;</p>
                                                             </div>
                                                         </div>
                                                         <div className="text-right text-xs text-gray-400">
@@ -424,7 +425,7 @@ export default function TeacherBatchesPage() {
                                             </option>
                                         ))}
                                     </select>
-                                    <p className="text-xs text-gray-400 mt-2">The batch stays inside this educator's teacher workflow after you save it.</p>
+                                    <p className="text-xs text-gray-400 mt-2">The batch stays inside this educator&apos;s teacher workflow after you save it.</p>
                                 </div>
                             )}
                             <div>

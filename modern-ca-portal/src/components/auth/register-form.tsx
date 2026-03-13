@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Lock, Mail, Briefcase, GraduationCap, ArrowRight } from "lucide-react";
+import { register } from "@/actions/auth-actions";
+import { toast } from "sonner";
 
 const ROLE_OPTIONS = [
     { value: "student", label: "Student" },
@@ -25,12 +27,24 @@ export function RegisterForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match!");
+            toast.error("Passwords do not match!");
             return;
         }
         setIsSubmitting(true);
-        console.log("Register with:", formData);
-        setTimeout(() => setIsSubmitting(false), 1000);
+        try {
+            const { confirmPassword, ...registerData } = formData;
+            const result = await register(registerData as Record<string, string>);
+            if (result.success) {
+                toast.success(result.message);
+                router.push(result.redirectTo || "/student/dashboard");
+            } else {
+                toast.error(result.message);
+            }
+        } catch {
+            toast.error("An error occurred during registration.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (

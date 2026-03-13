@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { deletePersonalMaterial, getMyVaultMaterials, uploadPersonalMaterial } from "@/actions/vault-actions";
 import { getStudentSharedMaterials } from "@/actions/educator-actions";
-import { Upload, FileText, Lock, Unlock, Folder as FolderIcon, X, ShieldCheck, Trash2, Users } from "lucide-react";
+import { Upload, FileText, Lock, Unlock, Folder as FolderIcon, X, ShieldCheck, Trash2, Users, BookOpen, Clock } from "lucide-react";
 
 type VaultMaterial = {
     id: string;
@@ -144,7 +144,7 @@ export default function StudentVaultPage() {
                         </button>
                         <button
                             onClick={() => setActiveTab("EDUCATOR")}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "EDUCATOR" ? "bg-white dark:bg-zinc-700 shadow flex items-center gap-2" : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-2"}`}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === "EDUCATOR" ? "bg-white dark:bg-zinc-700 shadow flex items-center gap-2" : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-2"}`}
                         >
                             <Lock className="w-4 h-4" /> Educator Materials
                         </button>

@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   GraduationCap,
@@ -12,17 +10,26 @@ import {
   Play,
   Timer,
   CheckCircle
-} from "@phosphor-icons/react";
+} from "@phosphor-icons/react/dist/ssr";
+import { getSessionPayload } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import { EliteNavbar } from "@/components/common/navbar";
 import { EliteFooter } from "@/components/common/footer";
 import { Testimonials } from "@/components/common/testimonials";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getSessionPayload();
+
+  if (session) {
+    if (session.role === "ADMIN") redirect("/admin/dashboard");
+    if (session.role === "TEACHER") redirect("/teacher/dashboard");
+    redirect("/student/dashboard");
+  }
+
   return (
     <div className="min-h-screen bg-white selection:bg-indigo-100 selection:text-indigo-900">
-      <EliteNavbar />
+      <EliteNavbar user={session} />
 
-      {/* Offer Countdown Banner */}
       <div className="pt-24 sm:pt-32">
         <div className="bg-indigo-600 py-3 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />

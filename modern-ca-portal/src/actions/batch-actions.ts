@@ -382,6 +382,7 @@ export async function getTeacherStudents() {
             status: string;
             joinedAt: Date;
             batchNames: string[];
+            batchIds: string[];
             batchCodes: string[];
             batchOwners: string[];
             attemptDue: string;
@@ -402,6 +403,7 @@ export async function getTeacherStudents() {
                     status: "Active",
                     joinedAt: enrollment.joinedAt,
                     batchNames: [enrollment.batch.name],
+                    batchIds: [enrollment.batch.id],
                     batchCodes: [enrollment.batch.uniqueJoinCode],
                     batchOwners: [ownerLabel],
                     attemptDue: "--",
@@ -410,6 +412,7 @@ export async function getTeacherStudents() {
             }
 
             existing.batchNames.push(enrollment.batch.name);
+            existing.batchIds.push(enrollment.batch.id);
             existing.batchCodes.push(enrollment.batch.uniqueJoinCode);
             existing.batchOwners.push(ownerLabel);
             if (new Date(enrollment.joinedAt).getTime() > new Date(existing.joinedAt).getTime()) {
@@ -459,6 +462,106 @@ export async function joinBatch(formData: FormData) {
         return { success: true, batchName: batch.name };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to join batch." };
+    }
+}
+
+// ── Remove a student from a specific batch ─────────────────────────────────────
+// Teacher must own the batch (or be admin). Does NOT delete the student account.
+export async function removeStudentFromBatch(studentId: string, batchId: string) {
+    try {
+        const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "delete");
+
+        const batch = await prisma.batch.findFirst({
+            where: isAdminUser(teacher) ? { id: batchId } : { id: batchId, teacherId: teacher.id },
+            select: { id: true, name: true },
+        });
+        if (!batch) throw new Error("Batch not found or you do not own it.");
+
+        const enrollment = await prisma.enrollment.findUnique({
+            where: { studentId_batchId: { studentId, batchId } },
+        });
+        if (!enrollment) throw new Error("Student is not enrolled in this batch.");
+
+        await prisma.enrollment.delete({ where: { studentId_batchId: { studentId, batchId } } });
+
+        revalidateBatchSurfaces();
+        return { success: true, batchName: batch.name };
+    } catch (error: unknown) {
+        return { success: false, message: error instanceof Error ? error.message : "Failed to remove student." };
+    }
+}
+
+// ── Get student performance summary for teacher view ──────────────────────────
+export async function getStudentPerformanceSummary(studentId: string) {
+    try {
+        const teacher = await getOrCreateMockTeacherB();
+        await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "read");
+
+        // Check the student is in one of this teacher's batches (or admin)
+        if (!isAdminUser(teacher)) {
+            const enrollment = await prisma.enrollment.findFirst({
+                where: { studentId, batch: { teacherId: teacher.id } },
+            });
+            if (!enrollment) throw new Error("Student not found in your batches.");
+        }
+
+        const [learningProfile, attempts, topicProgress, student] = await Promise.all([
+            prisma.studentLearningProfile.findUnique({ where: { studentId } }),
+            prisma.examAttempt.findMany({
+                where: { studentId, status: "SUBMITTED" },
+                include: { exam: { select: { title: true, category: true, totalMarks: true } } },
+                orderBy: { startTime: "desc" },
+                take: 10,
+            }),
+            prisma.topicProgress.findMany({
+                where: { studentId },
+                select: { subject: true, accuracy: true, totalAttempted: true },
+            }),
+            prisma.user.findUnique({
+                where: { id: studentId },
+                select: { fullName: true, email: true, examTarget: true, createdAt: true },
+            }),
+        ]);
+
+        // Aggregate subject accuracy
+        const subjectMap = new Map<string, { totalCorrect: number; totalQ: number }>();
+        for (const tp of topicProgress) {
+            const existing = subjectMap.get(tp.subject) ?? { totalCorrect: 0, totalQ: 0 };
+            subjectMap.set(tp.subject, {
+                totalCorrect: existing.totalCorrect + tp.accuracy * tp.totalAttempted,
+                totalQ: existing.totalQ + tp.totalAttempted,
+            });
+        }
+        const subjectAccuracy = Array.from(subjectMap.entries()).map(([subject, d]) => ({
+            subject,
+            accuracy: Math.round((d.totalCorrect / Math.max(d.totalQ, 1)) * 100),
+        })).sort((a, b) => b.accuracy - a.accuracy);
+
+        return {
+            success: true,
+            student: student ?? { fullName: null, email: null, examTarget: null, createdAt: new Date() },
+            profile: learningProfile ? {
+                level: learningProfile.level,
+                totalXP: learningProfile.totalXP,
+                streak: learningProfile.streak,
+                totalAttempts: learningProfile.totalAttempts,
+                totalCorrect: learningProfile.totalCorrect,
+                avgAccuracy: Math.round(learningProfile.avgAccuracy * 100),
+            } : null,
+            recentAttempts: attempts.map((a: any) => ({
+                id: a.id,
+                title: a.exam.title,
+                category: a.exam.category,
+                score: Math.round(a.score),
+                totalMarks: a.exam.totalMarks,
+                accuracy: a.exam.totalMarks > 0 ? Math.round((a.score / a.exam.totalMarks) * 100) : 0,
+                date: a.startTime.toISOString().split("T")[0],
+            })),
+            subjectAccuracy,
+        };
+    } catch (error: unknown) {
+        return { success: false, message: error instanceof Error ? error.message : "Failed to fetch performance." };
     }
 }
 

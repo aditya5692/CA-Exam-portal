@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { User, Lock, Chrome, ArrowRight } from "lucide-react";
+import { login } from "@/actions/auth-actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
     const router = useRouter();
@@ -16,9 +17,22 @@ export function LoginForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // Logic will be ported to Server Actions
-        console.log("Login with:", formData);
-        setTimeout(() => setIsSubmitting(false), 1000);
+        try {
+            const result = await login({
+                identifier: formData.registrationNumber,
+                password: formData.password
+            });
+            if (result.success) {
+                toast.success(result.message);
+                router.push(result.redirectTo || "/student/dashboard");
+            } else {
+                toast.error(result.message);
+            }
+        } catch {
+            toast.error("An error occurred during login.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -31,11 +45,12 @@ export function LoginForm() {
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                     <input
                         type="text"
+                        name="registrationNumber"
                         required
                         placeholder="Enter ICAI Reg No."
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all uppercase"
                         value={formData.registrationNumber}
-                        onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value.toUpperCase() })}
+                        onChange={(e) => setFormData(prev => ({ ...prev, registrationNumber: e.target.value.toUpperCase() }))}
                     />
                 </div>
             </div>
@@ -48,11 +63,12 @@ export function LoginForm() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                     <input
                         type="password"
+                        name="password"
                         required
                         placeholder="••••••••"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                         value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     />
                 </div>
             </div>

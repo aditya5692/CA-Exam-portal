@@ -56,7 +56,10 @@ export default function TeacherMCQExtractPage() {
     }, [selectedOwnerId]);
 
     useEffect(() => {
-        void loadExistingDrafts(selectedOwnerId || undefined);
+        const init = async () => {
+            await loadExistingDrafts(selectedOwnerId || undefined);
+        };
+        void init();
     }, [loadExistingDrafts, selectedOwnerId]);
 
     const handleAnalyze = async () => {
@@ -106,7 +109,7 @@ export default function TeacherMCQExtractPage() {
                     </div>
                     <p className="text-gray-500 ml-[52px]">
                         {isAdminView
-                            ? `Manage a teacher's draft question bank from the same extractor at Rs ${pricePerMCQ} per question.`
+                            ? `Manage a teacher&apos;s draft question bank from the same extractor at Rs ${pricePerMCQ} per question.`
                             : `Upload a scanned PDF or image. Our AI will extract structured MCQs at Rs ${pricePerMCQ} per question.`}
                     </p>
                 </div>
@@ -132,7 +135,8 @@ export default function TeacherMCQExtractPage() {
                             </option>
                         ))}
                     </select>
-                    <p className="text-xs text-gray-500">New extraction and import actions will update this educator's draft bank.</p>
+                    <p className="text-xs text-slate-400 font-medium">Wait... I&apos;ve seen this one before!</p>
+                    <p className="text-xs text-gray-500">New extraction and import actions will update this educator&apos;s draft bank.</p>
                 </div>
             )}
 

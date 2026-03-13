@@ -26,6 +26,7 @@ model User {
   passwordHash       String?
   isBlocked          Boolean             @default(false)
   blockedReason      String?
+  isPublicProfile    Boolean             @default(true)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -40,6 +41,15 @@ model User {
   enrollments        Enrollment[]
   announcements      Announcement[]      @relation("TeacherAnnouncements")
   draftMCQs          DraftMCQ[]          @relation("DraftMCQs")
+
+  // Exam Relations
+  examsCreated       Exam[]              @relation("TeacherExams")
+  examAttempts       ExamAttempt[]
+
+  // Adaptive Learning
+  learningProfile    StudentLearningProfile?
+  topicProgress      TopicProgress[]
+  xpEvents           XPEvent[]
 }
 
 model StudyMaterial {
@@ -51,6 +61,14 @@ model StudyMaterial {
   sizeInBytes   Int
   isPublic      Boolean          @default(false)
   isProtected   Boolean          @default(true)
+  
+  // Dynamic Content Fields
+  category      String           @default("GENERAL") // e.g., CA Final, CA Inter
+  subType       String           @default("PDF")     // PDF, VIDEO, RTP, MTP, PYQ
+  downloads     Int              @default(0)
+  rating        Float            @default(5.0)
+  isTrending    Boolean          @default(false)
+
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -72,7 +90,7 @@ model Folder {
   ownerId     String
   owner       User              @relation(fields: [ownerId], references: [id])
   parentId    String?
-  parent      Folder?           @relation("SubFolders", fields: [parentId], references: [id])
+  parent      Folder?          @relation("SubFolders", fields: [parentId], references: [id])
   subFolders  Folder[]          @relation("SubFolders")
   materials   StudyMaterial[]
 }
@@ -103,6 +121,7 @@ model Batch {
 
   enrollments     Enrollment[]
   announcements   Announcement[]
+  exams           Exam[]         @relation("BatchExams")
 }
 
 model Enrollment {
@@ -160,4 +179,162 @@ model UserFeatureAccess {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, featureKey])
+}
+
+// Exam Models
+
+model Exam {
+  id            String         @id @default(cuid())
+  title         String
+  description   String?
+  duration      Int            @default(60) // in minutes
+  totalMarks    Int            @default(0)
+  passingMarks  Int            @default(0)
+  category      String         @default("GENERAL") // e.g., CA Foundation, Inter, Final
+  status        String         @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Teacher who created the exam
+  teacherId     String
+  teacher       User           @relation("TeacherExams", fields: [teacherId], references: [id])
+
+  // Batch specific exams
+  batchId       String?
+  batch         Batch?          @relation("BatchExams", fields: [batchId], references: [id])
+
+  questions     ExamQuestion[]
+  attempts      ExamAttempt[]
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  text          String
+  type          String         @default("MCQ")
+  explanation   String?
+  difficulty    String         @default("MEDIUM") // EASY, MEDIUM, HARD
+  subject       String?
+  topic         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  options       Option[]
+  exams         ExamQuestion[]
+  studentAnswers StudentAnswer[]
+}
+
+model Option {
+  id            String         @id @default(cuid())
+  text          String
+  isCorrect     Boolean        @default(false)
+  
+  questionId    String
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  studentAnswers StudentAnswer[]
+}
+
+model ExamQuestion {
+  id            String         @id @default(cuid())
+  order         Int            @default(0)
+  marks         Int            @default(1)
+
+  examId        String
+  exam          Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  questionId    String
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, questionId])
+}
+
+model ExamAttempt {
+  id            String         @id @default(cuid())
+  startTime     DateTime       @default(now())
+  endTime       DateTime?
+  score         Float          @default(0)
+  status        String         @default("STARTED") // STARTED, SUBMITTED, EXPIRED
+  
+  studentId     String
+  student       User           @relation(fields: [studentId], references: [id])
+
+  examId        String
+  exam          Exam           @relation(fields: [examId], references: [id])
+
+  answers       StudentAnswer[]
+}
+
+model StudentAnswer {
+  id            String         @id @default(cuid())
+  isCorrect     Boolean        @default(false)
+  timeSpent     Int            @default(0) // seconds
+
+  attemptId     String
+  attempt       ExamAttempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  questionId    String
+  question      Question       @relation(fields: [questionId], references: [id])
+
+  selectedOptionId String?
+  selectedOption   Option?      @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([attemptId, questionId])
+}
+
+
+// Adaptive Learning System
+
+model StudentLearningProfile {
+  id              String   @id @default(cuid())
+  totalXP         Int      @default(0)
+  level           Int      @default(1)
+  streak          Int      @default(0)
+  longestStreak   Int      @default(0)
+  totalAttempts   Int      @default(0)
+  totalCorrect    Int      @default(0)
+  avgAccuracy     Float    @default(0)
+  weakTopicsJson  String   @default("")
+  badgesJson      String   @default("")
+  lastAttemptAt   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  studentId       String   @unique
+  student         User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  topicProgress   TopicProgress[]
+  xpEvents        XPEvent[]
+}
+
+model TopicProgress {
+  id              String   @id @default(cuid())
+  subject         String
+  topic           String
+  totalAttempted  Int      @default(0)
+  totalCorrect    Int      @default(0)
+  accuracy        Float    @default(0)
+  avgTimeSpent    Float    @default(0)
+  lastSeenAt      DateTime @default(now())
+  nextReviewAt    DateTime @default(now())
+  difficulty      String   @default("MEDIUM")
+
+  studentId       String
+  student         User                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  profileId       String
+  profile         StudentLearningProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, subject, topic])
+}
+
+model XPEvent {
+  id          String   @id @default(cuid())
+  xpDelta     Int
+  reason      String
+  meta        String   @default("")
+  createdAt   DateTime @default(now())
+
+  studentId   String
+  student     User                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  profileId   String
+  profile     StudentLearningProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

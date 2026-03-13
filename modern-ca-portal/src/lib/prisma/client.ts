@@ -16,16 +16,10 @@ declare global {
     var modernCaPortalPrisma: undefined | ReturnType<typeof prismaClientSingleton>
 }
 
-const isValidPrismaClient = (client: typeof globalThis.modernCaPortalPrisma) =>
-    Boolean(
-        client &&
-        typeof (client as { user?: unknown }).user !== "undefined" &&
-        typeof (client as { batch?: unknown }).batch !== "undefined"
-    )
-
-const prisma = isValidPrismaClient(globalThis.modernCaPortalPrisma)
-    ? globalThis.modernCaPortalPrisma!
-    : prismaClientSingleton()
+// In Prisma v7 with driver adapters, model accessors are lazy getters on the
+// prototype — NOT enumerable own properties. Do NOT check `client.exam` etc.
+// Just check whether a client instance exists at all.
+const prisma = globalThis.modernCaPortalPrisma ?? prismaClientSingleton()
 
 export default prisma
 

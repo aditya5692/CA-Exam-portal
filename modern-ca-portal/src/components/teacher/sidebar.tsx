@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout } from "@/actions/auth-actions";
 import { cn } from "@/lib/utils";
 import {
     ChartPieSlice,
@@ -12,7 +13,10 @@ import {
     Gear,
     SignOut,
     FileText,
-    GraduationCap
+    House,
+    GraduationCap,
+    Files,
+    Sparkle
 } from "@phosphor-icons/react";
 
 const NAV_ITEMS = [
@@ -20,16 +24,25 @@ const NAV_ITEMS = [
     { label: "Test Series", href: "/teacher/test-series", icon: FileText },
     { label: "Question Bank", href: "/teacher/questions", icon: Books },
     { label: "Study Materials", href: "/teacher/materials", icon: Books },
+    { label: "Free Resources", href: "/teacher/free-resources", icon: Sparkle },
+    { label: "Past Year Questions", href: "/teacher/past-year-questions", icon: Files },
     { label: "My Batches", href: "/teacher/batches", icon: GraduationCap },
     { label: "Updates", href: "/teacher/updates", icon: BellSimple },
     { label: "Students", href: "/teacher/students", icon: Users },
     { label: "Analytics", href: "/teacher/analytics", icon: ChartPieSlice },
-    { label: "Subscription", href: "/pricing", icon: Books },
+    { label: "My Plan", href: "/teacher/plan", icon: Sparkle },
     { label: "Academy", href: "/teacher/academy", icon: GraduationCap },
 ];
 
 export function TeacherSidebar({ showAdminLink = false }: { showAdminLink?: boolean }) {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push("/");
+        router.refresh();
+    };
 
     return (
         <aside className="w-64 bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0 shadow-[1px_0_10px_rgba(0,0,0,0.02)]">
@@ -100,13 +113,13 @@ export function TeacherSidebar({ showAdminLink = false }: { showAdminLink?: bool
                         <span className="text-sm">Admin Center</span>
                     </Link>
                 ) : null}
-                <Link
-                    href="/"
+                <button
+                    onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-500/70 hover:text-rose-600 hover:bg-rose-50 transition-all font-medium"
                 >
                     <SignOut size={20} weight="bold" />
                     <span className="text-sm">Sign Out</span>
-                </Link>
+                </button>
             </div>
         </aside>
     );

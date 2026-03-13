@@ -114,8 +114,9 @@ const STUDENT_PLANS: Plan[] = [
 
 import { CheckoutModal } from "./checkout-modal";
 
-export function PricingCards() {
-    const [view, setView] = useState<"teacher" | "student">("student");
+export function PricingCards({ userPlan, userRole }: { userPlan?: string, userRole?: string }) {
+    const defaultView = userRole === "TEACHER" || userRole === "ADMIN" ? "teacher" : "student";
+    const [view, setView] = useState<"teacher" | "student">(defaultView);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -133,28 +134,30 @@ export function PricingCards() {
 
     return (
         <div className="space-y-12">
-            <div className="flex justify-center">
-                <div className="inline-flex bg-gray-50 p-1 rounded-2xl border border-gray-100 shadow-sm">
-                    <button
-                        onClick={() => setView("student")}
-                        className={cn(
-                            "px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase tracking-widest",
-                            view === "student" ? "bg-white text-indigo-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
-                        )}
-                    >
-                        Student Plans
-                    </button>
-                    <button
-                        onClick={() => setView("teacher")}
-                        className={cn(
-                            "px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase tracking-widest",
-                            view === "teacher" ? "bg-white text-indigo-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
-                        )}
-                    >
-                        Teacher Plans
-                    </button>
+            {!userRole && (
+                <div className="flex justify-center">
+                    <div className="inline-flex bg-gray-50 p-1 rounded-2xl border border-gray-100 shadow-sm">
+                        <button
+                            onClick={() => setView("student")}
+                            className={cn(
+                                "px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase tracking-widest",
+                                view === "student" ? "bg-white text-indigo-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
+                            )}
+                        >
+                            Student Plans
+                        </button>
+                        <button
+                            onClick={() => setView("teacher")}
+                            className={cn(
+                                "px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase tracking-widest",
+                                view === "teacher" ? "bg-white text-indigo-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
+                            )}
+                        >
+                            Teacher Plans
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className={cn(
                 "grid gap-8 mx-auto",
@@ -213,15 +216,17 @@ export function PricingCards() {
                         </div>
 
                         <button
+                            disabled={userPlan === "PRO" && plan.highlight}
                             onClick={() => handlePlanClick(plan)}
                             className={cn(
                                 "w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-95",
-                                plan.highlight
-                                    ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:shadow-indigo-500/30"
-                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100"
+                                userPlan === "PRO" && plan.highlight ? "bg-emerald-50 text-emerald-600 cursor-not-allowed border border-emerald-100" :
+                                    plan.highlight
+                                        ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:shadow-indigo-500/30"
+                                        : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100"
                             )}>
-                            {plan.buttonText}
-                            <CaretRight size={18} weight="bold" />
+                            {userPlan === "PRO" && plan.highlight ? "Current Plan" : plan.buttonText}
+                            {userPlan === "PRO" && plan.highlight ? <Check size={18} weight="bold" /> : <CaretRight size={18} weight="bold" />}
                         </button>
                     </div>
                 ))}

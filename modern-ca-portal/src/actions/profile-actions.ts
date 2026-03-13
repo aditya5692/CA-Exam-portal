@@ -36,6 +36,7 @@ async function updateProfile(role: ProfileRole, formData: FormData) {
         const designation = String(formData.get("designation") ?? "").trim();
         const expertise = String(formData.get("expertise") ?? "").trim();
         const examTarget = String(formData.get("examTarget") ?? "").trim();
+        const isPublicProfile = formData.get("isPublicProfile") === "true";
 
         const updatedProfile = await prisma.user.update({
             where: { id: user.id },
@@ -51,6 +52,7 @@ async function updateProfile(role: ProfileRole, formData: FormData) {
                 designation: role === "TEACHER" ? (designation || null) : null,
                 expertise: role === "TEACHER" ? (expertise || null) : null,
                 examTarget: role === "STUDENT" ? (examTarget || null) : null,
+                isPublicProfile: role === "TEACHER" ? isPublicProfile : true,
             }
         });
 

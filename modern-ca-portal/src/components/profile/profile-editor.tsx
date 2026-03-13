@@ -33,6 +33,7 @@ type Profile = {
     examTarget: string | null;
     role: string;
     plan: string;
+    isPublicProfile: boolean;
     storageUsed: number;
     storageLimit: number;
     createdAt: string | Date;
@@ -50,6 +51,7 @@ type FormState = {
     designation: string;
     expertise: string;
     examTarget: string;
+    isPublicProfile: boolean;
 };
 
 const TEACHER_REQUIRED_FIELDS: Array<{ key: keyof FormState; label: string }> = [
@@ -84,6 +86,7 @@ const EMPTY_FORM: FormState = {
     designation: "",
     expertise: "",
     examTarget: "",
+    isPublicProfile: true,
 };
 
 export function ProfileEditor({ mode }: { mode: Mode }) {
@@ -118,6 +121,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                 designation: loadedProfile.designation ?? "",
                 expertise: loadedProfile.expertise ?? "",
                 examTarget: loadedProfile.examTarget ?? "",
+                isPublicProfile: loadedProfile.isPublicProfile ?? true,
             });
         })();
 
@@ -129,10 +133,16 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
     const requiredFields = mode === "teacher" ? TEACHER_REQUIRED_FIELDS : STUDENT_REQUIRED_FIELDS;
 
     const completion = useMemo(() => {
-        const completedFields = requiredFields.filter(({ key }) => formState[key].trim().length > 0);
+        const completedFields = requiredFields.filter(({ key }) => {
+            const val = formState[key];
+            return typeof val === "string" ? val.trim().length > 0 : true;
+        });
         const percentage = Math.round((completedFields.length / requiredFields.length) * 100);
         const missing = requiredFields
-            .filter(({ key }) => formState[key].trim().length === 0)
+            .filter(({ key }) => {
+                const val = formState[key];
+                return typeof val === "string" ? val.trim().length === 0 : false;
+            })
             .map(({ label }) => label);
 
         return { percentage, missing };
@@ -157,7 +167,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
 
         const formData = new FormData();
         Object.entries(formState).forEach(([key, value]) => {
-            formData.append(key, value);
+            formData.append(key, typeof value === "boolean" ? value.toString() : value);
         });
 
         const response = mode === "teacher"
@@ -408,6 +418,28 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                             className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="Taxation, Audit, Accounts"
                                         />
+                                    </div>
+                                </label>
+
+                                <label className="space-y-3 md:col-span-2 pt-2 border-t border-gray-100 mt-4">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                                Public Educator Profile <ShieldCheck className="text-emerald-500 w-4 h-4" />
+                                            </span>
+                                            <p className="text-xs text-gray-500 mt-1 max-w-[80%]">
+                                                When enabled, anyone can view your public badge, bio, and free resources. Turn this off to stay completely private.
+                                            </p>
+                                        </div>
+                                        <div className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={formState.isPublicProfile}
+                                                onChange={(e) => handleChange("isPublicProfile", e.target.checked.toString())}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                        </div>
                                     </div>
                                 </label>
                             </>

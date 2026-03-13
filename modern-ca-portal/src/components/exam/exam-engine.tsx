@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useExamStore } from "@/store/exam-store";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ArrowRight, Flag, Timer, CheckCircle, Warning, XCircle } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Flag, Timer, CheckCircle, Warning } from "@phosphor-icons/react";
 
 export function ExamEngine() {
     const {

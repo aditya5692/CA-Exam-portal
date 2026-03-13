@@ -41,7 +41,10 @@ export default function StudentUpdatesPage() {
     }, []);
 
     useEffect(() => {
-        void loadFeed();
+        const init = async () => {
+            await loadFeed();
+        };
+        void init();
     }, [loadFeed]);
 
     const handleJoin = async (event: React.FormEvent) => {

@@ -35,7 +35,6 @@ export function EliteFooter() {
                             <li><Link href="/student/exams" className="text-gray-500 hover:text-indigo-600 transition-colors text-sm font-medium">CA Foundation</Link></li>
                             <li><Link href="/student/exams" className="text-gray-500 hover:text-indigo-600 transition-colors text-sm font-medium">CA Intermediate</Link></li>
                             <li><Link href="/student/exams" className="text-gray-500 hover:text-indigo-600 transition-colors text-sm font-medium">CA Final</Link></li>
-                            <li><Link href="/student/exams" className="text-gray-500 hover:text-indigo-600 transition-colors text-sm font-medium">NISM Certifications</Link></li>
                         </ul>
                     </div>
 

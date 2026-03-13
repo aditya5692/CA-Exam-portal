@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { List, X, GraduationCap } from "@phosphor-icons/react";
+import { List, X, GraduationCap, SignOut } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { logout } from "@/actions/auth-actions";
+import { useRouter } from "next/navigation";
 
-export function EliteNavbar() {
+export function EliteNavbar({ user }: { user?: { fullName: string | null; role: string } | null }) {
+    const router = useRouter();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -19,6 +22,8 @@ export function EliteNavbar() {
 
     const NAV_LINKS = [
         { label: "Home", href: "/" },
+        { label: "Study Material", href: "/study-material" },
+        { label: "Past Year Questions", href: "/past-year-questions" },
         { label: "Mock Exams", href: "/student/exams" },
         { label: "Pricing", href: "/pricing" },
         { label: "Analytics", href: "/student/analytics" },
@@ -60,18 +65,41 @@ export function EliteNavbar() {
                     <div className="h-6 w-px bg-gray-200 mx-2" />
 
                     <div className="flex items-center gap-4">
-                        <Link
-                            href="/auth/login"
-                            className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors"
-                        >
-                            Login
-                        </Link>
-                        <Link
-                            href="/auth/signup"
-                            className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all active:scale-95 flex items-center gap-2"
-                        >
-                            Join Free
-                        </Link>
+                        {user ? (
+                            <>
+                                <Link
+                                    href={user.role === "ADMIN" ? "/admin/dashboard" : user.role === "TEACHER" ? "/teacher/dashboard" : "/student/dashboard"}
+                                    className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors"
+                                >
+                                    Dashboard
+                                </Link>
+                                <button
+                                    onClick={async () => {
+                                        await logout();
+                                        router.push("/");
+                                        router.refresh();
+                                    }}
+                                    className="px-6 py-2.5 rounded-xl bg-gray-100 text-gray-900 font-bold text-sm shadow-sm hover:bg-gray-200 transition-all active:scale-95 flex items-center gap-2"
+                                >
+                                    <SignOut size={18} weight="bold" /> Logout
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/auth/login"
+                                    className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors"
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    href="/auth/signup"
+                                    className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all active:scale-95 flex items-center gap-2"
+                                >
+                                    Join Free
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -100,20 +128,45 @@ export function EliteNavbar() {
                         ))}
                         <hr className="border-gray-100" />
                         <div className="flex flex-col gap-4">
-                            <Link
-                                href="/auth/login"
-                                className="w-full py-4 text-center font-bold text-gray-900 border border-gray-100 rounded-2xl"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Login
-                            </Link>
-                            <Link
-                                href="/auth/signup"
-                                className="w-full py-4 text-center font-bold text-white bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/20"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Start for Free
-                            </Link>
+                            {user ? (
+                                <>
+                                    <Link
+                                        href={user.role === "ADMIN" ? "/admin/dashboard" : user.role === "TEACHER" ? "/teacher/dashboard" : "/student/dashboard"}
+                                        className="w-full py-4 text-center font-bold text-gray-900 border border-gray-100 rounded-2xl"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                    <button
+                                        onClick={async () => {
+                                            setIsMobileMenuOpen(false);
+                                            await logout();
+                                            router.push("/");
+                                            router.refresh();
+                                        }}
+                                        className="w-full py-4 text-center font-bold text-gray-900 bg-gray-100 rounded-2xl flex items-center justify-center gap-2"
+                                    >
+                                        <SignOut size={18} weight="bold" /> Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link
+                                        href="/auth/login"
+                                        className="w-full py-4 text-center font-bold text-gray-900 border border-gray-100 rounded-2xl"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Login
+                                    </Link>
+                                    <Link
+                                        href="/auth/signup"
+                                        className="w-full py-4 text-center font-bold text-white bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/20"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Start for Free
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

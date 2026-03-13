@@ -1,27 +1,35 @@
 import { PricingCards } from "@/components/subscription/pricing-cards";
+import { ShieldCheck, CheckCircle, Question, Info } from "@phosphor-icons/react/dist/ssr";
 import { EliteNavbar } from "@/components/common/navbar";
 import { EliteFooter } from "@/components/common/footer";
+import { getSessionPayload } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 
-export default function PricingPage() {
+export default async function PricingPage() {
+    const session = await getSessionPayload();
+
+    if (session) {
+        if (session.role === "ADMIN") redirect("/admin/dashboard");
+        if (session.role === "TEACHER") redirect("/teacher/plan");
+        redirect("/student/plan");
+    }
+
     return (
-        <div className="min-h-screen bg-white">
-            <EliteNavbar />
+        <div className="min-h-screen bg-white selection:bg-indigo-100 selection:text-indigo-900">
+            <EliteNavbar user={session} />
 
             <main className="max-w-7xl mx-auto px-6 py-32 sm:py-48">
                 <div className="text-center space-y-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-[10px] font-bold uppercase tracking-[0.2em]">
-                        Invest in your Future
-                    </div>
-                    <h1 className="text-5xl md:text-7xl font-bold text-gray-900 font-outfit tracking-tight">
-                        Premium Plans for <span className="text-indigo-600">Pro Results.</span>
+                    <h1 className="text-5xl md:text-7xl font-bold font-outfit tracking-tight text-gray-900">
+                        Invest in your <span className="text-indigo-600">success</span>.
                     </h1>
-                    <p className="text-gray-500 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
-                        Flexible yearly plans designed to empower both ambitious students and professional educators in the CA journey.
+                    <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium">
+                        The most comprehensive CA preparation platform designed specifically for the latest ICAI pattern.
                     </p>
                 </div>
 
                 <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
-                    <PricingCards />
+                    <PricingCards userPlan={undefined} userRole={undefined} />
                 </div>
 
                 {/* FAQ / Trust Section */}

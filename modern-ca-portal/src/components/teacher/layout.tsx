@@ -2,10 +2,15 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { TeacherSidebar } from "./sidebar";
 import { Bell, MagnifyingGlass, UserCircle } from "@phosphor-icons/react/dist/ssr";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
-    const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+    const teacher = await getCurrentUser(["TEACHER", "ADMIN"]);
+
+    if (!teacher) {
+        redirect("/auth/login");
+    }
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc]">
