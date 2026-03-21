@@ -9,6 +9,7 @@ COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 
 RUN npm ci
+RUN node ./node_modules/prisma/build/index.js generate
 
 FROM base AS builder
 
