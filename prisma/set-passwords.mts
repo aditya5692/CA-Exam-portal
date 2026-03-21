@@ -1,10 +1,10 @@
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '@prisma/client';
+import * as dotenv from 'dotenv';
 import { createHash,scryptSync } from 'crypto';
+import { createRuntimePrismaClient } from '../src/lib/prisma/runtime';
 
-const prisma = new PrismaClient({
-    adapter: new PrismaBetterSqlite3({ url: 'file:./dev.db' }),
-})
+dotenv.config()
+
+const { prisma } = createRuntimePrismaClient(process.env)
 
 function makeHash(password: string, seed: string) {
     const salt = createHash('sha256').update(`modern-ca-portal-demo:${seed}`).digest('hex').slice(0, 32)
