@@ -1,7 +1,10 @@
-import { getGlobalLeaderboard } from "@/actions/leaderboard-actions";
+import { getGlobalLeaderboard, getUserRank } from "@/actions/leaderboard-actions";
+import { getCurrentUser } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
-import { ChartLineUp,Info,Medal,Trophy,UserCircle } from "@phosphor-icons/react/dist/ssr";
+import { ChartLineUp, Medal, Trophy, UserCircle, ArrowRight, Sparkle, Star, Crown, ShareNetwork, Lightbulb, Target, TrendUp, CheckCircle, Users, Presentation, Calendar } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { Navbar } from "@/components/common/navbar";
+import { Footer } from "@/components/common/footer";
 
 type LeaderboardStudent = {
     rank: number;
@@ -13,15 +16,27 @@ type LeaderboardStudent = {
 
 export const metadata = {
     title: "Global Leaderboard | CA Exam Portal",
-    description: "Public ranking of top CA aspirants based on learning XP.",
+    description: "Global student rankings based on learning XP.",
 };
 
-// Next.js config for 1-hour caching of this route natively at the page level if needed
 export const revalidate = 3600;
 
 export default async function LeaderboardPage() {
+    const user = await getCurrentUser();
+    const isTeacherOrAdmin = user?.role === "TEACHER" || user?.role === "ADMIN";
+    
     const res = await getGlobalLeaderboard(100);
     const topStudents = res.success && res.data ? res.data : [];
+
+    let myRankData = null;
+    if (user && !isTeacherOrAdmin) {
+        const rankRes = await getUserRank(user.id);
+        if (rankRes.success) {
+            myRankData = rankRes.data;
+        }
+    }
+
+    const isUserInTop100 = topStudents.some(s => s.studentId === user?.id);
 
     const top1 = topStudents[0];
     const top2 = topStudents[1];
@@ -29,219 +44,331 @@ export default async function LeaderboardPage() {
     const rest = topStudents.slice(3);
 
     return (
-        <div className="min-h-screen bg-slate-50 font-outfit">
-            {/* Minimal Navbar for Public Page */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 h-16 flex items-center px-6 md:px-12 justify-between">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-                        <ChartLineUp size={18} weight="bold" className="text-white" />
-                    </div>
-                    <span className="font-bold text-lg text-slate-900 tracking-tight">Financly</span>
-                </Link>
-                <div className="flex gap-4">
-                    <Link href="/login" className="px-5 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">
-                        Sign In
-                    </Link>
-                    <Link href="/login" className="px-5 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-blue-600 transition-all shadow-md active:scale-95 hidden sm:block">
-                        Get Started
-                    </Link>
-                </div>
-            </nav>
+        <div className="min-h-screen bg-[#FDFDFF] font-outfit text-slate-900 flex flex-col">
+            <Navbar user={user} />
 
-            <main className="pt-32 pb-24 px-4 max-w-5xl mx-auto space-y-12 animate-in fade-in duration-700">
-                {/* Header */}
-                <div className="text-center space-y-6 max-w-2xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 shadow-sm mx-auto">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Live Global Rankings</span>
-                    </div>
+            <main className="flex-grow pt-28 pb-16 px-6 sm:px-12 max-w-7xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                
+                {/* Two-Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
                     
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-tight tracking-tight">
-                        The CA Excellence <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Leaderboard.</span>
-                    </h1>
-                    
-                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm inline-block text-left relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-100 transition-colors duration-500" />
-                        <div className="relative z-10 flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400 mt-0.5">
-                                <Info size={20} weight="duotone" />
-                            </div>
-                            <div className="space-y-1">
-                                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Transparent Ranking Formula</h3>
-                                <p className="text-sm font-medium text-slate-500/90 leading-relaxed max-w-md">
-                                    Positions are determined strictly by <strong className="text-blue-600 font-bold">Total Learning XP</strong>. 
-                                    Earn XP through mock exams, consistent study streaks, and resource utilization.
-                                </p>
-                                <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
-                                    <Clock /> Updates Every Hour
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {topStudents.length > 0 ? (
+                    {/* Left Column: Rankings & Champions */}
                     <div className="space-y-12">
-                        {/* The Podium */}
-                        <div className="flex flex-col md:flex-row items-end justify-center gap-4 md:gap-6 mt-16 px-4">
-                            {/* Rank 2 - Silver */}
-                            {top2 && <PodiumCard student={top2} rank={2} color="slate" height="md:h-64" />}
-
-                            {/* Rank 1 - Gold */}
-                            {top1 && <PodiumCard student={top1} rank={1} color="amber" height="md:h-72" scale="md:scale-105" zIndex="z-10 shadow-2xl" />}
-
-                            {/* Rank 3 - Bronze */}
-                            {top3 && <PodiumCard student={top3} rank={3} color="orange" height="md:h-56" />}
+                        
+                        {/* Compact Achievement Header */}
+                        <div className="space-y-2 border-b border-slate-100 pb-8">
+                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
+                                <Star size={12} weight="fill" className="animate-pulse" />
+                                Elite Leaderboard
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 leading-none text-left">
+                                Global <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Rankings</span>
+                            </h1>
+                            <p className="text-slate-500 font-medium text-lg max-w-xl text-left">
+                                Celebrating the top scholars in their journey to professional excellence.
+                            </p>
                         </div>
 
-                        {/* Ranks 4-100 Table */}
-                        {rest.length > 0 && (
-                            <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm overflow-hidden mt-8">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                                <th className="py-5 px-6 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Rank</th>
-                                                <th className="py-5 px-6 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Aspiring Professional</th>
-                                                <th className="py-5 px-6 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Total XP</th>
-                                                <th className="py-5 px-6 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Level</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100/80">
-                                            {rest.map((student) => (
-                                                <tr key={student.studentId} className="hover:bg-slate-50/50 transition-colors group">
-                                                    <td className="py-4 px-6 whitespace-nowrap">
-                                                        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-sm flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                                            #{student.rank}
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6 whitespace-nowrap">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 shadow-inner">
-                                                                <UserCircle size={20} weight="fill" />
-                                                            </div>
-                                                            <span className="font-bold text-slate-800 text-[15px]">{student.fullName}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6 whitespace-nowrap text-right">
-                                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-700 rounded-lg border border-slate-100 font-mono font-bold">
-                                                            {student.totalXP.toLocaleString()} <span className="text-[10px] text-slate-400">XP</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6 whitespace-nowrap text-center">
-                                                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-black text-xs mx-auto border border-indigo-100/50 hover:bg-indigo-600 hover:text-white transition-colors cursor-default">
-                                                            {student.level}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                        {topStudents.length > 0 ? (
+                            <div className="space-y-12">
+                                {/* The Championship Podium Row */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                                    {top2 && <ChampionCard student={top2} rank={2} variant="silver" />}
+                                    {top1 && <ChampionCard student={top1} rank={1} variant="gold" featured={true} />}
+                                    {top3 && <ChampionCard student={top3} rank={3} variant="bronze" />}
                                 </div>
+
+                                {/* Ranking Table */}
+                                {rest.length > 0 && (
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 pl-4 text-left">All Rankings (4-100)</h3>
+                                        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-2xl shadow-slate-200/20 overflow-hidden">
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-left">
+                                                    <thead>
+                                                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                                                            <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 w-24">Rank</th>
+                                                            <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Student Name</th>
+                                                            <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">XP Points</th>
+                                                            <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center w-28">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-50">
+                                                        {rest.map((student) => {
+                                                            const isMe = student.studentId === user?.id;
+                                                            return (
+                                                                <tr key={student.studentId} className={cn(
+                                                                    "transition-all duration-300 group hover:bg-blue-50/20",
+                                                                    isMe && "bg-blue-50/40 relative shadow-inner"
+                                                                )}>
+                                                                    <td className="py-4 px-6">
+                                                                        <div className={cn(
+                                                                            "w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs",
+                                                                            isMe ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "bg-slate-100 text-slate-500"
+                                                                        )}>
+                                                                            {student.rank}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="py-4 px-6 font-bold text-slate-800 flex items-center gap-3">
+                                                                        <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                                                            <UserCircle size={20} weight="fill" />
+                                                                        </div>
+                                                                        <span className="truncate max-w-[150px] sm:max-w-none">{student.fullName}</span>
+                                                                        {isMe && <span className="h-5 px-2 bg-blue-100 text-blue-600 rounded flex items-center text-[9px] font-black uppercase tracking-widest ml-1 animate-pulse uppercase">YOU</span>}
+                                                                    </td>
+                                                                    <td className="py-4 px-6 text-right">
+                                                                        <span className="font-black font-mono text-slate-900">{student.totalXP.toLocaleString()}</span>
+                                                                    </td>
+                                                                    <td className="py-4 px-6 text-center text-left">
+                                                                        <span className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-100 shadow-sm text-[10px] font-black tracking-tight text-slate-500 uppercase">
+                                                                            Lvl {student.level}
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 bg-white rounded-[3rem] border border-dashed border-slate-300">
+                                <Trophy size={48} weight="duotone" className="text-slate-300 mx-auto mb-4" />
+                                <h2 className="text-xl font-black text-slate-900 tracking-tight">Leaderboard Opening Soon</h2>
+                                <p className="text-slate-500 mt-2 text-sm font-medium">Rankings refresh every hour. Start practicing to claim your spot!</p>
                             </div>
                         )}
                     </div>
-                ) : (
-                    <div className="text-center py-32 bg-white rounded-[40px] border border-slate-200 shadow-sm mt-12">
-                        <Trophy size={64} weight="duotone" className="text-slate-200 mx-auto mb-6" />
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Leaderboard is warming up</h2>
-                        <p className="text-slate-500 mt-2 font-medium">It looks like the competition is just getting started. Check back soon!</p>
+
+                    {/* Right Column: Sidebar (Analysis & Suggestions) */}
+                    <div className="space-y-6 pt-1">
+                        
+                        {/* Student Personal Analysis Box */}
+                        {user && myRankData && !isTeacherOrAdmin && (
+                            <div className="p-6 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl relative overflow-hidden group border border-slate-800">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[80px] -mr-16 -mt-16 opacity-40 group-hover:opacity-60 transition-opacity" />
+                                
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-blue-400">Personal Analysis</h3>
+                                        <TrendUp size={20} weight="bold" className="text-blue-400" />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Global Standing</div>
+                                                <div className="text-4xl font-black tracking-tighter">#{myRankData.rank}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Percentile</div>
+                                                <div className="text-xl font-black text-blue-400">Top {100 - myRankData.percentile}%</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+                                            <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-400 font-mono">
+                                                <span>Level Milestone</span>
+                                                <span>Lvl {myRankData.level} → {myRankData.level + 1}</span>
+                                            </div>
+                                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500" 
+                                                    style={{ width: '65%' }} 
+                                                />
+                                            </div>
+                                            <p className="text-[9px] font-medium text-slate-400 italic">
+                                                ~{Math.round((myRankData.level + 1) * 250 - myRankData.totalXP % 500)} XP to next milestone.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-500 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                                        <ShareNetwork size={18} weight="bold" />
+                                        Share My Rank
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Teacher/Admin "Class Analysis" Placeholder Box */}
+                        {isTeacherOrAdmin && (
+                            <div className="p-6 rounded-[2.5rem] bg-indigo-900 text-white shadow-2xl relative overflow-hidden group border border-indigo-800">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400 rounded-full blur-[80px] -mr-16 -mt-16 opacity-40 group-hover:opacity-60 transition-opacity" />
+                                
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-indigo-300">Teacher Insights</h3>
+                                        <Presentation size={20} weight="bold" className="text-indigo-300" />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <div className="text-[10px] font-bold text-indigo-200 uppercase mb-1">Top Batch Avg</div>
+                                                <div className="text-3xl font-black tracking-tighter">1,240 XP</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-[10px] font-bold text-indigo-200 uppercase mb-1">Growth</div>
+                                                <div className="text-xl font-black text-green-400">+12%</div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-[11px] font-medium text-indigo-100 bg-white/5 p-4 rounded-xl border border-white/10">
+                                            Your students are most active on Mock Exams during weekend evenings (6PM - 9PM).
+                                        </p>
+                                    </div>
+
+                                    <Link href="/teacher/dashboard" className="w-full h-12 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                                        View All Batches
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Integrated "Pro Suggestions" Box */}
+                        <div className="p-6 rounded-[2.5rem] bg-white border border-slate-200 shadow-sm space-y-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+                                    <Lightbulb size={24} weight="fill" />
+                                </div>
+                                <h3 className="font-black text-slate-900 tracking-tight text-left">Success Tips</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                <SuggestionItem 
+                                    icon={<Target size={14} weight="bold" />}
+                                    title={isTeacherOrAdmin ? "Encourage Retrieval" : "Accuracy First"}
+                                    desc={isTeacherOrAdmin ? "Remind students that practicing Mock Exams boosts their global rank significantly." : "Correct answers in Mock Exams provide 2x XP multipliers."}
+                                />
+                                <SuggestionItem 
+                                    icon={<Calendar size={14} weight="bold" />}
+                                    title="Consistency Wins"
+                                    desc="A 5-day study streak unlocks the Elite Multiplier rewards for all students."
+                                />
+                                <SuggestionItem 
+                                    icon={<Presentation size={14} weight="bold" />}
+                                    title="Peer Learning"
+                                    desc="Comparing standing with peers in the Top 100 boosts overall batch motivation."
+                                />
+                            </div>
+
+                            <Link href={isTeacherOrAdmin ? "/teacher/dashboard" : "/student/dashboard"} className="w-full h-11 rounded-xl border border-blue-100 bg-blue-50/50 text-blue-600 hover:bg-blue-600 hover:text-white font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center transition-all bg-white text-left">
+                                Go to Dashboard
+                            </Link>
+                        </div>
                     </div>
-                )}
+                </div>
             </main>
+
+            <Footer />
         </div>
     );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Subcomponents
+// Subcomponents (Leaderboard 3.0)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Clock() {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
-            <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"></path>
-        </svg>
-    );
-}
-
-function PodiumCard({ 
+function ChampionCard({ 
     student, 
     rank, 
-    color, 
-    height, 
-    scale = "", 
-    zIndex = "z-0" 
+    variant,
+    featured = false
 }: { 
     student: LeaderboardStudent, 
     rank: number, 
-    color: "amber" | "slate" | "orange", 
-    height: string, 
-    scale?: string,
-    zIndex?: string
+    variant: "gold" | "silver" | "bronze",
+    featured?: boolean
 }) {
-    const colorStyles = {
-        amber: {
-            bg: "bg-amber-50",
-            border: "border-amber-200",
-            text: "text-amber-600",
-            gradient: "from-amber-400 to-amber-600",
-            badge: "bg-amber-100 text-amber-700",
-            shadow: "shadow-amber-500/10",
-            icon: Trophy
+    const config = {
+        gold: {
+            bg: "bg-white",
+            border: "border-amber-400 shadow-[0_0_40px_-15px_rgba(245,158,11,0.3)]",
+            icon: Trophy,
+            iconColor: "text-amber-500",
+            badgeBg: "bg-amber-500",
+            title: "Scholar Gold"
         },
-        slate: {
-            bg: "bg-slate-50",
-            border: "border-slate-200",
-            text: "text-slate-600",
-            gradient: "from-slate-400 to-slate-600",
-            badge: "bg-slate-200 text-slate-700",
-            shadow: "shadow-slate-500/10",
-            icon: Medal
+        silver: {
+            bg: "bg-white",
+            border: "border-slate-300 shadow-[0_0_40px_-15px_rgba(148,163,184,0.3)]",
+            icon: Medal,
+            iconColor: "text-slate-400",
+            badgeBg: "bg-slate-400",
+            title: "Scholar Silver"
         },
-        orange: {
-            bg: "bg-orange-50",
-            border: "border-orange-200",
-            text: "text-orange-600",
-            gradient: "from-orange-400 to-orange-600",
-            badge: "bg-orange-100 text-orange-700",
-            shadow: "shadow-orange-500/10",
-            icon: Medal
+        bronze: {
+            bg: "bg-white",
+            border: "border-orange-400 shadow-[0_0_40px_-15px_rgba(251,146,60,0.3)]",
+            icon: Medal,
+            iconColor: "text-orange-500",
+            badgeBg: "bg-orange-500",
+            title: "Scholar Bronze"
         }
     };
 
-    const style = colorStyles[color];
+    const style = config[variant];
     const Icon = style.icon;
 
     return (
         <div className={cn(
-            "relative w-full md:w-64 flex flex-col items-center p-6 rounded-[32px] border transition-all duration-500",
-            style.bg, style.border, style.shadow, height, scale, zIndex
+            "relative p-6 rounded-[2.5rem] border transition-all duration-700 group",
+            style.bg, style.border, featured && "md:scale-105 md:-mt-2 ring-4 ring-amber-50 shadow-2xl"
         )}>
-            {/* Rank Badge */}
-            <div className={cn("absolute -top-5 flex items-center justify-center w-12 h-12 rounded-full border-4 border-white shadow-xl z-20 bg-gradient-to-br", style.gradient)}>
-                <span className="text-white font-black text-lg">#{rank}</span>
-            </div>
-
-            <div className="mt-8 flex flex-col items-center text-center w-full h-full justify-between">
-                <div className="space-y-3 flex flex-col items-center">
-                    <div className={cn("w-14 h-14 rounded-full flex items-center justify-center mb-1", style.badge)}>
-                        <Icon size={28} weight="duotone" />
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div className={cn(
+                        "px-3 py-1 rounded-full text-white font-black text-[10px] uppercase tracking-widest text-left",
+                        style.badgeBg
+                    )}>
+                       Rank #{rank}
                     </div>
-                    <div className="space-y-1">
-                        <h4 className="text-[17px] font-black text-slate-900 leading-tight line-clamp-1 break-all">{student.fullName}</h4>
-                        <div className="inline-flex items-center justify-center rounded-full bg-white px-3 py-1 border border-slate-100 font-mono text-[10px] uppercase font-bold tracking-widest text-indigo-600">
-                            Lvl {student.level}
+                    {featured && <Crown size={22} weight="fill" className="text-amber-500 animate-bounce" />}
+                </div>
+
+                <div className="flex flex-col items-center text-center space-y-3">
+                    <div className={cn(
+                        "w-20 h-20 rounded-[2rem] flex items-center justify-center transition-all duration-500 shadow-inner group-hover:rotate-6",
+                        featured ? "bg-amber-50" : "bg-slate-50"
+                    )}>
+                        <Icon size={48} weight="duotone" className={style.iconColor} />
+                    </div>
+                    <div>
+                        <h4 className="text-xl font-black tracking-tight text-slate-900 truncate max-w-[150px]">{student.fullName}</h4>
+                        <div className="text-[9px] font-black uppercase text-slate-400 tracking-widest uppercase">{style.title}</div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mt-4 text-center">
+                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Total XP</div>
+                        <div className="text-base font-black font-mono tracking-tighter text-slate-900 group-hover:text-blue-600 transition-colors">
+                            {student.totalXP.toLocaleString()}
                         </div>
                     </div>
+                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Level</div>
+                        <div className="text-base font-black text-slate-900">Lvl {student.level}</div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    );
+}
 
-                <div className="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mt-4 md:mt-0">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Total XP</p>
-                    <p className={cn("text-xl md:text-2xl font-black font-mono tracking-tight", style.text)}>
-                        {student.totalXP.toLocaleString()}
-                    </p>
-                </div>
+function SuggestionItem({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+    return (
+        <div className="flex gap-4 group p-3 rounded-2xl hover:bg-slate-50 transition-colors text-left">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                {icon}
+            </div>
+            <div className="space-y-0.5">
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide group-hover:text-blue-700 transition-colors">{title}</h4>
+                <p className="text-[11px] font-medium text-slate-500 leading-normal">{desc}</p>
             </div>
         </div>
     );

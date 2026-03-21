@@ -88,3 +88,39 @@ export async function getGlobalLeaderboard(limit = 100): Promise<ActionResponse<
         return { success: false, message: "Failed to fetch leaderboard rankings." };
     }
 }
+
+/**
+ * Fetches the rank and percentile for a specific user.
+ */
+export async function getUserRank(userId: string): Promise<ActionResponse<{ rank: number; percentile: number; totalXP: number; level: number }>> {
+    try {
+        const allProfiles = await prisma.studentLearningProfile.findMany({
+            select: { studentId: true, totalXP: true, level: true },
+            orderBy: [
+                { totalXP: 'desc' },
+                { updatedAt: 'asc' }
+            ]
+        });
+
+        const myIndex = allProfiles.findIndex(p => p.studentId === userId);
+        if (myIndex === -1) {
+            return { success: false, message: "User profile not found." };
+        }
+
+        const total = allProfiles.length;
+        const rank = myIndex + 1;
+        const percentile = Math.round(((total - rank) / total) * 100);
+
+        return { 
+            success: true, 
+            data: { 
+                rank, 
+                percentile, 
+                totalXP: allProfiles[myIndex].totalXP,
+                level: allProfiles[myIndex].level
+            } 
+        };
+    } catch (error) {
+        return { success: false, message: "Failed to fetch user rank." };
+    }
+}
