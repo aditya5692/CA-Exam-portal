@@ -16,6 +16,38 @@ export type DatabaseRuntimeConfig = {
 
 type EnvLike = Record<string, string | undefined>;
 
+const DATABASE_URL_ENV_KEYS = [
+    "DATABASE_URL",
+    "POSTGRES_URL",
+    "POSTGRES_PRISMA_URL",
+    "POSTGRESQL_URL",
+    "DATABASE_URI",
+] as const;
+
+function normalizeEnvString(rawValue: string | undefined) {
+    if (!rawValue) {
+        return "";
+    }
+
+    const trimmed = rawValue.trim();
+    const quoteWrapped =
+        (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"));
+
+    return quoteWrapped ? trimmed.slice(1, -1).trim() : trimmed;
+}
+
+function readDatabaseUrlFromEnv(env: EnvLike) {
+    for (const key of DATABASE_URL_ENV_KEYS) {
+        const value = normalizeEnvString(env[key]);
+        if (value) {
+            return value;
+        }
+    }
+
+    return "";
+}
+
 function parseDatabaseIntegerEnv(
     rawValue: string | undefined,
     fallback: number,
@@ -53,7 +85,7 @@ export function redactDatabaseUrl(databaseUrl: string) {
 }
 
 export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseRuntimeConfig {
-    const databaseUrl = env.DATABASE_URL?.trim();
+    const databaseUrl = readDatabaseUrlFromEnv(env);
     if (!databaseUrl) {
         throw new Error("DATABASE_URL is not configured.");
     }
