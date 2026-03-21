@@ -1,4 +1,3 @@
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool,type PoolConfig } from "pg";
@@ -7,7 +6,7 @@ const DEFAULT_POOL_MAX = 10;
 const DEFAULT_DEVELOPMENT_CONNECT_TIMEOUT_MS = 10_000;
 const DEFAULT_PRODUCTION_CONNECT_TIMEOUT_MS = 30_000;
 const DEFAULT_IDLE_TIMEOUT_MS = 30_000;
-const SUPPORTED_DATABASE_PROTOCOLS = new Set(["postgresql:", "postgres:", "file:", "sqlite:"]);
+const SUPPORTED_DATABASE_PROTOCOLS = new Set(["postgresql:", "postgres:"]);
 
 export type DatabaseRuntimeConfig = {
     databaseUrl: string;
@@ -139,7 +138,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
     }
 
     if (!SUPPORTED_DATABASE_PROTOCOLS.has(protocol)) {
-        throw new Error(`Unsupported DATABASE_URL protocol "${protocol}". Use a PostgreSQL or SQLite connection string.`);
+        throw new Error(`Unsupported DATABASE_URL protocol "${protocol}". Use a PostgreSQL connection string.`);
     }
 
     return {
@@ -180,14 +179,6 @@ export function createPostgresPool(config: DatabaseRuntimeConfig) {
 
 export function createRuntimePrismaClient(env: EnvLike = process.env) {
     const config = readDatabaseRuntimeConfig(env);
-    
-    if (config.protocol === "file:" || config.protocol === "sqlite:") {
-        const dbPath = config.databaseUrl.replace(/^(file:|sqlite:)/, "");
-        const adapter = new PrismaBetterSqlite3({ url: dbPath });
-        const prisma = new PrismaClient({ adapter });
-        return { prisma, config };
-    }
-
     const pool = createPostgresPool(config);
     const adapter = new PrismaPg(pool);
     const prisma = new PrismaClient({ adapter });

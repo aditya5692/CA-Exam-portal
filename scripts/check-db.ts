@@ -48,13 +48,11 @@ async function main() {
     console.log("Checking database connectivity...");
     console.log(`Env key: ${config.sourceEnvKey}`);
     console.log(`Target: ${config.redactedDatabaseUrl}`);
-    console.log(`Protocol: ${config.protocol}`);
 
     try {
-        // A simple query that works in both PostgreSQL and SQLite
-        const result = await prisma.$queryRawUnsafe("SELECT 1 as connected");
+        // A simple query that works in PostgreSQL
+        await prisma.$queryRawUnsafe("SELECT 1 as connected");
         console.log("Connection successful.");
-        // console.log("Result:", result); // Optional debug
     } catch (error) {
         throw error;
     } finally {
