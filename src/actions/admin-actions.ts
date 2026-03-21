@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { FEATURE_DEFINITIONS, type FeatureKey } from "@/lib/auth/feature-access";
 import { createPasswordHash, type AppRole } from "@/lib/auth/demo-accounts";
@@ -6,6 +6,8 @@ import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
+import { ActionResponse } from "@/types/shared";
+import { Prisma } from "@prisma/client";
 
 const ALLOWED_ROLES: AppRole[] = ["ADMIN", "TEACHER", "STUDENT"];
 const ALLOWED_FEATURE_KEYS = new Set(FEATURE_DEFINITIONS.map((feature) => feature.key));
@@ -71,7 +73,10 @@ function refreshAdminSurfaces() {
   revalidatePath("/exam/war-room");
 }
 
-export async function createAdminManagedUser(formData: FormData): Promise<void> {
+/**
+ * Creates a new user managed by an admin.
+ */
+export async function createAdminManagedUser(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -98,12 +103,17 @@ export async function createAdminManagedUser(formData: FormData): Promise<void> 
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "User created successfully.", data: undefined };
   } catch (error) {
     console.error("createAdminManagedUser failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to create user." };
   }
 }
 
-export async function updateAdminManagedUser(formData: FormData): Promise<void> {
+/**
+ * Updates an existing user's details.
+ */
+export async function updateAdminManagedUser(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -128,15 +138,7 @@ export async function updateAdminManagedUser(formData: FormData): Promise<void> 
     const plan = String(formData.get("plan") ?? "").trim().toUpperCase() || "FREE";
     const password = String(formData.get("password") ?? "").trim();
 
-    const data: {
-      fullName: string;
-      role: AppRole;
-      email: string | null;
-      registrationNumber: string | null;
-      department: string | null;
-      plan: string;
-      passwordHash?: string;
-    } = {
+    const data: Prisma.UserUpdateInput = {
       fullName,
       role,
       email,
@@ -161,12 +163,17 @@ export async function updateAdminManagedUser(formData: FormData): Promise<void> 
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "User updated successfully.", data: undefined };
   } catch (error) {
     console.error("updateAdminManagedUser failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to update user." };
   }
 }
 
-export async function setAdminManagedUserBlock(formData: FormData): Promise<void> {
+/**
+ * Commands the blocking or unblocking of a user.
+ */
+export async function setAdminManagedUserBlock(formData: FormData): Promise<ActionResponse<void>> {
   try {
     const admin = await requireAdmin();
     const userId = String(formData.get("userId") ?? "").trim();
@@ -187,12 +194,17 @@ export async function setAdminManagedUserBlock(formData: FormData): Promise<void
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: isBlocked ? "User blocked." : "User unblocked.", data: undefined };
   } catch (error) {
     console.error("setAdminManagedUserBlock failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to toggle block status." };
   }
 }
 
-export async function saveAdminManagedFeatureAccess(formData: FormData): Promise<void> {
+/**
+ * Saves specific feature access rules for a user.
+ */
+export async function saveAdminManagedFeatureAccess(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -233,12 +245,17 @@ export async function saveAdminManagedFeatureAccess(formData: FormData): Promise
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Feature access updated.", data: undefined };
   } catch (error) {
     console.error("saveAdminManagedFeatureAccess failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to update feature access." };
   }
 }
 
-export async function resetAdminManagedFeatureAccess(formData: FormData): Promise<void> {
+/**
+ * Resets a user's feature access to defaults by deleting specific overrides.
+ */
+export async function resetAdminManagedFeatureAccess(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -252,12 +269,17 @@ export async function resetAdminManagedFeatureAccess(formData: FormData): Promis
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Feature access reset.", data: undefined };
   } catch (error) {
     console.error("resetAdminManagedFeatureAccess failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to reset access." };
   }
 }
 
-export async function deleteAdminManagedUser(formData: FormData): Promise<void> {
+/**
+ * Permanently deletes a user and all their associated data across the platform.
+ */
+export async function deleteAdminManagedUser(formData: FormData): Promise<ActionResponse<void>> {
   try {
     const admin = await requireAdmin();
     const userId = String(formData.get("userId") ?? "").trim();
@@ -291,6 +313,7 @@ export async function deleteAdminManagedUser(formData: FormData): Promise<void> 
         where: { teacherId: userId },
       });
 
+      // Recursive folder deletion replacement logic (flattened)
       while (true) {
         const deletedLeafFolders = await tx.folder.deleteMany({
           where: {
@@ -311,12 +334,17 @@ export async function deleteAdminManagedUser(formData: FormData): Promise<void> 
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "User and associated data deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminManagedUser failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to delete user." };
   }
 }
 
-export async function createAdminManagedBatch(formData: FormData): Promise<void> {
+/**
+ * Creates a new training batch.
+ */
+export async function createAdminManagedBatch(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -347,12 +375,17 @@ export async function createAdminManagedBatch(formData: FormData): Promise<void>
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Batch created successfully.", data: undefined };
   } catch (error) {
     console.error("createAdminManagedBatch failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to create batch." };
   }
 }
 
-export async function updateAdminManagedBatch(formData: FormData): Promise<void> {
+/**
+ * Updates an existing batch's details.
+ */
+export async function updateAdminManagedBatch(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -387,12 +420,17 @@ export async function updateAdminManagedBatch(formData: FormData): Promise<void>
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Batch updated.", data: undefined };
   } catch (error) {
     console.error("updateAdminManagedBatch failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to update batch." };
   }
 }
 
-export async function deleteAdminManagedBatch(formData: FormData): Promise<void> {
+/**
+ * Deletes a batch.
+ */
+export async function deleteAdminManagedBatch(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -404,12 +442,17 @@ export async function deleteAdminManagedBatch(formData: FormData): Promise<void>
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Batch deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminManagedBatch failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Failed to delete batch." };
   }
 }
 
-export async function assignAdminManagedEnrollment(formData: FormData): Promise<void> {
+/**
+ * Assigns a student to a batch (Enrollment).
+ */
+export async function assignAdminManagedEnrollment(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -428,12 +471,17 @@ export async function assignAdminManagedEnrollment(formData: FormData): Promise<
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Student enrolled in batch.", data: undefined };
   } catch (error) {
     console.error("assignAdminManagedEnrollment failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Enrollment failed." };
   }
 }
 
-export async function removeAdminManagedEnrollment(formData: FormData): Promise<void> {
+/**
+ * Removes a student's enrollment from a batch.
+ */
+export async function removeAdminManagedEnrollment(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -442,12 +490,17 @@ export async function removeAdminManagedEnrollment(formData: FormData): Promise<
 
     await prisma.enrollment.delete({ where: { id: enrollmentId } });
     refreshAdminSurfaces();
+    return { success: true, message: "Enrollment removed.", data: undefined };
   } catch (error) {
     console.error("removeAdminManagedEnrollment failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Removal failed." };
   }
 }
 
-export async function createAdminAnnouncement(formData: FormData): Promise<void> {
+/**
+ * Creates a platform-wide or batch-specific announcement.
+ */
+export async function createAdminAnnouncement(formData: FormData): Promise<ActionResponse<void>> {
   try {
     const admin = await requireAdmin();
     const batchId = String(formData.get("batchId") ?? "").trim();
@@ -476,12 +529,17 @@ export async function createAdminAnnouncement(formData: FormData): Promise<void>
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Announcement published.", data: undefined };
   } catch (error) {
     console.error("createAdminAnnouncement failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Publication failed." };
   }
 }
 
-export async function deleteAdminAnnouncement(formData: FormData): Promise<void> {
+/**
+ * Deletes an announcement.
+ */
+export async function deleteAdminAnnouncement(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
     const announcementId = String(formData.get("announcementId") ?? "").trim();
@@ -492,12 +550,17 @@ export async function deleteAdminAnnouncement(formData: FormData): Promise<void>
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Announcement deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminAnnouncement failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Deletion failed." };
   }
 }
 
-export async function grantAdminManagedMaterialAccess(formData: FormData): Promise<void> {
+/**
+ * Manually grants material access to a student.
+ */
+export async function grantAdminManagedMaterialAccess(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
     const studentId = String(formData.get("studentId") ?? "").trim();
@@ -513,12 +576,17 @@ export async function grantAdminManagedMaterialAccess(formData: FormData): Promi
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Access granted.", data: undefined };
   } catch (error) {
     console.error("grantAdminManagedMaterialAccess failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Access grant failed." };
   }
 }
 
-export async function revokeAdminManagedMaterialAccess(formData: FormData): Promise<void> {
+/**
+ * Revokes material access.
+ */
+export async function revokeAdminManagedMaterialAccess(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
     const studentId = String(formData.get("studentId") ?? "").trim();
@@ -530,12 +598,17 @@ export async function revokeAdminManagedMaterialAccess(formData: FormData): Prom
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Access revoked.", data: undefined };
   } catch (error) {
     console.error("revokeAdminManagedMaterialAccess failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Revocation failed." };
   }
 }
 
-export async function updateAdminManagedMaterial(formData: FormData): Promise<void> {
+/**
+ * Updates metadata for a study material.
+ */
+export async function updateAdminManagedMaterial(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -557,12 +630,17 @@ export async function updateAdminManagedMaterial(formData: FormData): Promise<vo
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Material updated.", data: undefined };
   } catch (error) {
     console.error("updateAdminManagedMaterial failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Update failed." };
   }
 }
 
-export async function deleteAdminManagedMaterial(formData: FormData): Promise<void> {
+/**
+ * Deletes a material and cleans up associated storage metrics.
+ */
+export async function deleteAdminManagedMaterial(formData: FormData): Promise<ActionResponse<void>> {
   try {
     await requireAdmin();
 
@@ -597,15 +675,18 @@ export async function deleteAdminManagedMaterial(formData: FormData): Promise<vo
         await tx.user.update({
           where: { id: owner.id },
           data: {
-            storageUsed: Math.max(0, owner.storageUsed - material.sizeInBytes),
+            storageUsed: Math.max(0, owner.storageUsed - Number(material.sizeInBytes || 0)),
           },
         });
       }
     });
 
     refreshAdminSurfaces();
+    return { success: true, message: "Material deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminManagedMaterial failed", error);
+    return { success: false, message: error instanceof Error ? error.message : "Deletion failed." };
   }
 }
+
 

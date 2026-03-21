@@ -2,14 +2,26 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getStudentFeed, joinBatch } from "@/actions/batch-actions";
-import { Bell, Users, BookOpen, Plus, X, Clock, ShieldCheck } from "lucide-react";
+import { getStudentProfile } from "@/actions/profile-actions";
+import { Bell, Users, BookOpen, Plus, X, Clock, ShieldCheck, Sparkle, Megaphone, CalendarBlank, Calendar } from "@phosphor-icons/react";
+import { cn } from "@/lib/utils";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+type UpdateCategory = "STUDY MATERIAL" | "STATUTORY UPDATE" | "MOCK ASSESSMENT" | "ANNOUNCEMENT" | "PRACTICE Q&A" | "REGULATORY NEWS";
 
 type FeedItem = {
     id: string;
-    content: string;
+    category: UpdateCategory;
+    title: string;
+    description: string;
     createdAt: string | Date;
+    scheduledFor?: string;
+    isUnread?: boolean;
+    subject: string;
     batchName: string;
     teacherName: string;
+    link?: string;
 };
 
 type MyBatch = {
@@ -18,10 +30,17 @@ type MyBatch = {
     teacherName: string;
 };
 
+// ── Page Component ─────────────────────────────────────────────────────────────
+
 export default function StudentUpdatesPage() {
     const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
     const [myBatches, setMyBatches] = useState<MyBatch[]>([]);
     const [isAdminView, setIsAdminView] = useState(false);
+    const [selectedSubject, setSelectedSubject] = useState("All Updates");
+    const [visibleCount, setVisibleCount] = useState(6);
+    const [daysToExam, setDaysToExam] = useState(0);
+
+    // Join Batch State
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [joinCode, setJoinCode] = useState("");
     const [isJoining, setIsJoining] = useState(false);
@@ -31,20 +50,116 @@ export default function StudentUpdatesPage() {
 
     const loadFeed = useCallback(async () => {
         const res = await getStudentFeed();
-        if (!res.success) {
-            return;
+        if (!res.success) return;
+
+        // Fetch profile for daysToExam
+        const profileRes = await getStudentProfile();
+        if (profileRes.success && profileRes.data?.examTarget) {
+            const userTarget = profileRes.data.examTarget;
+            const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
+            const parts = userTarget.split(" ");
+            if (parts.length >= 2) {
+                const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
+                const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
+                const yrPart = parseInt(parts[parts.length - 1]);
+                if (moKey && !isNaN(yrPart)) {
+                    const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
+                    const now = new Date();
+                    const diffTime = targetDate.getTime() - now.getTime();
+                    setDaysToExam(Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24))));
+                }
+            }
         }
 
-        setFeedItems((res.feedItems ?? []) as FeedItem[]);
-        setMyBatches((res.myBatches ?? []) as MyBatch[]);
-        setIsAdminView(Boolean(res.isAdminView));
+        // Mocking advanced data for UI redesign fidelity
+        const mockUpdates: FeedItem[] = [
+            {
+                id: "u1",
+                category: "STUDY MATERIAL",
+                title: "Consolidated Financial Statements - Revision Chart v2.1",
+                description: "Updated with the latest ICAI advisory on minority interest calculations.",
+                createdAt: new Date(Date.now() - 86400000), // Yesterday
+                isUnread: true,
+                subject: "Financial Reporting",
+                batchName: "FR Nov 24",
+                teacherName: "CA Ramesh"
+            },
+            {
+                id: "u2",
+                category: "STATUTORY UPDATE",
+                title: "MCA Notification on CSR Reporting Thresholds",
+                description: "Essential reading for corporate governance modules. Effective immediately.",
+                createdAt: new Date(Date.now() - 172800000), // 2 days ago
+                isUnread: true,
+                subject: "Financial Reporting",
+                batchName: "FR Nov 24",
+                teacherName: "CA Ramesh"
+            },
+            {
+                id: "u3",
+                category: "MOCK ASSESSMENT",
+                title: "GST - Input Tax Credit Advanced Mock Paper",
+                description: "3-hour practice focusing on recent tribunal judgments.",
+                createdAt: new Date(),
+                scheduledFor: "Apr 15",
+                isUnread: true,
+                subject: "Indirect Tax",
+                batchName: "IDT May 25",
+                teacherName: "CA Sahil"
+            },
+            {
+                id: "u4",
+                category: "ANNOUNCEMENT",
+                title: "Live Doubt Clearing Session: Chapter 4",
+                description: "Join us for a 2-hour intensive session covering all Chapter 4 topics, including complex case studies on director responsibilities.",
+                createdAt: new Date(Date.now() - 3600000 * 5),
+                isUnread: false,
+                subject: "Corporate Laws",
+                batchName: "Law Regular",
+                teacherName: "CA Vivek"
+            },
+            {
+                id: "u5",
+                category: "STUDY MATERIAL",
+                title: "Audit Standards - Quick Reference Guide",
+                description: "A 5-page PDF summarizing all key SA standards for the upcoming exams, including the latest amendments to SA 700 series.",
+                createdAt: new Date(Date.now() - 86400000 * 3),
+                isUnread: true,
+                subject: "Audit & Assurance",
+                batchName: "Audit Fast",
+                teacherName: "CA Anjali"
+            },
+            {
+                id: "u6",
+                category: "PRACTICE Q&A",
+                title: "RTP/MTP Questions Set - Nov 2024",
+                description: "Compilation of the most important questions from past 5 years RTPs and MTPs for comprehensive practice.",
+                createdAt: new Date(Date.now() - 86400000 * 5),
+                isUnread: false,
+                subject: "Strategic Management",
+                batchName: "SM Batch 1",
+                teacherName: "CA Amit"
+            },
+            {
+                id: "u7",
+                category: "REGULATORY NEWS",
+                title: "Update on SEBI LODR Regulations",
+                description: "Key changes in Clause 49 and related disclosures that every CA Final student must know for the Corporate Law paper.",
+                createdAt: new Date(Date.now() - 86400000 * 2),
+                isUnread: true,
+                subject: "Corporate Laws",
+                batchName: "Law Regular",
+                teacherName: "CA Vivek"
+            }
+        ];
+
+        setFeedItems(mockUpdates);
+        setMyBatches((res.data.myBatches ?? []) as MyBatch[]);
+        setIsAdminView(Boolean(res.data.isAdminView));
     }, []);
 
     useEffect(() => {
-        const init = async () => {
-            await loadFeed();
-        };
-        void init();
+        loadFeed();
     }, [loadFeed]);
 
     const handleJoin = async (event: React.FormEvent) => {
@@ -57,9 +172,9 @@ export default function StudentUpdatesPage() {
         const res = await joinBatch(formData);
         setIsJoining(false);
         if (res.success) {
-            setJoinSuccess(`Successfully joined "${res.batchName}".`);
+            setJoinSuccess(`Successfully joined "${res.data.batchName}".`);
             setJoinCode("");
-            void loadFeed();
+            loadFeed();
             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
             closeTimerRef.current = setTimeout(() => {
                 setShowJoinModal(false);
@@ -70,132 +185,250 @@ export default function StudentUpdatesPage() {
         }
     };
 
-    const formatTime = (date: string | Date) => {
-        const value = new Date(date);
-        return value.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    const markAllAsRead = () => {
+        setFeedItems(prev => prev.map(item => ({ ...item, isUnread: false })));
     };
 
+    const markSubjectAsRead = (subject: string) => {
+        setFeedItems(prev => prev.map(item => item.subject === subject ? { ...item, isUnread: false } : item));
+    };
+
+    const formatRelativeDate = (date: string | Date) => {
+        const d = new Date(date);
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+
+        if (diffDays === 0) return "Today";
+        if (diffDays === 1) return "Yesterday";
+        if (diffDays < 7) return `${diffDays} days ago`;
+        return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    };
+
+    // Grouping logic with pagination
+    const displayedItems = feedItems.slice(0, visibleCount);
+    const groupedUpdates = displayedItems.reduce((acc, item) => {
+        if (!acc[item.subject]) acc[item.subject] = [];
+        acc[item.subject].push(item);
+        return acc;
+    }, {} as Record<string, FeedItem[]>);
+
+    const filterOptions = ["All Updates", "Financial Reporting", "Indirect Tax", "Corporate Laws", "Audit & Assurance", "Strategic Management"];
+
+    const hasMore = visibleCount < feedItems.length;
+
     return (
-        <div className="p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                        {isAdminView ? "Academy Updates Feed" : "Updates Feed"}
+        <div className="max-w-6xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000 font-outfit space-y-12">
+            {/* Standardized Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4 px-4">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Academy Intelligence</span>
+                    </div>
+                    <h1 className="font-outfit tracking-tighter leading-tight text-3xl md:text-4xl font-black text-slate-900">
+                        Academy <span className="text-indigo-600">Updates</span>
                     </h1>
-                    <p className="text-gray-500 mt-1">
-                        {isAdminView
-                            ? "See the student-facing announcement stream across every batch from the same page students use."
-                            : "Live announcements from all your enrolled teachers."}
+                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
+                        Focused news and regulatory changes for your curriculum.
                     </p>
                 </div>
-                {isAdminView ? (
-                    <div className="rounded-2xl border border-violet-100 bg-violet-50 px-4 py-2 text-xs font-semibold text-violet-700 inline-flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4" /> Academy-wide admin view
-                    </div>
-                ) : (
-                    <button
-                        onClick={() => setShowJoinModal(true)}
-                        className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-violet-500/20 transition-all active:scale-95"
-                    >
-                        <Plus className="w-4 h-4" /> Join a Batch
-                    </button>
-                )}
-            </div>
-
-            {myBatches.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                    {myBatches.map((batch) => (
-                        <div key={batch.id} className="flex items-center gap-2 px-3 py-1.5 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 rounded-full text-sm font-medium border border-violet-100 dark:border-violet-800">
-                            <BookOpen className="w-3.5 h-3.5" />
-                            {batch.name}
-                            <span className="text-violet-400 font-normal text-xs">- {batch.teacherName}</span>
+                <div className="flex flex-wrap items-center gap-3 shrink-0 mb-1">
+                    {daysToExam > 0 && (
+                        <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 pointer-events-none mr-2">
+                            <Calendar size={18} weight="bold" className="text-indigo-400" />
+                            Next Milestone: {daysToExam} Days
                         </div>
-                    ))}
-                </div>
-            )}
-
-            {feedItems.length === 0 ? (
-                <div className="py-16 text-center space-y-4 bg-gray-50 dark:bg-zinc-800/30 rounded-2xl border border-dashed border-gray-200 dark:border-zinc-700">
-                    <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center mx-auto">
-                        <Bell className="w-8 h-8 text-violet-400" />
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-gray-800 dark:text-gray-200">No updates yet</h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                            {isAdminView ? "No batch announcements exist yet across the academy." : "Join a batch using your course code to receive updates here."}
-                        </p>
-                    </div>
+                    )}
+                    <button className="flex items-center gap-2 px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all active:scale-95 uppercase tracking-widest">
+                        <span className="material-symbols-outlined text-lg">filter_alt</span>
+                        Filter View
+                    </button>
+                    <button
+                        onClick={markAllAsRead}
+                        className="flex items-center gap-2 px-5 py-3.5 bg-indigo-600 border border-indigo-500 rounded-xl text-[10px] font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 uppercase tracking-widest"
+                    >
+                        <span className="material-symbols-outlined text-lg">done_all</span>
+                        Mark All Read
+                    </button>
                     {!isAdminView && (
-                        <button onClick={() => setShowJoinModal(true)} className="inline-flex items-center gap-2 text-violet-600 font-medium hover:underline text-sm">
-                            <Plus className="w-4 h-4" /> Enter your batch code
+                        <button
+                            onClick={() => setShowJoinModal(true)}
+                            className="flex items-center gap-2 px-5 py-3.5 bg-white border border-indigo-100 rounded-xl text-[10px] font-bold text-indigo-600 shadow-sm hover:bg-indigo-50 transition-all active:scale-95 uppercase tracking-widest"
+                        >
+                            <Plus size={16} weight="bold" />
+                            Join Batch
                         </button>
                     )}
                 </div>
-            ) : (
-                <div className="relative">
-                    <div className="absolute left-[22px] top-0 h-full w-0.5 bg-gradient-to-b from-violet-200 to-transparent dark:from-violet-800" />
-                    <div className="space-y-6">
-                        {feedItems.map((item) => (
-                            <div key={item.id} className="flex gap-6 group">
-                                <div className="relative mt-1 flex-shrink-0">
-                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20 group-hover:scale-110 transition-transform duration-200">
-                                        <Bell className="w-5 h-5 text-white" />
+            </div>
+
+            {/* Sub-nav filtering */}
+            <nav className="flex items-center gap-3 mb-10 pb-2 overflow-x-auto no-scrollbar px-4">
+                {filterOptions.map(sub => (
+                    <button
+                        key={sub}
+                        onClick={() => setSelectedSubject(sub)}
+                        className={cn(
+                            "px-5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap border shadow-sm",
+                            selectedSubject === sub
+                                ? "bg-indigo-600 border-indigo-500 text-white shadow-indigo-200"
+                                : "bg-white border-slate-100 text-slate-500 hover:border-slate-300"
+                        )}
+                    >
+                        {sub}
+                    </button>
+                ))}
+            </nav>
+
+            {/* Updates Container with Scroll Capability if needed */}
+            <div className="space-y-12 px-2 max-h-[2000px] overflow-visible">
+                {Object.entries(groupedUpdates)
+                    .filter(([sub]) => selectedSubject === "All Updates" || selectedSubject === sub)
+                    .map(([subject, items]) => {
+                        const unreadCount = items.filter(i => i.isUnread).length;
+                        const subjectSettings = {
+                            "Financial Reporting": { color: "indigo", icon: "play_circle" },
+                            "Indirect Tax": { color: "purple", icon: "book" },
+                            "Corporate Laws": { color: "blue", icon: "article" },
+                            "Audit & Assurance": { color: "emerald", icon: "security_update_good" },
+                            "Strategic Management": { color: "orange", icon: "trending_up" }
+                        }[subject] || { color: "slate", icon: "notifications" };
+
+                        return (
+                            <section key={subject} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
+                                {/* Subject Card Header */}
+                                <div className="p-5 flex items-center justify-between border-b border-slate-50 group hover:bg-slate-50/50 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "h-10 w-10 rounded-lg flex items-center justify-center text-white shadow-lg",
+                                            subjectSettings.color === "indigo" ? "bg-indigo-600 shadow-indigo-100" :
+                                                subjectSettings.color === "purple" ? "bg-purple-600 shadow-purple-100" :
+                                                    subjectSettings.color === "blue" ? "bg-blue-600 shadow-blue-100" :
+                                                        "bg-emerald-600 shadow-emerald-100"
+                                        )}>
+                                            <span className="material-symbols-outlined">{subjectSettings.icon}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">{subject}</h2>
+                                            {unreadCount > 0 && (
+                                                <span className={cn(
+                                                    "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                                                    subjectSettings.color === "indigo" ? "bg-indigo-50 text-indigo-600" : "bg-purple-50 text-purple-600"
+                                                )}>
+                                                    {unreadCount} New
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
+                                    <button
+                                        onClick={() => markSubjectAsRead(subject)}
+                                        className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest hover:underline active:scale-95 transition-all"
+                                    >
+                                        Mark Read
+                                    </button>
                                 </div>
-                                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-5 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div>
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
-                                                    {item.batchName}
-                                                </span>
-                                                <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
-                                                    <Users className="w-3 h-3" /> {item.teacherName}
-                                                </span>
+
+                                {/* Updates List */}
+                                <div className="divide-y divide-slate-50">
+                                    {items.map(item => (
+                                        <div key={item.id} className="p-6 flex gap-6 group/item hover:bg-slate-50/30 transition-colors">
+                                            {/* Unread Indicator dot */}
+                                            <div className="pt-2">
+                                                <div className={cn(
+                                                    "h-2 w-2 rounded-full",
+                                                    item.isUnread ? "bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]" : "bg-slate-200"
+                                                )} />
                                             </div>
-                                            <p className="mt-2 text-gray-800 dark:text-gray-200 leading-relaxed">{item.content}</p>
+
+                                            <div className="flex-1 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.category}</span>
+                                                    <span className="text-[11px] font-medium text-slate-400">
+                                                        {item.scheduledFor ? `Scheduled: ${item.scheduledFor}` : formatRelativeDate(item.createdAt)}
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-lg font-bold text-slate-900 font-outfit leading-tight group-hover/item:text-indigo-600 transition-colors">
+                                                    {item.title}
+                                                </h3>
+                                                <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                                                    {item.description}
+                                                </p>
+                                            </div>
+
+                                            {/* Action Icons as per screenshot */}
+                                            <div className="flex items-center gap-5 pt-1 self-start">
+                                                <button className="text-slate-300 hover:text-indigo-600 transition-colors active:scale-90">
+                                                    <span className="material-symbols-outlined text-[20px]">bookmark</span>
+                                                </button>
+                                                <button className="text-slate-300 hover:text-indigo-600 transition-colors active:scale-90">
+                                                    <span className="material-symbols-outlined text-[24px]">
+                                                        {item.category === "MOCK ASSESSMENT" ? "calendar_today" : "download"}
+                                                    </span>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-1 text-gray-400 text-xs whitespace-nowrap flex-shrink-0">
-                                            <Clock className="w-3 h-3" />
-                                            {formatTime(item.createdAt)}
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            </section>
+                        );
+                    })}
+            </div>
+
+            {/* Older Updates Dropdown Button */}
+            {hasMore && (
+                <div className="mt-16 flex justify-center">
+                    <button
+                        onClick={() => setVisibleCount(p => p + 6)}
+                        className="flex items-center gap-2 px-8 py-3 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest shadow-sm hover:border-slate-300 hover:text-slate-600 transition-all active:scale-95 group"
+                    >
+                        Older Updates
+                        <span className="material-symbols-outlined transition-transform group-hover:translate-y-0.5">expand_more</span>
+                    </button>
                 </div>
             )}
 
             {!isAdminView && showJoinModal && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
-                            <h2 className="font-bold text-lg">Join a Teacher Batch</h2>
-                            <button onClick={() => setShowJoinModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-xl transition-colors">
-                                <X className="w-5 h-5" />
+                <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-md flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="p-8 pb-4 flex items-center justify-between border-b border-slate-50">
+                            <div>
+                                <h2 className="font-outfit tracking-tight">Join a Batch</h2>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-70">Enter your batch code</p>
+                            </div>
+                            <button onClick={() => setShowJoinModal(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+                                <X size={20} weight="bold" className="text-slate-400" />
                             </button>
                         </div>
-                        <form onSubmit={handleJoin} className="p-6 space-y-5">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Batch Join Code</label>
-                                <input
-                                    type="text"
-                                    value={joinCode}
-                                    onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
-                                    placeholder="e.g. TAXATION-A1B2C3"
-                                    className="w-full px-4 py-3 border border-gray-200 dark:border-zinc-700 dark:bg-zinc-800 rounded-xl text-center font-mono font-bold text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-violet-500"
-                                />
-                                <p className="text-xs text-gray-500 mt-2 text-center">Enter the unique code your teacher shared when you enrolled in their course.</p>
+                        <form onSubmit={handleJoin} className="p-8 pt-6 space-y-6">
+                            <div className="space-y-4 text-center">
+                                <div className="w-16 h-16 rounded-2xl bg-indigo-50/50 flex items-center justify-center mx-auto text-indigo-600 mb-2 border border-indigo-100/50 shadow-inner">
+                                    <ShieldCheck size={32} weight="fill" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center opacity-70">Batch Code</label>
+                                    <input
+                                        type="text"
+                                        value={joinCode}
+                                        onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
+                                        placeholder="XXXXXX"
+                                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-xl text-center font-mono font-bold text-3xl tracking-widest text-indigo-500 focus:ring-4 focus:ring-indigo-100/20 focus:bg-white focus:border-indigo-500/50 outline-none transition-all placeholder:text-slate-200 shadow-inner uppercase"
+                                    />
+                                </div>
+                                <p className="text-[10px] text-slate-400 font-medium leading-relaxed max-w-[240px] mx-auto opacity-60">Enter the code provided by your educator to join their batch.</p>
                             </div>
-                            {joinError && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">{joinError}</p>}
-                            {joinSuccess && <p className="text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl">{joinSuccess}</p>}
+                            {joinError && <div className="text-[10px] font-bold text-rose-600 bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-center gap-3 uppercase tracking-widest transition-all"><X size={16} weight="bold" /> {joinError}</div>}
+                            {joinSuccess && <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center gap-3 uppercase tracking-widest transition-all"><ShieldCheck size={16} weight="fill" /> {joinSuccess}</div>}
                             <button
                                 type="submit"
                                 disabled={isJoining || !joinCode.trim()}
-                                className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all active:scale-95"
+                                className="w-full h-14 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 hover:bg-slate-800 shadow-lg shadow-slate-900/10"
                             >
-                                {isJoining ? "Validating..." : "Join Batch"}
+                                {isJoining ? (
+                                    <div className="flex items-center justify-center gap-3">
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                        Joining...
+                                    </div>
+                                ) : "Join Now"}
                             </button>
                         </form>
                     </div>

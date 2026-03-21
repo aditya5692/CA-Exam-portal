@@ -2,8 +2,9 @@
 
 import prisma from "@/lib/prisma/client";
 import { getCurrentUser, setAuthSession } from "@/lib/auth/session";
+import { ActionResponse } from "@/types/shared";
 
-export async function activateProPlan() {
+export async function activateProPlan(): Promise<ActionResponse<void>> {
     try {
         const user = await getCurrentUser();
 
@@ -24,7 +25,7 @@ export async function activateProPlan() {
         // Update the auth session cookie to reflect the new plan
         await setAuthSession(updatedUser);
 
-        return { success: true, message: "Your PRO plan has been successfully activated!" };
+        return { success: true, message: "Your PRO plan has been successfully activated!", data: undefined };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "An unexpected error occurred during activation." };
     }

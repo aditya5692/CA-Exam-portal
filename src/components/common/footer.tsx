@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { GraduationCap, FacebookLogo, TwitterLogo, InstagramLogo, LinkedinLogo, YoutubeLogo, PaperPlaneTilt } from "@phosphor-icons/react";
 
-export function EliteFooter() {
+export function Footer() {
     return (
         <footer className="bg-white border-t border-gray-100 pt-24 pb-12 px-6 sm:px-12 overflow-hidden">
             <div className="max-w-7xl mx-auto">

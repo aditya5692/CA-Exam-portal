@@ -139,25 +139,26 @@ export function verifyPassword(password: string, storedHash: string | null | und
 }
 
 async function upsertDemoUser(seed: DemoAccountSeed) {
-    return prisma.user.upsert({
-        where: { registrationNumber: seed.registrationNumber },
-        update: {
-            fullName: seed.fullName,
-            email: seed.email,
-            department: seed.department,
-            role: seed.role,
-            plan: seed.plan,
-            storageLimit: seed.storageLimit,
-            designation: seed.designation ?? null,
-            expertise: seed.expertise ?? null,
-            examTarget: seed.examTarget ?? null,
-            preferredLanguage: seed.preferredLanguage ?? null,
-            timezone: seed.timezone ?? null,
-            bio: seed.bio ?? null,
-            phone: seed.phone ?? null,
-            passwordHash: createPasswordHash(DEMO_LOGIN_PASSWORD, seed.registrationNumber),
-        },
-        create: {
+  return prisma.user.upsert({
+    where: { registrationNumber: seed.registrationNumber },
+    update: {
+      fullName: seed.fullName,
+      email: seed.email,
+      registrationNumber: seed.registrationNumber,
+      department: seed.department,
+      role: seed.role,
+      plan: seed.plan,
+      storageLimit: seed.storageLimit,
+      designation: seed.designation ?? null,
+      expertise: seed.expertise ?? null,
+      examTarget: seed.examTarget ?? null,
+      preferredLanguage: seed.preferredLanguage ?? null,
+      timezone: seed.timezone ?? null,
+      bio: seed.bio ?? null,
+      phone: seed.phone ?? null,
+      passwordHash: createPasswordHash(DEMO_LOGIN_PASSWORD, seed.registrationNumber),
+    },
+    create: {
             fullName: seed.fullName,
             email: seed.email,
             registrationNumber: seed.registrationNumber,
@@ -204,33 +205,33 @@ async function ensureDemoTeachingData(users: Record<DemoAccountKey, User>) {
         },
     });
 
-    await prisma.enrollment.upsert({
-        where: {
-            studentId_batchId: {
-                studentId: users.student1.id,
-                batchId: taxationBatch.id,
-            },
-        },
-        update: {},
-        create: {
-            studentId: users.student1.id,
-            batchId: taxationBatch.id,
-        },
-    });
+  await prisma.enrollment.upsert({
+    where: {
+      studentId_batchId: {
+        studentId: users.student1.id,
+        batchId: taxationBatch.id,
+      },
+    },
+    update: {},
+    create: {
+      studentId: users.student1.id,
+      batchId: taxationBatch.id,
+    },
+  });
 
-    await prisma.enrollment.upsert({
-        where: {
-            studentId_batchId: {
-                studentId: users.student2.id,
-                batchId: auditBatch.id,
-            },
-        },
-        update: {},
-        create: {
-            studentId: users.student2.id,
-            batchId: auditBatch.id,
-        },
-    });
+  await prisma.enrollment.upsert({
+    where: {
+      studentId_batchId: {
+        studentId: users.student2.id,
+        batchId: auditBatch.id,
+      },
+    },
+    update: {},
+    create: {
+      studentId: users.student2.id,
+      batchId: auditBatch.id,
+    },
+  });
 }
 
 export async function ensureDemoAccounts() {

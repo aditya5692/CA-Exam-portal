@@ -3,14 +3,23 @@
 import { useState, useEffect } from "react";
 import { deletePersonalMaterial, getMyVaultMaterials, uploadPersonalMaterial } from "@/actions/vault-actions";
 import { getStudentSharedMaterials } from "@/actions/educator-actions";
-import { Upload, FileText, Lock, Unlock, Folder as FolderIcon, X, ShieldCheck, Trash2, Users, BookOpen, Clock } from "lucide-react";
+import { toggleSavedItem, getSavedItems } from "@/actions/student-actions";
+import { getStudentProfile } from "@/actions/profile-actions";
+import { Upload, FileText, Lock, Unlock, Folder as FolderIcon, X, ShieldCheck, Trash2, Users, BookOpen, Clock, Bookmark, Star, Download, Flame } from "lucide-react";
+import { Calendar } from "@phosphor-icons/react";
+import { cn } from "@/lib/utils";
 
 type VaultMaterial = {
     id: string;
     title: string;
+    description?: string;
     fileUrl: string;
     sizeInBytes: number;
     createdAt: string | Date;
+    subType: string;
+    downloads: number;
+    rating: number;
+    isTrending: boolean;
     uploadedBy?: {
         id: string;
         fullName: string | null;
@@ -21,8 +30,13 @@ type VaultMaterial = {
 type SharedMaterial = {
     id: string;
     title: string;
+    description?: string;
     fileUrl: string;
     isProtected: boolean;
+    subType: string;
+    downloads: number;
+    rating: number;
+    isTrending: boolean;
     uploadedBy?: {
         fullName: string | null;
         email: string | null;
@@ -47,21 +61,51 @@ export default function StudentVaultPage() {
     const [isAdminView, setIsAdminView] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [viewFileUrl, setViewFileUrl] = useState<string | null>(null);
+    const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+    const [daysToExam, setDaysToExam] = useState(0);
 
     const loadData = async () => {
         const vaultRes = await getMyVaultMaterials();
-        if (vaultRes.success) {
-            setMaterials((vaultRes.materials ?? []) as VaultMaterial[]);
-            setStorageUsed(vaultRes.storageUsed || 0);
-            setStorageLimit(vaultRes.storageLimit || 52428800);
-            setManagedStudentsCount(vaultRes.managedStudentsCount || 1);
-            setIsAdminView(Boolean(vaultRes.isAdminView));
+        if (vaultRes.success && vaultRes.data) {
+            setMaterials((vaultRes.data.materials ?? []) as VaultMaterial[]);
+            setStorageUsed(vaultRes.data.storageUsed || 0);
+            setStorageLimit(vaultRes.data.storageLimit || 52428800);
+            setManagedStudentsCount(vaultRes.data.managedStudentsCount || 1);
+            setIsAdminView(Boolean(vaultRes.data.isAdminView));
         }
 
         const sharedRes = await getStudentSharedMaterials();
-        if (sharedRes.success) {
-            setSharedMaterials((sharedRes.materials ?? []) as SharedMaterial[]);
-            setIsAdminView((current) => current || Boolean(sharedRes.isAdminView));
+        if (sharedRes.success && sharedRes.data) {
+            const sd = sharedRes.data;
+            setSharedMaterials((sd.materials ?? []) as SharedMaterial[]);
+            setIsAdminView((current) => current || Boolean(sd.isAdminView));
+        }
+
+        const profileRes = await getStudentProfile();
+        if (profileRes.success && profileRes.data?.examTarget) {
+            const userTarget = profileRes.data.examTarget;
+            const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
+            const parts = userTarget.split(" ");
+            if (parts.length >= 2) {
+                const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
+                const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
+                const yrPart = parseInt(parts[parts.length - 1]);
+                if (moKey && !isNaN(yrPart)) {
+                    const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
+                    const now = new Date();
+                    const diffTime = targetDate.getTime() - now.getTime();
+                    setDaysToExam(Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24))));
+                }
+            }
+        }
+
+        const savedRes = await getSavedItems();
+        if (savedRes.success && savedRes.data) {
+            const ids = new Set([
+                ...(savedRes.data.materials || []).map((m: any) => m.id),
+                ...(savedRes.data.exams || []).map((e: any) => e.id)
+            ]);
+            setSavedIds(ids);
         }
     };
 
@@ -93,7 +137,7 @@ export default function StudentVaultPage() {
     };
 
     const handleDelete = async (materialId: string) => {
-        const confirmed = window.confirm("Delete this note from the vault?");
+        const confirmed = window.confirm("Are you sure you want to delete this material?");
         if (!confirmed) {
             return;
         }
@@ -103,6 +147,18 @@ export default function StudentVaultPage() {
             await loadData();
         } else {
             alert(res.message || "Delete failed.");
+        }
+    };
+
+    const handleToggleSave = async (id: string, type: "MATERIAL" | "EXAM") => {
+        const res = await toggleSavedItem(id, type);
+        if (res.success && res.data) {
+            setSavedIds(prev => {
+                const next = new Set(prev);
+                if (res.data!.saved) next.add(id);
+                else next.delete(id);
+                return next;
+            });
         }
     };
 
@@ -116,37 +172,58 @@ export default function StudentVaultPage() {
     const usagePercent = storageLimit > 0 ? Math.min(100, (storageUsed / storageLimit) * 100) : 0;
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        {isAdminView ? "Academy Study Vault" : "Smart Study Vault"}
+        <div className="p-8 max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500 font-outfit">
+            {/* Standardized Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                            {isAdminView ? "Admin Protocol" : "Scholarly Assets"}
+                        </span>
+                    </div>
+                    <h1 className="font-outfit tracking-tighter leading-tight text-3xl md:text-4xl font-black text-slate-900">
+                        {isAdminView ? "Materials" : "Study"} <span className="text-indigo-600">{isAdminView ? "Library" : "Notes"}</span>
                     </h1>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
                         {isAdminView
-                            ? "Monitor student-owned notes and distributed educator materials from the same student vault surface."
-                            : "Organize your notes and access premium educator materials."}
+                            ? "Manage student storage and shared educator resources from a central dashboard."
+                            : "Access your personal study materials and resources shared by your educators."}
                     </p>
                 </div>
+                {daysToExam > 0 && !isAdminView && (
+                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 mb-1 pointer-events-none">
+                        <Calendar size={18} weight="bold" className="text-indigo-400" />
+                        Next Milestone: {daysToExam} Days
+                    </div>
+                )}
+            </div>
 
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                <div className="flex items-center gap-4">
                     {isAdminView && (
-                        <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-700 inline-flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4" /> Academy-wide admin view
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-5 py-3.5 text-[10px] font-bold text-indigo-700 inline-flex items-center gap-2 uppercase tracking-widest shadow-sm">
+                            <ShieldCheck size={18} /> Admin View
                         </div>
                     )}
-                    <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 rounded-lg">
+                    <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                         <button
                             onClick={() => setActiveTab("MY_NOTES")}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "MY_NOTES" ? "bg-white dark:bg-zinc-700 shadow flex items-center gap-2" : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-2"}`}
+                            className={cn(
+                                "px-6 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-200 flex items-center gap-2",
+                                activeTab === "MY_NOTES" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-900"
+                            )}
                         >
-                            <FolderIcon className="w-4 h-4" /> {isAdminView ? "Student Notes" : "My Notes"}
+                            <FolderIcon size={16} /> {isAdminView ? "Student Files" : "Personal Notes"}
                         </button>
                         <button
                             onClick={() => setActiveTab("EDUCATOR")}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === "EDUCATOR" ? "bg-white dark:bg-zinc-700 shadow flex items-center gap-2" : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-2"}`}
+                            className={cn(
+                                "px-6 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-200 flex items-center gap-2",
+                                activeTab === "EDUCATOR" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-900"
+                            )}
                         >
-                            <Lock className="w-4 h-4" /> Educator Materials
+                            <Lock size={16} /> {isAdminView ? "Shared Resources" : "Educator Files"}
                         </button>
                     </div>
                 </div>
@@ -154,29 +231,41 @@ export default function StudentVaultPage() {
 
             {activeTab === "MY_NOTES" && (
                 <div className="space-y-6">
-                    <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm">
-                        <div className="flex justify-between items-center mb-2 gap-4">
-                            <span className="text-sm font-medium">{isAdminView ? `Managed Student Storage (${managedStudentsCount})` : "Storage Quota (Free Plan)"}</span>
-                            <span className="text-sm font-bold text-blue-600">
-                                {formatBytes(storageUsed)} / {formatBytes(storageLimit)}
-                            </span>
+                    <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+                        <div className="flex justify-between items-end mb-5 gap-4">
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-80">{isAdminView ? `Total Student Storage (${managedStudentsCount})` : "Personal Storage"}</span>
+                                <p className="text-3xl font-bold font-outfit text-slate-950 tracking-tight">
+                                    {formatBytes(storageUsed)} <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-2 font-sans opacity-60">Used</span>
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-[10px] font-bold text-indigo-500/80 tracking-widest uppercase bg-indigo-50/50 px-4 py-2 rounded-full border border-indigo-100/50">
+                                    Limit: {formatBytes(storageLimit)}
+                                </span>
+                            </div>
                         </div>
-                        <div className="w-full bg-gray-100 dark:bg-zinc-800 rounded-full h-3">
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
                             <div
-                                className={`h-3 rounded-full transition-all duration-1000 ${usagePercent > 90 ? "bg-red-500" : "bg-gradient-to-r from-blue-500 to-indigo-500"}`}
+                                className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.2)] ${usagePercent > 90 ? "bg-rose-500" : "bg-indigo-500"}`}
                                 style={{ width: `${usagePercent}%` }}
                             />
                         </div>
                         {!isAdminView && usagePercent > 80 && (
-                            <p className="text-xs text-red-500 mt-2">You are nearing your storage limit. Upgrade to Pro for 1GB.</p>
+                            <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mt-4 flex items-center gap-2">
+                                <Clock className="w-4 h-4" /> Storage limit almost reached. Upgrade to Pro for more space.
+                            </p>
                         )}
                     </div>
 
-                    <div className="flex justify-between items-center gap-4">
-                        <h2 className="text-xl font-semibold">{isAdminView ? "Recent Student Notes" : "Recent Uploads"}</h2>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-950 font-outfit tracking-tight">{isAdminView ? "Document Index" : "Materials"}</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-70">Manage your study files</p>
+                        </div>
                         {!isAdminView && (
-                            <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                                {isUploading ? <span className="animate-spin text-xl">o</span> : <Upload className="w-4 h-4" />}
+                            <label className="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-slate-900/10 border border-slate-900">
+                                {isUploading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Upload size={18} />}
                                 {isUploading ? "Uploading..." : "Upload File"}
                                 <input type="file" className="hidden" onChange={handleUpload} accept=".pdf,.png,.jpg,.jpeg" disabled={isUploading} />
                             </label>
@@ -185,38 +274,89 @@ export default function StudentVaultPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {materials.length === 0 ? (
-                            <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700">
-                                {isAdminView ? "No student notes have been uploaded yet." : "No personal notes uploaded yet."}
+                            <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
+                                    <BookOpen className="w-8 h-8 text-slate-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-800 font-outfit tracking-tight uppercase">Empty</h3>
+                                <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2 opacity-70">
+                                    {isAdminView ? "No files have been added yet." : "Upload your first study material to get started."}
+                                </p>
                             </div>
                         ) : (
                             materials.map((material) => (
-                                <div key={material.id} className="group bg-white dark:bg-zinc-900 p-5 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <button className="text-left flex-1" onClick={() => setViewFileUrl(material.fileUrl)}>
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg">
-                                                    <FileText className="w-6 h-6" />
-                                                </div>
-                                                <span className="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-zinc-800 rounded-full">
-                                                    {formatBytes(material.sizeInBytes)}
-                                                </span>
+                                <div key={material.id} className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden flex flex-col h-full">
+                                    {material.isTrending && (
+                                        <div className="absolute top-4 left-4 z-10">
+                                            <span className="bg-amber-50 border border-amber-100 text-amber-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                                <Flame className="w-3.5 h-3.5 fill-current" /> Trending
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-start justify-between gap-4 mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl border border-slate-100 shadow-inner group-hover:bg-indigo-50 group-hover:text-indigo-500/80 transition-all duration-300">
+                                                <FileText className="w-6 h-6" />
                                             </div>
-                                            <h3 className="font-semibold mt-4 line-clamp-1">{material.title}</h3>
-                                            <p className="text-xs text-gray-500 mt-1">Uploaded {new Date(material.createdAt).toLocaleDateString()}</p>
-                                            {isAdminView && (
-                                                <p className="text-xs text-gray-500 mt-2">
-                                                    Student: {material.uploadedBy?.fullName || material.uploadedBy?.email || "Student"}
-                                                </p>
-                                            )}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => void handleDelete(material.id)}
-                                            className="rounded-lg bg-gray-100 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                            title="Delete material"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                            <div>
+                                                <span className="text-[10px] font-bold text-indigo-500/80 uppercase tracking-widest bg-indigo-50/50 px-2.5 py-1 rounded-full border border-indigo-100/50">{material.subType}</span>
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 ml-1 opacity-70">
+                                                    {formatBytes(material.sizeInBytes)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleSave(material.id, "MATERIAL");
+                                                }}
+                                                className={cn(
+                                                    "rounded-xl p-2.5 transition-all active:scale-95 border",
+                                                    savedIds.has(material.id)
+                                                        ? "bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-900/10"
+                                                        : "bg-slate-50 border-slate-100 text-slate-400 hover:text-indigo-500 hover:bg-white hover:border-indigo-100"
+                                                )}
+                                                title={savedIds.has(material.id) ? "Saved" : "Save for later"}
+                                            >
+                                                <Bookmark className={cn("w-4 h-4", savedIds.has(material.id) && "fill-current")} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    void handleDelete(material.id);
+                                                }}
+                                                className="rounded-xl bg-slate-50 p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-100 hover:border-rose-100 active:scale-95"
+                                                title="Delete asset"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
+                                        <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
+                                            {material.title}
+                                        </h3>
+                                        {material.description && (
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 line-clamp-1 opacity-60">{material.description}</p>
+                                        )}
+                                    </button>
+                                    
+                                    <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-50">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                <Download className="w-3.5 h-3.5 text-indigo-500" /> {material.downloads > 1000 ? (material.downloads/1000).toFixed(1)+'k' : material.downloads}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {material.rating?.toFixed(1) || "5.0"}
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                            {new Date(material.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </span>
                                     </div>
                                 </div>
                             ))
@@ -227,15 +367,20 @@ export default function StudentVaultPage() {
 
             {activeTab === "EDUCATOR" && (
                 <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border border-indigo-100 dark:border-indigo-900/50 p-6 rounded-xl">
-                        <h2 className="text-lg font-semibold text-indigo-900 dark:text-indigo-200 flex items-center gap-2">
-                            <Lock className="w-5 h-5" /> {isAdminView ? "Distributed Educator Materials" : "Secured Educator Hub"}
-                        </h2>
-                        <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-2">
-                            {isAdminView
-                                ? "Review the material library teachers have distributed to students across the academy."
-                                : "These premium materials have been shared with you by your registered educators. They do not count towards your personal storage quota."}
-                        </p>
+                    <div className="bg-slate-900 p-8 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group">
+                        <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400 shrink-0">
+                            <Lock size={28} />
+                        </div>
+                        <div className="flex-1 space-y-2 text-center md:text-left">
+                            <h2 className="text-2xl font-bold text-white font-outfit tracking-tight">
+                                {isAdminView ? "Educator Materials" : "Educator Resources"}
+                            </h2>
+                            <p className="text-slate-400 font-medium max-w-2xl leading-relaxed text-sm opacity-80 mt-1">
+                                {isAdminView
+                                    ? "These and high-value materials are managed directly by educators."
+                                    : "Premium resources shared by your faculty. These do not count towards your personal storage limit."}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -245,22 +390,73 @@ export default function StudentVaultPage() {
                             </div>
                         ) : (
                             sharedMaterials.map((material) => (
-                                <div key={material.id} className="group bg-white dark:bg-zinc-900 p-5 rounded-xl border border-indigo-100 dark:border-indigo-900/30 shadow-sm hover:shadow-md transition-all cursor-pointer relative overflow-hidden" onClick={() => setViewFileUrl(material.fileUrl)}>
-                                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 transform rotate-45 translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform duration-500" />
-                                    <div className="flex items-start justify-between relative z-10">
-                                        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-lg">
-                                            {material.isProtected ? <Lock className="w-6 h-6" /> : <Unlock className="w-6 h-6" />}
+                                <div key={material.id} className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
+                                     {material.isTrending && (
+                                        <div className="absolute top-4 left-4 z-10">
+                                            <span className="bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                                <Flame className="w-3.5 h-3.5 fill-current" /> Trending
+                                            </span>
                                         </div>
-                                        {isAdminView && (
-                                            <div className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-1 text-[10px] font-semibold text-indigo-700">
-                                                <Users className="w-3 h-3" /> {material.accessedBy?.length || 0}
+                                    )}
+                                    
+                                    <div className="flex items-start justify-between relative z-10 mb-6 gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500/80 rounded-xl">
+                                                {material.isProtected ? <Lock className="w-6 h-6" /> : <Unlock className="w-6 h-6" />}
                                             </div>
-                                        )}
+                                            <div>
+                                                <span className="text-[10px] font-bold text-indigo-500/80 uppercase tracking-widest">{material.subType}</span>
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Study Material</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-col items-end gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleSave(material.id, "MATERIAL");
+                                                }}
+                                                className={cn(
+                                                    "rounded-xl p-2.5 transition-all shadow-sm border active:scale-95",
+                                                    savedIds.has(material.id)
+                                                        ? "bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-900/10"
+                                                        : "bg-white border-slate-100 text-slate-400 hover:text-indigo-500 hover:border-indigo-100"
+                                                )}
+                                                title={savedIds.has(material.id) ? "Saved" : "Save for later"}
+                                            >
+                                                <Bookmark className={cn("w-4 h-4", savedIds.has(material.id) && "fill-current")} />
+                                            </button>
+                                            {isAdminView && (
+                                                <div className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-500/80">
+                                                    <Users className="w-3 h-3" /> {material.accessedBy?.length || 0}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mt-4 line-clamp-1 relative z-10">{material.title}</h3>
-                                    <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 relative z-10 font-medium border-t border-indigo-50 pt-2 mt-3">
-                                        By {material.uploadedBy?.fullName || material.uploadedBy?.email || "Educator"}
-                                    </p>
+                                    
+                                    <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
+                                        <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
+                                            {material.title}
+                                        </h3>
+                                        {material.description && (
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 line-clamp-2 min-h-[32px] opacity-60">{material.description}</p>
+                                        )}
+                                    </button>
+
+                                    <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-50">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                <Download className="w-3.5 h-3.5 text-indigo-400" /> {material.downloads > 1000 ? (material.downloads/1000).toFixed(1)+'k' : material.downloads}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {material.rating?.toFixed(1) || "5.0"}
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-indigo-400 bg-indigo-50/50 px-2 py-0.5 rounded-full border border-indigo-100/50">
+                                            By {material.uploadedBy?.fullName?.split(' ')[1] || "Expert"}
+                                        </span>
+                                    </div>
                                 </div>
                             ))
                         )}
@@ -271,17 +467,17 @@ export default function StudentVaultPage() {
             {viewFileUrl && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-zinc-900 w-full max-w-5xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950">
-                            <h3 className="font-semibold flex items-center gap-2">
-                                <Lock className="w-4 h-4 text-indigo-500" /> Secure Document Viewer
+                        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
+                            <h3 className="font-bold flex items-center gap-2 text-slate-800 font-outfit tracking-tight">
+                                <FileText size={18} className="text-indigo-600" /> Document Viewer
                             </h3>
-                            <button onClick={() => setViewFileUrl(null)} className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                                <X className="w-5 h-5" />
+                            <button onClick={() => setViewFileUrl(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400 hover:text-slate-900">
+                                <X size={20} />
                             </button>
                         </div>
-                        <div className="flex-1 bg-gray-100 dark:bg-zinc-900 p-4 relative" onContextMenu={(event) => event.preventDefault()}>
-                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-5 rotate-[-30deg]">
-                                <span className="text-6xl font-black text-black dark:text-white">MODERN-CA-PORTAL</span>
+                        <div className="flex-1 bg-slate-100 p-4 relative" onContextMenu={(event) => event.preventDefault()}>
+                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg]">
+                                <span className="text-6xl font-bold text-slate-950 uppercase tracking-widest">CA EXAM PORTAL</span>
                             </div>
                             {viewFileUrl.endsWith(".pdf") ? (
                                 <iframe src={`${viewFileUrl}#toolbar=0`} title="Secure Document Viewer" className="w-full h-full rounded-lg shadow-sm bg-white" />

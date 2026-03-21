@@ -3,10 +3,12 @@
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
+import { Prisma } from "@prisma/client";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { ActionResponse } from "@/types/shared";
 
 async function getOrCreateMockUser() {
     return getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
@@ -16,7 +18,10 @@ function isAdminUser(user: { role: string }) {
     return user.role === "ADMIN";
 }
 
-export async function checkStorageQuota(userId: string, incomingSize: number) {
+/**
+ * Checks if a user has sufficient storage quota for an incoming file.
+ */
+export async function checkStorageQuota(userId: string, incomingSize: number): Promise<boolean> {
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { storageUsed: true, storageLimit: true },
@@ -31,7 +36,10 @@ export async function checkStorageQuota(userId: string, incomingSize: number) {
     return true;
 }
 
-export async function uploadPersonalMaterial(formData: FormData) {
+/**
+ * Uploads a personal study material to the user's vault.
+ */
+export async function uploadPersonalMaterial(formData: FormData): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<{}>>> {
     try {
         const file = formData.get("file") as File | null;
         if (!file) throw new Error("No file provided");
@@ -48,8 +56,7 @@ export async function uploadPersonalMaterial(formData: FormData) {
         const uploadDir = join(process.cwd(), "public", "uploads");
         try {
             await mkdir(uploadDir, { recursive: true });
-        } catch {
-        }
+        } catch { }
 
         const fileExt = file.name.split(".").pop() || "tmp";
         const fileName = `${randomUUID()}.${fileExt}`;
@@ -85,14 +92,32 @@ export async function uploadPersonalMaterial(formData: FormData) {
         ]);
 
         revalidatePath("/student/materials");
-        return { success: true, material };
+        return { success: true, data: material, message: "File uploaded successfully." };
     } catch (error: unknown) {
-        console.error("Upload error:", error);
+        console.error("uploadPersonalMaterial error:", error);
         return { success: false, message: error instanceof Error ? error.message : "Upload failed." };
     }
 }
 
-export async function getMyVaultMaterials() {
+export type VaultMaterialWithOwner = Prisma.StudyMaterialGetPayload<{
+    include: { uploadedBy: { select: { id: true, fullName: true, email: true } } }
+}>;
+
+/**
+ * Result data for vault material retrieval.
+ */
+export type VaultMaterialsData = {
+    materials: VaultMaterialWithOwner[];
+    storageUsed: number;
+    storageLimit: number;
+    managedStudentsCount: number;
+    isAdminView: boolean;
+};
+
+/**
+ * Fetches materials from the personal vault for the current user.
+ */
+export async function getMyVaultMaterials(): Promise<ActionResponse<VaultMaterialsData>> {
     try {
         const user = await getOrCreateMockUser();
         await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "read");
@@ -128,11 +153,13 @@ export async function getMyVaultMaterials() {
 
             return {
                 success: true,
-                materials: personalMaterials,
-                storageUsed: aggregate._sum.storageUsed ?? 0,
-                storageLimit: aggregate._sum.storageLimit ?? 0,
-                managedStudentsCount: aggregate._count.id,
-                isAdminView: true,
+                data: {
+                    materials: personalMaterials as VaultMaterialWithOwner[],
+                    storageUsed: aggregate._sum.storageUsed ?? 0,
+                    storageLimit: aggregate._sum.storageLimit ?? 0,
+                    managedStudentsCount: aggregate._count.id,
+                    isAdminView: true,
+                }
             };
         }
 
@@ -154,19 +181,24 @@ export async function getMyVaultMaterials() {
 
         return {
             success: true,
-            materials: personalMaterials,
-            storageUsed: user.storageUsed,
-            storageLimit: user.storageLimit,
-            managedStudentsCount: 1,
-            isAdminView: false,
+            data: {
+                materials: personalMaterials as VaultMaterialWithOwner[],
+                storageUsed: user.storageUsed,
+                storageLimit: user.storageLimit,
+                managedStudentsCount: 1,
+                isAdminView: false,
+            }
         };
     } catch (error: unknown) {
-        console.error("Fetch error:", error);
+        console.error("getMyVaultMaterials error:", error);
         return { success: false, message: error instanceof Error ? error.message : "Failed to fetch vault materials." };
     }
 }
 
-export async function deletePersonalMaterial(materialId: string) {
+/**
+ * Deletes a personal material from the user's vault.
+ */
+export async function deletePersonalMaterial(materialId: string): Promise<ActionResponse<void>> {
     try {
         const user = await getOrCreateMockUser();
         await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "delete");
@@ -210,8 +242,10 @@ export async function deletePersonalMaterial(materialId: string) {
         ]);
 
         revalidatePath("/student/materials");
-        return { success: true };
+        return { success: true, message: "Material deleted successfully.", data: undefined };
     } catch (error: unknown) {
+        console.error("deletePersonalMaterial error:", error);
         return { success: false, message: error instanceof Error ? error.message : "Failed to delete material." };
     }
 }
+

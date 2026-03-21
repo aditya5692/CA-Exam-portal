@@ -2,27 +2,27 @@
 
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
+import { clampNumber, getActionErrorMessage, withSerializableTransaction } from "@/lib/server/action-utils";
 import { revalidatePath } from "next/cache";
+import { ActionResponse } from "@/types/shared";
 
 /**
- * CA Level → Exam category string stored on the Exam model
+ * CA Level -> Exam category string stored on the Exam model
  */
 const CA_LEVEL_CATEGORY: Record<string, string> = {
     foundation: "CA Foundation",
-    ipc: "CA Intermediate (IPC)",
+    ipc: "CA Intermediate",
     final: "CA Final",
 };
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-
 export type PublishTarget =
-    | { kind: "all" }                        // all students of the chosen category
-    | { kind: "batch"; batchId: string };    // students in one specific batch
+    | { kind: "all" }
+    | { kind: "batch"; batchId: string };
 
 export type ParsedQuestion = {
     prompt: string;
-    options: string[];       // [A, B, C, D]
-    correct: number[];       // 0-indexed array
+    options: string[];
+    correct: number[];
     subject?: string;
     topic?: string;
     difficulty?: string;
@@ -33,102 +33,156 @@ export type PublishExamInput = {
     title: string;
     caLevel: "foundation" | "ipc" | "final";
     subject: string;
+    chapter?: string;
     durationMinutes: number;
+    examType?: string;
     target: PublishTarget;
     questions: ParsedQuestion[];
 };
 
-export type PublishExamResult =
-    | { success: true; examId: string; examTitle: string; targetLabel: string; questionCount: number }
-    | { success: false; error: string };
+export type PublishExamResultData = {
+    examId: string;
+    examTitle: string;
+    targetLabel: string;
+    questionCount: number;
+};
 
-// ── Server action ──────────────────────────────────────────────────────────────
-
+/**
+ * Publishes an exam from a list of parsed questions.
+ */
 export async function publishExamFromQuestions(
     input: PublishExamInput
-): Promise<PublishExamResult> {
+): Promise<ActionResponse<PublishExamResultData>> {
     try {
         const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const normalizedTitle = input.title.trim();
+        const normalizedSubject = input.subject.trim();
+        const normalizedChapter = input.chapter?.trim() || null;
+        const normalizedExamType = input.examType?.trim() || "GENERAL";
+        const normalizedDuration = clampNumber(
+            Math.round(Number(input.durationMinutes) || 0),
+            1,
+            24 * 60,
+        );
+        const normalizedQuestions = input.questions.map((question) => ({
+            prompt: question.prompt.trim(),
+            options: question.options.map((option) => option.trim()).filter(Boolean),
+            correct: Array.from(new Set(
+                question.correct
+                    .map((index) => Math.round(Number(index)))
+                    .filter((index) => Number.isInteger(index) && index >= 0),
+            )).sort((left, right) => left - right),
+            subject: question.subject?.trim() || normalizedSubject,
+            topic: question.topic?.trim() || null,
+            difficulty: question.difficulty?.trim() || "MEDIUM",
+            explanation: question.explanation?.trim() || null,
+        }));
 
-        if (input.questions.length === 0) {
-            return { success: false, error: "No questions to publish." };
+        if (!normalizedTitle) {
+            return { success: false, message: "Exam title is required." };
         }
 
-        // ── Validate batch ownership if target is batch-specific ────────────
-        let resolvedBatchId: string | null = null;
-        let targetLabel = "All Students";
+        if (!normalizedSubject) {
+            return { success: false, message: "Subject is required." };
+        }
 
-        if (input.target.kind === "batch") {
-            const batch = await prisma.batch.findFirst({
-                where: {
-                    id: input.target.batchId,
-                    // Admin can publish to any batch; teacher only to their own
-                    ...(teacher.role !== "ADMIN" ? { teacherId: teacher.id } : {}),
-                },
-                select: { id: true, name: true },
-            });
+        if (normalizedQuestions.length === 0) {
+            return { success: false, message: "No questions to publish." };
+        }
 
-            if (!batch) {
-                return {
-                    success: false,
-                    error: "The selected batch was not found or you do not own it.",
-                };
+        for (const question of normalizedQuestions) {
+            if (!question.prompt) {
+                return { success: false, message: "Each question must include a prompt." };
             }
 
-            resolvedBatchId = batch.id;
-            targetLabel = `Batch: ${batch.name}`;
+            if (question.options.length < 2) {
+                return { success: false, message: "Each question must include at least two options." };
+            }
+
+            if (
+                question.correct.length === 0 ||
+                question.correct.some((index) => index >= question.options.length)
+            ) {
+                return {
+                    success: false,
+                    message: "Each question must include at least one valid correct answer.",
+                };
+            }
         }
 
         const category = CA_LEVEL_CATEGORY[input.caLevel] ?? "CA Final";
-        const totalMarks = input.questions.length; // 1 mark per question
+        const totalMarks = normalizedQuestions.length;
+        const publishedExam = await withSerializableTransaction(async (tx) => {
+            let resolvedBatchId: string | null = null;
+            let targetLabel = "All Students";
 
-        // ── Create the Exam record ──────────────────────────────────────────
-        const exam = await prisma.exam.create({
-            data: {
-                title: input.title,
-                description: `${input.subject} · ${category} · Bulk uploaded MCQ series`,
-                duration: input.durationMinutes,
-                totalMarks,
-                passingMarks: Math.ceil(totalMarks * 0.4),
-                category,
-                status: "PUBLISHED",
-                teacherId: teacher.id,
-                batchId: resolvedBatchId, // null = visible to all students of this category
-            },
-        });
+            if (input.target.kind === "batch") {
+                const batch = await tx.batch.findFirst({
+                    where: {
+                        id: input.target.batchId,
+                        ...(teacher.role !== "ADMIN" ? { teacherId: teacher.id } : {}),
+                    },
+                    select: { id: true, name: true },
+                });
 
-        // ── Create Question + Option + ExamQuestion records in a transaction ─
-        await prisma.$transaction(async (tx) => {
-            for (let i = 0; i < input.questions.length; i++) {
-                const q = input.questions[i];
+                if (!batch) {
+                    throw new Error("The selected batch was not found or you do not own it.");
+                }
 
-                // Create a reusable Question record
-                const question = await tx.question.create({
+                resolvedBatchId = batch.id;
+                targetLabel = `Batch: ${batch.name}`;
+            }
+
+            const exam = await tx.exam.create({
+                data: {
+                    title: normalizedTitle,
+                    description: `${normalizedSubject} - ${category} - Bulk uploaded MCQ series`,
+                    duration: normalizedDuration,
+                    totalMarks,
+                    passingMarks: Math.ceil(totalMarks * 0.4),
+                    category,
+                    subject: normalizedSubject,
+                    chapter: normalizedChapter,
+                    status: "PUBLISHED",
+                    examType: normalizedExamType,
+                    teacherId: teacher.id,
+                    batchId: resolvedBatchId,
+                },
+            });
+
+            for (let index = 0; index < normalizedQuestions.length; index += 1) {
+                const question = normalizedQuestions[index];
+                const createdQuestion = await tx.question.create({
                     data: {
-                        text: q.prompt,
-                        subject: q.subject ?? input.subject,
-                        topic: q.topic ?? null,
-                        difficulty: q.difficulty ?? "MEDIUM",
-                        explanation: q.explanation ?? null,
+                        text: question.prompt,
+                        subject: question.subject,
+                        topic: question.topic,
+                        difficulty: question.difficulty,
+                        explanation: question.explanation,
                         options: {
-                            create: q.options.map((opt, idx) => ({
-                                text: opt,
-                                isCorrect: q.correct.includes(idx),
+                            create: question.options.map((option, optionIndex) => ({
+                                text: option,
+                                isCorrect: question.correct.includes(optionIndex),
                             })),
                         },
                     },
                 });
 
-                // Link it to the exam with ordering
                 await tx.examQuestion.create({
                     data: {
                         examId: exam.id,
-                        questionId: question.id,
-                        order: i + 1,
+                        questionId: createdQuestion.id,
+                        order: index + 1,
                         marks: 1,
                     },
                 });
             }
+
+            return {
+                examId: exam.id,
+                examTitle: exam.title,
+                targetLabel,
+            };
         });
 
         revalidatePath("/teacher/test-series");
@@ -136,29 +190,28 @@ export async function publishExamFromQuestions(
 
         return {
             success: true,
-            examId: exam.id,
-            examTitle: exam.title,
-            targetLabel,
-            questionCount: input.questions.length,
+            message: "Exam published successfully.",
+            data: {
+                examId: publishedExam.examId,
+                examTitle: publishedExam.examTitle,
+                targetLabel: publishedExam.targetLabel,
+                questionCount: normalizedQuestions.length,
+            },
         };
     } catch (err) {
-        console.error("publishExamFromQuestions error:", err);
         return {
             success: false,
-            error: err instanceof Error ? err.message : "Failed to publish exam.",
+            message: getActionErrorMessage(err, "Failed to publish exam."),
         };
     }
 }
 
-// ── Fetch teacher's batches for the publish picker ────────────────────────────
-
 export type BatchOption = { id: string; name: string; studentCount: number };
 
-export async function getTeacherBatchOptions(): Promise<{
-    success: boolean;
-    batches: BatchOption[];
-    error?: string;
-}> {
+/**
+ * Fetches batches available for publishing for the current teacher.
+ */
+export async function getTeacherBatchOptions(): Promise<ActionResponse<BatchOption[]>> {
     try {
         const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 
@@ -174,44 +227,59 @@ export async function getTeacherBatchOptions(): Promise<{
 
         return {
             success: true,
-            batches: batches.map((b) => ({
-                id: b.id,
-                name: b.name,
-                studentCount: b._count.enrollments,
+            data: batches.map((batch) => ({
+                id: batch.id,
+                name: batch.name,
+                studentCount: batch._count.enrollments,
             })),
         };
     } catch (err) {
         return {
             success: false,
-            batches: [],
-            error: err instanceof Error ? err.message : "Failed to fetch batches.",
+            message: getActionErrorMessage(err, "Failed to fetch batches."),
         };
     }
 }
 
-// ── Fetch real exams visible to a student ─────────────────────────────────────
-// Called by /student/exams page once wired to real auth.
+export type StudentVisibleExam = {
+    id: string;
+    title: string;
+    duration: number;
+    totalMarks: number;
+    category: string;
+    subject: string | null;
+    chapter: string | null;
+    batchName: string | null;
+    teacherName: string;
+    questionCount: number;
+    attemptCount: number;
+    examType: string;
+    attempt: { id: string; examId: string; status: string; score: number } | null;
+};
 
-export async function getStudentVisibleExams(caLevel: "foundation" | "ipc" | "final") {
+/**
+ * Fetches all exams visible to the current student based on their CA level and batch enrollments.
+ */
+export async function getStudentVisibleExams(
+    caLevel: "foundation" | "ipc" | "final"
+): Promise<ActionResponse<StudentVisibleExam[]>> {
     try {
         const student = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT"]);
         const category = CA_LEVEL_CATEGORY[caLevel];
 
-        // Find all batches the student is enrolled in
         const enrollments = await prisma.enrollment.findMany({
             where: { studentId: student.id },
             select: { batchId: true },
         });
-        const enrolledBatchIds = enrollments.map((e) => e.batchId);
+        const enrolledBatchIds = enrollments.map((enrollment) => enrollment.batchId);
 
-        // Exam is visible if: same category AND (batchId is null OR batchId is one they're enrolled in)
         const exams = await prisma.exam.findMany({
             where: {
                 category,
                 status: "PUBLISHED",
                 OR: [
-                    { batchId: null },                                          // global
-                    { batchId: { in: enrolledBatchIds } },                     // their batch
+                    { batchId: null },
+                    { batchId: { in: enrolledBatchIds } },
                 ],
             },
             include: {
@@ -222,37 +290,45 @@ export async function getStudentVisibleExams(caLevel: "foundation" | "ipc" | "fi
             orderBy: { createdAt: "desc" },
         });
 
-        // Check which ones the student has already attempted
         const attempts = await prisma.examAttempt.findMany({
             where: {
                 studentId: student.id,
-                examId: { in: exams.map((e: any) => e.id) },
+                examId: { in: exams.map((exam) => exam.id) },
             },
-            select: { examId: true, status: true, score: true },
+            select: { id: true, examId: true, status: true, score: true },
+            orderBy: { startTime: "desc" },
         });
 
-        const attemptMap = new Map(attempts.map((a: any) => [a.examId, a]));
+        const attemptMap = new Map<string, typeof attempts[number]>();
+        for (const attempt of attempts) {
+            if (!attemptMap.has(attempt.examId)) {
+                attemptMap.set(attempt.examId, attempt);
+            }
+        }
 
         return {
             success: true,
-            exams: exams.map((e: any) => ({
-                id: e.id,
-                title: e.title,
-                duration: e.duration,
-                totalMarks: e.totalMarks,
-                category: e.category,
-                batchName: e.batch?.name ?? null,
-                teacherName: e.teacher.fullName ?? e.teacher.email ?? "Teacher",
-                questionCount: e._count.questions,
-                attemptCount: e._count.attempts,
-                attempt: attemptMap.get(e.id) ?? null, // null = not yet attempted
+            data: exams.map((exam) => ({
+                id: exam.id,
+                title: exam.title,
+                duration: exam.duration,
+                totalMarks: exam.totalMarks,
+                category: exam.category,
+                subject: exam.subject,
+                chapter: exam.chapter,
+                batchName: exam.batch?.name ?? null,
+                teacherName: exam.teacher.fullName ?? exam.teacher.email ?? "Teacher",
+                questionCount: exam._count.questions,
+                attemptCount: exam._count.attempts,
+                examType: exam.examType,
+                attempt: attemptMap.get(exam.id) ?? null,
             })),
         };
     } catch (err) {
+        console.error("getStudentVisibleExams error:", err);
         return {
             success: false,
-            exams: [],
-            error: err instanceof Error ? err.message : "Failed to fetch exams.",
+            message: getActionErrorMessage(err, "Failed to fetch exams."),
         };
     }
 }

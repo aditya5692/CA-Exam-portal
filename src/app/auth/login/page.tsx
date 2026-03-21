@@ -57,7 +57,7 @@ export default function LoginPage() {
         }
 
         const redirectTo =
-            result.redirectTo ??
+            result.data?.redirectTo ??
             (role === "admin" ? "/admin/dashboard" : role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
 
         router.push(redirectTo);
@@ -76,68 +76,68 @@ export default function LoginPage() {
                 <span className="text-2xl font-bold text-gray-900 tracking-tight font-outfit">Financly</span>
             </Link>
 
-            <div className="w-full max-w-md bg-white rounded-[40px] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-10 relative z-10 animate-in fade-in zoom-in-95 duration-700">
+            <div className="w-full max-w-md bg-white rounded-[40px] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-12 relative z-10 animate-in fade-in zoom-in-95 duration-700">
                 <div className="text-center mb-10">
-                    <h1 className="text-3xl font-bold text-gray-900 font-outfit mb-2">Welcome Back</h1>
-                    <p className="text-gray-400 font-medium uppercase tracking-widest text-[10px]">Access your learning studio</p>
+                    <h1 className="text-4xl font-bold text-slate-900 font-outfit mb-3 tracking-tight">Welcome Back</h1>
+                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Access your learning studio</p>
                 </div>
 
-                <div className="flex p-1.5 bg-gray-50 rounded-2xl mb-8 gap-1">
+                <div className="flex p-1.5 bg-slate-50 rounded-2xl mb-10 gap-1 border border-slate-100">
                     <button
                         type="button"
                         onClick={() => setRole("student")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${role === "student" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${role === "student" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-600"}`}
                     >
-                        <IdentificationBadge size={18} weight={role === "student" ? "fill" : "regular"} />
+                        <IdentificationBadge size={18} weight={role === "student" ? "fill" : "bold"} />
                         Student
                     </button>
                     <button
                         type="button"
                         onClick={() => setRole("teacher")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${role === "teacher" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${role === "teacher" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-600"}`}
                     >
-                        <ChalkboardTeacher size={18} weight={role === "teacher" ? "fill" : "regular"} />
+                        <ChalkboardTeacher size={18} weight={role === "teacher" ? "fill" : "bold"} />
                         Teacher
                     </button>
                     <button
                         type="button"
                         onClick={() => setRole("admin")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${role === "admin" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${role === "admin" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-600"}`}
                     >
-                        <ShieldCheck size={18} weight={role === "admin" ? "fill" : "regular"} />
+                        <ShieldCheck size={18} weight={role === "admin" ? "fill" : "bold"} />
                         Admin
                     </button>
                 </div>
 
                 <form className="space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4">Registration Number Or Email</label>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-4">Credentials</label>
                         <div className="relative group">
-                            <Envelope size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                            <Envelope size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" weight="bold" />
                             <input
                                 type="text"
                                 value={identifier}
                                 onChange={(event) => setIdentifier(event.target.value)}
                                 placeholder={role === "admin" ? "ADMIN001 or admin@demo.local" : "TCHR001 / STUD001 or email"}
-                                className="w-full bg-gray-50 border border-transparent rounded-[20px] py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-[20px] py-4.5 pl-14 pr-6 text-sm font-medium focus:bg-white focus:border-indigo-200 focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none font-sans"
                                 required
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <div className="flex justify-between items-center ml-4">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Password</label>
-                            <Link href="#" className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest hover:underline">Forgot?</Link>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Security Key</label>
+                            <Link href="#" className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.2em] hover:underline">Forgot?</Link>
                         </div>
                         <div className="relative group">
-                            <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                            <Lock size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" weight="bold" />
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(event) => setPassword(event.target.value)}
-                                placeholder="demo123"
-                                className="w-full bg-gray-50 border border-transparent rounded-[20px] py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none"
+                                placeholder="••••••••"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-[20px] py-4.5 pl-14 pr-6 text-sm font-medium focus:bg-white focus:border-indigo-200 focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none font-sans"
                                 required
                             />
                         </div>
@@ -152,9 +152,9 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-5 rounded-[24px] bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-3 active:scale-95 translate-y-2 disabled:opacity-70"
+                        className="w-full py-5 rounded-[20px] bg-indigo-600 text-white font-bold text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-indigo-500/20 hover:bg-slate-900 transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-70 mt-6"
                     >
-                        {isSubmitting ? "Signing In..." : "Sign In Now"} <ArrowRight size={18} weight="bold" />
+                        {isSubmitting ? "Authenticating..." : "Sign In Securely"} <ArrowRight size={18} weight="bold" />
                     </button>
                 </form>
 
@@ -188,26 +188,22 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                <div className="mt-12">
+                <div className="mt-8">
                     <div className="relative mb-8">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
-                        <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold"><span className="bg-white px-4 text-gray-300">Or continue with</span></div>
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
+                        <div className="relative flex justify-center text-[9px] uppercase tracking-[0.3em] font-bold text-slate-300"><span className="bg-white px-6">Third Party Auth</span></div>
                     </div>
                     <button
                         type="button"
-                        className="w-full py-4 border border-gray-100 rounded-2xl flex items-center justify-center gap-3 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all active:scale-95 group"
+                        className="w-full py-4 border border-slate-100 rounded-[20px] bg-slate-50 flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-600 hover:bg-white hover:border-indigo-100 transition-all active:scale-95 group font-sans"
                     >
-                        <GoogleLogo size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
-                        Google Account
+                        <GoogleLogo size={20} weight="bold" className="text-rose-500 group-hover:scale-110 transition-transform" />
+                        Continue with Google
                     </button>
                 </div>
 
-                <p className="text-gray-500 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
-                    Flexible yearly plans designed to empower both ambitious students and professional educators in the CA journey.
-                </p>
-
-                <p className="mt-10 text-center text-sm font-medium text-gray-500">
-                    Don&apos;t have an account? <Link href="/auth/signup" className="text-indigo-600 font-bold hover:underline">Create for Free</Link>
+                <p className="mt-10 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                    Don&apos;t have an account? <Link href="/auth/signup" className="text-indigo-600 hover:underline hover:text-indigo-700 transition-colors">Create for Free</Link>
                 </p>
             </div>
         </div>

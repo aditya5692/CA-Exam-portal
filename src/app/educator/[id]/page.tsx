@@ -48,45 +48,45 @@ export default async function PublicEducatorProfilePage({ params }: { params: { 
                         {/* Profile Details / Right Column */}
                         <div className="flex-1 space-y-6 lg:pt-4">
                             <div>
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 mb-3">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-700">Official CA Partner</span>
+                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[12px] bg-indigo-500/20 border border-indigo-500/30 mb-4 backdrop-blur-sm">
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">Official CA Partner</span>
                                 </div>
 
-                                <h1 className="text-4xl md:text-5xl font-black font-outfit text-white leading-tight flex items-center gap-4">
+                                <h1 className="text-4xl md:text-5xl font-black font-outfit text-white tracking-tight flex items-center gap-4">
                                     {fullName}
                                 </h1>
 
-                                <div className="mt-3 flex flex-wrap items-center gap-3 md:gap-6 text-sm md:text-base font-medium text-gray-400">
-                                    <span className="flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-lg text-gray-200"><ShieldCheck className="w-4 h-4" /> {designation}</span>
-                                    <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-indigo-500" /> {expertise}</span>
+                                <div className="mt-4 flex flex-wrap items-center gap-3 md:gap-6 text-sm md:text-base font-medium text-slate-400">
+                                    <span className="flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-[12px] text-slate-200 backdrop-blur-sm"><ShieldCheck className="w-4 h-4" /> {designation}</span>
+                                    <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-indigo-400" /> {expertise}</span>
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 mt-8 relative overflow-hidden">
-                                <h2 className="text-xl font-bold font-outfit mb-4 flex items-center gap-2">About the Educator</h2>
-                                <p className="text-gray-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+                            <div className="bg-white rounded-[32px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mt-8 relative overflow-hidden">
+                                <h2 className="text-xl font-bold font-outfit text-slate-900 mb-4 flex items-center gap-2">About the Educator</h2>
+                                <p className="text-slate-500 leading-relaxed text-sm md:text-base whitespace-pre-wrap font-sans">
                                     {bio || "This educator hasn't written a biography yet, but their materials speak for themselves!"}
                                 </p>
                             </div>
 
                             {/* Key Metrics */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center justify-between group hover:border-indigo-200 transition-colors">
+                            <div className="grid grid-cols-2 gap-6 mt-6">
+                                <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between group hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300">
                                     <div>
-                                        <p className="text-3xl font-black text-gray-900 font-outfit">{totalMaterials}</p>
-                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mt-1">Free Resources</p>
+                                        <p className="text-3xl font-black text-slate-900 font-outfit">{totalMaterials}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Free Resources</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <BookOpen className="w-6 h-6" />
+                                    <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-[20px] flex items-center justify-center shrink-0">
+                                        <BookOpen className="w-7 h-7" />
                                     </div>
                                 </div>
-                                <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center justify-between group hover:border-emerald-200 transition-colors">
+                                <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between group hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300">
                                     <div>
-                                        <p className="text-3xl font-black text-gray-900 font-outfit">{totalBatches}</p>
-                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mt-1">Active Batches</p>
+                                        <p className="text-3xl font-black text-slate-900 font-outfit">{totalBatches}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Active Batches</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <UsersRound className="w-6 h-6" />
+                                    <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[20px] flex items-center justify-center shrink-0">
+                                        <UsersRound className="w-7 h-7" />
                                     </div>
                                 </div>
                             </div>

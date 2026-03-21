@@ -15,6 +15,7 @@ import {
     UserRound,
     UsersRound
 } from "lucide-react";
+import { Calendar } from "@phosphor-icons/react";
 
 type Mode = "teacher" | "student";
 
@@ -37,6 +38,18 @@ type Profile = {
     storageUsed: number;
     storageLimit: number;
     createdAt: string | Date;
+    // New fields
+    batch: string | null;
+    dob: string | null;
+    location: string | null;
+    firm: string | null;
+    firmRole: string | null;
+    articleshipYear: number | null;
+    articleshipTotal: number | null;
+    foundationCleared: boolean;
+    intermediateCleared: boolean;
+    finalCleared: boolean;
+    resumeUrl: string | null;
 };
 
 type FormState = {
@@ -52,6 +65,18 @@ type FormState = {
     expertise: string;
     examTarget: string;
     isPublicProfile: boolean;
+    // New fields
+    batch: string;
+    dob: string;
+    location: string;
+    firm: string;
+    firmRole: string;
+    articleshipYear: string;
+    articleshipTotal: string;
+    foundationCleared: boolean;
+    intermediateCleared: boolean;
+    finalCleared: boolean;
+    resumeUrl: string;
 };
 
 const TEACHER_REQUIRED_FIELDS: Array<{ key: keyof FormState; label: string }> = [
@@ -87,6 +112,17 @@ const EMPTY_FORM: FormState = {
     expertise: "",
     examTarget: "",
     isPublicProfile: true,
+    batch: "",
+    dob: "",
+    location: "",
+    firm: "",
+    firmRole: "",
+    articleshipYear: "0",
+    articleshipTotal: "3",
+    foundationCleared: false,
+    intermediateCleared: false,
+    finalCleared: false,
+    resumeUrl: "",
 };
 
 export function ProfileEditor({ mode }: { mode: Mode }) {
@@ -94,6 +130,8 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
     const [formState, setFormState] = useState<FormState>(EMPTY_FORM);
     const [isSaving, setIsSaving] = useState(false);
     const [statusMessage, setStatusMessage] = useState("");
+    const [tempLevel, setTempLevel] = useState("CA Final");
+    const [tempCycle, setTempCycle] = useState("");
 
     useEffect(() => {
         let active = true;
@@ -107,7 +145,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                 return;
             }
 
-            const loadedProfile = response.profile as Profile;
+            const loadedProfile = response.data as Profile;
             setProfile(loadedProfile);
             setFormState({
                 fullName: loadedProfile.fullName ?? "",
@@ -122,7 +160,30 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                 expertise: loadedProfile.expertise ?? "",
                 examTarget: loadedProfile.examTarget ?? "",
                 isPublicProfile: loadedProfile.isPublicProfile ?? true,
+                batch: loadedProfile.batch ?? "",
+                dob: loadedProfile.dob ?? "",
+                location: loadedProfile.location ?? "",
+                firm: loadedProfile.firm ?? "",
+                firmRole: loadedProfile.firmRole ?? "",
+                articleshipYear: String(loadedProfile.articleshipYear ?? "0"),
+                articleshipTotal: String(loadedProfile.articleshipTotal ?? "3"),
+                foundationCleared: loadedProfile.foundationCleared ?? false,
+                intermediateCleared: loadedProfile.intermediateCleared ?? false,
+                finalCleared: loadedProfile.finalCleared ?? false,
+                resumeUrl: loadedProfile.resumeUrl ?? "",
             });
+            
+            // Re-parse level and cycle for UI
+            const target = loadedProfile.examTarget ?? "";
+            const levels = ["CA Foundation", "CA Intermediate", "CA Final"];
+            const foundLevel = levels.find(l => target.includes(l));
+            if (foundLevel) {
+                setTempLevel(foundLevel);
+                setTempCycle(target.replace(foundLevel, "").trim());
+            } else {
+                setTempLevel("CA Final");
+                setTempCycle(target);
+            }
         })();
 
         return () => {
@@ -156,7 +217,25 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
         return Math.min(100, Math.round((profile.storageUsed / profile.storageLimit) * 100));
     }, [profile]);
 
-    const handleChange = (key: keyof FormState, value: string) => {
+    const daysToExam = useMemo(() => {
+        if (mode !== "student" || !formState.examTarget) return 0;
+        const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
+        const parts = formState.examTarget.split(" ");
+        if (parts.length >= 2) {
+            const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
+            const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
+            const yrPart = parseInt(parts[parts.length - 1]);
+            if (moKey && !isNaN(yrPart)) {
+                const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
+                const now = new Date();
+                const diffTime = targetDate.getTime() - now.getTime();
+                return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            }
+        }
+        return 0;
+    }, [mode, formState.examTarget]);
+
+    const handleChange = (key: keyof FormState, value: string | boolean) => {
         setFormState((current) => ({ ...current, [key]: value }));
     };
 
@@ -166,8 +245,13 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
         setStatusMessage("");
 
         const formData = new FormData();
+        const combinedTarget = `${tempLevel} ${tempCycle}`.trim();
         Object.entries(formState).forEach(([key, value]) => {
-            formData.append(key, typeof value === "boolean" ? value.toString() : value);
+            if (key === "examTarget") {
+                formData.append(key, combinedTarget);
+            } else {
+                formData.append(key, typeof value === "boolean" ? value.toString() : value);
+            }
         });
 
         const response = mode === "teacher"
@@ -177,7 +261,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
         setIsSaving(false);
 
         if (response.success) {
-            const updatedProfile = response.profile as Profile;
+            const updatedProfile = response.data as Profile;
             setProfile(updatedProfile);
             setStatusMessage("Profile saved successfully.");
             return;
@@ -195,197 +279,211 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
-                <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-indigo-500">
-                        {mode === "teacher" ? "Teacher profile" : "Student profile"}
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-gray-900">
-                        {profile.fullName || (mode === "teacher" ? "Teacher Profile" : "Student Profile")}
+        <div className="space-y-12 animate-in fade-in duration-500 font-outfit">
+            {/* Standardized Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                            {mode === "teacher" ? "Faculty Protocol" : "Scholarly Identity"}
+                        </span>
+                    </div>
+                    <h1 className="font-outfit tracking-tighter leading-tight text-2xl md:text-3xl font-black text-slate-900">
+                        {profile.fullName?.split(" ")[0] || "User"}'s <span className="text-indigo-600">Profile</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-2">
-                        This profile is now tailored for your platform roles, batches, materials, updates, and exam workflows.
+                    <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
+                        Unified terminal for personal identity, scholarly credentials, and operational security management.
                     </p>
                 </div>
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 min-w-[280px]">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Completion status</p>
-                    <div className="mt-3 flex items-end gap-3">
-                        <span className="text-4xl font-black text-indigo-700">{completion.percentage}%</span>
+                {daysToExam > 0 && mode === "student" && (
+                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 mb-1 pointer-events-none">
+                        <Calendar size={18} weight="bold" className="text-indigo-400" />
+                        Next Milestone: {daysToExam} Days
+                    </div>
+                )}
+            </div>
+
+            <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
+                <div />
+                <div className="rounded-3xl border border-indigo-100/50 bg-indigo-50/20 backdrop-blur-md px-10 py-8 min-w-[340px] shadow-xl shadow-indigo-900/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200/10 rounded-full blur-3xl -mr-16 -mt-16" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/70 font-outfit">Identity Integrity</p>
+                    <div className="mt-5 flex items-end gap-4">
+                        <span className="text-6xl font-black text-indigo-600 tracking-tighter leading-none">{completion.percentage}%</span>
                         {completion.percentage === 100 && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700">
-                                <CheckCircle2 className="w-4 h-4" /> Complete
+                            <span className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest shadow-lg shadow-emerald-500/5 border border-emerald-100 mb-1">
+                                <CheckCircle2 className="w-4 h-4" /> Elite
                             </span>
                         )}
                     </div>
-                    <div className="mt-4 h-2 rounded-full bg-white/80">
-                        <div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${completion.percentage}%` }} />
+                    <div className="mt-8 h-2.5 rounded-full bg-indigo-100/50 overflow-hidden shadow-inner">
+                        <div className="h-full rounded-full bg-indigo-600 transition-all duration-1000 shadow-[0_0_15px_rgba(79,70,229,0.5)]" style={{ width: `${completion.percentage}%` }} />
                     </div>
                     {completion.missing.length > 0 && (
-                        <p className="mt-3 text-xs leading-relaxed text-indigo-700">
-                            Missing:
+                        <p className="mt-6 text-[10px] font-bold leading-relaxed text-indigo-400/80 uppercase tracking-widest">
+                            Required Assets:
                             {" "}
-                            <span className="font-semibold">{completion.missing.join(", ")}</span>
+                            <span className="text-indigo-600/80">{completion.missing.join(", ")}</span>
                         </p>
                     )}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-[0.92fr_1.08fr] gap-6">
-                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                            {mode === "teacher" ? <ShieldCheck className="w-6 h-6" /> : <GraduationCap className="w-6 h-6" />}
+                <div className="rounded-[32px] border border-slate-100 bg-white/70 backdrop-blur-md p-8 shadow-[0_8px_40px_rgba(0,0,0,0.03)] space-y-10">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-50 text-indigo-500/80 flex items-center justify-center border border-slate-100 shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
+                            {mode === "teacher" ? <ShieldCheck className="w-8 h-8" strokeWidth={2.5} /> : <GraduationCap className="w-8 h-8" strokeWidth={2.5} />}
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Profile overview</h2>
-                            <p className="text-sm text-gray-500">Role-aware summary for this account.</p>
+                            <h2 className="font-outfit tracking-tight">Identity Matrix</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Verified Authorization</p>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="rounded-2xl bg-gray-50 px-4 py-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Role</p>
-                            <p className="mt-2 text-lg font-bold text-gray-900">{profile.role}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="rounded-3xl bg-slate-50 border border-slate-100 px-7 py-7 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-full blur-2xl -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors relative z-10">Access Tier</p>
+                            <p className="mt-3 text-2xl font-bold text-slate-900 font-outfit tracking-tighter relative z-10">{profile.role}</p>
                         </div>
-                        <div className="rounded-2xl bg-gray-50 px-4 py-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Plan</p>
-                            <p className="mt-2 text-lg font-bold text-gray-900">{profile.plan}</p>
+                        <div className="rounded-3xl bg-slate-50 border border-slate-100 px-7 py-7 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-full blur-2xl -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors relative z-10">Asset Plan</p>
+                            <p className="mt-3 text-2xl font-bold text-slate-900 font-outfit tracking-tighter relative z-10">{profile.plan}</p>
                         </div>
-                        <div className="rounded-2xl bg-gray-50 px-4 py-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Language</p>
-                            <p className="mt-2 text-lg font-bold text-gray-900">{profile.preferredLanguage || "--"}</p>
-                        </div>
-                        <div className="rounded-2xl bg-gray-50 px-4 py-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Timezone</p>
-                            <p className="mt-2 text-lg font-bold text-gray-900">{profile.timezone || "--"}</p>
-                        </div>
-                        <div className="rounded-2xl bg-gray-50 px-4 py-4 md:col-span-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Storage usage</p>
-                            <p className="mt-2 text-lg font-bold text-gray-900">{storageUsage}%</p>
-                            <div className="mt-3 h-2 rounded-full bg-white">
-                                <div className="h-full rounded-full bg-indigo-600" style={{ width: `${storageUsage}%` }} />
+                        <div className="rounded-3xl bg-slate-50 border border-slate-100 px-7 py-7 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group md:col-span-2 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full blur-3xl -mr-12 -mt-12 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors relative z-10">Storage Allocation</p>
+                            <div className="flex justify-between items-end mt-3 relative z-10">
+                                <p className="text-2xl font-bold text-slate-900 font-outfit tracking-tighter">{storageUsage}% <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1 opacity-60">Capacity</span></p>
+                                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">Status: Nominal</p>
+                            </div>
+                            <div className="mt-6 h-2 rounded-full bg-slate-200/50 overflow-hidden ring-1 ring-slate-100 relative z-10 shadow-inner">
+                                <div className="h-full rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all duration-1000" style={{ width: `${storageUsage}%` }} />
                             </div>
                         </div>
                         {mode === "teacher" ? (
                             <>
-                                <div className="rounded-2xl bg-gray-50 px-4 py-4">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Designation</p>
-                                    <p className="mt-2 text-lg font-bold text-gray-900">{profile.designation || "--"}</p>
+                                <div className="rounded-[28px] bg-slate-50 border border-slate-100 px-7 py-7 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 relative overflow-hidden">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-600 relative z-10">Faculty Title</p>
+                                    <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter leading-none relative z-10">{profile.designation || "Faculty Member"}</p>
                                 </div>
-                                <div className="rounded-2xl bg-gray-50 px-4 py-4">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Expertise</p>
-                                    <p className="mt-2 text-lg font-bold text-gray-900">{profile.expertise || "--"}</p>
+                                <div className="rounded-[28px] bg-slate-50 border border-slate-100 px-7 py-7 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 relative overflow-hidden">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-600 relative z-10">Core Domain</p>
+                                    <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter leading-none relative z-10">{profile.expertise || "Economics & Strategy"}</p>
                                 </div>
                             </>
                         ) : (
-                            <div className="rounded-2xl bg-gray-50 px-4 py-4 md:col-span-2">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Exam target</p>
-                                <p className="mt-2 text-lg font-bold text-gray-900">{profile.examTarget || "--"}</p>
+                            <div className="rounded-[28px] bg-slate-50 border border-slate-100 px-7 py-7 md:col-span-2 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 relative overflow-hidden">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-600 relative z-10">Diagnostic Target</p>
+                                <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter relative z-10">{profile.examTarget || "Chartered Accountancy 2027"}</p>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <form onSubmit={handleSave} className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-6">
+                <form onSubmit={handleSave} className="rounded-3xl border border-slate-100 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-slate-200/20 space-y-8">
                     <div>
-                        <h2 className="text-lg font-semibold text-gray-900">Complete your profile</h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                            The fields below are selected for this platform’s real workflows, not a generic social profile.
-                        </p>
+                        <h2 className="font-outfit tracking-tight">Security Records</h2>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Verified Asset Management</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label className="space-y-2">
-                            <span className="text-sm font-medium text-gray-700">Full name</span>
-                            <div className="relative">
-                                <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <label className="space-y-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-5">Legal Identity</span>
+                            <div className="relative group">
+                                <UserRound className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                 <input
                                     type="text"
                                     value={formState.fullName}
                                     onChange={(event) => handleChange("fullName", event.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter full name"
                                 />
                             </div>
                         </label>
 
-                        <label className="space-y-2">
-                            <span className="text-sm font-medium text-gray-700">Email</span>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <label className="space-y-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Primary Email</span>
+                            <div className="relative group">
+                                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                                 <input
                                     type="email"
                                     value={formState.email}
                                     onChange={(event) => handleChange("email", event.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter email"
                                 />
                             </div>
                         </label>
 
-                        <label className="space-y-2">
-                            <span className="text-sm font-medium text-gray-700">{mode === "teacher" ? "Faculty / employee ID" : "Registration number"}</span>
-                            <input
-                                type="text"
-                                value={formState.registrationNumber}
-                                onChange={(event) => handleChange("registrationNumber", event.target.value.toUpperCase())}
-                                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder={mode === "teacher" ? "Enter faculty ID" : "Enter registration number"}
-                            />
+                        <label className="space-y-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">{mode === "teacher" ? "Faculty ID" : "Registration Number"}</span>
+                            <div className="relative group">
+                                <ShieldCheck className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                                <input
+                                    type="text"
+                                    value={formState.registrationNumber}
+                                    onChange={(event) => handleChange("registrationNumber", event.target.value.toUpperCase())}
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    placeholder={mode === "teacher" ? "Enter faculty ID" : "Enter registration number"}
+                                />
+                            </div>
                         </label>
 
-                        <label className="space-y-2">
-                            <span className="text-sm font-medium text-gray-700">Department</span>
-                            <div className="relative">
-                                <UsersRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <label className="space-y-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Operational Sector</span>
+                            <div className="relative group">
+                                <UsersRound className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                                 <input
                                     type="text"
                                     value={formState.department}
                                     onChange={(event) => handleChange("department", event.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter department"
                                 />
                             </div>
                         </label>
 
-                        <label className="space-y-2">
-                            <span className="text-sm font-medium text-gray-700">Phone</span>
-                            <div className="relative">
-                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <label className="space-y-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Contact Node</span>
+                            <div className="relative group">
+                                <Phone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                                 <input
                                     type="text"
                                     value={formState.phone}
                                     onChange={(event) => handleChange("phone", event.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter phone number"
                                 />
                             </div>
                         </label>
 
-                        <label className="space-y-2">
-                            <span className="text-sm font-medium text-gray-700">Preferred language</span>
-                            <div className="relative">
-                                <Languages className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <label className="space-y-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Cognitive Logic</span>
+                            <div className="relative group">
+                                <Languages className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                                 <input
                                     type="text"
                                     value={formState.preferredLanguage}
                                     onChange={(event) => handleChange("preferredLanguage", event.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="English, Hindi, etc."
                                 />
                             </div>
                         </label>
 
-                        <label className="space-y-2 md:col-span-2">
-                            <span className="text-sm font-medium text-gray-700">Timezone</span>
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <label className="space-y-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Temporal Matrix</span>
+                            <div className="relative group">
+                                <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                                 <input
                                     type="text"
                                     value={formState.timezone}
                                     onChange={(event) => handleChange("timezone", event.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Asia/Kolkata"
                                 />
                             </div>
@@ -393,96 +491,238 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
 
                         {mode === "teacher" ? (
                             <>
-                                <label className="space-y-2">
-                                    <span className="text-sm font-medium text-gray-700">Designation</span>
-                                    <div className="relative">
-                                        <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <label className="space-y-3">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Official Designation</span>
+                                    <div className="relative group">
+                                        <GraduationCap className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                                         <input
                                             type="text"
                                             value={formState.designation}
                                             onChange={(event) => handleChange("designation", event.target.value)}
-                                            className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                             placeholder="CA Faculty, Mentor, etc."
                                         />
                                     </div>
                                 </label>
 
-                                <label className="space-y-2">
-                                    <span className="text-sm font-medium text-gray-700">Subjects / expertise</span>
-                                    <div className="relative">
-                                        <BookOpenCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <label className="space-y-3">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Expertise Matrix</span>
+                                    <div className="relative group">
+                                        <BookOpenCheck className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                                         <input
                                             type="text"
                                             value={formState.expertise}
                                             onChange={(event) => handleChange("expertise", event.target.value)}
-                                            className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
                                             placeholder="Taxation, Audit, Accounts"
                                         />
                                     </div>
                                 </label>
 
-                                <label className="space-y-3 md:col-span-2 pt-2 border-t border-gray-100 mt-4">
+                                <label className="space-y-4 md:col-span-2 pt-6 border-t border-slate-100 mt-4">
                                     <div className="flex items-start justify-between">
-                                        <div>
-                                            <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-black text-slate-950 uppercase tracking-tight flex items-center gap-2">
                                                 Public Educator Profile <ShieldCheck className="text-emerald-500 w-4 h-4" />
                                             </span>
-                                            <p className="text-xs text-gray-500 mt-1 max-w-[80%]">
+                                            <p className="text-xs text-slate-500 max-w-[80%] leading-relaxed font-medium">
                                                 When enabled, anyone can view your public badge, bio, and free resources. Turn this off to stay completely private.
                                             </p>
                                         </div>
-                                        <div className="relative inline-flex items-center cursor-pointer">
+                                        <div className="relative inline-flex items-center cursor-pointer mt-1">
                                             <input
                                                 type="checkbox"
                                                 className="sr-only peer"
                                                 checked={formState.isPublicProfile}
                                                 onChange={(e) => handleChange("isPublicProfile", e.target.checked.toString())}
                                             />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-7 after:transition-all peer-checked:bg-indigo-600"></div>
                                         </div>
                                     </div>
                                 </label>
                             </>
                         ) : (
-                            <label className="space-y-2 md:col-span-2">
-                                <span className="text-sm font-medium text-gray-700">Exam target</span>
-                                <div className="relative">
-                                    <Target className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        value={formState.examTarget}
-                                        onChange={(event) => handleChange("examTarget", event.target.value)}
-                                        className="w-full rounded-xl border border-gray-200 px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        placeholder="CA Inter May 2027, CA Final Group 1, etc."
-                                    />
+                            <div className="space-y-3 md:col-span-2">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Scholarly Objective</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="relative group">
+                                        <GraduationCap className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                                        <select
+                                            value={tempLevel}
+                                            onChange={(e) => setTempLevel(e.target.value)}
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 appearance-none shadow-inner"
+                                        >
+                                            <option value="CA Foundation">CA Foundation</option>
+                                            <option value="CA Intermediate">CA Intermediate</option>
+                                            <option value="CA Final">CA Final</option>
+                                        </select>
+                                    </div>
+                                    <div className="relative group">
+                                        <Target className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                                        <input
+                                            type="text"
+                                            value={tempCycle}
+                                            onChange={(e) => setTempCycle(e.target.value)}
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                            placeholder="May 2026, Nov 2025, etc."
+                                        />
+                                    </div>
                                 </div>
-                            </label>
+                            </div>
                         )}
 
-                        <label className="space-y-2 md:col-span-2">
-                            <span className="text-sm font-medium text-gray-700">{mode === "teacher" ? "Bio / teaching note" : "Bio / study note"}</span>
+                        <label className="space-y-3 md:col-span-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">{mode === "teacher" ? "Pedagogical Note" : "Personal Dossier"}</span>
                             <textarea
                                 rows={5}
                                 value={formState.bio}
                                 onChange={(event) => handleChange("bio", event.target.value)}
-                                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full rounded-[28px] bg-slate-50 border border-slate-100 px-8 py-6 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner resize-none"
                                 placeholder={mode === "teacher" ? "Brief summary of teaching experience, classes, and approach." : "Brief summary of goals, background, or study preferences."}
                             />
                         </label>
+
+                        {mode === "student" && (
+                            <div className="md:col-span-2 space-y-8 pt-6 border-t border-slate-100">
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-6">Extended Academic & Professional Records</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <label className="space-y-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Batch</span>
+                                            <input
+                                                type="text"
+                                                value={formState.batch}
+                                                onChange={(e) => handleChange("batch", e.target.value)}
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                placeholder="e.g. Nov 2024"
+                                            />
+                                        </label>
+                                        <label className="space-y-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Date of Birth</span>
+                                            <input
+                                                type="text"
+                                                value={formState.dob}
+                                                onChange={(e) => handleChange("dob", e.target.value)}
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                placeholder="e.g. 14 Aug 2002"
+                                            />
+                                        </label>
+                                        <label className="space-y-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Location</span>
+                                            <input
+                                                type="text"
+                                                value={formState.location}
+                                                onChange={(e) => handleChange("location", e.target.value)}
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                placeholder="e.g. Mumbai"
+                                            />
+                                        </label>
+                                        <label className="space-y-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Current Firm</span>
+                                            <input
+                                                type="text"
+                                                value={formState.firm}
+                                                onChange={(e) => handleChange("firm", e.target.value)}
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                placeholder="e.g. Deloitte & Touche"
+                                            />
+                                        </label>
+                                        <label className="space-y-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Role in Firm</span>
+                                            <input
+                                                type="text"
+                                                value={formState.firmRole}
+                                                onChange={(e) => handleChange("firmRole", e.target.value)}
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                placeholder="e.g. Statutory Audit"
+                                            />
+                                        </label>
+                                        <label className="space-y-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Resume/Doc URL</span>
+                                            <input
+                                                type="text"
+                                                value={formState.resumeUrl}
+                                                onChange={(e) => handleChange("resumeUrl", e.target.value)}
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                placeholder="https://..."
+                                            />
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <label className="space-y-3">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Articleship Year</span>
+                                                <input
+                                                    type="number"
+                                                    value={formState.articleshipYear}
+                                                    onChange={(e) => handleChange("articleshipYear", e.target.value)}
+                                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 shadow-inner"
+                                                />
+                                            </label>
+                                            <label className="space-y-3">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-5">Total Years</span>
+                                                <input
+                                                    type="number"
+                                                    value={formState.articleshipTotal}
+                                                    onChange={(e) => handleChange("articleshipTotal", e.target.value)}
+                                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 shadow-inner"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Milestone Verification</h3>
+                                    <div className="flex flex-wrap gap-6">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={formState.foundationCleared}
+                                                onChange={(e) => handleChange("foundationCleared", e.target.checked)}
+                                                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-xs font-bold text-slate-700">Foundation Cleared</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={formState.intermediateCleared}
+                                                onChange={(e) => handleChange("intermediateCleared", e.target.checked)}
+                                                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-xs font-bold text-slate-700">Intermediate Cleared</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={formState.finalCleared}
+                                                onChange={(e) => handleChange("finalCleared", e.target.checked)}
+                                                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-xs font-bold text-slate-700">Final Cleared</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {statusMessage && (
-                        <div className="rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                            {statusMessage}
+                        <div className="rounded-[20px] bg-emerald-50 border border-emerald-100 px-6 py-4 text-[10px] font-black text-emerald-700 uppercase tracking-widest flex items-center gap-3">
+                            <CheckCircle2 className="w-4 h-4" /> {statusMessage}
                         </div>
                     )}
 
                     <button
                         type="submit"
                         disabled={isSaving}
-                        className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60"
+                        className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-12 py-4 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-slate-800 shadow-lg shadow-indigo-900/5 disabled:opacity-60 transition-all duration-300 active:scale-95 w-full md:w-auto"
                     >
-                        {isSaving ? "Saving..." : "Save profile"}
+                        {isSaving ? (
+                            <div className="flex items-center gap-3">
+                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                Executing Save Protocol...
+                            </div>
+                        ) : "Synchronize Profile"}
                     </button>
                 </form>
             </div>

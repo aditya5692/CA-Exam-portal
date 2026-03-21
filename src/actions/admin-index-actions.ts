@@ -1,0 +1,84 @@
+"use server";
+
+import { ActionResponse } from "@/types/shared";
+import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import prisma from "@/lib/prisma/client";
+
+export type AdminMetrics = {
+    students: number;
+    teachers: number;
+    batches: number;
+    exams: number;
+    mcqs: number;
+    resources: number;
+    downloads: number;
+    attempts: number;
+};
+
+export type AdminMetricsData = {
+    metrics: AdminMetrics;
+    recentUsers: {
+        id: string;
+        fullName: string | null;
+        email: string | null;
+        createdAt: Date;
+        role: string;
+    }[];
+    timestamp: string;
+};
+
+/**
+ * Fetches platform-wide metrics for the admin control center.
+ */
+export async function getAdminMetrics(): Promise<ActionResponse<AdminMetricsData>> {
+    try {
+        await getCurrentUserOrDemoUser("ADMIN", ["ADMIN"]);
+
+        const [
+            studentCount,
+            teacherCount,
+            batchCount,
+            examCount,
+            mcqCount,
+            materialCount,
+            totalDownloads,
+            totalAttempts,
+            recentUsers
+        ] = await Promise.all([
+            prisma.user.count({ where: { role: "STUDENT" } }),
+            prisma.user.count({ where: { role: "TEACHER" } }),
+            prisma.batch.count(),
+            prisma.exam.count(),
+            prisma.question.count(),
+            prisma.studyMaterial.count(),
+            prisma.studyMaterial.aggregate({ _sum: { downloads: true } }),
+            prisma.examAttempt.count(),
+            prisma.user.findMany({
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+                select: { id: true, fullName: true, email: true, createdAt: true, role: true }
+            })
+        ]);
+
+        return {
+            success: true,
+            data: {
+                metrics: {
+                    students: studentCount,
+                    teachers: teacherCount,
+                    batches: batchCount,
+                    exams: examCount,
+                    mcqs: mcqCount,
+                    resources: materialCount,
+                    downloads: totalDownloads._sum.downloads ?? 0,
+                    attempts: totalAttempts,
+                },
+                recentUsers,
+                timestamp: new Date().toISOString()
+            }
+        };
+    } catch (error) {
+        console.error("getAdminMetrics error:", error);
+        return { success: false, message: "Failed to fetch administrative metrics." };
+    }
+}

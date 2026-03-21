@@ -1,9 +1,12 @@
+import * as dotenv from 'dotenv'
+dotenv.config()
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 
-const prisma = new PrismaClient({
-    adapter: new PrismaBetterSqlite3({ url: 'file:./dev.db' }),
-})
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter })
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -24,76 +27,105 @@ function daysAgo(n: number): Date {
 // ─── Static data ──────────────────────────────────────────────────────────────
 
 const TEACHERS = [
-    { name: 'Dr. Anjali Sharma', email: 'anjali.sharma@caportal.edu', reg: 'T1001', dept: 'Accounting', expertise: 'Financial Reporting, Ind AS' },
-    { name: 'Prof. Rohit Mehta', email: 'rohit.mehta@caportal.edu', reg: 'T1002', dept: 'Audit', expertise: 'Statutory Audit, Risk Assessment' },
-    { name: 'CA Priya Nair', email: 'priya.nair@caportal.edu', reg: 'T1003', dept: 'Taxation', expertise: 'GST, Income Tax' },
-    { name: 'Dr. Suresh Verma', email: 'suresh.verma@caportal.edu', reg: 'T1004', dept: 'Law', expertise: 'Company Law, FEMA' },
-    { name: 'CA Kavitha Reddy', email: 'kavitha.reddy@caportal.edu', reg: 'T1005', dept: 'Finance', expertise: 'SFM, Derivatives' },
-    { name: 'Prof. Amitabh Joshi', email: 'amitabh.joshi@caportal.edu', reg: 'T1006', dept: 'Costing', expertise: 'Standard Costing, Variance Analysis' },
-    { name: 'CA Meena Pillai', email: 'meena.pillai@caportal.edu', reg: 'T1007', dept: 'Accounts', expertise: 'Partnership Accounts, AS' },
-    { name: 'Dr. Vikram Singh', email: 'vikram.singh@caportal.edu', reg: 'T1008', dept: 'Economics', expertise: 'Business Economics, Statistics' },
-    { name: 'CA Sunita Agarwal', email: 'sunita.agarwal@caportal.edu', reg: 'T1009', dept: 'Ethics', expertise: 'Professional Ethics, ICAI Standards' },
-    { name: 'Prof. Rajesh Kumar', email: 'rajesh.kumar@caportal.edu', reg: 'T1010', dept: 'IT/SM', expertise: 'Information Systems, Strategic Mgmt' },
+    { name: 'CA Ramesh FR Specialist', email: 'ramesh.fr@caportal.edu', reg: 'T1001', dept: 'Accounting', expertise: 'Financial Reporting (Paper 1)' },
+    { name: 'Dr. Neha AFM Expert', email: 'neha.afm@caportal.edu', reg: 'T1002', dept: 'Finance', expertise: 'Advanced Financial Management (Paper 2)' },
+    { name: 'CA Vivek Audit Guru', email: 'vivek.audit@caportal.edu', reg: 'T1003', dept: 'Audit', expertise: 'Advanced Auditing & Ethics (Paper 3)' },
+    { name: 'CA Sahil Tax Wizard', email: 'sahil.dt@caportal.edu', reg: 'T1004', dept: 'Direct Tax', expertise: 'Direct Tax & International Taxation (Paper 4)' },
+    { name: 'CA Anjali IDT Specialist', email: 'anjali.idt@caportal.edu', reg: 'T1005', dept: 'Indirect Tax', expertise: 'Indirect Tax Laws (Paper 5)' },
+    { name: 'Prof. Manish IBS Mentor', email: 'manish.ibs@caportal.edu', reg: 'T1006', dept: 'Integrated', expertise: 'Integrated Business Solutions (Paper 6)' }
 ]
 
 const STUDENT_FIRST = ['Aarav', 'Aditya', 'Ananya', 'Arjun', 'Ayesha', 'Bhavna', 'Chirag', 'Deepa', 'Divya', 'Farhan', 'Gaurav', 'Harini', 'Ishan', 'Jyoti', 'Karan', 'Kavya', 'Lakshmi', 'Manish', 'Meera', 'Nikhil', 'Nisha', 'Om', 'Pallavi', 'Prateek', 'Priya', 'Rachna', 'Rajat', 'Ravi', 'Ritika', 'Rohan', 'Sahil', 'Sanaya', 'Sanjay', 'Shreya', 'Siddharth', 'Sneha', 'Suraj', 'Tanvi', 'Uday', 'Varun', 'Vidya', 'Yashaswi', 'Zara', 'Abhinav', 'Akash', 'Alisha', 'Amrita', 'Ankit', 'Archana', 'Aryan']
 const STUDENT_LAST = ['Agarwal', 'Bhat', 'Choudhary', 'Desai', 'Gandhi', 'Gupta', 'Iyer', 'Jain', 'Kapoor', 'Khan', 'Kumar', 'Mehta', 'Mishra', 'Nair', 'Pandey', 'Patel', 'Pillai', 'Rao', 'Reddy', 'Saxena', 'Shah', 'Sharma', 'Singh', 'Sinha', 'Tiwari', 'Varma', 'Verma', 'Yadav', 'Bose', 'Das']
 
 const BATCH_NAMES = [
-    'CA Foundation Batch A',
-    'CA Foundation Batch B',
-    'CA Inter - Group I',
-    'CA Inter - Group II',
-    'CA Final - SFM Intensive',
-    'CA Final - FR Intensive',
-    'GST Masterclass',
-    'Audit & Ethics Batch',
-    'Direct Tax Special',
-    'Costing Crash Course',
+    'CA Final - Financial Reporting (May 24)',
+    'CA Final - AFM Intensive (Nov 24)',
+    'CA Final - Advanced Auditing',
+    'CA Final - Direct Tax & International Tax',
+    'CA Final - Indirect Tax Laws (IDT)',
+    'CA Final - Integrated Business Solutions (IBS)'
 ]
 
 const JOIN_CODES = [
-    'CAFND-A01', 'CAFND-B02', 'CAINT-G103', 'CAINT-G204', 'CAFIN-SFM5',
-    'CAFIN-FR06', 'GST-MSTR07', 'AUD-ETH08', 'DT-SPCL09', 'COST-CC10',
+    'FR-MAY24', 'AFM-NOV24', 'AUDIT-P3', 'DT-TAX-P4', 'IDT-P5', 'IBS-P6'
 ]
 
-const CA_SUBJECTS = ['Financial Reporting', 'Auditing', 'Direct Taxation', 'Cost Accounting', 'Business Law', 'Strategic Finance', 'Economics', 'Information Technology']
-const CA_TOPICS = ['Partnership', 'Depreciation', 'GST Basics', 'Internal Audit', 'Tax Planning', 'Standard Costing', 'Companies Act', 'Capital Budgeting', 'Ratio Analysis', 'Marginal Costing']
+const CA_SUBJECTS = [
+    'Financial Reporting (Paper 1)', 
+    'Advanced Financial Management (Paper 2)', 
+    'Advanced Auditing, Assurance & Professional Ethics (Paper 3)', 
+    'Direct Tax Laws & International Taxation (Paper 4)', 
+    'Indirect Tax Laws (Paper 5)',
+    'Integrated Business Solutions (Paper 6)'
+]
+
+const CA_TOPICS = [
+    'Ind AS 115 - Revenue', 'Leases Ind AS 116', 'Corporate Valuation', 'Foreign Exchange Risk',
+    'Professional Ethics', 'Audit of NBFCs', 'Transfer Pricing', 'Assessment of Trusts',
+    'Place of Supply - GST', 'Input Tax Credit', 'Case Study Integration', 'Strategic Management'
+]
 
 const EXAM_TITLES = [
-    'CA Foundation Mock Test 1', 'CA Foundation Mock Test 2',
-    'CA Inter Accounting Quiz', 'CA Inter Law Test',
-    'CA Final SFM Practice', 'CA Final FR Mock',
-    'GST Objective Test', 'Audit Standards Quiz',
-    'Income Tax Practice Set', 'Costing Weekly Test',
-    'Economics Unit Test', 'Business Law MCQ',
-    'FULL SYLLABUS Mock Exam', 'ICAI Pattern Practice',
-    'Mid-term Review Test', 'Speed Test - Accounts',
-    'Conceptual Clarity Quiz', 'Advanced Problems Set',
-    'Revision Test Alpha', 'Revision Test Beta',
+    'FR Mock Test - Financial Instruments',
+    'AFM Practice Test - Derivatives',
+    'Auditing Standards Masterclass',
+    'Direct Tax Practice - Assessment',
+    'IDT Weekly Test - GST Compliance',
+    'IBS Case Study 01',
+    'FULL SYLLABUS MOCK - Group 1',
+    'FULL SYLLABUS MOCK - Group 2'
 ]
 
 const MCQ_BANK = [
-    { text: 'Which Accounting Standard deals with Revenue Recognition?', opts: ['AS-2', 'AS-7', 'AS-9', 'AS-15'], ans: 2 },
-    { text: 'A Company with paid-up capital above what limit requires audit?', opts: ['₹5 Lakh', '₹10 Lakh', '₹25 Lakh', 'Any'], ans: 3 },
-    { text: 'GST was implemented in India from which date?', opts: ['1 Apr 2016', '1 Jul 2017', '1 Jan 2018', '1 Apr 2019'], ans: 1 },
-    { text: 'ICAI was established in which year?', opts: ['1942', '1947', '1949', '1956'], ans: 2 },
-    { text: 'Which method values closing stock at market value or cost?', opts: ['FIFO', 'LIFO', 'Weighted Avg', 'Lower of cost or NRV'], ans: 3 },
-    { text: 'Debenture holders are considered as:', opts: ['Owners', 'Creditors', 'Partners', 'Promoters'], ans: 1 },
-    { text: 'Working capital = ?', opts: ['CA - CL', 'FA - CL', 'CA + CL', 'FA + CA'], ans: 0 },
-    { text: 'Break-even point means:', opts: ['Max Profit', 'Zero Profit', 'Max Sales', 'Min Cost'], ans: 1 },
-    { text: 'A bill of exchange has minimum ___ parties.', opts: ['1', '2', '3', '4'], ans: 2 },
-    { text: 'Internal rate of return ignores:', opts: ['Cash Flows', 'Time Value', 'Scale of Investment', 'All'], ans: 2 },
-    { text: 'Standard costing helps in:', opts: ['Tax Filing', 'Variance Analysis', 'Balance Sheet', 'None'], ans: 1 },
-    { text: 'Indirect tax means tax on:', opts: ['Income', 'Wealth', 'Goods & Services', 'Property'], ans: 2 },
-    { text: 'Capital gearing ratio measures:', opts: ['Profitability', 'Liquidity', 'Leverage', 'Efficiency'], ans: 2 },
-    { text: 'An auditor\'s primary duty is to:', opts: ['Detect fraud', 'Express an opinion', 'Prepare accounts', 'Calculate tax'], ans: 1 },
-    { text: 'Ratio of Net Profit to Net Sales is called:', opts: ['Gross Profit Ratio', 'Net Profit Ratio', 'Current Ratio', 'Quick Ratio'], ans: 1 },
-    { text: 'Deferred Revenue Expenditure is shown in:', opts: ['P&L A/c', 'Balance Sheet', 'Cash Flow', 'None'], ans: 1 },
-    { text: 'SEBI stands for:', opts: ['Securities Exchange Board of India', 'Stock Exchange Bureau of India', 'Securities Evaluation Board of India', 'None'], ans: 0 },
-    { text: 'Net Present Value method discounts cash flows at:', opts: ['Required rate of return', 'Inflation rate', 'Bank rate', 'None'], ans: 0 },
-    { text: 'Which of the following is a non-cash expense?', opts: ['Salary', 'Rent', 'Depreciation', 'Interest'], ans: 2 },
-    { text: 'Goodwill is a:', opts: ['Current Asset', 'Fixed Asset', 'Fictitious Asset', 'Intangible Asset'], ans: 3 },
+    // Paper 1: Financial Reporting (FR)
+    { text: 'Under Ind AS 115, revenue is recognized when:', opts: ['Cash is received', 'Invoices are generated', 'The customer obtains control of goods', 'Risks and rewards are transferred'], ans: 2, sub: 'Financial Reporting (Paper 1)' },
+    { text: 'Ind AS 116 "Leases" requires a lessee to recognize:', opts: ['Only Finance Leases', 'Only Operating Leases', 'Right-of-Use asset and Lease Liability', 'Rent expense on SLM basis'], ans: 2, sub: 'Financial Reporting (Paper 1)' },
+    { text: 'In a Business Combination (Ind AS 103), bargain purchase gain is recognized in:', opts: ['Profit & Loss', 'Other Comprehensive Income', 'Capital Reserve', 'Retained Earnings'], ans: 2, sub: 'Financial Reporting (Paper 1)' },
+    { text: 'Ind AS 32 deals with:', opts: ['Financial Instruments: Presentation', 'Financial Instruments: Recognition', 'Financial Instruments: Disclosures', 'Operating Segments'], ans: 0, sub: 'Financial Reporting (Paper 1)' },
+    { text: 'Consolidated Financial Statements are prepared under:', opts: ['Ind AS 27', 'Ind AS 110', 'Ind AS 28', 'Ind AS 111'], ans: 1, sub: 'Financial Reporting (Paper 1)' },
+
+    // Paper 2: Advanced Financial Management (AFM)
+    { text: 'In Capital Budgeting, if NPV is zero, the IRR is:', opts: ['Zero', 'Equal to cost of capital', 'Less than cost of capital', 'Undefined'], ans: 1, sub: 'Advanced Financial Management (Paper 2)' },
+    { text: 'Beta measures:', opts: ['Unsystematic risk', 'Systematic risk', 'Total risk', 'Credit risk'], ans: 1, sub: 'Advanced Financial Management (Paper 2)' },
+    { text: 'A call option is "in the money" when:', opts: ['Strike > Spot', 'Spot > Strike', 'Spot = Strike', 'Never'], ans: 1, sub: 'Advanced Financial Management (Paper 2)' },
+    { text: 'Foreign exchange risk arising from future transactions is called:', opts: ['Translation risk', 'Transaction risk', 'Economic risk', 'Business risk'], ans: 1, sub: 'Advanced Financial Management (Paper 2)' },
+    { text: 'The Capital Asset Pricing Model (CAPM) relates:', opts: ['Risk to Return', 'Cost to Price', 'Dividend to Growth', 'Supply to Demand'], ans: 0, sub: 'Advanced Financial Management (Paper 2)' },
+
+    // Paper 3: Advanced Auditing, Assurance & Professional Ethics
+    { text: 'SQC 1 deals with:', opts: ['Audit Documentation', 'Quality Control for Firms', 'Fraud in Audit', 'Materiality'], ans: 1, sub: 'Advanced Auditing, Assurance & Professional Ethics (Paper 3)' },
+    { text: 'Key Audit Matters (KAM) are reported under:', opts: ['SA 700', 'SA 701', 'SA 705', 'SA 706'], ans: 1, sub: 'Advanced Auditing, Assurance & Professional Ethics (Paper 3)' },
+    { text: 'A Chartered Accountant in practice can specify his name on:', opts: ['Greetings cards', 'Educational brochures', 'Visiting cards', 'All of the above'], ans: 3, sub: 'Advanced Auditing, Assurance & Professional Ethics (Paper 3)' },
+    { text: 'Audit of NBFCs is governed by directions issued by:', opts: ['ICAI', 'SEBI', 'RBI', 'Ministry of Finance'], ans: 2, sub: 'Advanced Auditing, Assurance & Professional Ethics (Paper 3)' },
+    { text: 'Under SA 600, the Principal Auditor has a right to:', opts: ['Review Branch auditor workpapers', 'Visit the branch', 'Request information from branch auditor', 'Both 2 and 3'], ans: 3, sub: 'Advanced Auditing, Assurance & Professional Ethics (Paper 3)' },
+
+    // Paper 4: Direct Tax Laws & International Taxation
+    { text: 'Significant Economic Presence (SEP) threshold for digital transactions is:', opts: ['₹1 Crore', '₹2 Crore', '₹5 Crore', '₹50 Lakh'], ans: 1, sub: 'Direct Tax Laws & International Taxation (Paper 4)' },
+    { text: 'Standard deduction for salaried employees under the new tax regime (2024) is:', opts: ['₹40,000', '₹50,000', '₹75,000', '₹2,50,000'], ans: 2, sub: 'Direct Tax Laws & International Taxation (Paper 4)' },
+    { text: 'The time limit for filing an updated return (Section 139(8A)) is:', opts: ['12 months', '24 months', '36 months', '9 months'], ans: 1, sub: 'Direct Tax Laws & International Taxation (Paper 4)' },
+    { text: 'TDS on lottery winnings is at:', opts: ['10%', '20%', '30%', '5%'], ans: 2, sub: 'Direct Tax Laws & International Taxation (Paper 4)' },
+    { text: 'Base Erosion and Profit Shifting (BEPS) Action 13 relates to:', opts: ['Digital Economy', 'Hybrid Mismatch', 'Country-by-Country Reporting', 'Transfer Pricing'], ans: 2, sub: 'Direct Tax Laws & International Taxation (Paper 4)' },
+
+    // Paper 5: Indirect Tax Laws (IDT)
+    { text: 'Under GST, Time of Supply for goods is generally:', opts: ['Date of invoice', 'Date of payment', 'Date of delivery', 'Date of invoice or last date of issue'], ans: 3, sub: 'Indirect Tax Laws (Paper 5)' },
+    { text: 'Place of Supply for service of admission to an event is:', opts: ['Location of supplier', 'Location of recipient', 'Where the event is held', 'Location of contract'], ans: 2, sub: 'Indirect Tax Laws (Paper 5)' },
+    { text: 'Input Tax Credit (ITC) is blocked for:', opts: ['Office equipment', 'Personal food & beverages', 'Factory machines', 'Raw materials'], ans: 1, sub: 'Indirect Tax Laws (Paper 5)' },
+    { text: 'Composition scheme threshold for manufacturers is:', opts: ['₹1 Crore', '₹1.5 Crore', '₹2 Crore', '₹50 Lakh'], ans: 1, sub: 'Indirect Tax Laws (Paper 5)' },
+    { text: 'IGST is levied on:', opts: ['Intra-state supplies', 'Inter-state supplies', 'Exempt supplies', 'None'], ans: 1, sub: 'Indirect Tax Laws (Paper 5)' },
+
+    // Paper 6: Integrated Business Solutions (IBS)
+    { text: 'Integrated Business Solutions (Paper 6) is an:', opts: ['Closed book exam', 'Open book exam', 'Oral viva', 'Practical project'], ans: 1, sub: 'Integrated Business Solutions (Paper 6)' },
+    { text: 'Michael Porter\'s "Five Forces" model is used for:', opts: ['Risk assessment', 'Industry analysis', 'Cost accounting', 'Audit planning'], ans: 1, sub: 'Integrated Business Solutions (Paper 6)' },
+    { text: 'ESG reporting stands for:', opts: ['Economic, Social, Goods', 'Environmental, Social, Governance', 'Energy, Safety, Growth', 'Equity, Stability, Gains'], ans: 1, sub: 'Integrated Business Solutions (Paper 6)' },
+    { text: 'A "Turnaround Strategy" is most appropriate when:', opts: ['Entering new markets', 'Company faces continuous losses', 'Acquiring a competitor', 'Issuing IPO'], ans: 1, sub: 'Integrated Business Solutions (Paper 6)' },
+    { text: 'Risk mitigation strategy of "Transfer" usually involves:', opts: ['Avoiding the project', 'Buying Insurance', 'Cost cutting', 'Accepting risk'], ans: 1, sub: 'Integrated Business Solutions (Paper 6)' },
+
+    // Full Syllabus Multidisciplinary MCQs
+    { text: 'The impact of Ind AS on Tax liability is bridged by:', opts: ['Deferred Tax (Ind AS 12)', 'Cash Flow', 'Audit Report', 'Board Report'], ans: 0, sub: 'FULL SYLLABUS' },
+    { text: 'Professional Ethics applies to CA in:', opts: ['Practice ONLY', 'Employment ONLY', 'Both Practice and Employment', 'Teaching ONLY'], ans: 2, sub: 'FULL SYLLABUS' },
+    { text: 'Foreign branch integration involves:', opts: ['Ind AS 21', 'FEMA regulations', 'International Taxation', 'All of the above'], ans: 3, sub: 'FULL SYLLABUS' },
+    { text: 'Valuation of a startup for funding involves:', opts: ['AFM concepts', 'Asset valuation', 'Direct tax implications', 'All of the above'], ans: 3, sub: 'FULL SYLLABUS' },
+    { text: 'Audit of a group entity requires:', opts: ['SA 600', 'Ind AS 110', 'Compliance with Companies Act', 'All of the above'], ans: 3, sub: 'FULL SYLLABUS' }
 ]
 
 const ANNOUNCEMENT_TEMPLATES = [
@@ -116,8 +148,29 @@ const ANNOUNCEMENT_TEMPLATES = [
 async function main() {
     console.log('🌱  Starting comprehensive seed...\n')
 
-    // 1. Create 10 Teachers
-    console.log('👩‍🏫  Creating 10 teachers...')
+    // 0. Cleanup existing data
+    console.log('🧹  Cleaning up database...')
+    await prisma.studentAnswer.deleteMany({})
+    await prisma.examAttempt.deleteMany({})
+    await prisma.examQuestion.deleteMany({})
+    await prisma.question.deleteMany({})
+    await prisma.option.deleteMany({})
+    await prisma.exam.deleteMany({})
+    await prisma.announcement.deleteMany({})
+    await prisma.enrollment.deleteMany({})
+    await prisma.batch.deleteMany({})
+    await prisma.materialAccess.deleteMany({})
+    await prisma.studyMaterial.deleteMany({})
+    await prisma.folder.deleteMany({})
+    await prisma.xPEvent.deleteMany({})
+    await prisma.topicProgress.deleteMany({})
+    await prisma.studentLearningProfile.deleteMany({})
+    await prisma.draftMCQ.deleteMany({})
+    await prisma.user.deleteMany({ where: { role: { in: ['STUDENT', 'TEACHER'] } } })
+    console.log('  ✓ Cleanup complete\n')
+
+    // 1. Create 6 Teachers
+    console.log('👩‍🏫  Creating 6 teachers...')
     const teachers = []
     for (const t of TEACHERS) {
         const user = await prisma.user.upsert({
@@ -143,10 +196,10 @@ async function main() {
         console.log(`  ✓ ${user.fullName}`)
     }
 
-    // 2. Create 10 Batches (1 per teacher)
-    console.log('\n📦  Creating 10 batches...')
+    // 2. Create 6 Batches (1 per teacher)
+    console.log('\n📦  Creating 6 batches...')
     const batches: any[] = []
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 6; i++) {
         const batch = await prisma.batch.upsert({
             where: { uniqueJoinCode: JOIN_CODES[i] },
             update: {},
@@ -167,7 +220,7 @@ async function main() {
     const usedEmails = new Set<string>()
     const usedRegs = new Set<string>()
 
-    for (let ti = 0; ti < 10; ti++) {
+    for (let ti = 0; ti < 6; ti++) {
         for (let si = 0; si < 10; si++) {
             const fn = STUDENT_FIRST[(ti * 10 + si) % STUDENT_FIRST.length]
             const ln = STUDENT_LAST[(ti * 10 + si) % STUDENT_LAST.length]
@@ -210,7 +263,7 @@ async function main() {
 
             // 20% of students are in a second batch as well
             if (Math.random() < 0.2) {
-                const secondBatchIdx = (ti + rnd(1, 9)) % 10
+                const secondBatchIdx = (ti + rnd(1, 4)) % 6
                 try {
                     await prisma.enrollment.create({
                         data: {
@@ -231,12 +284,12 @@ async function main() {
     console.log('\n📝  Creating exams & questions...')
     const allExams = []
     for (let ei = 0; ei < 20; ei++) {
-        const ti = ei % 10
+        const ti = ei % 6
         const qCount = rnd(10, 20)
         const marksEach = 4
         const exam = await prisma.exam.create({
             data: {
-                title: EXAM_TITLES[ei],
+                title: EXAM_TITLES[ei % EXAM_TITLES.length],
                 description: `Practice exam by ${teachers[ti].fullName} covering ${pick(CA_SUBJECTS)}.`,
                 duration: pick([60, 90, 120, 180]),
                 totalMarks: qCount * marksEach,
@@ -351,7 +404,7 @@ async function main() {
     // 6. Create Announcements (3–6 per batch)
     console.log('\n📢  Creating announcements...')
     let annCount = 0
-    for (let bi = 0; bi < 10; bi++) {
+    for (let bi = 0; bi < 6; bi++) {
         const count = rnd(3, 6)
         for (let ai = 0; ai < count; ai++) {
             await prisma.announcement.create({
@@ -373,10 +426,14 @@ async function main() {
     const MAT_TITLES = ['Chapter Notes', 'Practice Questions', 'Formula Sheet', 'Video Lecture', 'Past Year Papers', 'Summary Sheet', 'Quick Revision PDF', 'MCQ Bank']
     let matCount = 0
 
-    const RESOURCE_CATEGORIES = ["CA Final", "CA Inter", "CA Foundation", "Case Studies", "Amendments"];
-    const SUB_TYPES = ["PDF", "VIDEO", "RTP", "MTP", "PYQ"];
+    const ICAI_PDFS = [
+        { title: 'Revision Test Paper (RTP) - May 2025', url: 'https://resource.cdn.icai.org/82155bos66380-p1.pdf', type: 'RTP' },
+        { title: 'Mock Test Paper (MTP) - Series 1', url: 'https://resource.cdn.icai.org/81944bos65809-p1.pdf', type: 'MTP' },
+        { title: 'Suggested Answers - Jan 2024', url: 'https://resource.cdn.icai.org/79261bos63731.pdf', type: 'PYQ' },
+        { title: 'Quick Revision Notes - Ind AS', url: 'https://resource.cdn.icai.org/62325bos50435.pdf', type: 'PDF' }
+    ];
 
-    for (let ti = 0; ti < 10; ti++) {
+    for (let ti = 0; ti < 6; ti++) {
         // Create a folder for each teacher
         const folder = await prisma.folder.create({
             data: {
@@ -385,24 +442,24 @@ async function main() {
             },
         })
 
-        const count = rnd(2, 4)
+        const count = rnd(3, 5)
         for (let mi = 0; mi < count; mi++) {
-            const fileName = pick(MAT_TITLES)
-            const isPublic = Math.random() < 0.5;
+            const pdfInfo = ICAI_PDFS[mi % ICAI_PDFS.length]
+            const isPublic = true; // Making all seeded papers public as requested
             
             const material = await prisma.studyMaterial.create({
                 data: {
-                    title: `${fileName} - ${pick(CA_SUBJECTS)}`,
-                    description: `Prepared by ${teachers[ti].fullName}. Comprehensive coverage of concepts for ${pick(RESOURCE_CATEGORIES)}.`,
-                    fileUrl: `/uploads/${teachers[ti].registrationNumber}/file_${mi}.${pick(FILE_TYPES).toLowerCase()}`,
-                    fileType: pick(FILE_TYPES),
-                    sizeInBytes: rnd(200_000, 15_000_000),
+                    title: `${CA_SUBJECTS[ti]} - ${pdfInfo.title}`,
+                    description: `Official ${pdfInfo.type} release for ${CA_SUBJECTS[ti]}. Verified by ${teachers[ti].fullName}.`,
+                    fileUrl: pdfInfo.url,
+                    fileType: 'PDF',
+                    sizeInBytes: rnd(1_000_000, 5_000_000),
                     isPublic: isPublic,
-                    category: pick(RESOURCE_CATEGORIES),
-                    subType: isPublic ? (fileName.includes("Past Year") ? "PYQ" : pick(SUB_TYPES)) : "PDF",
-                    downloads: rnd(100, 25000),
-                    rating: 4.0 + (Math.random() * 1.0),
-                    isTrending: Math.random() < 0.3,
+                    category: 'CA Final',
+                    subType: pdfInfo.type,
+                    downloads: rnd(1000, 50000),
+                    rating: 4.5 + (Math.random() * 0.5),
+                    isTrending: Math.random() < 0.4,
                     uploadedById: teachers[ti].id,
                     folderId: folder.id,
                     createdAt: daysAgo(rnd(5, 60)),
@@ -458,11 +515,11 @@ async function main() {
                     totalAttempts,
                     totalCorrect,
                     avgAccuracy,
-                    weakTopicsJson: JSON.stringify([pick(CA_TOPICS), pick(CA_TOPICS)]),
+                    weakTopicsJson: JSON.stringify([pick(CA_TOPICS), pick(CA_TOPICS)]) as any,
                     badgesJson: JSON.stringify(
                         level >= 3 ? ['first_exam', 'streak_7', 'accuracy_80'] :
                             level >= 2 ? ['first_exam'] : []
-                    ),
+                    ) as any,
                     lastAttemptAt: daysAgo(rnd(0, 15)),
                 },
             })
@@ -539,9 +596,9 @@ async function main() {
     console.log('  ✓ 50 draft MCQs')
 
     console.log('\n✅  Seed complete!')
-    console.log(`   Teachers   : 10`)
-    console.log(`   Students   : 100`)
-    console.log(`   Batches    : 10`)
+    console.log(`   Teachers   : 6`)
+    console.log(`   Students   : 60`)
+    console.log(`   Batches    : 6`)
     console.log(`   Exams      : 20`)
     console.log(`   Attempts   : ${attemptCount}`)
     console.log(`   Announcements: ${annCount}`)

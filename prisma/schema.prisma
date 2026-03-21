@@ -1,6 +1,5 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -31,11 +30,25 @@ model User {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
+  // Extended Student Profile Fields
+  batch              String?
+  dob                String?
+  location           String?
+  firm               String?
+  firmRole           String?
+  articleshipYear    Int?
+  articleshipTotal   Int?
+  foundationCleared  Boolean             @default(false)
+  intermediateCleared Boolean            @default(false)
+  finalCleared       Boolean             @default(false)
+  resumeUrl          String?
+
   // Relations
   materialsUploaded  StudyMaterial[]     @relation("UploadedMaterials")
   folders            Folder[]
   materialAccess     MaterialAccess[]
   featureOverrides   UserFeatureAccess[]
+  savedItems         SavedItem[]         @relation("StudentSavedItems")
 
   // Phase 2 Relations
   batchesTeaching    Batch[]             @relation("TeacherBatches")
@@ -66,7 +79,9 @@ model StudyMaterial {
   // Dynamic Content Fields
   category      String           @default("GENERAL") // e.g., CA Final, CA Inter
   subType       String           @default("PDF")     // PDF, VIDEO, RTP, MTP, PYQ
+  providerType  String           @default("PLATFORM") // TEACHER, ICAI, PLATFORM
   downloads     Int              @default(0)
+  shareCount    Int              @default(0)
   rating        Float            @default(5.0)
   isTrending    Boolean          @default(false)
 
@@ -108,6 +123,23 @@ model MaterialAccess {
   material    StudyMaterial     @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, materialId])
+}
+
+model SavedItem {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // Type of saved resource: MATERIAL, EXAM, etc.
+  type        String   @default("MATERIAL") 
+  
+  // Relations
+  studentId   String
+  student     User     @relation("StudentSavedItems", fields: [studentId], references: [id], onDelete: Cascade)
+  
+  // Polymorphic-ish relations (IDs pointing to specific models)
+  resourceId  String
+
+  @@unique([studentId, resourceId, type])
 }
 
 model Batch {
@@ -192,7 +224,10 @@ model Exam {
   totalMarks    Int            @default(0)
   passingMarks  Int            @default(0)
   category      String         @default("GENERAL") // e.g., CA Foundation, Inter, Final
+  subject       String?
+  chapter       String?
   status        String         @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  examType      String         @default("GENERAL") // RPT, MTP, PYQ, GENERAL
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -297,6 +332,7 @@ model StudentLearningProfile {
   weakTopicsJson  Json     @default("[]")
   badgesJson      Json     @default("[]")
   lastAttemptAt   DateTime?
+  practiceGoal     Int      @default(20)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

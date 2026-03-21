@@ -3,6 +3,9 @@
 import { ExamAttempt, Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma/client";
 import { revalidatePath } from "next/cache";
+import { startExamAttemptRecord, submitExamAttemptRecord, type SubmittedExamAnswerInput } from "@/lib/server/exam-workflow";
+import { getActionErrorMessage } from "@/lib/server/action-utils";
+import { ActionResponse } from "@/types/shared";
 
 export type ExamWithQuestions = Prisma.ExamGetPayload<{
     include: {
@@ -18,7 +21,10 @@ export type ExamWithQuestions = Prisma.ExamGetPayload<{
     }
 }>;
 
-export async function getExamDetails(examId: string): Promise<{ success: boolean; exam?: ExamWithQuestions; error?: string }> {
+/**
+ * Fetches the full details of an exam, including its questions and options.
+ */
+export async function getExamDetails(examId: string): Promise<ActionResponse<ExamWithQuestions>> {
     try {
         const exam = await prisma.exam.findUnique({
             where: { id: examId },
@@ -36,119 +42,45 @@ export async function getExamDetails(examId: string): Promise<{ success: boolean
             }
         });
 
-        if (!exam) return { success: false, error: "Exam not found" };
+        if (!exam) return { success: false, message: "Exam not found." };
 
-        return { success: true, exam: exam as ExamWithQuestions };
+        return { success: true, data: exam as ExamWithQuestions };
     } catch (error) {
-        console.error("Error fetching exam:", error);
-        return { success: false, error: "Failed to fetch exam details" };
+        console.error("getExamDetails error:", error);
+        return { success: false, message: "Failed to fetch exam details." };
     }
 }
 
-export async function startExamAttempt(examId: string, studentId: string): Promise<{ success: boolean; attempt?: ExamAttempt; error?: string }> {
+/**
+ * Initializes a new exam attempt for a student or returns an existing active attempt.
+ */
+export async function startExamAttempt(examId: string, studentId: string): Promise<ActionResponse<ExamAttempt>> {
     try {
-        // Check if there's an existing active attempt
-        const existingAttempt = await prisma.examAttempt.findFirst({
-            where: {
-                examId,
-                studentId,
-                status: 'STARTED'
-            }
-        });
+        const attempt = await startExamAttemptRecord(examId, studentId);
 
-        if (existingAttempt) return { success: true, attempt: existingAttempt };
-
-        const attempt = await prisma.examAttempt.create({
-            data: {
-                examId,
-                studentId,
-                status: 'STARTED',
-                startTime: new Date(),
-            }
-        });
-
-        return { success: true, attempt };
+        return { success: true, data: attempt };
     } catch (error) {
-        console.error("Error starting attempt:", error);
-        return { success: false, error: "Failed to start exam attempt" };
+        console.error("startExamAttempt error:", error);
+        return { success: false, message: getActionErrorMessage(error, "Failed to start exam attempt.") };
     }
 }
 
+/**
+ * Finalizes an exam attempt, calculating the score and saving student answers.
+ */
 export async function submitExamAttempt(
     attemptId: string,
-    answers: { questionId: string, selectedOptionId: string, timeSpent: number }[]
-): Promise<{ success: boolean; attempt?: ExamAttempt; error?: string }> {
+    answers: SubmittedExamAnswerInput[]
+): Promise<ActionResponse<ExamAttempt>> {
     try {
-        const attempt = await prisma.examAttempt.findUnique({
-            where: { id: attemptId },
-            include: {
-                exam: {
-                    include: {
-                        questions: {
-                            include: {
-                                question: {
-                                    include: {
-                                        options: true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        if (!attempt) return { success: false, error: "Attempt not found" };
-
-        let totalScore = 0;
-
-        // Process answers and calculate score
-        for (const ans of answers) {
-            const examQuestion = attempt.exam.questions.find(eq => eq.questionId === ans.questionId);
-            const question = examQuestion?.question;
-            const selectedOption = question?.options.find(o => o.id === ans.selectedOptionId);
-
-            const isCorrect = selectedOption?.isCorrect || false;
-            if (isCorrect && examQuestion) {
-                totalScore += examQuestion.marks;
-            }
-
-            await prisma.studentAnswer.upsert({
-                where: {
-                    attemptId_questionId: {
-                        attemptId,
-                        questionId: ans.questionId
-                    }
-                },
-                update: {
-                    selectedOptionId: ans.selectedOptionId,
-                    isCorrect,
-                    timeSpent: ans.timeSpent
-                },
-                create: {
-                    attemptId,
-                    questionId: ans.questionId,
-                    selectedOptionId: ans.selectedOptionId,
-                    isCorrect,
-                    timeSpent: ans.timeSpent
-                }
-            });
-        }
-
-        const updatedAttempt = await prisma.examAttempt.update({
-            where: { id: attemptId },
-            data: {
-                status: 'SUBMITTED',
-                endTime: new Date(),
-                score: totalScore
-            }
-        });
+        const updatedAttempt = await submitExamAttemptRecord(attemptId, answers);
 
         revalidatePath(`/student/results/${attemptId}`);
-        return { success: true, attempt: updatedAttempt };
+        revalidatePath("/student/exams");
+        return { success: true, data: updatedAttempt, message: "Exam submitted successfully." };
     } catch (error) {
-        console.error("Error submitting attempt:", error);
-        return { success: false, error: "Failed to submit exam attempt" };
+        console.error("submitExamAttempt error:", error);
+        return { success: false, message: getActionErrorMessage(error, "Failed to submit exam attempt.") };
     }
 }
 
@@ -174,7 +106,10 @@ export type AttemptWithResults = Prisma.ExamAttemptGetPayload<{
     }
 }>;
 
-export async function getExamResults(attemptId: string): Promise<{ success: boolean; attempt?: AttemptWithResults; error?: string }> {
+/**
+ * Fetches the results of a completed exam attempt.
+ */
+export async function getExamResults(attemptId: string): Promise<ActionResponse<AttemptWithResults>> {
     try {
         const attempt = await prisma.examAttempt.findUnique({
             where: { id: attemptId },
@@ -204,11 +139,11 @@ export async function getExamResults(attemptId: string): Promise<{ success: bool
             }
         });
 
-        if (!attempt) return { success: false, error: "Results not found" };
+        if (!attempt) return { success: false, message: "Results not found." };
 
-        return { success: true, attempt: attempt as AttemptWithResults };
+        return { success: true, data: attempt as AttemptWithResults };
     } catch (error) {
-        console.error("Error fetching results:", error);
-        return { success: false, error: "Failed to fetch results" };
+        console.error("getExamResults error:", error);
+        return { success: false, message: "Failed to fetch results." };
     }
 }

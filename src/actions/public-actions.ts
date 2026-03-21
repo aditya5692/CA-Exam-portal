@@ -42,3 +42,31 @@ export async function getPublicEducatorProfile(id: string) {
         return null;
     }
 }
+
+export async function getGlobalMetrics() {
+    try {
+        const [studentCount, mcqCount, resourceCount, batchCount] = await Promise.all([
+            prisma.user.count({ where: { role: "STUDENT" } }),
+            prisma.question.count({}),
+            prisma.studyMaterial.count({}),
+            prisma.batch.count({})
+        ]);
+
+        return {
+            studentCount,
+            mcqCount,
+            resourceCount,
+            batchCount,
+            lastUpdate: new Date().toISOString()
+        };
+    } catch (error) {
+        console.error("Failed to fetch global metrics:", error);
+        return {
+            studentCount: 0,
+            mcqCount: 0,
+            resourceCount: 0,
+            batchCount: 0,
+            lastUpdate: new Date().toISOString()
+        };
+    }
+}

@@ -1,5 +1,5 @@
-import { ProfileEditor } from "@/components/profile/profile-editor";
+import { StudentProfile } from "@/components/student/profile/student-profile";
 
 export default function StudentProfilePage() {
-    return <ProfileEditor mode="student" />;
+    return <StudentProfile />;
 }

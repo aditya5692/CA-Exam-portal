@@ -3,6 +3,11 @@ export type Question = {
     prompt: string;
     options: string[];
     correct: number[];
+    subject?: string;
+    topic?: string;
+    difficulty?: string;
+    type?: string;
+    status?: string;
 };
 
 export type UploadReport = {
@@ -101,6 +106,11 @@ export const parseQuestionRows = (rows: Record<string, unknown>[], fileName: str
             prompt,
             options,
             correct,
+            subject: getCellValue(row, ["subject"]),
+            topic: getCellValue(row, ["topic"]),
+            difficulty: getCellValue(row, ["difficulty"]),
+            type: getCellValue(row, ["examtype", "type"]) || "Practice",
+            status: "Live",
         });
     });
 

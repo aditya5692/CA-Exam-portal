@@ -1,5 +1,5 @@
-import { EliteNavbar } from "@/components/common/navbar";
-import { EliteFooter } from "@/components/common/footer";
+import { Navbar } from "@/components/common/navbar";
+import { Footer } from "@/components/common/footer";
 import { PastYearQuestionsDashboard } from "@/components/home/PastYearQuestionsDashboard";
 import { getSessionPayload } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
@@ -15,13 +15,13 @@ export default async function PastYearQuestionsPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <EliteNavbar user={session} />
+            <Navbar user={session} />
 
             <main className="pt-24 sm:pt-32 pb-20">
                 <PastYearQuestionsDashboard />
             </main>
 
-            <EliteFooter />
+            <Footer />
         </div>
     );
 }

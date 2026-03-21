@@ -1,7 +1,7 @@
 import { PricingCards } from "@/components/subscription/pricing-cards";
 import { ShieldCheck, CheckCircle, Question, Info } from "@phosphor-icons/react/dist/ssr";
-import { EliteNavbar } from "@/components/common/navbar";
-import { EliteFooter } from "@/components/common/footer";
+import { Navbar } from "@/components/common/navbar";
+import { Footer } from "@/components/common/footer";
 import { getSessionPayload } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
@@ -16,7 +16,7 @@ export default async function PricingPage() {
 
     return (
         <div className="min-h-screen bg-white selection:bg-indigo-100 selection:text-indigo-900">
-            <EliteNavbar user={session} />
+            <Navbar user={session} />
 
             <main className="max-w-7xl mx-auto px-6 py-32 sm:py-48">
                 <div className="text-center space-y-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
@@ -60,7 +60,7 @@ export default async function PricingPage() {
                 </div>
             </main>
 
-            <EliteFooter />
+            <Footer />
         </div>
     );
 }

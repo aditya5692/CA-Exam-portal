@@ -24,7 +24,7 @@ export function LoginForm() {
             });
             if (result.success) {
                 toast.success(result.message);
-                router.push(result.redirectTo || "/student/dashboard");
+                router.push(result.data?.redirectTo || "/student/dashboard");
             } else {
                 toast.error(result.message);
             }

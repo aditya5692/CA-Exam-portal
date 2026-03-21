@@ -27,7 +27,7 @@ export function ExamClient({ exam, studentName, attemptId }: ExamClientProps) {
                 toast.success("Exam submitted successfully!");
                 router.push(`/student/results/${attemptId}`);
             } else {
-                toast.error(result.error || "Failed to submit exam.");
+                toast.error(result.message || "Failed to submit exam.");
             }
         } catch {
             toast.error("An error occurred during submission.");

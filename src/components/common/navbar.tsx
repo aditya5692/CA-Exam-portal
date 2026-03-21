@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { logout } from "@/actions/auth-actions";
 import { useRouter } from "next/navigation";
 
-export function EliteNavbar({ user }: { user?: { fullName: string | null; role: string } | null }) {
+export function Navbar({ user }: { user?: { fullName: string | null; role: string } | null }) {
     const router = useRouter();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

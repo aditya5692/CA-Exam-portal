@@ -39,9 +39,9 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                 answers.filter((a) => a.isCorrect);
 
     const tabs: { key: FilterTab; label: string; active: string; inactive: string }[] = [
-        { key: "all", label: `All (${counts.all})`, active: "bg-indigo-600 text-white", inactive: "bg-gray-100 text-gray-500 hover:bg-gray-200" },
-        { key: "wrong", label: `❌ Wrong (${counts.wrong})`, active: "bg-rose-500 text-white", inactive: "bg-gray-100 text-gray-500 hover:bg-rose-50" },
-        { key: "correct", label: `✅ Correct (${counts.correct})`, active: "bg-emerald-500 text-white", inactive: "bg-gray-100 text-gray-500 hover:bg-emerald-50" },
+        { key: "all", label: `All (${counts.all})`, active: "bg-slate-900 text-white", inactive: "bg-slate-100 text-slate-500 hover:bg-slate-200" },
+        { key: "wrong", label: `Wrong (${counts.wrong})`, active: "bg-rose-500 text-white", inactive: "bg-slate-100 text-slate-500 hover:bg-rose-50" },
+        { key: "correct", label: `Correct (${counts.correct})`, active: "bg-emerald-500 text-white", inactive: "bg-slate-100 text-slate-500 hover:bg-emerald-50" },
     ];
 
     const optionLetters = ["A", "B", "C", "D", "E"];
@@ -49,11 +49,11 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
     return (
         <div className="space-y-4">
             {/* Filter tabs */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap mb-6">
                 {tabs.map((t) => (
                     <button key={t.key} onClick={() => setFilter(t.key)}
-                        className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95",
-                            filter === t.key ? t.active : t.inactive)}>
+                        className={cn("px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-sm border",
+                            filter === t.key ? t.active + " border-transparent" : t.inactive + " border-slate-100")}>
                         {t.label}
                     </button>
                 ))}
@@ -72,60 +72,60 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
             {/* Question cards */}
             {displayed.map((answer, idx) => (
                 <div key={answer.id}
-                    className={cn("p-6 rounded-2xl bg-white border-2 shadow-sm",
-                        answer.isCorrect ? "border-emerald-100" : "border-rose-100")}>
+                    className={cn("p-6 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all duration-300",
+                        !answer.isCorrect && "border-rose-100")}>
                     <div className="flex items-start gap-4">
-                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0",
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-inner border border-black/5",
                             answer.isCorrect ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600")}>
                             {idx + 1}
                         </div>
 
                         <div className="flex-1 space-y-4 min-w-0">
                             {/* Tags */}
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-3 flex-wrap">
                                 {answer.question.topic && (
-                                    <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold">
+                                    <span className="px-3 py-1 rounded-full bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
                                         {answer.question.topic}
                                     </span>
                                 )}
                                 {answer.question.difficulty && (
-                                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold",
-                                        answer.question.difficulty === "EASY" ? "bg-green-50 text-green-600" :
-                                            answer.question.difficulty === "HARD" ? "bg-rose-50 text-rose-600" :
-                                                "bg-amber-50 text-amber-600")}>
+                                    <span className={cn("px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
+                                        answer.question.difficulty === "EASY" ? "bg-emerald-50 text-emerald-600/80 border-emerald-100" :
+                                            answer.question.difficulty === "HARD" ? "bg-rose-50 text-rose-600/80 border-rose-100" :
+                                                "bg-amber-50 text-amber-600/80 border-amber-100")}>
                                         {answer.question.difficulty}
                                     </span>
                                 )}
                                 {answer.timeSpent > 0 && (
-                                    <span className="text-[10px] text-gray-400 font-medium">⏱ {answer.timeSpent}s</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">⏱ Time: {answer.timeSpent}s</span>
                                 )}
                             </div>
 
                             {/* Question text */}
-                            <p className="font-semibold text-gray-900 leading-relaxed text-sm">{answer.question.text}</p>
+                            <p className="font-bold text-slate-900 leading-relaxed text-lg font-outfit tracking-tight">{answer.question.text}</p>
 
                             {/* Options */}
-                            <div className="grid sm:grid-cols-2 gap-2">
+                            <div className="grid sm:grid-cols-2 gap-3">
                                 {answer.question.options.map((opt, oi) => {
                                     const isChosen = opt.id === answer.selectedOptionId;
                                     const isCorrect = opt.isCorrect;
                                     return (
                                         <div key={opt.id}
-                                            className={cn("p-3 rounded-xl border text-sm font-medium flex items-center justify-between gap-2",
-                                                isCorrect ? "bg-emerald-50 border-emerald-200 text-emerald-800" :
-                                                    isChosen && !isCorrect ? "bg-rose-50 border-rose-200 text-rose-800" :
-                                                        "bg-gray-50 border-gray-100 text-gray-500")}>
-                                            <span className="flex items-center gap-2">
-                                                <span className={cn("w-6 h-6 rounded-full text-[10px] font-black flex items-center justify-center shrink-0",
+                                            className={cn("p-4 rounded-xl border text-sm font-bold flex items-center justify-between gap-3 transition-all",
+                                                isCorrect ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm" :
+                                                    isChosen && !isCorrect ? "bg-rose-50 border-rose-100 text-rose-700 shadow-sm" :
+                                                        "bg-white border-slate-100 text-slate-500 hover:border-slate-200")}>
+                                            <span className="flex items-center gap-3">
+                                                <span className={cn("w-8 h-8 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 shadow-sm",
                                                     isCorrect ? "bg-emerald-500 text-white" :
                                                         isChosen ? "bg-rose-500 text-white" :
-                                                            "bg-gray-200 text-gray-500")}>
+                                                            "bg-slate-100 text-slate-400")}>
                                                     {optionLetters[oi] ?? String.fromCharCode(65 + oi)}
                                                 </span>
                                                 {opt.text}
                                             </span>
-                                            {isCorrect && <CheckCircle size={14} weight="fill" className="text-emerald-500 shrink-0" />}
-                                            {isChosen && !isCorrect && <XCircle size={14} weight="fill" className="text-rose-500 shrink-0" />}
+                                            {isCorrect && <CheckCircle size={18} weight="fill" className="text-emerald-500 shrink-0" />}
+                                            {isChosen && !isCorrect && <XCircle size={18} weight="fill" className="text-rose-500 shrink-0" />}
                                         </div>
                                     );
                                 })}
@@ -133,19 +133,19 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
 
                             {/* Explanation */}
                             {answer.question.explanation && (
-                                <div className="flex gap-3 p-4 rounded-xl bg-indigo-50 border border-indigo-100">
-                                    <span className="text-indigo-500 shrink-0">💡</span>
+                                <div className="flex gap-4 p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                                    <span className="text-xl shrink-0">💡</span>
                                     <div>
-                                        <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Explanation</div>
-                                        <p className="text-sm text-gray-700 leading-relaxed">{answer.question.explanation}</p>
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 opacity-70">Explanation</div>
+                                        <p className="text-base text-slate-700 font-medium leading-relaxed font-sans">{answer.question.explanation}</p>
                                     </div>
                                 </div>
                             )}
 
                             {/* Unanswered notice */}
                             {!answer.selectedOptionId && (
-                                <div className="flex gap-2 items-center p-3 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-400 font-medium">
-                                    ⏭ You skipped this question
+                                <div className="flex gap-3 items-center p-4 rounded-xl bg-slate-50 border border-slate-100 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                                    Not Answered
                                 </div>
                             )}
                         </div>
@@ -154,14 +154,14 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
             ))}
 
             {/* Back CTA */}
-            <div className="pt-4 flex gap-3">
+            <div className="pt-8 flex gap-4">
                 <Link href="/student/exams"
-                    className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all text-center shadow-lg shadow-indigo-200">
-                    Practice More →
+                    className="flex-1 py-4 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all text-center shadow-lg active:scale-95">
+                    Start Next Exam
                 </Link>
-                <Link href="/student/history"
-                    className="flex-1 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-all text-center">
-                    📋 Full History
+                <Link href="/student/analytics"
+                    className="flex-1 py-4 rounded-xl bg-white border border-slate-200 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all text-center active:scale-95 shadow-sm">
+                    View Analytics
                 </Link>
             </div>
         </div>

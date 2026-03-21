@@ -3,9 +3,11 @@
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
+import { Prisma } from "@prisma/client";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import { ActionResponse } from "@/types/shared";
 
 const MCQ_PRICE_PER_QUESTION = 5;
 
@@ -79,7 +81,17 @@ async function parseQuestionsFromFileAI(
     ];
 }
 
-export async function analyzePdfForMCQs(formData: FormData) {
+export type MCQExtractionResult = {
+    count: number;
+    totalCost: number;
+    pricePerMCQ: number;
+    questions: Array<{ question: string; options: string; answer: string }>;
+};
+
+/**
+ * Uploads a PDF/file and analyzes it to extract MCQs into a draft state.
+ */
+export async function analyzePdfForMCQs(formData: FormData): Promise<ActionResponse<MCQExtractionResult>> {
     try {
         const file = formData.get("file") as File | null;
         if (!file) throw new Error("No file provided.");
@@ -115,17 +127,36 @@ export async function analyzePdfForMCQs(formData: FormData) {
 
         return {
             success: true,
-            count: extractedQuestions.length,
-            totalCost,
-            pricePerMCQ: MCQ_PRICE_PER_QUESTION,
-            questions: extractedQuestions,
+            data: {
+                count: extractedQuestions.length,
+                totalCost,
+                pricePerMCQ: MCQ_PRICE_PER_QUESTION,
+                questions: extractedQuestions,
+            },
+            message: `Extracted ${extractedQuestions.length} draft questions.`
         };
     } catch (error: unknown) {
+        console.error("analyzePdfForMCQs error:", error);
         return { success: false, message: error instanceof Error ? error.message : "Analysis failed." };
     }
 }
 
-export async function getMyDraftMCQs(ownerId?: string) {
+export type DraftMCQWithTeacher = Prisma.DraftMCQGetPayload<{
+    include: { teacher: { select: { id: true, fullName: true, email: true } } }
+}>;
+
+export type DraftMCQsData = {
+    drafts: DraftMCQWithTeacher[];
+    totalCost: number;
+    pricePerMCQ: number;
+    isAdminView: boolean;
+    availableEducators: { id: string; fullName: string | null; email: string | null; role: string }[];
+};
+
+/**
+ * Fetches the current teacher's draft MCQs.
+ */
+export async function getMyDraftMCQs(ownerId?: string): Promise<ActionResponse<DraftMCQsData>> {
     try {
         const teacher = await getMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "read");
@@ -147,22 +178,29 @@ export async function getMyDraftMCQs(ownerId?: string) {
                 },
             },
             orderBy: { createdAt: "desc" },
-        });
+        }) as DraftMCQWithTeacher[];
+
         const totalCost = drafts.length * MCQ_PRICE_PER_QUESTION;
         return {
             success: true,
-            drafts,
-            totalCost,
-            pricePerMCQ: MCQ_PRICE_PER_QUESTION,
-            isAdminView,
-            availableEducators: isAdminView ? await getAvailableEducators() : [],
+            data: {
+                drafts,
+                totalCost,
+                pricePerMCQ: MCQ_PRICE_PER_QUESTION,
+                isAdminView,
+                availableEducators: isAdminView ? await getAvailableEducators() : [],
+            }
         };
     } catch (error: unknown) {
+        console.error("getMyDraftMCQs error:", error);
         return { success: false, message: error instanceof Error ? error.message : "Failed to load drafts." };
     }
 }
 
-export async function confirmAndImportMCQs(ownerId?: string) {
+/**
+ * Confirms the draft MCQs and "imports" them (currently just clears them as a final step).
+ */
+export async function confirmAndImportMCQs(ownerId?: string): Promise<ActionResponse<{ imported: number }>> {
     try {
         const teacher = await getMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "share");
@@ -176,8 +214,9 @@ export async function confirmAndImportMCQs(ownerId?: string) {
 
         await prisma.draftMCQ.deleteMany({ where: { teacherId: targetTeacherId } });
 
-        return { success: true, imported: drafts.length };
+        return { success: true, data: { imported: drafts.length }, message: "MCQs imported successfully." };
     } catch (error: unknown) {
+        console.error("confirmAndImportMCQs error:", error);
         return { success: false, message: error instanceof Error ? error.message : "Import failed." };
     }
 }

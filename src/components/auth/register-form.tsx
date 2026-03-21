@@ -36,7 +36,7 @@ export function RegisterForm() {
             const result = await register(registerData as Record<string, string>);
             if (result.success) {
                 toast.success(result.message);
-                router.push(result.redirectTo || "/student/dashboard");
+                router.push(result.data?.redirectTo || "/student/dashboard");
             } else {
                 toast.error(result.message);
             }

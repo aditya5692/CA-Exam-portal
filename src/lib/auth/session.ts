@@ -15,6 +15,7 @@ type SessionPayload = {
 
 const SESSION_COOKIE_NAME = "modern_ca_portal_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
+let demoAccountsPromise: Promise<unknown> | null = null;
 
 function encodeSession(payload: SessionPayload) {
     return Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -34,6 +35,17 @@ function roleMatches(user: User, role?: AppRole | AppRole[]) {
     if (!role) return true;
     if (Array.isArray(role)) return role.includes(user.role as AppRole);
     return user.role === role;
+}
+
+async function ensureDemoAccountsReady() {
+    if (!demoAccountsPromise) {
+        demoAccountsPromise = ensureDemoAccounts().catch((error) => {
+            demoAccountsPromise = null;
+            throw error;
+        });
+    }
+
+    await demoAccountsPromise;
 }
 
 export async function setAuthSession(user: User) {
@@ -70,17 +82,18 @@ export async function getSessionPayload() {
 }
 
 export async function getCurrentUser(role?: AppRole | AppRole[]) {
-    await ensureDemoAccounts();
-
     const session = await getSessionPayload();
-    if (!session) return null;
+    if (!session) {
+        return null;
+    }
 
     const user = await prisma.user.findUnique({
         where: { id: session.userId },
     });
 
     if (!user) {
-        await clearAuthSession();
+        // In Next.js 15, we cannot clear sessions (modifying cookies) during server component rendering
+        // Return null and let the page handle the redirect/unauthorized state
         return null;
     }
 
@@ -95,6 +108,7 @@ export async function getCurrentUserOrDemoUser(
     const sessionUser = await getCurrentUser(allowedRoles ?? role);
     if (sessionUser) return sessionUser;
 
+    await ensureDemoAccountsReady();
     const demoUser = await getDefaultDemoUser(role);
     if (!demoUser) {
         throw new Error(`No ${role.toLowerCase()} account is available.`);
@@ -102,4 +116,3 @@ export async function getCurrentUserOrDemoUser(
 
     return demoUser;
 }
-

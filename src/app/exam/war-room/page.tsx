@@ -3,9 +3,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { getExamDetails, submitExamAttempt } from "@/actions/exam-actions";
+import { getExamDetails, submitExamAttempt, type ExamWithQuestions } from "@/actions/exam-actions";
 import { startMyExamAttempt } from "@/actions/student-actions";
 import { saveExamResultsAndUpdateLearning } from "@/actions/learning-actions";
+import { 
+    Users, 
+    ChartBar, 
+    DownloadSimple, 
+    FileText,
+    ArrowRight,
+    CaretRight,
+    Spinner,
+    Check
+} from "@phosphor-icons/react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type OptionShape = { id: string; text: string; isCorrect?: boolean };
@@ -59,7 +69,6 @@ export default function MCQExamPage() {
     const [attemptId, setAttemptId] = useState<string | null>(null);
     const [studentId, setStudentId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [prevBest, setPrevBest] = useState<number | null>(null);
 
     // Flow state
     const [phase, setPhase] = useState<"exam" | "submitting" | "results">("exam");
@@ -95,17 +104,23 @@ export default function MCQExamPage() {
                 return;
             }
             const res = await getExamDetails(examId);
-            if (!res.success || !res.exam) { setQuestions(DEMO_QUESTIONS); setIsLoading(false); return; }
+            if (!res.success || !res.data) { setQuestions(DEMO_QUESTIONS); setIsLoading(false); return; }
 
-            const exam = res.exam;
-            const mapped: QuestionShape[] = exam.questions.map((eq: any, idx: number) => ({
-                id: eq.question.id, no: idx + 1, marks: eq.marks,
+            const exam: ExamWithQuestions = res.data;
+            const mapped: QuestionShape[] = exam.questions.map((eq, idx: number) => ({
+                id: eq.question.id, 
+                no: idx + 1, 
+                marks: eq.marks,
                 difficulty: eq.question.difficulty ?? "MEDIUM",
                 subject: eq.question.subject ?? exam.category,
                 topic: eq.question.topic,
                 text: eq.question.text,
                 explanation: eq.question.explanation,
-                options: eq.question.options.map((o: any) => ({ id: o.id, text: o.text, isCorrect: o.isCorrect })),
+                options: eq.question.options.map((o) => ({ 
+                    id: o.id, 
+                    text: o.text, 
+                    isCorrect: o.isCorrect 
+                })),
             }));
             setQuestions(mapped);
             setExamTitle(exam.title);
@@ -118,7 +133,10 @@ export default function MCQExamPage() {
             // Auto start the exam
             startedAtRef.current = Date.now();
             const r = await startMyExamAttempt(examId);
-            if (r.success && r.attemptId) { setAttemptId(r.attemptId); setStudentId(r.studentId ?? null); }
+            if (r.success && r.data) { 
+                setAttemptId(r.data.attemptId); 
+                setStudentId(r.data.studentId); 
+            }
 
             setPhase("exam");
             setIsLoading(false);
@@ -184,7 +202,14 @@ export default function MCQExamPage() {
             await saveExamResultsAndUpdateLearning(studentId, examId ?? "", attemptId,
                 questions.map(q => {
                     const a = answers[q.id];
-                    return { questionId: q.id, subject: q.subject, topic: q.topic ?? "General", isCorrect: a?.optionId ? (q.options.find(o => o.id === a.optionId)?.isCorrect ?? false) : false, timeSpent: Math.max(1, Math.round((now - (a?.startedAt ?? now)) / 1000)), selectedOptionId: a?.optionId ?? null };
+                    return { 
+                        questionId: q.id, 
+                        subject: q.subject, 
+                        topic: q.topic ?? "General", 
+                        isCorrect: a?.optionId ? (q.options.find(o => o.id === a.optionId)?.isCorrect ?? false) : false, 
+                        timeSpent: Math.max(1, Math.round((now - (a?.startedAt ?? now)) / 1000)), 
+                        selectedOptionId: a?.optionId ?? null 
+                    };
                 })
             );
         }
@@ -192,7 +217,7 @@ export default function MCQExamPage() {
         setSolFilter("all"); // reset filter for new results
         setResultData({ correct: correctCount, total: questions.length, xpGained, timeUsed, topicList });
         setPhase("results");
-    }, [phase, questions, answers, mode, attemptId, studentId, examId]);
+    }, [phase, questions, answers, mode, attemptId, studentId, examId, examDuration]);
 
     // ── Answer interactions ────────────────────────────────────────────────────
     const selectOption = (optId: string) => {
@@ -248,7 +273,7 @@ export default function MCQExamPage() {
         return (
             <div className="min-h-screen bg-[#f5f7fa] pb-20">
                 {/* Hero */}
-                <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white px-8 py-12">
+                <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white px-8 py-12 shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
                     <div className="max-w-5xl mx-auto grid md:grid-cols-[auto_1fr] gap-10 items-center">
                         <div className="relative w-36 h-36 shrink-0">
                             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
@@ -277,9 +302,9 @@ export default function MCQExamPage() {
                                     { v: notVisited, l: "Skipped" },
                                     { v: `${Math.floor(timeUsed / 60)}m ${timeUsed % 60}s`, l: "Time" },
                                 ].map(s => (
-                                    <div key={s.l} className="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
+                                    <div key={s.l} className="p-3 rounded-[16px] bg-white/5 border border-white/10 text-center shadow-inner">
                                         <div className="text-xl font-black">{s.v}</div>
-                                        <div className="text-[10px] text-white/40 uppercase tracking-widest">{s.l}</div>
+                                        <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">{s.l}</div>
                                     </div>
                                 ))}
                             </div>
@@ -297,19 +322,19 @@ export default function MCQExamPage() {
                 <div className="max-w-5xl mx-auto px-8 mt-10 space-y-8">
                     {/* Topic breakdown */}
                     {topicList.length > 0 && (
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                            <h2 className="font-black text-gray-900 mb-5">📊 Topic-wise Performance</h2>
+                        <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+                            <h2 className="font-bold font-outfit text-slate-900 mb-5">📊 Topic-wise Performance</h2>
                             <div className="space-y-3">
                                 {topicList.map(t => {
                                     const c = t.accuracy >= 80 ? "#22c55e" : t.accuracy >= 55 ? "#f59e0b" : "#ef4444";
                                     return (
                                         <div key={t.topic} className="flex items-center gap-4">
-                                            <span className="w-40 text-xs font-bold text-gray-700 truncate shrink-0">{t.topic}</span>
-                                            <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                            <span className="w-40 text-xs font-bold text-slate-700 truncate shrink-0">{t.topic}</span>
+                                            <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
                                                 <div className="h-full rounded-full" style={{ width: `${t.accuracy}%`, backgroundColor: c }} />
                                             </div>
-                                            <span className="text-sm font-black w-10 text-right" style={{ color: c }}>{t.accuracy}%</span>
-                                            <span className="text-xs text-gray-400 w-16 text-right">{t.correct}/{t.total}</span>
+                                            <span className="text-sm font-bold w-10 text-right" style={{ color: c }}>{t.accuracy}%</span>
+                                            <span className="text-xs text-slate-400 w-16 text-right">{t.correct}/{t.total}</span>
                                         </div>
                                     );
                                 })}
@@ -333,8 +358,8 @@ export default function MCQExamPage() {
                     )}
 
                     {/* Solution Review */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                        <h2 className="font-black text-gray-900 mb-4">📋 Solution Review</h2>
+                    <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+                        <h2 className="font-bold font-outfit text-slate-900 mb-4">📋 Solution Review</h2>
                         <div className="flex gap-2 mb-5 flex-wrap">
                             {([["all", `All (${questions.length})`], ["wrong", `❌ Wrong (${questions.length - correct})`], ["correct", `✅ Correct (${correct})`]] as const).map(([key, label]) => (
                                 <button key={key} onClick={() => setSolFilter(key as "all" | "wrong" | "correct")}
@@ -350,9 +375,9 @@ export default function MCQExamPage() {
                                 const isCorrect = chosen ? (item.options.find(o => o.id === chosen)?.isCorrect ?? false) : false;
                                 const conf = item.answer?.confidence;
                                 return (
-                                    <div key={item.id} className={cn("p-5 rounded-2xl border-2", isCorrect ? "border-emerald-100 bg-emerald-50/30" : "border-rose-100 bg-rose-50/30")}>
+                                    <div key={item.id} className={cn("p-5 rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.03)]", isCorrect ? "border-emerald-100 bg-emerald-50/50" : "border-rose-100 bg-rose-50/50")}>
                                         <div className="flex items-start gap-3 mb-3">
-                                            <span className={cn("w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0", isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>{idx + 1}</span>
+                                            <span className={cn("w-8 h-8 rounded-[12px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm", isCorrect ? "bg-emerald-100 text-emerald-700 shadow-emerald-500/10" : "bg-rose-100 text-rose-700 shadow-rose-500/10")}>{idx + 1}</span>
                                             <div className="flex-1">
                                                 <div className="flex gap-2 flex-wrap mb-2">
                                                     {item.topic && <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold">{item.topic}</span>}
@@ -366,11 +391,11 @@ export default function MCQExamPage() {
                                             {item.options.map((opt, oi) => {
                                                 const isChosen = opt.id === chosen;
                                                 return (
-                                                    <div key={opt.id} className={cn("p-3 rounded-xl border text-sm font-medium flex items-center justify-between gap-2",
-                                                        opt.isCorrect ? "bg-emerald-50 border-emerald-200 text-emerald-800" : isChosen ? "bg-rose-50 border-rose-200 text-rose-800" : "bg-gray-50 border-gray-100 text-gray-500")}>
+                                                    <div key={opt.id} className={cn("p-3 rounded-[16px] border text-sm font-medium flex items-center justify-between gap-2 transition-all",
+                                                        opt.isCorrect ? "bg-emerald-50 border-emerald-200 text-emerald-800" : isChosen ? "bg-rose-50 border-rose-200 text-rose-800" : "bg-white border-slate-100 text-slate-500")}>
                                                         <span className="flex items-center gap-2">
-                                                            <span className={cn("w-6 h-6 rounded-full text-[10px] font-black flex items-center justify-center shrink-0",
-                                                                opt.isCorrect ? "bg-emerald-500 text-white" : isChosen ? "bg-rose-500 text-white" : "bg-gray-200 text-gray-500")}>
+                                                            <span className={cn("w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0",
+                                                                opt.isCorrect ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : isChosen ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-slate-100 text-slate-500")}>
                                                                 {["A", "B", "C", "D"][oi]}
                                                             </span>{opt.text}
                                                         </span>
@@ -406,7 +431,6 @@ export default function MCQExamPage() {
     // ── NTA Exam UI ───────────────────────────────────────────────────────────
     const q = questions[current];
     const ans = answers[q.id] ?? { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null };
-    const correctOption = q.options.find(o => o.isCorrect);
 
     return (
         <div className={cn("min-h-screen flex flex-col", highContrast ? "bg-black text-white" : "bg-[#f5f7fa]")}>
@@ -526,16 +550,16 @@ export default function MCQExamPage() {
                                 const isCorrectOpt = opt.isCorrect;
                                 return (
                                     <button key={opt.id} onClick={() => !showPracticeAnswer && selectOption(opt.id)}
-                                        className={cn("w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all", fontClass,
-                                            showCorrect && isCorrectOpt ? "border-emerald-500 bg-emerald-50" :
-                                                showCorrect && selected && !isCorrectOpt ? "border-rose-400 bg-rose-50" :
-                                                    selected ? "border-indigo-500 bg-indigo-50" :
-                                                        highContrast ? "border-gray-700 bg-gray-800 hover:border-gray-500" :
-                                                            "border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30")}>
-                                        <span className={cn("w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shrink-0",
-                                            showCorrect && isCorrectOpt ? "bg-emerald-500 text-white" :
-                                                showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white" :
-                                                    selected ? "bg-indigo-600 text-white" : highContrast ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600")}>
+                                        className={cn("w-full flex items-center gap-4 p-4 rounded-[20px] border text-left transition-all duration-300", fontClass,
+                                            showCorrect && isCorrectOpt ? "border-emerald-500 bg-emerald-50 hover:shadow-md hover:-translate-y-0.5" :
+                                                showCorrect && selected && !isCorrectOpt ? "border-rose-400 bg-rose-50 hover:shadow-md hover:-translate-y-0.5" :
+                                                    selected ? "border-indigo-600 bg-indigo-50/80 text-indigo-950 shadow-md shadow-indigo-600/10 hover:-translate-y-0.5" :
+                                                        highContrast ? "border-slate-700 bg-slate-800 hover:border-slate-500 hover:-translate-y-0.5" :
+                                                            "border-slate-100 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-[0_8px_30px_rgb(79,70,229,0.06)] hover:-translate-y-0.5")}>
+                                        <span className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
+                                            showCorrect && isCorrectOpt ? "bg-emerald-500 text-white shadow-emerald-500/20" :
+                                                showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white shadow-rose-500/20" :
+                                                    selected ? "bg-indigo-600 text-white shadow-indigo-600/20" : highContrast ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500")}>
                                             {["A", "B", "C", "D", "E"][oi]}
                                         </span>
                                         <span className={highContrast ? "text-gray-200" : "text-gray-800"}>{opt.text}</span>

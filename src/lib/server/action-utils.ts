@@ -1,0 +1,119 @@
+import "server-only";
+
+import prisma from "@/lib/prisma/client";
+import { Prisma } from "@prisma/client";
+
+const SERIALIZABLE_RETRY_CODE = "P2034";
+const UNIQUE_CONSTRAINT_CODE = "P2002";
+const RECORD_NOT_FOUND_CODE = "P2025";
+
+function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function isPrismaKnownError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
+    return error instanceof Prisma.PrismaClientKnownRequestError;
+}
+
+export function isPrismaCode(error: unknown, code: string): error is Prisma.PrismaClientKnownRequestError {
+    return isPrismaKnownError(error) && error.code === code;
+}
+
+export function isUniqueConstraintError(error: unknown, target?: string[]) {
+    if (!isPrismaCode(error, UNIQUE_CONSTRAINT_CODE)) {
+        return false;
+    }
+
+    if (!target || target.length === 0) {
+        return true;
+    }
+
+    const rawTarget = error.meta?.target;
+    const normalizedTarget = Array.isArray(rawTarget)
+        ? rawTarget.map((value) => String(value))
+        : rawTarget
+            ? [String(rawTarget)]
+            : [];
+
+    return target.every((field) => normalizedTarget.includes(field));
+}
+
+export function isRecordNotFoundError(error: unknown) {
+    return isPrismaCode(error, RECORD_NOT_FOUND_CODE);
+}
+
+function isRetryableTransactionError(error: unknown) {
+    return isPrismaCode(error, SERIALIZABLE_RETRY_CODE);
+}
+
+export async function withSerializableTransaction<T>(
+    callback: (tx: Prisma.TransactionClient) => Promise<T>,
+    maxAttempts = 3,
+) {
+    let attempt = 0;
+
+    while (true) {
+        try {
+            return await prisma.$transaction(callback, {
+                isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            });
+        } catch (error) {
+            attempt += 1;
+
+            if (attempt >= maxAttempts || !isRetryableTransactionError(error)) {
+                throw error;
+            }
+
+            await wait(25 * attempt);
+        }
+    }
+}
+
+export function clampNumber(value: number, min: number, max: number) {
+    if (!Number.isFinite(value)) return min;
+    return Math.min(max, Math.max(min, value));
+}
+
+export function readJsonStringArray(value: Prisma.JsonValue | null | undefined): string[] {
+    if (Array.isArray(value)) {
+        return value
+            .map((item) => (typeof item === "string" ? item.trim() : ""))
+            .filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+
+        try {
+            return readJsonStringArray(JSON.parse(trimmed) as Prisma.JsonValue);
+        } catch {
+            return [trimmed];
+        }
+    }
+
+    return [];
+}
+
+export function getActionErrorMessage(error: unknown, fallbackMessage: string) {
+    if (isPrismaCode(error, UNIQUE_CONSTRAINT_CODE)) {
+        return "A record with those details already exists.";
+    }
+
+    if (isPrismaCode(error, RECORD_NOT_FOUND_CODE)) {
+        return "The requested record could not be found.";
+    }
+
+    if (
+        error instanceof Prisma.PrismaClientInitializationError ||
+        error instanceof Prisma.PrismaClientRustPanicError
+    ) {
+        return "The database is temporarily unavailable. Please try again.";
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+        return error.message;
+    }
+
+    return fallbackMessage;
+}

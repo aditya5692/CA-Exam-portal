@@ -1,6 +1,6 @@
 import { getExamDetails, startExamAttempt } from "@/actions/exam-actions";
 import { ExamClient } from "@/components/exam/exam-client";
-import { redirect } from "next/navigation";
+import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 
 interface ExamPageProps {
     params: { examId: string };
@@ -8,12 +8,11 @@ interface ExamPageProps {
 
 export default async function ExamPage({ params }: ExamPageProps) {
     const { examId } = await params;
+    const currentUser = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+    const studentId = currentUser.id;
+    const studentName = currentUser.fullName ?? currentUser.email ?? "Student";
 
-    // In a real app, get current user from session
-    const studentId = "clp12345"; // Placeholder for demonstration
-    const studentName = "Aditya Student";
-
-    const { success, exam, error } = await getExamDetails(examId);
+    const { success, data: exam, message: error } = await getExamDetails(examId);
 
     if (!success || !exam) {
         return (
@@ -37,7 +36,7 @@ export default async function ExamPage({ params }: ExamPageProps) {
 
     // Initialize/Start attempt
     const attemptResult = await startExamAttempt(examId, studentId);
-    if (!attemptResult.success || !attemptResult.attempt) {
+    if (!attemptResult.success || !attemptResult.data) {
         return <div>Error starting attempt</div>;
     }
 
@@ -45,7 +44,7 @@ export default async function ExamPage({ params }: ExamPageProps) {
         <ExamClient
             exam={exam}
             studentName={studentName}
-            attemptId={attemptResult.attempt.id}
+            attemptId={attemptResult.data.id}
         />
     );
 }

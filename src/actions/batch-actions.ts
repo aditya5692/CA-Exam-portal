@@ -5,6 +5,7 @@ import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import prisma from "@/lib/prisma/client";
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
+import { ActionResponse } from "@/types/shared";
 
 function generateJoinCode(name: string): string {
     const slug = name.toUpperCase().replace(/\s+/g, "-").slice(0, 8);
@@ -74,7 +75,10 @@ export async function getOrCreateMockTeacherB() {
     return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 }
 
-export async function createBatch(formData: FormData) {
+/**
+ * Creates a new training batch.
+ */
+export async function createBatch(formData: FormData): Promise<ActionResponse<any>> {
     try {
         const name = String(formData.get("name") ?? "").trim();
         if (!name) throw new Error("Batch name is required.");
@@ -96,13 +100,16 @@ export async function createBatch(formData: FormData) {
         });
 
         revalidateBatchSurfaces();
-        return { success: true, batch };
+        return { success: true, data: batch, message: "Batch created successfully." };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to create batch." };
     }
 }
 
-export async function getTeacherBatches() {
+/**
+ * Fetches batches owned by or accessible to the current teacher.
+ */
+export async function getTeacherBatches(): Promise<ActionResponse<{ batches: any[], isAdminView: boolean, availableTeachers: any[] }>> {
     try {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "read");
@@ -112,34 +119,19 @@ export async function getTeacherBatches() {
             where: isAdminView ? undefined : { teacherId: teacher.id },
             include: {
                 teacher: {
-                    select: {
-                        id: true,
-                        fullName: true,
-                        email: true,
-                    },
+                    select: { id: true, fullName: true, email: true },
                 },
                 enrollments: {
                     include: {
                         student: {
-                            select: {
-                                id: true,
-                                fullName: true,
-                                email: true,
-                                registrationNumber: true,
-                            },
+                            select: { id: true, fullName: true, email: true, registrationNumber: true },
                         },
                     },
                     orderBy: { joinedAt: "desc" },
                 },
                 announcements: {
                     include: {
-                        teacher: {
-                            select: {
-                                id: true,
-                                fullName: true,
-                                email: true,
-                            },
-                        },
+                        teacher: { select: { id: true, fullName: true, email: true } },
                     },
                     orderBy: { createdAt: "desc" },
                     take: 5,
@@ -151,16 +143,21 @@ export async function getTeacherBatches() {
 
         return {
             success: true,
-            batches,
-            isAdminView,
-            availableTeachers: isAdminView ? await getEducatorOptions() : [],
+            data: {
+                batches,
+                isAdminView,
+                availableTeachers: isAdminView ? await getEducatorOptions() : [],
+            }
         };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to fetch batches." };
     }
 }
 
-export async function postAnnouncement(formData: FormData) {
+/**
+ * Posts an announcement to one or more batches.
+ */
+export async function postAnnouncement(formData: FormData): Promise<ActionResponse<any>> {
     try {
         const content = String(formData.get("content") ?? "").trim();
         const sendToAll = formData.get("sendToAll") === "true";
@@ -202,13 +199,16 @@ export async function postAnnouncement(formData: FormData) {
         );
 
         revalidateBatchSurfaces();
-        return { success: true, announcements, postedCount: announcements.length };
+        return { success: true, data: announcements, message: `Update posted to ${announcements.length} batches.` };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to post." };
     }
 }
 
-export async function updateBatch(formData: FormData) {
+/**
+ * Updates an existng batch's metadata.
+ */
+export async function updateBatch(formData: FormData): Promise<ActionResponse<any>> {
     try {
         const batchId = String(formData.get("batchId") ?? "").trim();
         const name = String(formData.get("name") ?? "").trim();
@@ -240,13 +240,16 @@ export async function updateBatch(formData: FormData) {
         });
 
         revalidateBatchSurfaces();
-        return { success: true, batch };
+        return { success: true, data: batch, message: "Batch updated." };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to update batch." };
     }
 }
 
-export async function deleteBatch(formData: FormData) {
+/**
+ * Deletes a batch.
+ */
+export async function deleteBatch(formData: FormData): Promise<ActionResponse<void>> {
     try {
         const batchId = String(formData.get("batchId") ?? "").trim();
         if (!batchId) throw new Error("Batch id is required.");
@@ -266,13 +269,16 @@ export async function deleteBatch(formData: FormData) {
         });
 
         revalidateBatchSurfaces();
-        return { success: true };
+        return { success: true, message: "Batch deleted.", data: undefined };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to delete batch." };
     }
 }
 
-export async function getTeacherUpdates() {
+/**
+ * Fetches all updates and available batches for the training feed.
+ */
+export async function getTeacherUpdates(): Promise<ActionResponse<{ batches: any[], announcements: any[], isAdminView: boolean }>> {
     try {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_UPDATES", "read");
@@ -283,16 +289,8 @@ export async function getTeacherUpdates() {
             select: {
                 id: true,
                 name: true,
-                teacher: {
-                    select: {
-                        id: true,
-                        fullName: true,
-                        email: true,
-                    },
-                },
-                _count: {
-                    select: { enrollments: true },
-                },
+                teacher: { select: { id: true, fullName: true, email: true } },
+                _count: { select: { enrollments: true } },
             },
             orderBy: [{ name: "asc" }],
         });
@@ -300,24 +298,12 @@ export async function getTeacherUpdates() {
         const announcements = await prisma.announcement.findMany({
             where: isAdminView ? undefined : { teacherId: teacher.id },
             include: {
-                teacher: {
-                    select: {
-                        id: true,
-                        fullName: true,
-                        email: true,
-                    },
-                },
+                teacher: { select: { id: true, fullName: true, email: true } },
                 batch: {
                     select: {
                         id: true,
                         name: true,
-                        teacher: {
-                            select: {
-                                id: true,
-                                fullName: true,
-                                email: true,
-                            },
-                        },
+                        teacher: { select: { id: true, fullName: true, email: true } },
                     },
                 },
             },
@@ -325,13 +311,16 @@ export async function getTeacherUpdates() {
             take: 20,
         });
 
-        return { success: true, batches, announcements, isAdminView };
+        return { success: true, data: { batches, announcements, isAdminView } };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to load updates." };
     }
 }
 
-export async function getTeacherStudents() {
+/**
+ * Fetches students across all batches owned by the current teacher.
+ */
+export async function getTeacherStudents(): Promise<ActionResponse<{ isAdminView: boolean, students: any[] }>> {
     try {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "read");
@@ -373,20 +362,7 @@ export async function getTeacherStudents() {
             orderBy: { joinedAt: "desc" },
         });
 
-        const studentsMap = new Map<string, {
-            id: string;
-            name: string;
-            email: string;
-            registrationNumber: string;
-            department: string;
-            status: string;
-            joinedAt: Date;
-            batchNames: string[];
-            batchIds: string[];
-            batchCodes: string[];
-            batchOwners: string[];
-            attemptDue: string;
-        }>();
+        const studentsMap = new Map<string, any>();
 
         for (const enrollment of enrollments) {
             const studentId = enrollment.student.id;
@@ -422,8 +398,10 @@ export async function getTeacherStudents() {
 
         return {
             success: true,
-            isAdminView,
-            students: Array.from(studentsMap.values()),
+            data: {
+                isAdminView,
+                students: Array.from(studentsMap.values()),
+            }
         };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to load students." };
@@ -434,7 +412,10 @@ export async function getOrCreateMockStudentB() {
     return getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
 }
 
-export async function joinBatch(formData: FormData) {
+/**
+ * Joins a student to a batch using a join code.
+ */
+export async function joinBatch(formData: FormData): Promise<ActionResponse<any>> {
     try {
         const code = String(formData.get("code") ?? "").trim().toUpperCase();
         if (!code) throw new Error("Please enter a join code.");
@@ -459,15 +440,16 @@ export async function joinBatch(formData: FormData) {
         });
 
         revalidatePath("/student/updates");
-        return { success: true, batchName: batch.name };
+        return { success: true, data: { batchName: batch.name }, message: `You've joined ${batch.name}!` };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to join batch." };
     }
 }
 
-// ── Remove a student from a specific batch ─────────────────────────────────────
-// Teacher must own the batch (or be admin). Does NOT delete the student account.
-export async function removeStudentFromBatch(studentId: string, batchId: string) {
+/**
+ * Removes a student from a specific batch.
+ */
+export async function removeStudentFromBatch(studentId: string, batchId: string): Promise<ActionResponse<any>> {
     try {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "delete");
@@ -486,19 +468,20 @@ export async function removeStudentFromBatch(studentId: string, batchId: string)
         await prisma.enrollment.delete({ where: { studentId_batchId: { studentId, batchId } } });
 
         revalidateBatchSurfaces();
-        return { success: true, batchName: batch.name };
+        return { success: true, data: { batchName: batch.name }, message: "Student removed from batch." };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to remove student." };
     }
 }
 
-// ── Get student performance summary for teacher view ──────────────────────────
-export async function getStudentPerformanceSummary(studentId: string) {
+/**
+ * Fetches a detailed performance summary for a student.
+ */
+export async function getStudentPerformanceSummary(studentId: string): Promise<ActionResponse<any>> {
     try {
         const teacher = await getOrCreateMockTeacherB();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "read");
 
-        // Check the student is in one of this teacher's batches (or admin)
         if (!isAdminUser(teacher)) {
             const enrollment = await prisma.enrollment.findFirst({
                 where: { studentId, batch: { teacherId: teacher.id } },
@@ -524,7 +507,6 @@ export async function getStudentPerformanceSummary(studentId: string) {
             }),
         ]);
 
-        // Aggregate subject accuracy
         const subjectMap = new Map<string, { totalCorrect: number; totalQ: number }>();
         for (const tp of topicProgress) {
             const existing = subjectMap.get(tp.subject) ?? { totalCorrect: 0, totalQ: 0 };
@@ -540,32 +522,37 @@ export async function getStudentPerformanceSummary(studentId: string) {
 
         return {
             success: true,
-            student: student ?? { fullName: null, email: null, examTarget: null, createdAt: new Date() },
-            profile: learningProfile ? {
-                level: learningProfile.level,
-                totalXP: learningProfile.totalXP,
-                streak: learningProfile.streak,
-                totalAttempts: learningProfile.totalAttempts,
-                totalCorrect: learningProfile.totalCorrect,
-                avgAccuracy: Math.round(learningProfile.avgAccuracy * 100),
-            } : null,
-            recentAttempts: attempts.map((a: any) => ({
-                id: a.id,
-                title: a.exam.title,
-                category: a.exam.category,
-                score: Math.round(a.score),
-                totalMarks: a.exam.totalMarks,
-                accuracy: a.exam.totalMarks > 0 ? Math.round((a.score / a.exam.totalMarks) * 100) : 0,
-                date: a.startTime.toISOString().split("T")[0],
-            })),
-            subjectAccuracy,
+            data: {
+                student: student ?? { fullName: null, email: null, examTarget: null, createdAt: new Date() },
+                profile: learningProfile ? {
+                    level: learningProfile.level,
+                    totalXP: learningProfile.totalXP,
+                    streak: learningProfile.streak,
+                    totalAttempts: learningProfile.totalAttempts,
+                    totalCorrect: learningProfile.totalCorrect,
+                    avgAccuracy: Math.round(learningProfile.avgAccuracy * 100),
+                } : null,
+                recentAttempts: attempts.map((a: any) => ({
+                    id: a.id,
+                    title: a.exam.title,
+                    category: a.exam.category,
+                    score: Math.round(a.score),
+                    totalMarks: a.exam.totalMarks,
+                    accuracy: a.exam.totalMarks > 0 ? Math.round((a.score / a.exam.totalMarks) * 100) : 0,
+                    date: a.startTime.toISOString().split("T")[0],
+                })),
+                subjectAccuracy,
+            }
         };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to fetch performance." };
     }
 }
 
-export async function getStudentFeed() {
+/**
+ * Fetches the training feed for a student.
+ */
+export async function getStudentFeed(): Promise<ActionResponse<{ feedItems: any[], myBatches: any[], isAdminView: boolean }>> {
     try {
         const student = await getOrCreateMockStudentB();
         await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "read");
@@ -574,30 +561,12 @@ export async function getStudentFeed() {
         const batches = await prisma.batch.findMany({
             where: isAdminView
                 ? undefined
-                : {
-                    enrollments: {
-                        some: {
-                            studentId: student.id,
-                        },
-                    },
-                },
+                : { enrollments: { some: { studentId: student.id } } },
             include: {
-                teacher: {
-                    select: {
-                        id: true,
-                        fullName: true,
-                        email: true,
-                    },
-                },
+                teacher: { select: { id: true, fullName: true, email: true } },
                 announcements: {
                     include: {
-                        teacher: {
-                            select: {
-                                id: true,
-                                fullName: true,
-                                email: true,
-                            },
-                        },
+                        teacher: { select: { id: true, fullName: true, email: true } },
                     },
                     orderBy: { createdAt: "desc" },
                 },
@@ -628,7 +597,7 @@ export async function getStudentFeed() {
             teacherName: batch.teacher.fullName ?? batch.teacher.email ?? "Educator",
         }));
 
-        return { success: true, feedItems, myBatches, isAdminView };
+        return { success: true, data: { feedItems, myBatches, isAdminView } };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to load feed." };
     }

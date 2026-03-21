@@ -1,4 +1,4 @@
-import { Calendar, Play, Clock, Trophy, Sparkle, Fire, Medal, FileText, BookmarkSimple, List, CaretRight, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
+import { Calendar, Play, Clock, Trophy, Sparkle, Fire, Medal, FileText, BookmarkSimple, List, CaretRight, ChartLineUp, BookOpen, FilePdf, Target } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -16,8 +16,8 @@ export default async function StudentDashboardPage() {
 
     let totalStudyMinutes = 0;
 
-    let practiceStreak = 0;
-    let personalBestStreak = 0;
+    let totalMCQScore = 0;
+    let avgAccuracy = 0;
 
     let currentRank = 0;
     let percentile = 90;
@@ -37,21 +37,26 @@ export default async function StudentDashboardPage() {
     // Practice questions
     let topPracticeExams: any[] = [];
 
+    // Free Resources
+    let freeResources: any[] = [];
+
     try {
         const user = await getCurrentUser(["STUDENT", "ADMIN"]);
         if (!user) throw new Error("Unauthorized");
         userName = user.fullName?.split(" ")[0] ?? user.email?.split("@")[0] ?? "Student";
         userTarget = user.examTarget || "";
 
-        // Logic for days remaining using examTarget (like "May 2026")
+        // Logic for days remaining using examTarget (like "May 2026" or "CA Foundation May 2026")
         if (userTarget) {
             const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
             const parts = userTarget.split(" ");
-            if (parts.length === 2 && parts[0].length >= 3) {
-                const mo = parts[0].substring(0, 3);
-                const yr = parseInt(parts[1]);
-                if (months[mo as keyof typeof months] !== undefined && !isNaN(yr)) {
-                    const targetDate = new Date(yr, months[mo as keyof typeof months], 1);
+            // Look for the last two parts as Month and Year
+            if (parts.length >= 2) {
+                const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
+                const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
+                const yrPart = parseInt(parts[parts.length - 1]);
+                if (moKey && !isNaN(yrPart)) {
+                    const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
                     const now = new Date();
                     const diffTime = targetDate.getTime() - now.getTime();
                     daysToExam = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
@@ -65,8 +70,8 @@ export default async function StudentDashboardPage() {
         });
 
         if (profile) {
-            practiceStreak = profile.streak;
-            personalBestStreak = profile.longestStreak;
+            totalMCQScore = profile.totalCorrect;
+            avgAccuracy = profile.avgAccuracy;
 
             // Calculate pseudo level progress (each level is 1000 XP)
             const currentLevelBaseline = (profile.level - 1) * 1000;
@@ -178,6 +183,20 @@ export default async function StudentDashboardPage() {
             category: e.category || "General"
         }));
 
+        // Fetch some free resources
+        const freeResRaw = await prisma.studyMaterial.findMany({
+            where: { isPublic: true },
+            take: 4,
+            orderBy: { createdAt: "desc" }
+        });
+
+        freeResources = freeResRaw.map(r => ({
+            id: r.id,
+            title: r.title,
+            category: r.category,
+            type: r.subType || "PDF"
+        }));
+
     } catch (e) {
         console.error("Dashboard error:", e);
     }
@@ -187,149 +206,148 @@ export default async function StudentDashboardPage() {
         : `${totalStudyMinutes}m`;
 
     return (
-        <div className="space-y-10 pb-20 w-full max-w-[1400px] mx-auto p-4 sm:p-6 md:p-8">
+        <div className="space-y-8 pb-10 w-full max-w-[1400px] mx-auto font-outfit">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl md:text-[40px] font-black text-slate-900 tracking-tight leading-tight mb-2">
-                        Welcome back, {userName}!
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Student Dashboard</span>
+                    </div>
+                    <h1 className="font-outfit tracking-tighter leading-tight">
+                        Welcome back, {userName}.
                     </h1>
-                    <p className="text-slate-500 font-medium text-sm md:text-base">
-                        You&apos;ve completed {levelProgressPct}% of your learning level. Keep going!
+                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
+                        You have completed <span className="text-indigo-600 font-bold">{levelProgressPct}%</span> of your current learning level.
                     </p>
                 </div>
                 {daysToExam > 0 && (
-                    <div className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold text-sm shadow-sm">
-                        <Calendar size={20} weight="fill" className="text-indigo-500" />
-                        Exam in {daysToExam} Days
+                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 mb-1">
+                        <Calendar size={18} weight="bold" className="text-indigo-400" />
+                        Next Milestone: {daysToExam} Days
                     </div>
                 )}
             </div>
 
             {/* Top 4 Metrics Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1 relative">
+                {/* Decorative gradients for the row */}
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/20 via-transparent to-purple-50/20 blur-3xl -z-10" />
+
                 {/* MCQ Progress */}
-                <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] relative overflow-hidden flex flex-col justify-center min-h-[140px]">
-                    <div className="flex items-start justify-between mb-4">
-                        <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
-                            MCQ Progress
+                <div className="bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm rounded-2xl relative overflow-hidden flex flex-col justify-center min-h-[160px] transition-all duration-300 hover:shadow-md hover:border-indigo-100/50 group">
+                    <div className="flex items-start justify-between mb-6 px-8 pt-8">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                            Practice Coverage
                         </span>
-                        <ChartLineUp size={20} className="text-indigo-500" weight="bold" />
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-300 group-hover:bg-indigo-600 group-hover:text-white shadow-sm border border-slate-100">
+                            <ChartLineUp size={20} weight="bold" />
+                        </div>
                     </div>
-                    <div className="flex items-end gap-3">
-                        <div className="text-3xl font-black text-slate-900 leading-none">{totalQuestionsAttempted.toLocaleString()}</div>
+                    <div className="flex items-end gap-2 mb-3 px-8">
+                        <div className="text-4xl font-bold text-slate-900 leading-none tracking-tight font-outfit">{totalQuestionsAttempted.toLocaleString()}</div>
                     </div>
-                    <div className="flex items-center justify-between mt-3 text-xs font-medium text-slate-400">
-                        <span>Attempted / {(totalQuestionsAvailable >= 1000 ? (totalQuestionsAvailable / 1000).toFixed(1) + 'k' : totalQuestionsAvailable)} total</span>
-                        <span className="text-indigo-600 font-bold">{mcqProgressPct}%</span>
+                    <div className="flex items-center justify-between mt-3 px-8 pb-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                        <span className="text-indigo-600/80">{mcqProgressPct}% Total Progress</span>
                     </div>
                     {/* Progress Bar */}
-                    <div className="absolute bottom-6 left-6 right-6 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(mcqProgressPct, 100)}%` }}></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-50 overflow-hidden">
+                        <div className="h-full bg-indigo-500 transition-all duration-1000 ease-out" style={{ width: `${Math.min(mcqProgressPct, 100)}%` }}></div>
                     </div>
                 </div>
 
                 {/* Total Study Time */}
-                <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] relative min-h-[140px]">
+                <div className="bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm rounded-2xl p-8 relative min-h-[160px] transition-all duration-300 hover:shadow-md hover:border-amber-100/50 group flex flex-col justify-between">
                     <div className="flex items-start justify-between mb-4">
-                        <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
                             Total Study Time
                         </span>
-                        <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center">
-                            <Clock size={14} className="text-indigo-600" weight="fill" />
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center transition-all duration-300 group-hover:bg-amber-500 group-hover:text-white shadow-sm border border-slate-100">
+                            <Clock size={20} weight="bold" />
                         </div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 leading-none mt-2">{studyHoursLabel}</div>
-                    <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-500">
-                        <ChartLineUp size={14} weight="bold" />
-                        <span>Consistent learning</span>
+                    <div className="text-4xl font-bold text-slate-900 leading-none mt-2 tracking-tight font-outfit mb-3">{studyHoursLabel}</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                        Focused Learning
                     </div>
                 </div>
 
-                {/* Practice Streak */}
-                <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] relative overflow-hidden min-h-[140px]">
-                    <div className="absolute -right-4 -bottom-4 opacity-[0.03]">
-                        <Fire size={120} weight="fill" />
-                    </div>
+                {/* Total MCQ Score */}
+                <div className="bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm rounded-2xl p-8 relative overflow-hidden min-h-[160px] transition-all duration-300 hover:shadow-md hover:border-emerald-100/50 group flex flex-col justify-between">
                     <div className="flex items-start justify-between mb-4 relative z-10">
-                        <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
-                            Practice Streak
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                            Points Earned
                         </span>
-                        <Fire size={20} className="text-orange-500" weight="fill" />
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center transition-all duration-300 group-hover:bg-emerald-500 group-hover:text-white shadow-sm border border-slate-100">
+                            <Target size={20} weight="bold" />
+                        </div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 leading-none mt-2 relative z-10">{practiceStreak} Days</div>
-                    <div className="mt-4 text-xs font-medium text-slate-400 relative z-10">
-                        Personal Best: {personalBestStreak} Days
+                    <div className="text-4xl font-bold text-slate-900 leading-none mt-2 relative z-10 tracking-tight font-outfit mb-3">{totalMCQScore.toLocaleString()} <span className="text-sm text-slate-400 font-bold tracking-tight">XP</span></div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                        {Math.round(avgAccuracy)}% Avg. Accuracy
                     </div>
                 </div>
 
                 {/* Current Ranking */}
-                <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] relative border-l-[6px] border-l-indigo-500 min-h-[140px]">
-                    <div className="flex items-start justify-between mb-4">
-                        <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
-                            Current Ranking
+                <div className="bg-slate-900 border border-slate-800 shadow-md rounded-2xl p-8 relative min-h-[160px] transition-all duration-300 hover:shadow-lg group overflow-hidden flex flex-col justify-between">
+                    <div className="flex items-start justify-between relative z-10">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-outfit">
+                            Global Rank
                         </span>
-                        <Medal size={20} className="text-indigo-500" weight="fill" />
+                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 group-hover:bg-amber-500 group-hover:text-slate-950">
+                            <Medal size={20} className="text-amber-500/80 group-hover:text-inherit" weight="bold" />
+                        </div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 leading-none mt-2">Rank #{currentRank > 0 ? currentRank : '-'}</div>
-                    <div className="mt-4 text-xs font-bold text-indigo-600">
-                        {percentile}th Percentile
+                    <div className="text-4xl font-bold text-white leading-none mt-2 tracking-tight relative z-10 font-outfit mb-3">#{currentRank > 0 ? currentRank : '-'} <span className="text-xs text-slate-500 font-bold uppercase tracking-widest pl-1">RANK</span></div>
+                    <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-widest font-outfit relative z-10">
+                        TOP {Math.max(1, 100 - percentile)}% of Students
                     </div>
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-8 pt-4">
                 {/* Left Column: Update Feeds */}
-                <div className="lg:col-span-2 space-y-5">
+                <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            <FileText size={24} className="text-indigo-500" weight="fill" />
-                            Update Feeds
-                        </h2>
-                        <Link href="/student/updates" className="text-indigo-600 text-sm font-bold hover:underline">View All Updates</Link>
+                        <div className="space-y-1">
+                            <h2 className="flex items-center gap-3 font-outfit uppercase">
+                                <FileText size={20} className="text-slate-400" weight="bold" />
+                                Latest Announcements
+                            </h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-8">Stay updated with the latest news</p>
+                        </div>
+                        <Link href="/student/updates" className="px-4 py-2 rounded-xl bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-950 hover:text-white transition-all duration-200 border border-slate-100 active:scale-95 shadow-sm">View All</Link>
                     </div>
 
                     <div className="space-y-4">
                         {announcements.length === 0 ? (
-                            <div className="p-8 bg-white rounded-3xl border border-slate-100 text-center shadow-sm">
-                                <div className="inline-flex w-16 h-16 rounded-full bg-slate-50 items-center justify-center text-slate-300 mb-4">
-                                    <FileText size={32} weight="fill" />
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-700">No updates yet</h3>
-                                <p className="text-slate-500 text-sm mt-1">Check back later for important announcements from your educators.</p>
+                            <div className="p-12 bg-white rounded-2xl border border-slate-100 text-center shadow-sm border-dashed border-2">
+                                <FileText size={40} className="mx-auto text-slate-200 mb-4 opacity-50" />
+                                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No active announcements</h3>
                             </div>
                         ) : (
-                            announcements.map((feed, i) => (
-                                <div key={feed.id} className="p-5 bg-white rounded-2xl border border-slate-100 hover:border-indigo-100 shadow-sm transition-all flex gap-4">
-                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 shrink-0 flex items-center justify-center border border-indigo-100/50">
-                                        <FileText size={20} className="text-indigo-600" weight="fill" />
+                            announcements.map((feed) => (
+                                <div key={feed.id} className="p-6 bg-white rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-md transition-all duration-300 flex gap-5 group relative overflow-hidden">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-50 shrink-0 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm border border-slate-100">
+                                        <FileText size={20} weight="bold" />
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                                                <span className="text-indigo-600">{feed.tag.substring(0, 15)}</span>
-                                                <span>•</span>
-                                                <span>{feed.date}</span>
+                                    <div className="flex-1 min-w-0 relative z-10">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                <span className="text-indigo-600/80">{feed.tag}</span> <span className="px-2 opacity-30">/</span> {feed.date}
                                             </div>
-                                            {feed.type === "CRITICAL" && (
-                                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-600 uppercase tracking-wider shrink-0">Critical</span>
-                                            )}
                                         </div>
-                                        <h3 className="text-sm font-bold text-slate-900 mb-1.5 leading-tight truncate">
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight font-outfit tracking-tight group-hover:text-indigo-600 transition-colors">
                                             {feed.title}
                                         </h3>
-                                        <p className="text-xs font-medium text-slate-500 mb-3 line-clamp-2 leading-relaxed">
+                                        <p className="text-sm font-medium text-slate-500 mb-5 line-clamp-1 opacity-80 font-sans max-w-xl">
                                             {feed.description}
                                         </p>
-                                        <div className="flex items-center gap-3">
-                                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md text-[11px] font-bold hover:bg-indigo-700 transition shadow-sm active:scale-95">
-                                                <FileText size={14} />
-                                                Read PDF
-                                            </button>
-                                            <button className="flex items-center gap-1 px-2 py-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-md transition">
-                                                <BookmarkSimple size={14} weight="bold" />
-                                                Save
+                                        <div className="flex items-center gap-4">
+                                            <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-600 active:scale-95 transition-all duration-200">
+                                                <Play size={14} weight="fill" />
+                                                Read More
                                             </button>
                                         </div>
                                     </div>
@@ -340,101 +358,138 @@ export default async function StudentDashboardPage() {
                 </div>
 
                 {/* Right Column: Rankings */}
-                <div className="space-y-5">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Trophy size={24} className="text-indigo-500" weight="fill" />
-                        <h2 className="text-xl font-bold text-slate-900">Rankings</h2>
+                <div className="space-y-6">
+                    <div className="space-y-1 mb-2">
+                        <h2 className="flex items-center gap-3 uppercase font-outfit">
+                            <Trophy size={20} className="text-slate-400" weight="bold" />
+                            Peer Leaderboard
+                        </h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-8">Your standing among peers</p>
                     </div>
 
-                    <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                         {leaderboard.length === 0 ? (
-                            <div className="py-12 text-center text-slate-400">
-                                <Trophy size={48} className="mx-auto text-slate-200 mb-3" weight="fill" />
-                                <p className="text-sm font-bold">No rankings available yet.</p>
+                            <div className="py-20 text-center text-slate-300 uppercase tracking-widest text-[10px] font-bold">
+                                No Peer Data
                             </div>
                         ) : (
-                            <div className="space-y-0 relative">
+                            <div className="space-y-2">
                                 {leaderboard.map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between py-4 border-b border-slate-50/80 last:border-0 relative">
+                                    <div key={i} className={cn(
+                                        "flex items-center justify-between p-4 rounded-2xl transition-all duration-300",
+                                        item.isMe ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20" : "hover:bg-slate-50"
+                                    )}>
                                         <div className="flex items-center gap-4">
-                                            <div className="text-sm font-bold w-6 text-center" style={{ color: item.rank === 1 ? '#f59e0b' : item.rank === 2 ? '#94a3b8' : item.rank === 3 ? '#b45309' : '#cbd5e1' }}>
+                                            <div className={cn("text-xs font-bold w-5 text-center", item.isMe ? "text-indigo-200" : "text-slate-400")}>
                                                 {item.rank}
                                             </div>
-                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 shrink-0 border border-slate-200 flex items-center justify-center">
-                                                {/* Pseudo avatar */}
-                                                <span className="font-bold text-slate-400 text-xs uppercase">{item.name.charAt(0)}</span>
+                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold uppercase shadow-sm border",
+                                                item.isMe ? "bg-white/10 border-white/10 text-white" : "bg-white border-slate-100 text-slate-400")}>
+                                                {item.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <div className={cn("text-sm font-bold leading-tight", item.isMe ? "text-slate-900" : "text-slate-700")}>
+                                                <div className={cn("text-sm font-bold tracking-tight font-outfit leading-tight mb-0.5", item.isMe ? "text-white" : "text-slate-900")}>
                                                     {item.name}
                                                 </div>
-                                                <div className="text-[10px] text-slate-400 font-medium mt-0.5">
-                                                    Level {Math.floor(item.score / 1000) + 1}
+                                                <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-indigo-200/70" : "text-slate-400")}>
+                                                    LVL {Math.floor(item.score / 1000) + 1}
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-bold text-slate-900">{item.score.toLocaleString()}</div>
-                                            <div className="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5 font-bold">XP</div>
+                                            <div className={cn("text-sm font-bold tracking-tight font-outfit leading-tight mb-0.5", item.isMe ? "text-white" : "text-slate-900")}>{item.score.toLocaleString()}</div>
+                                            <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-indigo-200/70" : "text-indigo-500")}>Unit XP</div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        <Link href="/student/leaderboard"
-                            className="block w-full text-center py-3 mt-4 text-xs font-bold tracking-widest uppercase text-slate-500 hover:text-indigo-600 transition-colors bg-slate-50 rounded-xl hover:bg-indigo-50 border border-slate-100">
-                            See Full Leaderboard
+                        <Link href="/leaderboard"
+                            className="block w-full text-center py-3.5 mt-6 text-[10px] font-bold tracking-widest uppercase text-slate-400 hover:text-slate-950 transition-all border border-slate-100 rounded-xl hover:bg-slate-50 active:scale-[0.98]">
+                            View Detailed Ranking
                         </Link>
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Grid: Top Practice Questions */}
-            <div className="pt-6">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                            <span className="text-indigo-600 font-bold text-lg leading-none">?</span>
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-900">Top Practice Questions</h2>
+            {/* Free Resource Library Section */}
+            <div className="pt-8">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="space-y-1">
+                        <h2 className="flex items-center gap-3 uppercase font-outfit">
+                            <BookOpen size={20} className="text-slate-400" weight="bold" />
+                            Free Resources
+                        </h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-8">Helpful study materials</p>
                     </div>
-                    <Link href="/student/exams" className="text-sm font-bold text-indigo-600 hover:underline flex items-center gap-1">
-                        Practice More <CaretRight size={14} weight="bold" />
-                    </Link>
+                    <Link href="/student/free-resources" className="px-5 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-950 hover:text-white transition-all duration-200 border border-slate-100 shadow-sm active:scale-95">Explore All</Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {freeResources.length === 0 ? (
+                        <div className="lg:col-span-4 p-12 text-center text-slate-300 bg-white rounded-2xl border-2 border-slate-100 border-dashed uppercase tracking-widest text-[10px] font-bold shadow-sm">
+                            No resources available yet
+                        </div>
+                    ) : freeResources.map((res) => (
+                        <Link href="/student/free-resources" key={res.id}
+                            className="p-6 bg-white rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer min-h-[140px] relative overflow-hidden">
+                            <div className="flex items-start justify-between mb-4 relative z-10">
+                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                                    <FilePdf size={18} weight="bold" />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100/50">
+                                    {res.type}
+                                </span>
+                            </div>
+                            <div className="z-10 relative">
+                                <h4 className="font-bold text-base text-slate-900 leading-tight mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors tracking-tight font-outfit">
+                                    {res.title}
+                                </h4>
+                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                    {res.category}
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+
+            <div className="pt-10">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="space-y-1">
+                        <h2 className="flex items-center gap-3 uppercase font-outfit">
+                            <Sparkle size={20} className="text-slate-400" weight="bold" />
+                            Recommended Exams
+                        </h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-8">Top practice modules for you</p>
+                    </div>
+                    <Link href="/student/exams" className="px-5 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-950 hover:text-white transition-all duration-200 border border-slate-100 active:scale-95 shadow-sm">View More</Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {topPracticeExams.length === 0 ? (
-                        <div className="lg:col-span-4 p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-100">
-                            No practice exams available right now.
+                        <div className="lg:col-span-4 p-12 text-center text-slate-300 bg-white rounded-2xl border-2 border-slate-100 border-dashed uppercase tracking-widest text-[10px] font-bold shadow-sm">
+                            No exams available yet
                         </div>
                     ) : topPracticeExams.map((exam, i) => {
-                        const iconColors = [
-                            "bg-emerald-50 text-emerald-600",
-                            "bg-purple-50 text-purple-600",
-                            "bg-amber-50 text-amber-600",
-                            "bg-rose-50 text-rose-600"
-                        ];
-                        const selColor = iconColors[i % iconColors.length];
-
                         return (
                             <Link href={`/exam/war-room?examId=${exam.id}`} key={exam.id}
-                                className="p-4 bg-white rounded-[16px] border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all flex flex-col justify-between group cursor-pointer border-t-[3px] border-t-transparent hover:border-t-indigo-500 min-h-[110px]">
-                                <div className="flex items-start justify-between mb-2">
-                                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm", selColor)}>
-                                        <List size={20} weight="fill" />
+                                className="p-6 bg-white rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer min-h-[140px] relative overflow-hidden">
+                                <div className="flex items-start justify-between mb-4 relative z-10">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                                        <List size={18} weight="bold" />
                                     </div>
-                                    <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <CaretRight size={12} className="text-indigo-500" weight="bold" />
-                                    </div>
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-sm text-slate-900 leading-tight mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                                <div className="z-10 relative">
+                                    <h4 className="font-bold text-base text-slate-900 leading-tight mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors tracking-tight font-outfit">
                                         {exam.title}
                                     </h4>
-                                    <div className="text-[11px] text-slate-500 font-medium">
-                                        {exam.questions} Questions • {exam.category}
+                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <span>{exam.questions} Questions</span>
+                                        <span className="opacity-30">•</span>
+                                        <span className="text-slate-500/80">{exam.category}</span>
                                     </div>
                                 </div>
                             </Link>
