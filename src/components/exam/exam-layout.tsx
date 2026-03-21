@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-    ArrowsOut,
-    X,
-    Monitor,
-    Clock
-} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import {
+  ArrowsOut,
+  Clock,
+  Monitor,
+  X
+} from "@phosphor-icons/react";
+import React,{ useEffect,useState } from "react";
 
 interface ExamLayoutProps {
     children: React.ReactNode;
@@ -22,7 +22,6 @@ export function ExamLayout({
     children,
     examTitle,
     duration,
-    studentName: _studentName,
     onExit,
     onSubmit
 }: ExamLayoutProps) {

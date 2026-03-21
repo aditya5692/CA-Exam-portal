@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { User, Lock, Chrome, ArrowRight } from "lucide-react";
 import { login } from "@/actions/auth-actions";
-import { toast } from "sonner";
+import { ArrowRight,Chrome,Lock,User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function LoginForm() {
     const router = useRouter();

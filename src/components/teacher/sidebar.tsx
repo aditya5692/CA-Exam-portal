@@ -1,22 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/actions/auth-actions";
 import { cn } from "@/lib/utils";
 import {
-    ChartPieSlice,
-    BellSimple,
-    Books,
-    Users,
-    IdentificationBadge,
-    Gear,
-    SignOut,
-    FileText,
-    GraduationCap,
-    Files,
-    Sparkle
+  BellSimple,
+  Books,
+  ChartPieSlice,
+  Files,
+  FileText,
+  GraduationCap,
+  IdentificationBadge,
+  SignOut,
+  Sparkle,
+  Users
 } from "@phosphor-icons/react";
+import Link from "next/link";
+import { usePathname,useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
     { label: "Overview", href: "/teacher/dashboard", icon: ChartPieSlice },

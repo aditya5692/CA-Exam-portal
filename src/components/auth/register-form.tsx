@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { User, Lock, Mail, Briefcase, GraduationCap, ArrowRight } from "lucide-react";
 import { register } from "@/actions/auth-actions";
+import { ArrowRight,Briefcase,GraduationCap,Lock,Mail,User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const ROLE_OPTIONS = [
@@ -32,7 +32,13 @@ export function RegisterForm() {
         }
         setIsSubmitting(true);
         try {
-            const { confirmPassword, ...registerData } = formData;
+            const registerData = {
+                fullName: formData.fullName,
+                registrationNumber: formData.registrationNumber,
+                department: formData.department,
+                role: formData.role,
+                password: formData.password,
+            };
             const result = await register(registerData as Record<string, string>);
             if (result.success) {
                 toast.success(result.message);

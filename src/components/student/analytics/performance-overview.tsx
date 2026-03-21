@@ -1,7 +1,7 @@
 "use client";
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, Cell } from "recharts";
-import { Sparkle, TrendUp, Target, Brain, ArrowRight } from "@phosphor-icons/react";
-import { StudentHistoryData } from "@/actions/student-actions";
+import type { StudentHistoryData } from "@/types/student";
+import { ArrowRight,Sparkle,Target,TrendUp } from "@phosphor-icons/react";
+import { Area,AreaChart,Bar,BarChart,CartesianGrid,Cell,ResponsiveContainer,Tooltip,XAxis,YAxis } from "recharts";
 
 interface Props {
     data: StudentHistoryData;

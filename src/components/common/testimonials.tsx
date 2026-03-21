@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, Quotes, IdentificationCard } from "@phosphor-icons/react";
+import { IdentificationCard,Quotes,Star } from "@phosphor-icons/react";
 
 const TESTIMONIALS = [
     {

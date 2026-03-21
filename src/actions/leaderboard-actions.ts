@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma/client";
+import { getActionErrorMessage } from "@/lib/server/action-utils";
 import { ActionResponse } from "@/types/shared";
 import { unstable_cache } from "next/cache";
 
@@ -44,9 +45,27 @@ async function fetchLeaderboardData(limit: number): Promise<LeaderboardEntry[]> 
     }));
 }
 
+function shouldSuppressPublicDataError(error: unknown) {
+    const message = getActionErrorMessage(error, "Failed to fetch leaderboard rankings.");
+    return (
+        message === "The database connection is temporarily unavailable. Please try again." ||
+        message === "The database is temporarily unavailable. Please try again." ||
+        message === "The database configuration is invalid. Please check the server environment."
+    );
+}
+
 function getCachedLeaderboard(limit: number) {
     return unstable_cache(
-        async () => fetchLeaderboardData(limit),
+        async () => {
+            try {
+                return await fetchLeaderboardData(limit);
+            } catch (error) {
+                if (!shouldSuppressPublicDataError(error)) {
+                    console.error("[GET_GLOBAL_LEADERBOARD]", error);
+                }
+                return [];
+            }
+        },
         [`global-leaderboard-cache-${limit}`],
         {
             revalidate: 3600,
@@ -63,7 +82,9 @@ export async function getGlobalLeaderboard(limit = 100): Promise<ActionResponse<
         const data = await getCachedLeaderboard(limit);
         return { success: true, data };
     } catch (error) {
-        console.error("[GET_GLOBAL_LEADERBOARD]", error);
+        if (!shouldSuppressPublicDataError(error)) {
+            console.error("[GET_GLOBAL_LEADERBOARD]", error);
+        }
         return { success: false, message: "Failed to fetch leaderboard rankings." };
     }
 }

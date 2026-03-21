@@ -1,4 +1,4 @@
-import { getExamDetails, startExamAttempt } from "@/actions/exam-actions";
+import { getExamDetails,startExamAttempt } from "@/actions/exam-actions";
 import { ExamClient } from "@/components/exam/exam-client";
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 

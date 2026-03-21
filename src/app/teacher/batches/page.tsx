@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { createBatch, deleteBatch, getTeacherBatches, updateBatch } from "@/actions/batch-actions";
-import { 
-    Calendar, 
-    Copy, 
-    PencilLine, 
-    Plus, 
-    ShieldCheck, 
-    Trash, 
-    User, 
-    Users, 
-    X,
-    CaretRight,
-    CheckCircle,
-    Info,
-    Sparkle
-} from "@phosphor-icons/react";
+import { createBatch,deleteBatch,getTeacherBatches,updateBatch } from "@/actions/batch-actions";
 import { cn } from "@/lib/utils";
+import {
+  Calendar,
+  CaretRight,
+  CheckCircle,
+  Copy,
+  Info,
+  PencilLine,
+  Plus,
+  ShieldCheck,
+  Sparkle,
+  Trash,
+  User,
+  Users,
+  X
+} from "@phosphor-icons/react";
+import { useEffect,useMemo,useState } from "react";
 
 type Student = {
     id: string;
@@ -97,7 +97,13 @@ export default function TeacherBatchesPage() {
     };
 
     useEffect(() => {
-        void load();
+        const timer = window.setTimeout(() => {
+            void load();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
     }, []);
 
     const selectedBatch = useMemo(

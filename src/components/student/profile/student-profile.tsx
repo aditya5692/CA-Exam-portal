@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { getStudentProfile } from "@/actions/profile-actions";
+import type { UserProfile } from "@/types/profile";
+import { useCallback,useEffect,useState } from "react";
 import { ProfileHeader } from "./avatar-section";
-import { JourneySection } from "./journey-section";
 import { InfoCards } from "./info-cards";
+import { JourneySection } from "./journey-section";
 import { StudentProfileEditor } from "./student-profile-editor";
 
 export function StudentProfile() {
-    const [profile, setProfile] = useState<any>(null);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -22,7 +23,13 @@ export function StudentProfile() {
     }, []);
 
     useEffect(() => {
-        loadProfile();
+        const timer = window.setTimeout(() => {
+            void loadProfile();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
     }, [loadProfile]);
 
     if (isLoading) {

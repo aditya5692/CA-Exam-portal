@@ -1,19 +1,19 @@
 "use client";
 
+import { login } from "@/actions/auth-actions";
+import {
+  ArrowRight,
+  ChalkboardTeacher,
+  Envelope,
+  GoogleLogo,
+  GraduationCap,
+  IdentificationBadge,
+  Lock,
+  ShieldCheck,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import {
-    GraduationCap,
-    ArrowRight,
-    Envelope,
-    Lock,
-    GoogleLogo,
-    IdentificationBadge,
-    ChalkboardTeacher,
-    ShieldCheck,
-} from "@phosphor-icons/react";
-import { login } from "@/actions/auth-actions";
+import { useMemo,useState } from "react";
 
 type LoginRole = "student" | "teacher" | "admin";
 

@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
-import Link from "next/link";
-import { StudentSidebar } from "../sidebar";
-import { Bell, MagnifyingGlass, Question, User } from "@phosphor-icons/react/dist/ssr";
 import { getCurrentUser } from "@/lib/auth/session";
+import { Bell,MagnifyingGlass,Question } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ReactNode } from "react";
+import { StudentSidebar } from "../sidebar";
 
 export default async function StudentLayout({ children }: { children: ReactNode }) {
     const student = await getCurrentUser(["STUDENT", "ADMIN"]);

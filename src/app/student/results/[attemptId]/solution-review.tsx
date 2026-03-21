@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { CheckCircle, XCircle } from "@phosphor-icons/react";
+import { CheckCircle,XCircle } from "@phosphor-icons/react";
+import Link from "next/link";
+import { useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface SolutionAnswer {

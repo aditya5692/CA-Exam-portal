@@ -1,5 +1,5 @@
-import { Navbar } from "@/components/common/navbar";
 import { Footer } from "@/components/common/footer";
+import { Navbar } from "@/components/common/navbar";
 import { FreeResourcesDashboard } from "@/components/home/FreeResourcesDashboard";
 import { getSessionPayload } from "@/lib/auth/session";
 import { redirect } from "next/navigation";

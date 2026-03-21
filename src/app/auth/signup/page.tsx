@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { register } from "@/actions/auth-actions";
+import { ArrowRight,CheckCircle,Envelope,GraduationCap,Lock,Sparkle,User } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, ArrowRight, Envelope, Lock, User, Sparkle, CheckCircle } from "@phosphor-icons/react";
-import { register } from "@/actions/auth-actions";
+import { useState } from "react";
 
 export default function SignupPage() {
     const router = useRouter();

@@ -1,13 +1,15 @@
-import { getSessionPayload } from "@/lib/auth/session";
 import { PricingCards } from "@/components/subscription/pricing-cards";
+import { getSessionPayload } from "@/lib/auth/session";
+import { getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
+import { CheckCircle,ShieldCheck,Sparkle } from "lucide-react";
 import { redirect } from "next/navigation";
-import { ShieldCheck, Sparkle, CheckCircle } from "lucide-react";
 
 export default async function StudentPlanPage() {
     const session = await getSessionPayload();
     if (!session || session.role !== "STUDENT") redirect("/auth/login");
 
     const isPro = session.plan === "PRO";
+    const planSummary = await getCurrentUserPlanSummary(session.userId);
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-24">
@@ -38,6 +40,55 @@ export default async function StudentPlanPage() {
                         <CheckCircle className="w-4 h-4" /> Fully Unlocked
                     </div>
                 )}
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Plan Summary</p>
+                    <div className="mt-5 grid grid-cols-2 gap-4">
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Storage Used</div>
+                            <div className="mt-2 text-2xl font-bold text-slate-900">{Math.round(planSummary.storageUsed / 1024 / 1024)} MB</div>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Plan Limit</div>
+                            <div className="mt-2 text-2xl font-bold text-slate-900">{Math.round(planSummary.storageLimit / 1024 / 1024)} MB</div>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Support Tier</div>
+                            <div className="mt-2 text-lg font-bold text-slate-900">{planSummary.supportTier}</div>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Entitled Floor</div>
+                            <div className="mt-2 text-lg font-bold text-slate-900">{Math.round(planSummary.entitledStorageLimit / 1024 / 1024)} MB</div>
+                        </div>
+                    </div>
+                    <div className="mt-5">
+                        <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            <span>Storage Utilization</span>
+                            <span>{planSummary.storageUsagePercent}%</span>
+                        </div>
+                        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-full rounded-full bg-indigo-600" style={{ width: `${planSummary.storageUsagePercent}%` }} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-500">What This Plan Unlocks</p>
+                    <div className="mt-5 space-y-3">
+                        {planSummary.featureHighlights.map((feature) => (
+                            <div key={feature} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                                {feature}
+                            </div>
+                        ))}
+                        {planSummary.restrictions.length > 0 && planSummary.restrictions.map((restriction) => (
+                            <div key={restriction} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                                {restriction}
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Pricing / Upgrade Component */}

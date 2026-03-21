@@ -1,8 +1,7 @@
 import { getPublicEducatorProfile } from "@/actions/public-actions";
-import { notFound } from "next/navigation";
-import { CheckCircle, UsersRound, BookOpen, ShieldCheck, Share2 } from "lucide-react";
+import { BookOpen,CheckCircle,Share2,ShieldCheck,UsersRound } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { notFound } from "next/navigation";
 
 export default async function PublicEducatorProfilePage({ params }: { params: { id: string } }) {
     const profile = await getPublicEducatorProfile(params.id);

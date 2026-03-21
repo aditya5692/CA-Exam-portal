@@ -1,19 +1,16 @@
 import { getGlobalMetrics } from "@/actions/public-actions";
-import { 
-    Student, 
-    BookOpen, 
-    FilePdf, 
-    Users, 
-    Gauge, 
-    ArrowRight, 
-    Lightning,
-    Exam,
-    ChartPieSlice,
-    ShieldCheck,
-    Broadcast
+import { cn } from "@/lib/utils";
+import {
+  ArrowRight,
+  BookOpen,
+  Broadcast,
+  ChartPieSlice,
+  Exam,
+  FilePdf,
+  Lightning,
+  Users
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 export default async function GlobalIndexPage() {
     const metrics = await getGlobalMetrics();

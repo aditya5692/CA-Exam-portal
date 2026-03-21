@@ -9,7 +9,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:backend": "node ./tests/backend/run-backend-tests.mjs",
+    "test:integration": "node ./tests/integration/run-integration-tests.mjs"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"
@@ -56,6 +58,7 @@
     "eslint-config-next": "16.1.6",
     "prisma": "^7.4.2",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

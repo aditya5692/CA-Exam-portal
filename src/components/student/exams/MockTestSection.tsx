@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { ExamHubData } from "@/actions/student-actions";
+import type { ExamHubData } from "@/types/student";
+import Link from "next/link";
 
 export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
     return (

@@ -1,8 +1,8 @@
 import { TopicMasteryHeatmap } from "@/components/teacher/analytics/topic-mastery";
-import { Warning, ArrowRight, UserFocus, ChartBar, Export, Sparkle, Users, ShieldCheck, Target, TrendUp, TrendDown } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
 import prisma from "@/lib/prisma/client";
+import { cn } from "@/lib/utils";
+import { ArrowRight,ChartBar,Export,ShieldCheck,Sparkle,Target,TrendDown,UserFocus,Warning } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 
 interface AtRiskStudent {
     name: string;
@@ -152,7 +152,7 @@ export default async function TeacherAnalyticsPage() {
                             
                             <h3 className="text-3xl font-bold font-outfit mb-4 tracking-tighter">Strategic Growth</h3>
                             <p className="text-slate-400 text-base font-medium leading-relaxed font-sans mb-10">
-                                Analytics suggest focusing on <b className="text-white">Taxation & Law</b>. <span className="text-indigo-400 font-bold">62% of your cohort</span> is struggling with 'Capital Gains' logic.
+                                Analytics suggest focusing on <b className="text-white">Taxation & Law</b>. <span className="text-indigo-400 font-bold">62% of your cohort</span> is struggling with &apos;Capital Gains&apos; logic.
                             </p>
                         </div>
 

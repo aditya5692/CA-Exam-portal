@@ -1,38 +1,34 @@
 "use client";
 
+import { getTeacherBatchOptions,publishExamFromQuestions } from "@/actions/publish-exam-actions";
+import {
+  clearBulkUploadSession,
+  readBulkUploadSession,
+  readStoredQuestionBank,
+  TEMPLATE_COLUMNS,
+  writeStoredQuestionBank,
+} from "@/lib/question-bank-upload";
+import { cn } from "@/lib/utils";
+import type { BatchOption } from "@/types/publish-exam";
+import {
+  ArrowLeft,
+  CaretRight,
+  CheckCircle,
+  CloudArrowUp,
+  Database,
+  FileArrowUp,
+  Globe,
+  Info,
+  Rocket,
+  Sparkle,
+  SpinnerGap,
+  TerminalWindow,
+  Users,
+  WarningCircle
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-    ArrowLeft,
-    CheckCircle,
-    CloudArrowUp,
-    Database,
-    FileArrowUp,
-    Globe,
-    Rocket,
-    SpinnerGap,
-    Users,
-    WarningCircle,
-    Info,
-    Stack,
-    CaretRight,
-    Sparkle,
-    TerminalWindow
-} from "@phosphor-icons/react";
-import {
-    clearBulkUploadSession,
-    readBulkUploadSession,
-    readStoredQuestionBank,
-    TEMPLATE_COLUMNS,
-    writeStoredQuestionBank,
-} from "@/lib/question-bank-upload";
-import {
-    type BatchOption,
-    getTeacherBatchOptions,
-    publishExamFromQuestions,
-} from "@/actions/publish-exam-actions";
-import { cn } from "@/lib/utils";
+import { useEffect,useState } from "react";
 
 type Stage = "processing" | "ready";
 type AudienceMode = "all" | "batch";
@@ -146,7 +142,7 @@ export function QuestionBulkUploadReview() {
                     </div>
                     <h2 className="text-3xl font-bold tracking-tighter text-slate-900 leading-tight">MCQ Series Published!</h2>
                     <p className="text-slate-500 font-medium text-lg leading-relaxed max-w-md mx-auto">
-                        <span className="text-indigo-600 font-bold">"{publishResult.examTitle}"</span>
+                        <span className="text-indigo-600 font-bold">&quot;{publishResult.examTitle}&quot;</span>
                          {" "}is now live and accessible by{" "}
                         <span className="text-slate-900 font-bold">{publishResult.targetLabel}</span>.
                     </p>

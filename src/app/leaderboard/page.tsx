@@ -1,7 +1,15 @@
 import { getGlobalLeaderboard } from "@/actions/leaderboard-actions";
-import { Trophy, Lightning, Medal, Star, Info, ChartLineUp, Path, UserCircle, TrendUp } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ChartLineUp,Info,Medal,Trophy,UserCircle } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+
+type LeaderboardStudent = {
+    rank: number;
+    studentId: string;
+    fullName: string;
+    totalXP: number;
+    level: number;
+};
 
 export const metadata = {
     title: "Global Leaderboard | CA Exam Portal",
@@ -165,7 +173,7 @@ function PodiumCard({
     scale = "", 
     zIndex = "z-0" 
 }: { 
-    student: any, 
+    student: LeaderboardStudent, 
     rank: number, 
     color: "amber" | "slate" | "orange", 
     height: string, 

@@ -1,15 +1,14 @@
-import prisma from "@/lib/prisma/client";
-import { User } from "@prisma/client";
-import {
-  Users,
-  UserPlus,
-  ShieldCheck,
-  CheckCircle,
-  Prohibit,
-  FilePdf
-} from "@phosphor-icons/react/dist/ssr";
-import { cn } from "@/lib/utils";
 import { AdminDirectory } from "@/components/admin/admin-directory";
+import prisma from "@/lib/prisma/client";
+import { cn } from "@/lib/utils";
+import {
+  FilePdf,
+  Prohibit,
+  ShieldCheck,
+  UserPlus,
+  Users
+} from "@phosphor-icons/react/dist/ssr";
+import { User } from "@prisma/client";
 import Link from "next/link";
 
 export default async function AdminUsersPage() {

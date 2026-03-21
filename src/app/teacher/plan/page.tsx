@@ -1,13 +1,15 @@
-import { getSessionPayload } from "@/lib/auth/session";
 import { PricingCards } from "@/components/subscription/pricing-cards";
+import { getSessionPayload } from "@/lib/auth/session";
+import { getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
+import { CheckCircle,CreditCard,Crown,Info,ShieldCheck,Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
-import { ShieldCheck, Sparkle, CheckCircle, CreditCard, Crown, Info } from "@phosphor-icons/react/dist/ssr";
 
 export default async function TeacherPlanPage() {
     const session = await getSessionPayload();
     if (!session || session.role !== "TEACHER") redirect("/auth/login");
 
     const isPro = session.plan === "PRO";
+    const planSummary = await getCurrentUserPlanSummary(session.userId);
 
     return (
         <div className="space-y-10 pb-24 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -73,6 +75,55 @@ export default async function TeacherPlanPage() {
                 </div>
             </div>
 
+            <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+                <div className="rounded-[32px] border border-slate-100 bg-white/80 p-8 shadow-sm">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Capacity Envelope</p>
+                    <div className="mt-6 grid grid-cols-2 gap-4">
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Storage Used</div>
+                            <div className="mt-2 text-2xl font-black tracking-tight text-slate-900">{Math.round(planSummary.storageUsed / 1024 / 1024)} MB</div>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Storage Limit</div>
+                            <div className="mt-2 text-2xl font-black tracking-tight text-slate-900">{Math.round(planSummary.storageLimit / 1024 / 1024)} MB</div>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Support Tier</div>
+                            <div className="mt-2 text-lg font-black tracking-tight text-slate-900">{planSummary.supportTier}</div>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Entitled Floor</div>
+                            <div className="mt-2 text-lg font-black tracking-tight text-slate-900">{Math.round(planSummary.entitledStorageLimit / 1024 / 1024)} MB</div>
+                        </div>
+                    </div>
+                    <div className="mt-6">
+                        <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <span>Utilization</span>
+                            <span>{planSummary.storageUsagePercent}%</span>
+                        </div>
+                        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-full rounded-full bg-indigo-600" style={{ width: `${planSummary.storageUsagePercent}%` }} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-[32px] border border-slate-100 bg-white/80 p-8 shadow-sm">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Deployment Entitlements</p>
+                    <div className="mt-6 space-y-3">
+                        {planSummary.featureHighlights.map((feature) => (
+                            <div key={feature} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                                {feature}
+                            </div>
+                        ))}
+                        {planSummary.restrictions.length > 0 && planSummary.restrictions.map((restriction) => (
+                            <div key={restriction} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                                {restriction}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* Pricing / Upgrade Component Section */}
             <div className="space-y-8">
                 <div className="flex items-center gap-4">
@@ -91,4 +142,4 @@ export default async function TeacherPlanPage() {
     );
 }
 
-const cn = (...args: any[]) => args.filter(Boolean).join(' ');
+const cn = (...args: Array<string | false | null | undefined>) => args.filter(Boolean).join(" ");

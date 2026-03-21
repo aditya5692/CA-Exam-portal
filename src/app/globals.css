@@ -28,6 +28,8 @@
 }
 
 :root {
+  --font-outfit: "Aptos Display", "Segoe UI", "Trebuchet MS", sans-serif;
+  --font-inter: "Aptos", "Segoe UI", system-ui, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.25 0.02 260);
   --card: oklch(1 0 0);

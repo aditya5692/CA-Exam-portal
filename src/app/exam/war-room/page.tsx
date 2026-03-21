@@ -1,21 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { getExamDetails, submitExamAttempt, type ExamWithQuestions } from "@/actions/exam-actions";
-import { startMyExamAttempt } from "@/actions/student-actions";
+import { getExamDetails,submitExamAttempt } from "@/actions/exam-actions";
 import { saveExamResultsAndUpdateLearning } from "@/actions/learning-actions";
-import { 
-    Users, 
-    ChartBar, 
-    DownloadSimple, 
-    FileText,
-    ArrowRight,
-    CaretRight,
-    Spinner,
-    Check
-} from "@phosphor-icons/react";
+import { startMyExamAttempt } from "@/actions/student-actions";
+import { cn } from "@/lib/utils";
+import type { ExamWithQuestions } from "@/types/exam";
+import { useSearchParams } from "next/navigation";
+import { useCallback,useEffect,useRef,useState } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type OptionShape = { id: string; text: string; isCorrect?: boolean };
@@ -64,7 +55,6 @@ export default function MCQExamPage() {
     // Exam data
     const [questions, setQuestions] = useState<QuestionShape[]>([]);
     const [examTitle, setExamTitle] = useState("CA MCQ Series");
-    const [examDuration, setExamDuration] = useState(40 * 60);
     const [examCategory, setExamCategory] = useState("");
     const [attemptId, setAttemptId] = useState<string | null>(null);
     const [studentId, setStudentId] = useState<string | null>(null);
@@ -95,7 +85,6 @@ export default function MCQExamPage() {
         async function load() {
             if (!examId) {
                 setQuestions(DEMO_QUESTIONS);
-                setExamDuration(20 * 60);
                 setTimeLeft(20 * 60);
                 setAnswers(Object.fromEntries(DEMO_QUESTIONS.map(q => [q.id, { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null }])));
                 startedAtRef.current = Date.now();
@@ -125,9 +114,7 @@ export default function MCQExamPage() {
             setQuestions(mapped);
             setExamTitle(exam.title);
             setExamCategory(exam.category);
-            const dur = exam.duration * 60;
-            setExamDuration(dur);
-            setTimeLeft(dur);
+            setTimeLeft(exam.duration * 60);
             setAnswers(Object.fromEntries(mapped.map(q => [q.id, { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null }])));
 
             // Auto start the exam
@@ -217,7 +204,7 @@ export default function MCQExamPage() {
         setSolFilter("all"); // reset filter for new results
         setResultData({ correct: correctCount, total: questions.length, xpGained, timeUsed, topicList });
         setPhase("results");
-    }, [phase, questions, answers, mode, attemptId, studentId, examId, examDuration]);
+    }, [phase, questions, answers, mode, attemptId, studentId, examId]);
 
     // ── Answer interactions ────────────────────────────────────────────────────
     const selectOption = (optId: string) => {

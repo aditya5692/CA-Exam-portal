@@ -1,188 +1,82 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
-import { Prisma, type StudyMaterial, type User } from "@prisma/client";
+import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { randomUUID } from "crypto";
-import { revalidatePath } from "next/cache";
+import { getActionErrorMessage } from "@/lib/server/action-utils";
+import {
+  isAdminUser,
+  listManagedEducatorOptions,
+  resolveManagedEducatorId,
+} from "@/lib/server/educator-management";
+import {
+  revalidateMaterialSurfaces,
+  revalidatePastYearQuestionSurfaces,
+} from "@/lib/server/revalidation";
+import {
+  removeSavedFileByUrl,
+  saveUploadedFile,
+} from "@/lib/server/storage-utils";
+import {
+  createOwnedStudyMaterial,
+  createSharedTeacherMaterial,
+  deleteStudyMaterialWithAccessCleanup,
+  splitCsvValues,
+} from "@/lib/server/study-material-service";
+import type {
+  TeacherMaterialWithRelations,
+  TeacherOverviewData,
+} from "@/types/educator";
 import { ActionResponse } from "@/types/shared";
+import { Prisma,type StudyMaterial } from "@prisma/client";
 
 async function getOrCreateMockTeacher() {
     return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 }
 
-function isAdminUser(user: { role: string }) {
-    return user.role === "ADMIN";
-}
-
-async function getAvailableEducators() {
-    return prisma.user.findMany({
-        where: {
-            role: {
-                in: ["TEACHER", "ADMIN"],
-            },
-        },
-        select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-        },
-        orderBy: [
-            { fullName: "asc" },
-            { email: "asc" },
-        ],
-    });
-}
-
-async function resolveManagedOwnerId(actor: { id: string; role: string }, requestedOwnerId: string | null) {
-    try {
-        if (!isAdminUser(actor)) {
-            return actor.id;
-        }
-
-        if (!requestedOwnerId) {
-            return actor.id;
-        }
-
-        const educator = await prisma.user.findFirst({
-            where: {
-                id: requestedOwnerId,
-                role: {
-                    in: ["TEACHER", "ADMIN"],
-                },
-            },
-            select: { id: true },
-        });
-
-        if (!educator) {
-            throw new Error("Selected educator was not found.");
-        }
-
-        return educator.id;
-    } catch (error) {
-        console.error("resolveManagedOwnerId failed:", error);
-        throw error;
-    }
-}
-
 /**
  * Publishes a study material and distributes it to batches or specific students.
  */
-export async function publishMaterial(formData: FormData): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<{}>>> {
+export async function publishMaterial(
+    formData: FormData
+): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<Record<string, never>>>> {
+    let savedFileUrl: string | null = null;
     try {
         const file = formData.get("file");
         const studentEmailsStr = String(formData.get("studentEmails") ?? "");
         const batchIdsStr = String(formData.get("batchIds") ?? "");
-        
         if (!file || !(file instanceof File)) {
-            throw new Error("No file provided or invalid file format");
+            throw new Error("No file provided or invalid file format.");
         }
-
         const title = String(formData.get("title") ?? file.name ?? "").trim();
         const isProtected = formData.get("isProtected") === "true";
-
         const teacher = await getOrCreateMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "share");
-
-        const ownerId = await resolveManagedOwnerId(
+        const ownerId = await resolveManagedEducatorId(
             teacher,
             String(formData.get("ownerId") ?? "").trim() || null,
         );
-
-        const uploadDir = join(process.cwd(), "public", "uploads", "teacher_materials");
-        await mkdir(uploadDir, { recursive: true }).catch(() => { });
-
-        const fileExt = file.name.split(".").pop() || "tmp";
-        const fileName = `${randomUUID()}.${fileExt}`;
-        const filePath = join(uploadDir, fileName);
-
-        const bytes = await file.arrayBuffer();
-        await writeFile(filePath, Buffer.from(bytes));
-
-        const fileUrl = `/uploads/teacher_materials/${fileName}`;
-
-        const material = await prisma.studyMaterial.create({
-            data: {
-                title: title || file.name,
-                fileUrl,
-                fileType: file.type,
-                sizeInBytes: file.size,
-                isPublic: false,
-                isProtected,
-                uploadedById: ownerId,
-                providerType: "TEACHER",
-                category: String(formData.get("category") ?? "GENERAL").trim(),
-            } as Prisma.StudyMaterialUncheckedCreateInput,
+        const savedFile = await saveUploadedFile(file, ["teacher_materials"], "tmp");
+        savedFileUrl = savedFile.fileUrl;
+        const material = await createSharedTeacherMaterial({
+            actor: teacher,
+            ownerId,
+            title: title || file.name,
+            fileUrl: savedFile.fileUrl,
+            fileType: file.type || "application/octet-stream",
+            fileSize: file.size,
+            isProtected,
+            batchIds: splitCsvValues(batchIdsStr),
+            studentEmails: splitCsvValues(studentEmailsStr),
         });
-
-        // ── Batch-based distribution ────────────────────────────────────────
-        if (batchIdsStr) {
-            const batchIds = batchIdsStr.split(",").map((id) => id.trim()).filter(Boolean);
-
-            const validBatches = await prisma.batch.findMany({
-                where: {
-                    id: { in: batchIds },
-                    ...(isAdminUser(teacher) ? {} : { teacherId: teacher.id }),
-                },
-                select: { id: true },
-            });
-            const validBatchIds = validBatches.map((b) => b.id);
-
-            if (validBatchIds.length > 0) {
-                const enrollments = await prisma.enrollment.findMany({
-                    where: { batchId: { in: validBatchIds } },
-                    select: { studentId: true },
-                });
-                const studentIds = [...new Set(enrollments.map((e) => e.studentId))];
-
-                if (studentIds.length > 0) {
-                    await prisma.$transaction(
-                        studentIds.map((studentId) =>
-                            prisma.materialAccess.upsert({
-                                where: { studentId_materialId: { studentId, materialId: material.id } },
-                                update: { accessType: "FREE_BATCH_MATERIAL" },
-                                create: { studentId, materialId: material.id, accessType: "FREE_BATCH_MATERIAL" },
-                            }),
-                        ),
-                    );
-                }
-            }
-        } else if (studentEmailsStr) {
-            // ── Fallback: email-based distribution ──────────────────────────
-            const emails = studentEmailsStr
-                .split(",")
-                .map((email) => email.trim())
-                .filter(Boolean);
-
-            const students = await prisma.user.findMany({ where: { email: { in: emails } } });
-
-            if (students.length > 0) {
-                await prisma.$transaction(
-                    students.map((student) =>
-                        prisma.materialAccess.upsert({
-                            where: { studentId_materialId: { studentId: student.id, materialId: material.id } },
-                            update: { accessType: "FREE_BATCH_MATERIAL" },
-                            create: { studentId: student.id, materialId: material.id, accessType: "FREE_BATCH_MATERIAL" },
-                        }),
-                    ),
-                );
-            }
-        }
-
-        revalidatePath("/admin/dashboard");
-        revalidatePath("/teacher/materials");
-        revalidatePath("/student/materials");
+        revalidateMaterialSurfaces();
         return { success: true, data: material };
     } catch (error: unknown) {
         console.error("Publish error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to publish material." };
+        await removeSavedFileByUrl(savedFileUrl);
+        return { success: false, message: getActionErrorMessage(error, "Failed to publish material.") };
     }
 }
-
 /**
  * Fetches batches owned by or accessible to the current teacher.
  */
@@ -207,13 +101,6 @@ export async function getTeacherBatchesForMaterials(): Promise<ActionResponse<{ 
         return { success: false, message: "Failed to fetch batches.", data: [] };
     }
 }
-
-export type TeacherMaterialWithRelations = Prisma.StudyMaterialGetPayload<{
-    include: {
-        uploadedBy: { select: { id: true, fullName: true, email: true, role: true } },
-        accessedBy: { include: { student: { select: { id: true, fullName: true, email: true } } } }
-    }
-}>;
 
 type TeacherMaterialsData = {
     materials: TeacherMaterialWithRelations[];
@@ -255,7 +142,7 @@ export async function getTeacherMaterials(): Promise<ActionResponse<TeacherMater
             data: {
                 materials,
                 isAdminView,
-                availableEducators: isAdminView ? await getAvailableEducators() : [],
+                availableEducators: isAdminView ? await listManagedEducatorOptions() : [],
             }
         };
     } catch (error: unknown) {
@@ -318,7 +205,7 @@ export async function getStudentSharedMaterials(studentId?: string): Promise<Act
                 orderBy: { createdAt: "desc" },
             });
 
-            return { success: true, data: { materials: materials as any as StudyMaterial[], isAdminView: true } };
+            return { success: true, data: { materials: materials as unknown as StudyMaterial[], isAdminView: true } };
         }
 
         const accesses = await prisma.materialAccess.findMany({
@@ -343,7 +230,7 @@ export async function getStudentSharedMaterials(studentId?: string): Promise<Act
 /**
  * Fetches general resources for a teacher.
  */
-export async function getTeacherResources(subType?: string): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<{}>[]>> {
+export async function getTeacherResources(subType?: string): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<Record<string, never>>[]>> {
     try {
         const teacher = await getOrCreateMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "read");
@@ -366,56 +253,40 @@ export async function getTeacherResources(subType?: string): Promise<ActionRespo
 /**
  * Uploads a Past Year Question (PYQ) document.
  */
-export async function uploadPYQ(formData: FormData): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<{}>>> {
+export async function uploadPYQ(formData: FormData): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<Record<string, never>>>> {
+    let savedFileUrl: string | null = null;
     try {
         const file = formData.get("file");
         const title = String(formData.get("title") ?? "").trim();
         const category = String(formData.get("category") ?? "").trim();
         const description = String(formData.get("description") ?? "").trim();
-
         if (!file || !(file instanceof File)) {
-            throw new Error("No file provided or invalid file format");
+            throw new Error("No file provided or invalid file format.");
         }
-
         const teacher = await getOrCreateMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "create");
-
-        const uploadDir = join(process.cwd(), "public", "uploads", "pyqs");
-        await mkdir(uploadDir, { recursive: true }).catch(() => { });
-
-        const fileExt = file.name.split(".").pop() || "pdf";
-        const fileName = `${randomUUID()}.${fileExt}`;
-        const filePath = join(uploadDir, fileName);
-
-        const bytes = await file.arrayBuffer();
-        await writeFile(filePath, Buffer.from(bytes));
-
-        const fileUrl = `/uploads/pyqs/${fileName}`;
-
-        const material = await prisma.studyMaterial.create({
-            data: {
-                title: title || file.name,
-                description,
-                fileUrl,
-                fileType: file.type,
-                sizeInBytes: file.size,
-                isPublic: true,
-                category,
-                subType: "PYQ",
-                providerType: "TEACHER",
-                uploadedById: teacher.id,
-            } as Prisma.StudyMaterialUncheckedCreateInput,
+        const savedFile = await saveUploadedFile(file, ["pyqs"], "pdf");
+        savedFileUrl = savedFile.fileUrl;
+        const material = await createOwnedStudyMaterial({
+            title: title || file.name,
+            description,
+            fileUrl: savedFile.fileUrl,
+            fileType: file.type || "application/pdf",
+            sizeInBytes: file.size,
+            isPublic: true,
+            category,
+            subType: "PYQ",
+            providerType: "TEACHER",
+            uploadedById: teacher.id,
         });
-
-        revalidatePath("/teacher/past-year-questions");
-        revalidatePath("/student/past-year-questions");
+        revalidatePastYearQuestionSurfaces();
         return { success: true, data: material };
     } catch (error) {
         console.error("Upload error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to upload." };
+        await removeSavedFileByUrl(savedFileUrl);
+        return { success: false, message: getActionErrorMessage(error, "Failed to upload.") };
     }
 }
-
 /**
  * Deletes a PYQ material.
  */
@@ -423,40 +294,26 @@ export async function deletePYQ(id: string): Promise<ActionResponse<void>> {
     try {
         const teacher = await getOrCreateMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "delete");
-
-        await prisma.studyMaterial.deleteMany({
-            where: { 
-                id,
-                uploadedById: teacher.id
-            }
-        });
-
-        revalidatePath("/teacher/past-year-questions");
-        revalidatePath("/student/past-year-questions");
+        const normalizedId = id.trim();
+        if (!normalizedId) {
+            throw new Error("Material id is required.");
+        }
+        const deletedMaterial = await deleteStudyMaterialWithAccessCleanup(
+            normalizedId,
+            (material) => {
+                if (!isAdminUser(teacher) && material.uploadedById !== teacher.id) {
+                    throw new Error("You do not have permission to delete this material.");
+                }
+            },
+        );
+        await removeSavedFileByUrl(deletedMaterial.fileUrl);
+        revalidatePastYearQuestionSurfaces();
         return { success: true, data: undefined };
     } catch (error) {
         console.error("Delete error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to delete." };
+        return { success: false, message: getActionErrorMessage(error, "Failed to delete.") };
     }
 }
-
-export type TeacherOverviewData = {
-    stats: {
-        activeStudents: number;
-        avgTestScore: number;
-        avgTimePerTest: string;
-        testsCompleted: number;
-        activeStudentsTrend: number;
-        avgScoreTrend: number;
-    };
-    trends: { name: string; attempts: number; score: number }[];
-    recentActivity: { user: string; action: string; time: string; color: string }[];
-    topStudents: { id: string; name: string; xp: number; rank: number; level: number }[];
-    recentAnnouncements: { id: string; content: string; date: string; batchName: string }[];
-    recentMaterials: { id: string; title: string; type: string; category: string; date: string }[];
-    teacherName: string;
-};
-
 /**
  * Fetches overview metrics for the teacher dashboard.
  */

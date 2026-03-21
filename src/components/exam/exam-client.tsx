@@ -1,8 +1,9 @@
 "use client";
 
-import { ExamWithQuestions, submitExamAttempt } from "@/actions/exam-actions";
+import { submitExamAttempt } from "@/actions/exam-actions";
 import { ExamLayout } from "@/components/exam/exam-layout";
 import { ExamMain } from "@/components/exam/exam-main";
+import type { ExamWithQuestions } from "@/types/exam";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 

@@ -1,14 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { getTeacherStudents, removeStudentFromBatch, getStudentPerformanceSummary } from "@/actions/batch-actions";
-import {
-    ArrowRight, CaretDown, CaretUp, MagnifyingGlass, User, X, ChartLineUp, Trash, ShieldCheck,
-    DotsThreeVertical, MagnifyingGlassPlus, GraduationCap, IdentificationBadge, Buildings, 
-    CalendarCheck, UserCircleCheck, IdentificationCard, IdentificationCard as UserID, Target, Sparkle,
-    Users
-} from "@phosphor-icons/react";
+import { getStudentPerformanceSummary,getTeacherStudents,removeStudentFromBatch } from "@/actions/batch-actions";
 import { cn } from "@/lib/utils";
+import {
+  ArrowRight,
+  Buildings,
+  CalendarCheck,
+  CaretDown,CaretUp,
+  ChartLineUp,
+  DotsThreeVertical,
+  GraduationCap,IdentificationBadge,
+  MagnifyingGlass,
+  MagnifyingGlassPlus,
+  ShieldCheck,
+  Sparkle,
+  Target,
+  Trash,
+  UserCircleCheck,
+  IdentificationCard as UserID,
+  Users,
+  X
+} from "@phosphor-icons/react";
+import { useCallback,useEffect,useMemo,useState,type ComponentProps,type ComponentType } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,7 +52,9 @@ type PerformanceData = {
     subjectAccuracy: { subject: string; accuracy: number }[];
 };
 
-const FILTERABLE_COLUMNS: Array<{ key: keyof Omit<StudentDirectoryRow, "id" | "batchNames" | "batchCodes" | "batchOwners"> | "batch"; label: string; icon: any }> = [
+type FilterColumnIcon = ComponentType<ComponentProps<typeof GraduationCap>>;
+
+const FILTERABLE_COLUMNS: Array<{ key: keyof Omit<StudentDirectoryRow, "id" | "batchNames" | "batchCodes" | "batchOwners"> | "batch"; label: string; icon: FilterColumnIcon }> = [
     { key: "name", label: "Cadet Identity", icon: GraduationCap },
     { key: "registrationNumber", label: "Registry ID", icon: UserID },
     { key: "department", label: "Division", icon: Buildings },
@@ -49,7 +64,7 @@ const FILTERABLE_COLUMNS: Array<{ key: keyof Omit<StudentDirectoryRow, "id" | "b
     { key: "joinedAt", label: "Enlistment", icon: Sparkle },
 ];
 
-function HeartbeatIcon(props: any) {
+function HeartbeatIcon(props: ComponentProps<typeof UserCircleCheck>) {
     return <UserCircleCheck {...props} />;
 }
 

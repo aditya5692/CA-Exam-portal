@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { getStudentProfile, getTeacherProfile, updateStudentProfile, updateTeacherProfile } from "@/actions/profile-actions";
-import {
-    BookOpenCheck,
-    CheckCircle2,
-    GraduationCap,
-    Languages,
-    Mail,
-    MapPin,
-    Phone,
-    ShieldCheck,
-    Target,
-    UserRound,
-    UsersRound
-} from "lucide-react";
+import { getStudentProfile,getTeacherProfile,updateStudentProfile,updateTeacherProfile } from "@/actions/profile-actions";
 import { Calendar } from "@phosphor-icons/react";
+import {
+  BookOpenCheck,
+  CheckCircle2,
+  GraduationCap,
+  Languages,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  Target,
+  UserRound,
+  UsersRound
+} from "lucide-react";
+import { useEffect,useMemo,useState } from "react";
 
 type Mode = "teacher" | "student";
 
@@ -290,7 +290,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                         </span>
                     </div>
                     <h1 className="font-outfit tracking-tighter leading-tight text-2xl md:text-3xl font-black text-slate-900">
-                        {profile.fullName?.split(" ")[0] || "User"}'s <span className="text-indigo-600">Profile</span>
+                        {profile.fullName?.split(" ")[0] || "User"}&apos;s <span className="text-indigo-600">Profile</span>
                     </h1>
                     <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
                         Unified terminal for personal identity, scholarly credentials, and operational security management.

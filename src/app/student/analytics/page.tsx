@@ -1,8 +1,9 @@
-import { StudentAnalyticsOverview } from "@/components/student/analytics/performance-overview";
-import { StudentAttemptHistory } from "@/components/student/analytics/attempt-history";
-import { Info, Calendar } from "@phosphor-icons/react/dist/ssr";
 import { getStudentHistory } from "@/actions/student-actions";
+import { StudentAttemptHistory } from "@/components/student/analytics/attempt-history";
+import { StudentAnalyticsOverview } from "@/components/student/analytics/performance-overview";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getStudentStudyRecommendations } from "@/lib/server/study-intelligence";
+import { Calendar,Info } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 
 export default async function StudentAnalyticsPage() {
@@ -12,6 +13,10 @@ export default async function StudentAnalyticsPage() {
     if (!result.success || !result.data) {
         redirect("/auth/login");
     }
+
+    const recommendations = user
+        ? await getStudentStudyRecommendations(user.id, 5)
+        : null;
 
     let daysToExam = 0;
     const userTarget = user?.examTarget || "";
@@ -56,6 +61,77 @@ export default async function StudentAnalyticsPage() {
             </div>
 
             <StudentAnalyticsOverview data={result.data} />
+
+            {recommendations && (
+                <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+                        <div className="mb-6 flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Study Intelligence</p>
+                                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Next Best Actions</h2>
+                            </div>
+                            <div className="rounded-2xl bg-indigo-50 px-4 py-3 text-right">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Due For Review</div>
+                                <div className="text-2xl font-black text-indigo-700">{recommendations.summary.dueForReviewCount}</div>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            {recommendations.priorityTopics.map((topic) => (
+                                <div key={`${topic.subject}-${topic.topic}`} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{topic.subject}</div>
+                                            <h3 className="mt-1 text-lg font-bold tracking-tight text-slate-900">{topic.topic}</h3>
+                                        </div>
+                                        <div className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${topic.priorityBand === "HIGH" ? "bg-rose-100 text-rose-700" : topic.priorityBand === "MEDIUM" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                            {topic.priorityBand}
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                        <span className="rounded-full bg-white px-3 py-1 border border-slate-100">Accuracy {topic.accuracy}%</span>
+                                        <span className="rounded-full bg-white px-3 py-1 border border-slate-100">Attempts {topic.attempts}</span>
+                                        <span className="rounded-full bg-white px-3 py-1 border border-slate-100">{topic.dueForReview ? "Review Due" : "Scheduled"}</span>
+                                    </div>
+                                    <p className="mt-4 text-sm font-medium leading-relaxed text-slate-600">{topic.suggestedAction}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Subject Focus</p>
+                            <div className="mt-5 space-y-4">
+                                {recommendations.subjectFocus.slice(0, 4).map((subject) => (
+                                    <div key={subject.subject} className="rounded-2xl border border-slate-100 p-4">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">{subject.subject}</h3>
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${subject.trend === "IMPROVING" ? "text-emerald-600" : subject.trend === "NEEDS_ATTENTION" ? "text-rose-600" : "text-slate-500"}`}>
+                                                {subject.trend.replace("_", " ")}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between text-sm font-semibold text-slate-600">
+                                            <span>Accuracy {subject.averageAccuracy}%</span>
+                                            <span>{subject.recommendedMinutes} min focus</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-slate-100 bg-slate-900 p-8 text-white shadow-sm">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Weekly Direction</p>
+                            <div className="mt-5 space-y-3">
+                                {recommendations.nextActions.map((action) => (
+                                    <div key={action} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm font-medium leading-relaxed text-slate-200">
+                                        {action}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <StudentAttemptHistory attempts={result.data.attempts} />
 

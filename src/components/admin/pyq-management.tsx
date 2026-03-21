@@ -1,47 +1,63 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { 
-    FilePdf, 
-    DownloadSimple, 
-    ShareNetwork, 
-    Trash, 
-    Plus,
-    MagnifyingGlass,
-    Funnel,
-    CaretDown,
-    CheckCircle,
-    UserCircle,
-    Globe
-} from "@phosphor-icons/react";
-import { getPublicResources, trackPYQAction } from "@/actions/resource-actions";
 import { deletePYQ } from "@/actions/educator-actions"; // Reusing delete for now
+import { getPublicResources } from "@/actions/resource-actions";
+import { cn } from "@/lib/utils";
+import type { PublicResource } from "@/types/resource";
+import {
+  DownloadSimple,
+  FilePdf,
+  Funnel,
+  Globe,
+  MagnifyingGlass,
+  Plus,
+  ShareNetwork,
+  Trash,
+  UserCircle
+} from "@phosphor-icons/react";
+import { useEffect,useState } from "react";
 
 export default function AdminPYQManagement() {
-    const [resources, setResources] = useState<any[]>([]);
+    const [resources, setResources] = useState<PublicResource[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterProvider, setFilterProvider] = useState("All");
 
-    useEffect(() => {
-        fetchResources();
-    }, []);
-
-    const fetchResources = async () => {
-        setLoading(true);
-        // Admins can see everything
-        const res = await getPublicResources({}); 
+    async function refreshResources() {
+        const res = await getPublicResources({});
         if (res.success) {
-            setResources(res.data.filter(r => r.subType === "PYQ"));
+            setResources((res.data || []).filter((resource) => resource.subType === "PYQ"));
         }
         setLoading(false);
-    };
+    }
+
+    useEffect(() => {
+        let active = true;
+
+        const loadResources = async () => {
+            const res = await getPublicResources({});
+            if (!active) {
+                return;
+            }
+
+            if (res.success) {
+                setResources((res.data || []).filter((resource) => resource.subType === "PYQ"));
+            }
+            setLoading(false);
+        };
+
+        void loadResources();
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const handleDelete = async (id: string) => {
         if (confirm("ADMIN ACTION: Are you sure you want to PERMANENTLY delete this resource from the platform?")) {
+            setLoading(true);
             await deletePYQ(id);
-            fetchResources();
+            await refreshResources();
         }
     };
 

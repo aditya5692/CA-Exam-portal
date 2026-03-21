@@ -1,13 +1,9 @@
 
-import * as dotenv from 'dotenv'
+import * as dotenv from 'dotenv';
+import { createRuntimePrismaClient } from '../src/lib/prisma/runtime';
 dotenv.config()
-import { Pool } from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client'
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
+const { prisma } = createRuntimePrismaClient(process.env)
 
 const CA_FINAL_SUBJECTS = [
     "Financial Reporting",

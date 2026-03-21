@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Info, Users, BookOpen, TrendUp, Sparkle, Target, CaretRight, ChartBar } from "@phosphor-icons/react";
+import { CaretRight,ChartBar,Sparkle,Target,Users } from "@phosphor-icons/react";
 
 const TOPICS = [
     "Corporate Law",

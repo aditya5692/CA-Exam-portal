@@ -1,45 +1,28 @@
 "use client";
 
-import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
-    Plus,
-    Trash,
-    PencilSimple,
-    FloppyDisk,
-    CloudArrowUp,
-    Check,
-    CaretDown,
-    DownloadSimple,
-    MagnifyingGlass,
-    FileText,
-    Clock,
-    Lightning,
-    FileArrowDown,
-    CheckCircle,
-    XCircle,
-    ListChecks,
-    SelectionBackground,
-    Funnel,
-    SortAscending,
-    SortDescending,
-    Info,
-    User,
-    Copy,
-    ArrowsClockwise,
-    DotsThreeVertical,
-    Sparkle
-} from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
-import * as XLSX from "xlsx";
-import {
-    parseQuestionRows,
-    Question,
-    readStoredQuestionBank,
-    TEMPLATE_COLUMNS,
-    writeBulkUploadSession,
+  parseQuestionRows,
+  Question,
+  readStoredQuestionBank,
+  writeBulkUploadSession
 } from "@/lib/question-bank-upload";
+import { cn } from "@/lib/utils";
+import {
+  CaretDown,
+  Check,
+  CloudArrowUp,
+  DownloadSimple,
+  FloppyDisk,
+  Lightning,
+  MagnifyingGlass,
+  PencilSimple,
+  Plus,
+  Trash
+} from "@phosphor-icons/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect,useRef,useState } from "react";
+import * as XLSX from "xlsx";
 
 const DEFAULT_QUESTIONS: Question[] = [
     { id: 1, prompt: "As per Ind AS 116, which of the following is included in the measurement of a right-of-use asset?", options: ["Initial direct costs incurred by the lessee", "Variable lease payments not included in lease liability", "General overheads of the lessor", "Costs incurred after lease commencement"], correct: [0] },

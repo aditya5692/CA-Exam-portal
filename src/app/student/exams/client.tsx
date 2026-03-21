@@ -1,26 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { getExamHubData, updateStudentLevel } from "@/actions/student-actions";
+import type { ExamHubData } from "@/types/student";
 import { useRouter } from "next/navigation";
-import { toggleSavedItem, getSavedItems, getExamHubData, updateStudentLevel, ExamHubData } from "@/actions/student-actions";
+import { useEffect,useState } from "react";
 
 // ── Components ─────────────────────────────────────────────────────────────────
-import { ExamHero } from "@/components/student/exams/ExamHero";
-import { ExamStats } from "@/components/student/exams/ExamStats";
 import { ChapterMCQSection } from "@/components/student/exams/ChapterMCQSection";
-import { MockTestSection } from "@/components/student/exams/MockTestSection";
+import { ExamHero } from "@/components/student/exams/ExamHero";
 import { ExamHubFooter } from "@/components/student/exams/ExamHubFooter";
-import { ExamShape, TeacherShape, Props } from "@/components/student/exams/types";
+import { ExamStats } from "@/components/student/exams/ExamStats";
+import { MockTestSection } from "@/components/student/exams/MockTestSection";
+import { Props } from "@/components/student/exams/types";
 import { Calendar } from "@phosphor-icons/react";
 
 // ── Main client component ──────────────────────────────────────────────────────
 
-export default function StudentExamsClient({ caLevelKey, caLevelLabel, exams, teachers, studentName, daysToExam }: Props) {
+export default function StudentExamsClient({ caLevelKey, caLevelLabel, daysToExam }: Props) {
     const router = useRouter();
     const [selectedSubject, setSelectedSubject] = useState("All Subjects");
-    const [selectedLevel, setSelectedLevel] = useState("All Levels");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
     const [hubData, setHubData] = useState<ExamHubData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -28,20 +26,9 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, exams, te
         let mounted = true;
         const init = async () => {
             setLoading(true);
-            const [saveRes, hubRes] = await Promise.all([
-                getSavedItems(),
-                getExamHubData()
-            ]);
+            const hubRes = await getExamHubData();
 
             if (mounted) {
-                if (saveRes.success && saveRes.data) {
-                    const ids = new Set([
-                        ...(saveRes.data.materials || []).map((m: any) => m.id),
-                        ...(saveRes.data.exams || []).map((e: any) => e.id)
-                    ]);
-                    setSavedIds(ids);
-                }
-
                 if (hubRes.success && hubRes.data) {
                     setHubData(hubRes.data);
                 }
@@ -63,19 +50,6 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, exams, te
                 }
                 router.refresh();
             }
-        }
-        setSelectedLevel(level);
-    };
-
-    const handleToggleSave = async (id: string) => {
-        const res = await toggleSavedItem(id, "EXAM");
-        if (res.success && res.data) {
-            setSavedIds(prev => {
-                const next = new Set(prev);
-                if ((res.data as { saved: boolean }).saved) next.add(id);
-                else next.delete(id);
-                return next;
-            });
         }
     };
 

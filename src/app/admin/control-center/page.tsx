@@ -1,24 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-    Users, 
-    ShieldCheck, 
-    BookOpen, 
-    Monitor, 
-    ChartBar, 
-    DownloadSimple, 
-    Plus,
-    Gear,
-    Pulse,
-    FileText,
-    ArrowRight,
-    SealCheck,
-    Broadcast
-} from "@phosphor-icons/react";
+import { getAdminMetrics } from "@/actions/admin-index-actions";
 import { cn } from "@/lib/utils";
+import type { AdminMetricsData } from "@/types/admin";
+import {
+  ArrowRight,
+  BookOpen,
+  Broadcast,
+  ChartBar,
+  DownloadSimple,
+  FileText,
+  Gear,
+  Monitor,
+  Pulse,
+  SealCheck,
+  ShieldCheck,
+  Users
+} from "@phosphor-icons/react";
 import Link from "next/link";
-import { getAdminMetrics, AdminMetricsData } from "@/actions/admin-index-actions";
+import { useEffect,useState } from "react";
 
 export default function AdminControlCenter() {
     const [metrics, setMetrics] = useState<AdminMetricsData | null>(null);
@@ -244,7 +244,7 @@ interface MetricCardProps {
     label: string;
     value: string;
     trend: string;
-    icon: any;
+    icon: typeof Users;
     color: "indigo" | "blue" | "emerald" | "amber";
 }
 

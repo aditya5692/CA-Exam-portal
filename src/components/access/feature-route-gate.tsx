@@ -1,5 +1,3 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
 import type { AppRole } from "@/lib/auth/demo-accounts";
 import {
   assertUserCanAccessFeature,
@@ -7,6 +5,8 @@ import {
   type FeatureKey,
 } from "@/lib/auth/feature-access";
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import Link from "next/link";
+import type { ReactNode } from "react";
 
 type FeatureRouteGateProps = {
   children: ReactNode;

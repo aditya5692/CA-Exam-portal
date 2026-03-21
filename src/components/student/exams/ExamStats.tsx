@@ -1,6 +1,6 @@
 "use client";
 
-import { ExamHubData } from "@/actions/student-actions";
+import type { ExamHubData } from "@/types/student";
 
 export function ExamStats({ hubData }: { hubData: ExamHubData | null }) {
     return (

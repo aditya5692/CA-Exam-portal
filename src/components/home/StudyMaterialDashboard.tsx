@@ -1,18 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
-    BookmarkSimple,
-    Funnel,
-    CaretDown,
-    FilePdf,
-    FileText,
-    BookOpen,
-    PenNib,
-    DownloadSimple
+  BookmarkSimple,
+  BookOpen,
+  CaretDown,
+  DownloadSimple,
+  FilePdf,
+  FileText,
+  Funnel,
+  PenNib
 } from "@phosphor-icons/react";
+import { useState } from "react";
 
 export function StudyMaterialDashboard() {
     const [activeLevel, setActiveLevel] = useState("CA Final");

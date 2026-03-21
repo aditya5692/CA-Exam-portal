@@ -3,7 +3,7 @@ import "server-only";
 import prisma from "@/lib/prisma/client";
 import type { User } from "@prisma/client";
 import { cookies } from "next/headers";
-import { ensureDemoAccounts, getDefaultDemoUser, type AppRole } from "./demo-accounts";
+import { ensureDemoAccounts,getDefaultDemoUser,type AppRole } from "./demo-accounts";
 
 type SessionPayload = {
     userId: string;

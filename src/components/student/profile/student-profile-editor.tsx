@@ -1,16 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import { updateStudentProfile } from "@/actions/profile-actions";
-import { 
-    User, Mail, ShieldCheck, MapPin, 
-    Languages, Briefcase, Calendar, 
-    Target, CheckCircle2, ChevronLeft,
-    Save, FileText
+import type { UserProfile } from "@/types/profile";
+import {
+  Briefcase,Calendar,
+  CheckCircle2,ChevronLeft,
+  FileText,
+  Mail,
+  MapPin,
+  Save,
+  ShieldCheck,
+  Target,
+  User
 } from "lucide-react";
+import { useState,type ReactNode } from "react";
+
+type ProfileFormState = {
+    fullName: string;
+    email: string;
+    registrationNumber: string;
+    department: string;
+    phone: string;
+    preferredLanguage: string;
+    timezone: string;
+    bio: string;
+    examTarget: string;
+    batch: string;
+    dob: string;
+    location: string;
+    firm: string;
+    firmRole: string;
+    articleshipYear: string;
+    articleshipTotal: string;
+    foundationCleared: boolean;
+    intermediateCleared: boolean;
+    finalCleared: boolean;
+    resumeUrl: string;
+};
+
+type CheckboxFieldName = "foundationCleared" | "intermediateCleared" | "finalCleared";
+type TextFieldName = Exclude<keyof ProfileFormState, CheckboxFieldName>;
 
 interface StudentProfileEditorProps {
-    profile: any;
+    profile: UserProfile;
     onCancel: () => void;
     onSaveSuccess: () => void;
 }
@@ -21,30 +53,34 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
     const [statusMessage, setStatusMessage] = useState("");
 
     // Initial state from profile
-    const [formData, setFormData] = useState({
-        fullName: profile.fullName || "",
-        email: profile.email || "",
-        registrationNumber: profile.registrationNumber || "",
-        department: profile.department || "",
-        phone: profile.phone || "",
-        preferredLanguage: profile.preferredLanguage || "",
-        timezone: profile.timezone || "",
-        bio: profile.bio || "",
-        examTarget: profile.examTarget || "",
-        batch: profile.batch || "",
-        dob: profile.dob || "",
-        location: profile.location || "",
-        firm: profile.firm || "",
-        firmRole: profile.firmRole || "",
-        articleshipYear: String(profile.articleshipYear || 0),
-        articleshipTotal: String(profile.articleshipTotal || 3),
-        foundationCleared: profile.foundationCleared || false,
-        intermediateCleared: profile.intermediateCleared || false,
-        finalCleared: profile.finalCleared || false,
-        resumeUrl: profile.resumeUrl || "",
+    const [formData, setFormData] = useState<ProfileFormState>({
+        fullName: profile.fullName ?? "",
+        email: profile.email ?? "",
+        registrationNumber: profile.registrationNumber ?? "",
+        department: profile.department ?? "",
+        phone: profile.phone ?? "",
+        preferredLanguage: profile.preferredLanguage ?? "",
+        timezone: profile.timezone ?? "",
+        bio: profile.bio ?? "",
+        examTarget: profile.examTarget ?? "",
+        batch: profile.batch ?? "",
+        dob: profile.dob ? String(profile.dob) : "",
+        location: profile.location ?? "",
+        firm: profile.firm ?? "",
+        firmRole: profile.firmRole ?? "",
+        articleshipYear: String(profile.articleshipYear ?? 0),
+        articleshipTotal: String(profile.articleshipTotal ?? 3),
+        foundationCleared: Boolean(profile.foundationCleared),
+        intermediateCleared: Boolean(profile.intermediateCleared),
+        finalCleared: Boolean(profile.finalCleared),
+        resumeUrl: profile.resumeUrl ?? "",
     });
 
-    const handleChange = (key: string, value: any) => {
+    const handleTextChange = (key: TextFieldName, value: string) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleCheckboxChange = (key: CheckboxFieldName, value: boolean) => {
         setFormData(prev => ({ ...prev, [key]: value }));
     };
 
@@ -96,7 +132,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Full Name" 
                             name="fullName" 
                             value={formData.fullName} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="Aditya Vardhan"
                             icon={<User className="w-4 h-4" />}
                         />
@@ -104,7 +140,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Email Address" 
                             name="email" 
                             value={formData.email} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             type="email"
                             placeholder="aditya@example.com"
                             icon={<Mail className="w-4 h-4" />}
@@ -113,7 +149,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Registration Number (CRO)" 
                             name="registrationNumber" 
                             value={formData.registrationNumber} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="CRO-0742918"
                             icon={<ShieldCheck className="w-4 h-4" />}
                         />
@@ -121,7 +157,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Phone Number" 
                             name="phone" 
                             value={formData.phone} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="+91 98200 12345"
                             icon={<Mail className="w-4 h-4" />}
                         />
@@ -135,14 +171,14 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Batch" 
                             name="batch" 
                             value={formData.batch} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="Nov 2024"
                         />
                         <InputField 
                             label="Attempt Due" 
                             name="examTarget" 
                             value={formData.examTarget} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="May 2025"
                             icon={<Target className="w-4 h-4" />}
                         />
@@ -150,7 +186,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Location" 
                             name="location" 
                             value={formData.location} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="Mumbai"
                             icon={<MapPin className="w-4 h-4" />}
                         />
@@ -158,7 +194,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Date of Birth" 
                             name="dob" 
                             value={formData.dob} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="14 Aug 2002"
                         />
                     </div>
@@ -171,14 +207,14 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Current Firm" 
                             name="firm" 
                             value={formData.firm} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="Deloitte & Touche"
                         />
                         <InputField 
                             label="Role" 
                             name="firmRole" 
                             value={formData.firmRole} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="Statutory Audit"
                         />
                          <div className="grid grid-cols-2 gap-4">
@@ -187,21 +223,21 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                                 name="articleshipYear" 
                                 type="number"
                                 value={formData.articleshipYear} 
-                                onChange={handleChange} 
+                                onChange={handleTextChange} 
                             />
                             <InputField 
                                 label="Total Duration" 
                                 name="articleshipTotal" 
                                 type="number"
                                 value={formData.articleshipTotal} 
-                                onChange={handleChange} 
+                                onChange={handleTextChange} 
                             />
                         </div>
                         <InputField 
                             label="Resume URL" 
                             name="resumeUrl" 
                             value={formData.resumeUrl} 
-                            onChange={handleChange} 
+                            onChange={handleTextChange} 
                             placeholder="https://..."
                             icon={<FileText className="w-4 h-4" />}
                         />
@@ -215,19 +251,19 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="Foundation Cleared" 
                             name="foundationCleared" 
                             checked={formData.foundationCleared} 
-                            onChange={handleChange} 
+                            onChange={handleCheckboxChange} 
                         />
                         <CheckboxField 
                             label="Intermediate Cleared" 
                             name="intermediateCleared" 
                             checked={formData.intermediateCleared} 
-                            onChange={handleChange} 
+                            onChange={handleCheckboxChange} 
                         />
                         <CheckboxField 
                             label="Final Cleared" 
                             name="finalCleared" 
                             checked={formData.finalCleared} 
-                            onChange={handleChange} 
+                            onChange={handleCheckboxChange} 
                         />
                     </div>
                 </Section>
@@ -271,7 +307,17 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
     );
 }
 
-function InputField({ label, name, value, onChange, placeholder, type = "text", icon }: any) {
+type InputFieldProps = {
+    label: string;
+    name: TextFieldName;
+    value: string;
+    onChange: (key: TextFieldName, value: string) => void;
+    placeholder?: string;
+    type?: string;
+    icon?: ReactNode;
+};
+
+function InputField({ label, name, value, onChange, placeholder, type = "text", icon }: InputFieldProps) {
     return (
         <label className="block space-y-2.5">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</span>
@@ -289,7 +335,14 @@ function InputField({ label, name, value, onChange, placeholder, type = "text", 
     );
 }
 
-function CheckboxField({ label, name, checked, onChange }: any) {
+type CheckboxFieldProps = {
+    label: string;
+    name: CheckboxFieldName;
+    checked: boolean;
+    onChange: (key: CheckboxFieldName, value: boolean) => void;
+};
+
+function CheckboxField({ label, name, checked, onChange }: CheckboxFieldProps) {
     return (
         <label className="flex items-center gap-3 cursor-pointer group">
             <div className="relative w-6 h-6">

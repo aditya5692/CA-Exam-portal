@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { BookmarkSimple, List, Star, Clock, Users, CheckCircle } from "@phosphor-icons/react";
+import { BookmarkSimple,CheckCircle,Clock,List,Star,Users } from "@phosphor-icons/react";
+import Link from "next/link";
 import { ExamShape } from "./types";
 
 export function ExamCard({ 

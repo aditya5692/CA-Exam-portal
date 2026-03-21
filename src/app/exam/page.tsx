@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import { ExamEngine } from "@/components/exam/exam-engine";
 import { useExamStore } from "@/store/exam-store";
+import { useEffect } from "react";
 
 const MOCK_QUESTIONS = [
     {

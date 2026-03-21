@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { deletePersonalMaterial, getMyVaultMaterials, uploadPersonalMaterial } from "@/actions/vault-actions";
 import { getStudentSharedMaterials } from "@/actions/educator-actions";
-import { toggleSavedItem, getSavedItems } from "@/actions/student-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
-import { Upload, FileText, Lock, Unlock, Folder as FolderIcon, X, ShieldCheck, Trash2, Users, BookOpen, Clock, Bookmark, Star, Download, Flame } from "lucide-react";
-import { Calendar } from "@phosphor-icons/react";
+import { getSavedItems,toggleSavedItem } from "@/actions/student-actions";
+import { deletePersonalMaterial,getMyVaultMaterials,uploadPersonalMaterial } from "@/actions/vault-actions";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@phosphor-icons/react";
+import { Bookmark,BookOpen,Clock,Download,FileText,Flame,Folder as FolderIcon,Lock,ShieldCheck,Star,Trash2,Unlock,Upload,Users,X } from "lucide-react";
+import { useEffect,useState } from "react";
 
 type VaultMaterial = {
     id: string;
@@ -102,8 +102,8 @@ export default function StudentVaultPage() {
         const savedRes = await getSavedItems();
         if (savedRes.success && savedRes.data) {
             const ids = new Set([
-                ...(savedRes.data.materials || []).map((m: any) => m.id),
-                ...(savedRes.data.exams || []).map((e: any) => e.id)
+                ...(savedRes.data.materials || []).map((material) => material.id),
+                ...(savedRes.data.exams || []).map((exam) => exam.id)
             ]);
             setSavedIds(ids);
         }

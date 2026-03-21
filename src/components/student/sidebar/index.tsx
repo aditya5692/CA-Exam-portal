@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/actions/auth-actions";
 import { cn } from "@/lib/utils";
 import {
-    CaretLeft,
-    CaretRight,
-    ShieldCheck,
-    Target,
-    IdentificationBadge,
-    SignOut
+  CaretLeft,
+  CaretRight,
+  IdentificationBadge,
+  ShieldCheck,
+  SignOut,
+  Target
 } from "@phosphor-icons/react";
+import Link from "next/link";
+import { usePathname,useRouter } from "next/navigation";
+import { useEffect,useState } from "react";
 
 const NAV_SECTIONS = [
     {
@@ -42,9 +42,15 @@ export function StudentSidebar({ showAdminLink = false }: { showAdminLink?: bool
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
-        const saved = localStorage.getItem("sidebar-collapsed");
-        if (saved !== null) setIsCollapsed(saved === "true");
+        const timer = window.setTimeout(() => {
+            setMounted(true);
+            const saved = localStorage.getItem("sidebar-collapsed");
+            if (saved !== null) setIsCollapsed(saved === "true");
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
     }, []);
 
     const toggleCollapse = () => {
@@ -251,5 +257,4 @@ export function StudentSidebar({ showAdminLink = false }: { showAdminLink?: bool
         </aside>
     );
 }
-
 

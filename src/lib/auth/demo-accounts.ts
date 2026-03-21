@@ -2,7 +2,7 @@ import "server-only";
 
 import prisma from "@/lib/prisma/client";
 import type { User } from "@prisma/client";
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHash,randomBytes,scryptSync,timingSafeEqual } from "crypto";
 
 export type AppRole = "ADMIN" | "TEACHER" | "STUDENT";
 
@@ -85,7 +85,7 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         department: "CA Intermediate",
         role: "STUDENT",
         plan: "ELITE",
-        storageLimit: 52428800,
+        storageLimit: 536870912,
         examTarget: "November 2026",
         preferredLanguage: "English",
         timezone: "Asia/Kolkata",
@@ -100,7 +100,7 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         department: "CA Intermediate",
         role: "STUDENT",
         plan: "PRO",
-        storageLimit: 52428800,
+        storageLimit: 268435456,
         examTarget: "May 2027",
         preferredLanguage: "English",
         timezone: "Asia/Kolkata",

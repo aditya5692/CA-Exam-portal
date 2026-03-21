@@ -1,68 +1,22 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
+import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { Prisma } from "@prisma/client";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { randomUUID } from "crypto";
+import { getActionErrorMessage,withSerializableTransaction } from "@/lib/server/action-utils";
+import {
+  isAdminUser,
+  listManagedEducatorOptions,
+  resolveManagedEducatorId,
+  type ManagedEducatorOption,
+} from "@/lib/server/educator-management";
 import { ActionResponse } from "@/types/shared";
+import { Prisma } from "@prisma/client";
 
 const MCQ_PRICE_PER_QUESTION = 5;
 
 async function getMockTeacher() {
     return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
-}
-
-function isAdminUser(user: { role: string }) {
-    return user.role === "ADMIN";
-}
-
-async function getAvailableEducators() {
-    return prisma.user.findMany({
-        where: {
-            role: {
-                in: ["TEACHER", "ADMIN"],
-            },
-        },
-        select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-        },
-        orderBy: [
-            { fullName: "asc" },
-            { email: "asc" },
-        ],
-    });
-}
-
-async function resolveManagedTeacherId(actor: { id: string; role: string }, requestedTeacherId: string | null) {
-    if (!isAdminUser(actor)) {
-        return actor.id;
-    }
-
-    if (!requestedTeacherId) {
-        throw new Error("Select the educator whose draft bank you want to manage.");
-    }
-
-    const educator = await prisma.user.findFirst({
-        where: {
-            id: requestedTeacherId,
-            role: {
-                in: ["TEACHER", "ADMIN"],
-            },
-        },
-        select: { id: true },
-    });
-
-    if (!educator) {
-        throw new Error("Selected educator was not found.");
-    }
-
-    return educator.id;
 }
 
 async function parseQuestionsFromFileAI(
@@ -81,7 +35,7 @@ async function parseQuestionsFromFileAI(
     ];
 }
 
-export type MCQExtractionResult = {
+type MCQExtractionResult = {
     count: number;
     totalCost: number;
     pricePerMCQ: number;
@@ -94,33 +48,38 @@ export type MCQExtractionResult = {
 export async function analyzePdfForMCQs(formData: FormData): Promise<ActionResponse<MCQExtractionResult>> {
     try {
         const file = formData.get("file") as File | null;
-        if (!file) throw new Error("No file provided.");
+        if (!file || !(file instanceof File)) throw new Error("No file provided.");
+        if (file.size <= 0) throw new Error("Uploaded file is empty.");
 
         const teacher = await getMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "create");
 
         const targetTeacherId = isAdminUser(teacher)
-            ? await resolveManagedTeacherId(teacher, String(formData.get("ownerId") ?? "").trim() || null)
+            ? await resolveManagedEducatorId(teacher, String(formData.get("ownerId") ?? "").trim() || null, {
+                allowAdminFallbackToActor: false,
+                missingSelectionMessage: "Select the educator whose draft bank you want to manage.",
+            })
             : teacher.id;
 
-        const uploadDir = join(process.cwd(), "public", "uploads", "mcq_drafts");
-        await mkdir(uploadDir, { recursive: true }).catch(() => { });
-        const fileName = `${randomUUID()}.${file.name.split(".").pop()}`;
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        await writeFile(join(uploadDir, fileName), buffer);
 
         const extractedQuestions = await parseQuestionsFromFileAI(buffer, file.type);
+        if (extractedQuestions.length === 0) {
+            throw new Error("No draft MCQs could be extracted from the uploaded file.");
+        }
 
-        await prisma.draftMCQ.deleteMany({ where: { teacherId: targetTeacherId } });
+        await withSerializableTransaction(async (tx) => {
+            await tx.draftMCQ.deleteMany({ where: { teacherId: targetTeacherId } });
 
-        await prisma.draftMCQ.createMany({
-            data: extractedQuestions.map((question) => ({
-                question: question.question,
-                options: question.options,
-                answer: question.answer,
-                teacherId: targetTeacherId,
-            })),
+            await tx.draftMCQ.createMany({
+                data: extractedQuestions.map((question) => ({
+                    question: question.question,
+                    options: question.options,
+                    answer: question.answer,
+                    teacherId: targetTeacherId,
+                })),
+            });
         });
 
         const totalCost = extractedQuestions.length * MCQ_PRICE_PER_QUESTION;
@@ -137,20 +96,20 @@ export async function analyzePdfForMCQs(formData: FormData): Promise<ActionRespo
         };
     } catch (error: unknown) {
         console.error("analyzePdfForMCQs error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Analysis failed." };
+        return { success: false, message: getActionErrorMessage(error, "Analysis failed.") };
     }
 }
 
-export type DraftMCQWithTeacher = Prisma.DraftMCQGetPayload<{
+type DraftMCQWithTeacher = Prisma.DraftMCQGetPayload<{
     include: { teacher: { select: { id: true, fullName: true, email: true } } }
 }>;
 
-export type DraftMCQsData = {
+type DraftMCQsData = {
     drafts: DraftMCQWithTeacher[];
     totalCost: number;
     pricePerMCQ: number;
     isAdminView: boolean;
-    availableEducators: { id: string; fullName: string | null; email: string | null; role: string }[];
+    availableEducators: ManagedEducatorOption[];
 };
 
 /**
@@ -163,7 +122,12 @@ export async function getMyDraftMCQs(ownerId?: string): Promise<ActionResponse<D
 
         const isAdminView = isAdminUser(teacher);
         const scopedTeacherId = isAdminView
-            ? (ownerId ? await resolveManagedTeacherId(teacher, ownerId) : null)
+            ? (ownerId
+                ? await resolveManagedEducatorId(teacher, ownerId, {
+                    allowAdminFallbackToActor: false,
+                    missingSelectionMessage: "Select the educator whose draft bank you want to manage.",
+                })
+                : null)
             : teacher.id;
 
         const drafts = await prisma.draftMCQ.findMany({
@@ -188,12 +152,12 @@ export async function getMyDraftMCQs(ownerId?: string): Promise<ActionResponse<D
                 totalCost,
                 pricePerMCQ: MCQ_PRICE_PER_QUESTION,
                 isAdminView,
-                availableEducators: isAdminView ? await getAvailableEducators() : [],
+                availableEducators: isAdminView ? await listManagedEducatorOptions() : [],
             }
         };
     } catch (error: unknown) {
         console.error("getMyDraftMCQs error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to load drafts." };
+        return { success: false, message: getActionErrorMessage(error, "Failed to load drafts.") };
     }
 }
 
@@ -206,17 +170,23 @@ export async function confirmAndImportMCQs(ownerId?: string): Promise<ActionResp
         await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "share");
 
         const targetTeacherId = isAdminUser(teacher)
-            ? await resolveManagedTeacherId(teacher, ownerId ?? null)
+            ? await resolveManagedEducatorId(teacher, ownerId ?? null, {
+                allowAdminFallbackToActor: false,
+                missingSelectionMessage: "Select the educator whose draft bank you want to manage.",
+            })
             : teacher.id;
 
-        const drafts = await prisma.draftMCQ.findMany({ where: { teacherId: targetTeacherId } });
-        if (drafts.length === 0) throw new Error("No draft MCQs to import.");
+        const deletedDrafts = await withSerializableTransaction(async (tx) => {
+            const drafts = await tx.draftMCQ.findMany({ where: { teacherId: targetTeacherId } });
+            if (drafts.length === 0) throw new Error("No draft MCQs to import.");
 
-        await prisma.draftMCQ.deleteMany({ where: { teacherId: targetTeacherId } });
+            await tx.draftMCQ.deleteMany({ where: { teacherId: targetTeacherId } });
+            return drafts.length;
+        });
 
-        return { success: true, data: { imported: drafts.length }, message: "MCQs imported successfully." };
+        return { success: true, data: { imported: deletedDrafts }, message: "MCQs imported successfully." };
     } catch (error: unknown) {
         console.error("confirmAndImportMCQs error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Import failed." };
+        return { success: false, message: getActionErrorMessage(error, "Import failed.") };
     }
 }

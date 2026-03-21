@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
-import { X, CreditCard, ShieldCheck, Spinner, Sparkle, ArrowRight } from "@phosphor-icons/react";
-import { ActivationSuccess } from "./activation-success";
 import { activateProPlan } from "@/actions/subscription-actions";
+import { ArrowRight,CreditCard,ShieldCheck,Sparkle,Spinner,X } from "@phosphor-icons/react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { ActivationSuccess } from "./activation-success";
 
 interface CheckoutModalProps {
     plan: {

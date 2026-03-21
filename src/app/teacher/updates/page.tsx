@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { getTeacherUpdates, postAnnouncement } from "@/actions/batch-actions";
-import { 
-    Megaphone, 
-    PaperPlaneRight, 
-    ShieldCheck, 
-    Users, 
-    CheckCircle, 
-    Bell,
-    CaretRight,
-    Sparkle
-} from "@phosphor-icons/react";
+import { getTeacherUpdates,postAnnouncement } from "@/actions/batch-actions";
 import { cn } from "@/lib/utils";
+import {
+  Bell,
+  CaretRight,
+  CheckCircle,
+  Megaphone,
+  PaperPlaneRight,
+  ShieldCheck,
+  Sparkle,
+  Users
+} from "@phosphor-icons/react";
+import { useEffect,useState } from "react";
 
 type BatchTarget = {
     id: string;
@@ -67,13 +67,14 @@ export default function TeacherUpdatesPage() {
     };
 
     useEffect(() => {
-        void load();
-    }, []);
+        const timer = window.setTimeout(() => {
+            void load();
+        }, 0);
 
-    const selectedBatchCount = useMemo(
-        () => (sendToAll ? batches.length : selectedBatchIds.length),
-        [batches.length, selectedBatchIds.length, sendToAll],
-    );
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, []);
 
     const toggleBatch = (batchId: string) => {
         setSelectedBatchIds((current) =>

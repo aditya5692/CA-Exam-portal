@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import { List, X, GraduationCap, SignOut } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
 import { logout } from "@/actions/auth-actions";
+import { cn } from "@/lib/utils";
+import { GraduationCap,List,SignOut,X } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect,useState } from "react";
 
 export function Navbar({ user }: { user?: { fullName: string | null; role: string } | null }) {
     const router = useRouter();

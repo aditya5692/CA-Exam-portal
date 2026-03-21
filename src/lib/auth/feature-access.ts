@@ -1,9 +1,9 @@
 import "server-only";
 
 import prisma from "@/lib/prisma/client";
+import type { User,UserFeatureAccess } from "@prisma/client";
 import type { AppRole } from "./demo-accounts";
 import { getCurrentUserOrDemoUser } from "./session";
-import type { User, UserFeatureAccess } from "@prisma/client";
 
 export type FeatureCapability = "read" | "create" | "update" | "delete" | "share";
 export type FeatureAudience = "TEACHER" | "STUDENT";

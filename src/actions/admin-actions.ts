@@ -1,11 +1,28 @@
 "use server";
 
-import { FEATURE_DEFINITIONS, type FeatureKey } from "@/lib/auth/feature-access";
-import { createPasswordHash, type AppRole } from "@/lib/auth/demo-accounts";
+import { createPasswordHash,type AppRole } from "@/lib/auth/demo-accounts";
+import { FEATURE_DEFINITIONS,type FeatureKey } from "@/lib/auth/feature-access";
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { randomBytes } from "crypto";
-import { revalidatePath } from "next/cache";
+import { getActionErrorMessage } from "@/lib/server/action-utils";
+import {
+  assertManagedUserIdentityAvailability,
+  deleteManagedUserAndCollectFiles,
+  ensureManagedUserRecord,
+} from "@/lib/server/admin-user-management";
+import {
+  createBatchAnnouncements,
+  createManagedBatch,
+  deleteEnrollmentById,
+  ensureAnnouncementAuthorRecord,
+  ensureBatchRecord,
+  updateManagedBatchById,
+  upsertBatchEnrollment,
+} from "@/lib/server/batch-management";
+import { ensureManagedEducatorRecord } from "@/lib/server/educator-management";
+import { revalidateAdminSurfaces } from "@/lib/server/revalidation";
+import { removeSavedFileByUrl } from "@/lib/server/storage-utils";
+import { deleteStudyMaterialWithAccessCleanup } from "@/lib/server/study-material-service";
 import { ActionResponse } from "@/types/shared";
 import { Prisma } from "@prisma/client";
 
@@ -42,35 +59,12 @@ function readBooleanField(input: FormDataEntryValue | null) {
   return String(input ?? "false").toLowerCase() === "true";
 }
 
-function generateJoinCode(name: string) {
-  const slug = name.toUpperCase().replace(/\s+/g, "-").slice(0, 8);
-  const rand = randomBytes(3).toString("hex").toUpperCase();
-  return `${slug}-${rand}`;
-}
-
 async function requireAdmin() {
   return getCurrentUserOrDemoUser("ADMIN");
 }
 
-function refreshAdminSurfaces() {
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/teacher/dashboard");
-  revalidatePath("/teacher/profile");
-  revalidatePath("/teacher/batches");
-  revalidatePath("/teacher/materials");
-  revalidatePath("/teacher/updates");
-  revalidatePath("/teacher/students");
-  revalidatePath("/teacher/questions");
-  revalidatePath("/teacher/mcq-extract");
-  revalidatePath("/teacher/analytics");
-  revalidatePath("/student/dashboard");
-  revalidatePath("/student/profile");
-  revalidatePath("/student/exams");
-  revalidatePath("/student/materials");
-  revalidatePath("/student/updates");
-  revalidatePath("/student/analytics");
-  revalidatePath("/exam");
-  revalidatePath("/exam/war-room");
+async function ensureTeacherOrAdminUser(teacherId: string) {
+  return ensureManagedEducatorRecord(teacherId, "Teacher not found.");
 }
 
 /**
@@ -91,6 +85,8 @@ export async function createAdminManagedUser(formData: FormData): Promise<Action
     if (!registrationNumber) throw new Error("Registration number is required.");
     if (!password) throw new Error("Password is required.");
 
+    await assertManagedUserIdentityAvailability(email, registrationNumber);
+
     await prisma.user.create({
       data: {
         fullName,
@@ -102,11 +98,11 @@ export async function createAdminManagedUser(formData: FormData): Promise<Action
       },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "User created successfully.", data: undefined };
   } catch (error) {
     console.error("createAdminManagedUser failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to create user." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to create user.") };
   }
 }
 
@@ -115,7 +111,7 @@ export async function createAdminManagedUser(formData: FormData): Promise<Action
  */
 export async function updateAdminManagedUser(formData: FormData): Promise<ActionResponse<void>> {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
 
     const userId = String(formData.get("userId") ?? "").trim();
     if (!userId) throw new Error("User id is required.");
@@ -137,6 +133,12 @@ export async function updateAdminManagedUser(formData: FormData): Promise<Action
     const department = String(formData.get("department") ?? "").trim() || null;
     const plan = String(formData.get("plan") ?? "").trim().toUpperCase() || "FREE";
     const password = String(formData.get("password") ?? "").trim();
+
+    if (userId === admin.id && role !== "ADMIN") {
+      throw new Error("You cannot remove admin access from the currently logged-in admin.");
+    }
+
+    await assertManagedUserIdentityAvailability(email, registrationNumber, userId);
 
     const data: Prisma.UserUpdateInput = {
       fullName,
@@ -162,11 +164,11 @@ export async function updateAdminManagedUser(formData: FormData): Promise<Action
       data,
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "User updated successfully.", data: undefined };
   } catch (error) {
     console.error("updateAdminManagedUser failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to update user." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to update user.") };
   }
 }
 
@@ -185,6 +187,8 @@ export async function setAdminManagedUserBlock(formData: FormData): Promise<Acti
       throw new Error("You cannot block the currently logged-in admin.");
     }
 
+    await ensureManagedUserRecord(userId);
+
     await prisma.user.update({
       where: { id: userId },
       data: {
@@ -193,11 +197,11 @@ export async function setAdminManagedUserBlock(formData: FormData): Promise<Acti
       },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: isBlocked ? "User blocked." : "User unblocked.", data: undefined };
   } catch (error) {
     console.error("setAdminManagedUserBlock failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to toggle block status." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to toggle block status.") };
   }
 }
 
@@ -212,6 +216,8 @@ export async function saveAdminManagedFeatureAccess(formData: FormData): Promise
     const featureKey = normalizeFeatureKey(formData.get("featureKey"));
 
     if (!userId) throw new Error("User id is required.");
+
+    await ensureManagedUserRecord(userId);
 
     await prisma.userFeatureAccess.upsert({
       where: {
@@ -244,11 +250,11 @@ export async function saveAdminManagedFeatureAccess(formData: FormData): Promise
       },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Feature access updated.", data: undefined };
   } catch (error) {
     console.error("saveAdminManagedFeatureAccess failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to update feature access." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to update feature access.") };
   }
 }
 
@@ -264,15 +270,17 @@ export async function resetAdminManagedFeatureAccess(formData: FormData): Promis
 
     if (!userId) throw new Error("User id is required.");
 
+    await ensureManagedUserRecord(userId);
+
     await prisma.userFeatureAccess.deleteMany({
       where: { userId, featureKey },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Feature access reset.", data: undefined };
   } catch (error) {
     console.error("resetAdminManagedFeatureAccess failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to reset access." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to reset access.") };
   }
 }
 
@@ -286,58 +294,15 @@ export async function deleteAdminManagedUser(formData: FormData): Promise<Action
     if (!userId) throw new Error("User id is required.");
     if (userId === admin.id) throw new Error("You cannot delete the currently logged-in admin.");
 
-    await prisma.$transaction(async (tx) => {
-      await tx.materialAccess.deleteMany({
-        where: {
-          OR: [{ studentId: userId }, { material: { uploadedById: userId } }],
-        },
-      });
+    const uploadedMaterialFiles = await deleteManagedUserAndCollectFiles(userId);
 
-      await tx.studyMaterial.deleteMany({
-        where: { uploadedById: userId },
-      });
+    await Promise.all(uploadedMaterialFiles.map((fileUrl) => removeSavedFileByUrl(fileUrl)));
 
-      await tx.enrollment.deleteMany({
-        where: { studentId: userId },
-      });
-
-      await tx.announcement.deleteMany({
-        where: { teacherId: userId },
-      });
-
-      await tx.batch.deleteMany({
-        where: { teacherId: userId },
-      });
-
-      await tx.draftMCQ.deleteMany({
-        where: { teacherId: userId },
-      });
-
-      // Recursive folder deletion replacement logic (flattened)
-      while (true) {
-        const deletedLeafFolders = await tx.folder.deleteMany({
-          where: {
-            ownerId: userId,
-            subFolders: { none: {} },
-          },
-        });
-        if (deletedLeafFolders.count === 0) break;
-      }
-
-      await tx.folder.deleteMany({
-        where: { ownerId: userId },
-      });
-
-      await tx.user.delete({
-        where: { id: userId },
-      });
-    });
-
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "User and associated data deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminManagedUser failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to delete user." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to delete user.") };
   }
 }
 
@@ -350,35 +315,24 @@ export async function createAdminManagedBatch(formData: FormData): Promise<Actio
 
     const name = String(formData.get("name") ?? "").trim();
     const teacherId = String(formData.get("teacherId") ?? "").trim();
-    const uniqueJoinCodeInput = String(formData.get("uniqueJoinCode") ?? "")
-      .trim()
-      .toUpperCase();
+    const uniqueJoinCodeInput = String(formData.get("uniqueJoinCode") ?? "").trim();
 
     if (!name) throw new Error("Batch name is required.");
     if (!teacherId) throw new Error("Teacher is required.");
 
-    const teacher = await prisma.user.findUnique({
-      where: { id: teacherId },
-      select: { id: true, role: true },
-    });
-    if (!teacher) throw new Error("Teacher not found.");
-    if (!["TEACHER", "ADMIN"].includes(teacher.role)) {
-      throw new Error("Selected owner must be a teacher or admin.");
-    }
+    await ensureTeacherOrAdminUser(teacherId);
 
-    await prisma.batch.create({
-      data: {
-        name,
-        teacherId,
-        uniqueJoinCode: uniqueJoinCodeInput || generateJoinCode(name),
-      },
+    await createManagedBatch({
+      name,
+      teacherId,
+      uniqueJoinCodeInput,
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Batch created successfully.", data: undefined };
   } catch (error) {
     console.error("createAdminManagedBatch failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to create batch." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to create batch.") };
   }
 }
 
@@ -392,38 +346,28 @@ export async function updateAdminManagedBatch(formData: FormData): Promise<Actio
     const batchId = String(formData.get("batchId") ?? "").trim();
     const name = String(formData.get("name") ?? "").trim();
     const teacherId = String(formData.get("teacherId") ?? "").trim();
-    const uniqueJoinCode = String(formData.get("uniqueJoinCode") ?? "")
-      .trim()
-      .toUpperCase();
+    const uniqueJoinCode = String(formData.get("uniqueJoinCode") ?? "").trim();
 
     if (!batchId) throw new Error("Batch id is required.");
     if (!name) throw new Error("Batch name is required.");
     if (!teacherId) throw new Error("Teacher is required.");
     if (!uniqueJoinCode) throw new Error("Join code is required.");
 
-    const teacher = await prisma.user.findUnique({
-      where: { id: teacherId },
-      select: { id: true, role: true },
-    });
-    if (!teacher) throw new Error("Teacher not found.");
-    if (!["TEACHER", "ADMIN"].includes(teacher.role)) {
-      throw new Error("Selected owner must be a teacher or admin.");
-    }
+    await ensureBatchRecord(batchId);
+    await ensureTeacherOrAdminUser(teacherId);
 
-    await prisma.batch.update({
-      where: { id: batchId },
-      data: {
-        name,
-        teacherId,
-        uniqueJoinCode,
-      },
+    await updateManagedBatchById({
+      batchId,
+      name,
+      teacherId,
+      uniqueJoinCode,
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Batch updated.", data: undefined };
   } catch (error) {
     console.error("updateAdminManagedBatch failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to update batch." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to update batch.") };
   }
 }
 
@@ -437,15 +381,20 @@ export async function deleteAdminManagedBatch(formData: FormData): Promise<Actio
     const batchId = String(formData.get("batchId") ?? "").trim();
     if (!batchId) throw new Error("Batch id is required.");
 
+    const batch = await ensureBatchRecord(batchId);
+    if (batch._count.exams > 0) {
+      throw new Error("Remove or reassign linked exams before deleting this batch.");
+    }
+
     await prisma.batch.delete({
       where: { id: batchId },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Batch deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminManagedBatch failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Failed to delete batch." };
+    return { success: false, message: getActionErrorMessage(error, "Failed to delete batch.") };
   }
 }
 
@@ -461,20 +410,13 @@ export async function assignAdminManagedEnrollment(formData: FormData): Promise<
 
     if (!studentId || !batchId) throw new Error("Student and batch are required.");
 
-    const student = await prisma.user.findUnique({ where: { id: studentId }, select: { role: true } });
-    if (!student || student.role !== "STUDENT") throw new Error("Selected user is not a student.");
+    await upsertBatchEnrollment(studentId, batchId);
 
-    await prisma.enrollment.upsert({
-      where: { studentId_batchId: { studentId, batchId } },
-      update: {},
-      create: { studentId, batchId },
-    });
-
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Student enrolled in batch.", data: undefined };
   } catch (error) {
     console.error("assignAdminManagedEnrollment failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Enrollment failed." };
+    return { success: false, message: getActionErrorMessage(error, "Enrollment failed.") };
   }
 }
 
@@ -488,12 +430,13 @@ export async function removeAdminManagedEnrollment(formData: FormData): Promise<
     const enrollmentId = String(formData.get("enrollmentId") ?? "").trim();
     if (!enrollmentId) throw new Error("Enrollment id is required.");
 
-    await prisma.enrollment.delete({ where: { id: enrollmentId } });
-    refreshAdminSurfaces();
+    await deleteEnrollmentById(enrollmentId);
+
+    revalidateAdminSurfaces();
     return { success: true, message: "Enrollment removed.", data: undefined };
   } catch (error) {
     console.error("removeAdminManagedEnrollment failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Removal failed." };
+    return { success: false, message: getActionErrorMessage(error, "Removal failed.") };
   }
 }
 
@@ -511,28 +454,20 @@ export async function createAdminAnnouncement(formData: FormData): Promise<Actio
     if (!content) throw new Error("Announcement content is required.");
 
     const teacherId = teacherIdInput || admin.id;
-    const author = await prisma.user.findUnique({
-      where: { id: teacherId },
-      select: { id: true, role: true },
-    });
-    if (!author) throw new Error("Announcement author not found.");
-    if (!["TEACHER", "ADMIN"].includes(author.role)) {
-      throw new Error("Author must be a teacher or admin.");
-    }
+    await ensureAnnouncementAuthorRecord(teacherId);
+    await ensureBatchRecord(batchId);
 
-    await prisma.announcement.create({
-      data: {
-        batchId,
-        teacherId,
-        content,
-      },
+    await createBatchAnnouncements({
+      authorId: teacherId,
+      content,
+      batchIds: [batchId],
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Announcement published.", data: undefined };
   } catch (error) {
     console.error("createAdminAnnouncement failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Publication failed." };
+    return { success: false, message: getActionErrorMessage(error, "Publication failed.") };
   }
 }
 
@@ -549,11 +484,11 @@ export async function deleteAdminAnnouncement(formData: FormData): Promise<Actio
       where: { id: announcementId },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Announcement deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminAnnouncement failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Deletion failed." };
+    return { success: false, message: getActionErrorMessage(error, "Deletion failed.") };
   }
 }
 
@@ -569,17 +504,33 @@ export async function grantAdminManagedMaterialAccess(formData: FormData): Promi
 
     if (!studentId || !materialId) throw new Error("Student and material are required.");
 
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: { role: true },
+    });
+    if (!student || student.role !== "STUDENT") {
+      throw new Error("Selected user is not a student.");
+    }
+
+    const material = await prisma.studyMaterial.findUnique({
+      where: { id: materialId },
+      select: { id: true },
+    });
+    if (!material) {
+      throw new Error("Material not found.");
+    }
+
     await prisma.materialAccess.upsert({
       where: { studentId_materialId: { studentId, materialId } },
       update: { accessType },
       create: { studentId, materialId, accessType },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Access granted.", data: undefined };
   } catch (error) {
     console.error("grantAdminManagedMaterialAccess failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Access grant failed." };
+    return { success: false, message: getActionErrorMessage(error, "Access grant failed.") };
   }
 }
 
@@ -597,11 +548,11 @@ export async function revokeAdminManagedMaterialAccess(formData: FormData): Prom
       where: { studentId, materialId },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Access revoked.", data: undefined };
   } catch (error) {
     console.error("revokeAdminManagedMaterialAccess failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Revocation failed." };
+    return { success: false, message: getActionErrorMessage(error, "Revocation failed.") };
   }
 }
 
@@ -620,6 +571,14 @@ export async function updateAdminManagedMaterial(formData: FormData): Promise<Ac
     if (!materialId) throw new Error("Material id is required.");
     if (!title) throw new Error("Material title is required.");
 
+    const material = await prisma.studyMaterial.findUnique({
+      where: { id: materialId },
+      select: { id: true },
+    });
+    if (!material) {
+      throw new Error("Material not found.");
+    }
+
     await prisma.studyMaterial.update({
       where: { id: materialId },
       data: {
@@ -629,11 +588,11 @@ export async function updateAdminManagedMaterial(formData: FormData): Promise<Ac
       },
     });
 
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Material updated.", data: undefined };
   } catch (error) {
     console.error("updateAdminManagedMaterial failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Update failed." };
+    return { success: false, message: getActionErrorMessage(error, "Update failed.") };
   }
 }
 
@@ -647,45 +606,15 @@ export async function deleteAdminManagedMaterial(formData: FormData): Promise<Ac
     const materialId = String(formData.get("materialId") ?? "").trim();
     if (!materialId) throw new Error("Material id is required.");
 
-    await prisma.$transaction(async (tx) => {
-      const material = await tx.studyMaterial.findUnique({
-        where: { id: materialId },
-        select: {
-          id: true,
-          sizeInBytes: true,
-          uploadedById: true,
-        },
-      });
-      if (!material) throw new Error("Material not found.");
+    const deletedMaterial = await deleteStudyMaterialWithAccessCleanup(materialId);
 
-      await tx.materialAccess.deleteMany({
-        where: { materialId },
-      });
+    await removeSavedFileByUrl(deletedMaterial.fileUrl);
 
-      await tx.studyMaterial.delete({
-        where: { id: materialId },
-      });
-
-      const owner = await tx.user.findUnique({
-        where: { id: material.uploadedById },
-        select: { id: true, storageUsed: true },
-      });
-
-      if (owner) {
-        await tx.user.update({
-          where: { id: owner.id },
-          data: {
-            storageUsed: Math.max(0, owner.storageUsed - Number(material.sizeInBytes || 0)),
-          },
-        });
-      }
-    });
-
-    refreshAdminSurfaces();
+    revalidateAdminSurfaces();
     return { success: true, message: "Material deleted.", data: undefined };
   } catch (error) {
     console.error("deleteAdminManagedMaterial failed", error);
-    return { success: false, message: error instanceof Error ? error.message : "Deletion failed." };
+    return { success: false, message: getActionErrorMessage(error, "Deletion failed.") };
   }
 }
 

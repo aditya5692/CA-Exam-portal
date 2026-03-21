@@ -1,31 +1,9 @@
 "use server";
 
-import { ActionResponse } from "@/types/shared";
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-
-export type AdminMetrics = {
-    students: number;
-    teachers: number;
-    batches: number;
-    exams: number;
-    mcqs: number;
-    resources: number;
-    downloads: number;
-    attempts: number;
-};
-
-export type AdminMetricsData = {
-    metrics: AdminMetrics;
-    recentUsers: {
-        id: string;
-        fullName: string | null;
-        email: string | null;
-        createdAt: Date;
-        role: string;
-    }[];
-    timestamp: string;
-};
+import type { AdminMetricsData } from "@/types/admin";
+import { ActionResponse } from "@/types/shared";
 
 /**
  * Fetches platform-wide metrics for the admin control center.

@@ -1,8 +1,40 @@
-import { Calendar, Play, Clock, Trophy, Sparkle, Fire, Medal, FileText, BookmarkSimple, List, CaretRight, ChartLineUp, BookOpen, FilePdf, Target } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
+import { cn } from "@/lib/utils";
+import { BookOpen,Calendar,ChartLineUp,Clock,FilePdf,FileText,List,Medal,Play,Sparkle,Target,Trophy } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+
+type DashboardAnnouncement = {
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    tag: string;
+    type: string;
+};
+
+type DashboardLeaderboardEntry = {
+    rank: number;
+    name: string;
+    score: number;
+    isMe: boolean;
+};
+
+type DashboardPracticeExam = {
+    id: string;
+    title: string;
+    questions: number;
+    category: string;
+};
+
+type DashboardResource = {
+    id: string;
+    title: string;
+    category: string;
+    type: string;
+};
 
 export default async function StudentDashboardPage() {
     // ── Fetch real data ────────────────────────────────────────────────────────
@@ -29,16 +61,16 @@ export default async function StudentDashboardPage() {
     let daysToExam = 0;
 
     // Updates
-    let announcements: any[] = [];
+    let announcements: DashboardAnnouncement[] = [];
 
     // Rankings
-    let leaderboard: any[] = [];
+    let leaderboard: DashboardLeaderboardEntry[] = [];
 
     // Practice questions
-    let topPracticeExams: any[] = [];
+    let topPracticeExams: DashboardPracticeExam[] = [];
 
     // Free Resources
-    let freeResources: any[] = [];
+    let freeResources: DashboardResource[] = [];
 
     try {
         const user = await getCurrentUser(["STUDENT", "ADMIN"]);
@@ -472,7 +504,7 @@ export default async function StudentDashboardPage() {
                         <div className="lg:col-span-4 p-12 text-center text-slate-300 bg-white rounded-2xl border-2 border-slate-100 border-dashed uppercase tracking-widest text-[10px] font-bold shadow-sm">
                             No exams available yet
                         </div>
-                    ) : topPracticeExams.map((exam, i) => {
+                    ) : topPracticeExams.map((exam) => {
                         return (
                             <Link href={`/exam/war-room?examId=${exam.id}`} key={exam.id}
                                 className="p-6 bg-white rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer min-h-[140px] relative overflow-hidden">

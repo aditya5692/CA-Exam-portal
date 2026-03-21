@@ -1,18 +1,16 @@
-import { ReactNode } from "react";
 import { getCurrentUser } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { 
-    ShieldCheck, 
-    Users, 
-    BookOpen, 
-    ChartBar, 
-    SignOut,
-    House,
-    MagnifyingGlass,
-    Bell,
-    IdentificationBadge
+import {
+  Bell,
+  BookOpen,
+  House,
+  MagnifyingGlass,
+  ShieldCheck,
+  SignOut,
+  Users
 } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ReactNode } from "react";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
     const admin = await getCurrentUser("ADMIN");

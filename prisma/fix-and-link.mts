@@ -9,9 +9,9 @@
  * 5. Adds varied announcements, study-material access, topic progress, XP
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { PrismaClient } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import { createHash, scryptSync } from 'crypto'
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaClient } from '@prisma/client';
+import { createHash,scryptSync } from 'crypto';
 
 const prisma = new PrismaClient({
     adapter: new PrismaBetterSqlite3({ url: 'file:./dev.db' }),

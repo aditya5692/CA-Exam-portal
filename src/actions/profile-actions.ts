@@ -1,11 +1,13 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
+import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
+import { clampNumber,getActionErrorMessage } from "@/lib/server/action-utils";
+import { revalidateProfileSurfaces } from "@/lib/server/revalidation";
+import type { UserProfile } from "@/types/profile";
 import { ActionResponse } from "@/types/shared";
+import type { Prisma } from "@prisma/client";
 
 type ProfileRole = "TEACHER" | "STUDENT";
 
@@ -13,7 +15,34 @@ async function getOrCreateProfile(role: ProfileRole) {
     return getCurrentUserOrDemoUser(role, [role, "ADMIN"]);
 }
 
-export type UserProfile = Prisma.UserGetPayload<{}>;
+function normalizeOptionalString(input: FormDataEntryValue | null) {
+    const value = String(input ?? "").trim();
+    return value || null;
+}
+
+function normalizeOptionalEmail(input: FormDataEntryValue | null) {
+    const value = String(input ?? "").trim().toLowerCase();
+    return value || null;
+}
+
+function normalizeOptionalRegistration(input: FormDataEntryValue | null) {
+    const value = String(input ?? "").trim().toUpperCase();
+    return value || null;
+}
+
+function parseOptionalBoundedInt(input: FormDataEntryValue | null, min: number, max: number) {
+    const rawValue = String(input ?? "").trim();
+    if (!rawValue) {
+        return null;
+    }
+
+    const parsedValue = Number.parseInt(rawValue, 10);
+    if (!Number.isFinite(parsedValue)) {
+        throw new Error("One or more numeric profile fields are invalid.");
+    }
+
+    return clampNumber(parsedValue, min, max);
+}
 
 async function getProfile(role: ProfileRole): Promise<ActionResponse<UserProfile>> {
     try {
@@ -34,84 +63,101 @@ async function updateProfile(role: ProfileRole, formData: FormData): Promise<Act
         const user = await getOrCreateProfile(role);
         await assertUserCanAccessFeature(user.id, role === "TEACHER" ? "TEACHER_PROFILE" : "STUDENT_PROFILE", "update");
 
-        const fullName = String(formData.get("fullName") ?? "").trim();
-        const email = String(formData.get("email") ?? "").trim();
-        const registrationNumber = String(formData.get("registrationNumber") ?? "").trim();
-        const department = String(formData.get("department") ?? "").trim();
-        const phone = String(formData.get("phone") ?? "").trim();
-        const preferredLanguage = String(formData.get("preferredLanguage") ?? "").trim();
-        const timezone = String(formData.get("timezone") ?? "").trim();
-        const bio = String(formData.get("bio") ?? "").trim();
-        const designation = String(formData.get("designation") ?? "").trim();
-        const expertise = String(formData.get("expertise") ?? "").trim();
-        const examTarget = String(formData.get("examTarget") ?? "").trim();
+        const fullName = normalizeOptionalString(formData.get("fullName"));
+        const email = normalizeOptionalEmail(formData.get("email"));
+        const registrationNumber = normalizeOptionalRegistration(formData.get("registrationNumber"));
+        const department = normalizeOptionalString(formData.get("department"));
+        const phone = normalizeOptionalString(formData.get("phone"));
+        const preferredLanguage = normalizeOptionalString(formData.get("preferredLanguage"));
+        const timezone = normalizeOptionalString(formData.get("timezone"));
+        const bio = normalizeOptionalString(formData.get("bio"));
+        const designation = normalizeOptionalString(formData.get("designation"));
+        const expertise = normalizeOptionalString(formData.get("expertise"));
+        const examTarget = normalizeOptionalString(formData.get("examTarget"));
         const isPublicProfile = formData.get("isPublicProfile") === "true";
 
-        // New fields
-        const batch = String(formData.get("batch") ?? "").trim();
-        const dob = String(formData.get("dob") ?? "").trim();
-        const location = String(formData.get("location") ?? "").trim();
-        const firm = String(formData.get("firm") ?? "").trim();
-        const firmRole = String(formData.get("firmRole") ?? "").trim();
-        const articleshipYearInput = String(formData.get("articleshipYear") ?? "0");
-        const articleshipTotalInput = String(formData.get("articleshipTotal") ?? "0");
-        
-        const articleshipYear = parseInt(articleshipYearInput);
-        const articleshipTotal = parseInt(articleshipTotalInput);
-        
+        const batch = normalizeOptionalString(formData.get("batch"));
+        const dob = normalizeOptionalString(formData.get("dob"));
+        const location = normalizeOptionalString(formData.get("location"));
+        const firm = normalizeOptionalString(formData.get("firm"));
+        const firmRole = normalizeOptionalString(formData.get("firmRole"));
+        const articleshipYear = parseOptionalBoundedInt(formData.get("articleshipYear"), 0, 10);
+        const articleshipTotal = parseOptionalBoundedInt(formData.get("articleshipTotal"), 0, 10);
         const foundationCleared = formData.get("foundationCleared") === "true";
         const intermediateCleared = formData.get("intermediateCleared") === "true";
         const finalCleared = formData.get("finalCleared") === "true";
-        const resumeUrl = String(formData.get("resumeUrl") ?? "").trim();
+        const resumeUrl = normalizeOptionalString(formData.get("resumeUrl"));
+
+        if (articleshipYear !== null && articleshipTotal !== null && articleshipYear > articleshipTotal) {
+            throw new Error("Articleship year cannot exceed total articleship years.");
+        }
+
+        if (email) {
+            const duplicateEmail = await prisma.user.findFirst({
+                where: {
+                    email,
+                    id: { not: user.id },
+                },
+                select: { id: true },
+            });
+
+            if (duplicateEmail) {
+                throw new Error("A profile with this email already exists.");
+            }
+        }
+
+        if (registrationNumber) {
+            const duplicateRegistration = await prisma.user.findFirst({
+                where: {
+                    registrationNumber,
+                    id: { not: user.id },
+                },
+                select: { id: true },
+            });
+
+            if (duplicateRegistration) {
+                throw new Error("A profile with this registration number already exists.");
+            }
+        }
+
+        const data: Prisma.UserUpdateInput = {
+            fullName,
+            email,
+            registrationNumber,
+            department,
+            phone,
+            preferredLanguage,
+            timezone,
+            bio,
+            designation: role === "TEACHER" ? designation : null,
+            expertise: role === "TEACHER" ? expertise : null,
+            examTarget: role === "STUDENT" ? examTarget : null,
+            isPublicProfile: role === "TEACHER" ? isPublicProfile : true,
+            batch,
+            dob,
+            location,
+            firm,
+            firmRole,
+            articleshipYear,
+            articleshipTotal,
+            foundationCleared,
+            intermediateCleared,
+            finalCleared,
+            resumeUrl,
+        };
 
         const updatedProfile = await prisma.user.update({
             where: { id: user.id },
-            data: {
-                fullName: fullName || null,
-                email: email || null,
-                registrationNumber: registrationNumber || null,
-                department: department || null,
-                phone: phone || null,
-                preferredLanguage: preferredLanguage || null,
-                timezone: timezone || null,
-                bio: bio || null,
-                designation: role === "TEACHER" ? (designation || null) : null,
-                expertise: role === "TEACHER" ? (expertise || null) : null,
-                examTarget: role === "STUDENT" ? (examTarget || null) : null,
-                isPublicProfile: role === "TEACHER" ? isPublicProfile : true,
-                // New fields sync
-                batch: batch || null,
-                dob: dob || null,
-                location: location || null,
-                firm: firm || null,
-                firmRole: firmRole || null,
-                articleshipYear: isNaN(articleshipYear) ? null : articleshipYear,
-                articleshipTotal: isNaN(articleshipTotal) ? null : articleshipTotal,
-                foundationCleared,
-                intermediateCleared,
-                finalCleared,
-                resumeUrl: resumeUrl || null,
-            } as any
+            data,
         });
 
-        if (role === "STUDENT") {
-            revalidatePath("/");
-            revalidatePath("/student", "layout");
-            revalidatePath("/student/dashboard");
-            revalidatePath("/student/exams");
-            revalidatePath("/student/profile");
-            revalidatePath("/student/history");
-            revalidatePath("/student/analytics");
-        } else {
-            revalidatePath("/teacher", "layout");
-            revalidatePath("/teacher/profile");
-        }
+        revalidateProfileSurfaces(role);
         return { success: true, data: updatedProfile };
     } catch (error: unknown) {
         console.error(`updateProfile (${role}) failed:`, error);
         return {
             success: false,
-            message: error instanceof Error ? error.message : "Failed to update profile."
+            message: getActionErrorMessage(error, "Failed to update profile.")
         };
     }
 }

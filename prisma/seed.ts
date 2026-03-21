@@ -1,12 +1,8 @@
-import * as dotenv from 'dotenv'
+import * as dotenv from 'dotenv';
+import { createRuntimePrismaClient } from '../src/lib/prisma/runtime';
 dotenv.config()
-import { Pool } from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client'
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
+const { prisma } = createRuntimePrismaClient(process.env)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -198,7 +194,7 @@ async function main() {
 
     // 2. Create 6 Batches (1 per teacher)
     console.log('\n📦  Creating 6 batches...')
-    const batches: any[] = []
+    const batches: Array<{ id: string }> = []
     for (let i = 0; i < 6; i++) {
         const batch = await prisma.batch.upsert({
             where: { uniqueJoinCode: JOIN_CODES[i] },
@@ -422,8 +418,6 @@ async function main() {
 
     // 7. Create Study Materials (2–4 per teacher / folder) + Public Resources
     console.log('\n📚  Creating study materials & public resources...')
-    const FILE_TYPES = ['PDF', 'PPT', 'DOCX', 'MP4', 'PDF', 'PDF']
-    const MAT_TITLES = ['Chapter Notes', 'Practice Questions', 'Formula Sheet', 'Video Lecture', 'Past Year Papers', 'Summary Sheet', 'Quick Revision PDF', 'MCQ Bank']
     let matCount = 0
 
     const ICAI_PDFS = [
@@ -515,11 +509,11 @@ async function main() {
                     totalAttempts,
                     totalCorrect,
                     avgAccuracy,
-                    weakTopicsJson: JSON.stringify([pick(CA_TOPICS), pick(CA_TOPICS)]) as any,
+                    weakTopicsJson: JSON.stringify([pick(CA_TOPICS), pick(CA_TOPICS)]),
                     badgesJson: JSON.stringify(
                         level >= 3 ? ['first_exam', 'streak_7', 'accuracy_80'] :
                             level >= 2 ? ['first_exam'] : []
-                    ) as any,
+                    ),
                     lastAttemptAt: daysAgo(rnd(0, 15)),
                 },
             })

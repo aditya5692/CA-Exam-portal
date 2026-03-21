@@ -1,7 +1,7 @@
 "use client";
 
+import { FacebookLogo,GraduationCap,InstagramLogo,LinkedinLogo,PaperPlaneTilt,TwitterLogo,YoutubeLogo } from "@phosphor-icons/react";
 import Link from "next/link";
-import { GraduationCap, FacebookLogo, TwitterLogo, InstagramLogo, LinkedinLogo, YoutubeLogo, PaperPlaneTilt } from "@phosphor-icons/react";
 
 export function Footer() {
     return (

@@ -1,21 +1,22 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { getPublicResources,incrementDownloadCount } from "@/actions/resource-actions";
+import { getSavedItems,toggleSavedItem } from "@/actions/student-actions";
 import { cn } from "@/lib/utils";
+import type { PublicResource } from "@/types/resource";
 import {
-    MagnifyingGlass,
-    Funnel,
-    DownloadSimple,
-    Eye,
-    Star,
-    FilePdf,
-    FileText,
-    Video,
-    Calendar,
-    BookmarkSimple
+  BookmarkSimple,
+  Calendar,
+  DownloadSimple,
+  Eye,
+  FilePdf,
+  FileText,
+  Funnel,
+  MagnifyingGlass,
+  Star,
+  Video
 } from "@phosphor-icons/react";
-import { getPublicResources, incrementDownloadCount, type PublicResource } from "@/actions/resource-actions";
-import { toggleSavedItem, getSavedItems } from "@/actions/student-actions";
+import Link from "next/link";
+import { useCallback,useEffect,useState } from "react";
 
 const CATEGORIES = ["All", "CA Final", "CA Inter", "CA Foundation", "Case Studies", "Amendments"];
 const CONTENT_TYPES = ["All", "PDF", "VIDEO", "RTP", "MTP", "PYQ"];
@@ -51,7 +52,13 @@ export function FreeResourcesDashboard({ daysToExam = 0 }: { daysToExam?: number
     }, [activeCategory, activeSecondary, debouncedSearch]);
 
     useEffect(() => {
-        fetchResources();
+        const timer = window.setTimeout(() => {
+            void fetchResources();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
     }, [fetchResources]);
 
     useEffect(() => {

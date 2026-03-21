@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { User } from "@prisma/client";
-import { MagnifyingGlass, DotsThreeVertical } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { DotsThreeVertical,MagnifyingGlass } from "@phosphor-icons/react";
+import { User } from "@prisma/client";
+import { useState } from "react";
 
 interface AdminDirectoryProps {
     initialUsers: User[];

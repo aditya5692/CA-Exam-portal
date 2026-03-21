@@ -6,6 +6,13 @@ import { Prisma } from "@prisma/client";
 const SERIALIZABLE_RETRY_CODE = "P2034";
 const UNIQUE_CONSTRAINT_CODE = "P2002";
 const RECORD_NOT_FOUND_CODE = "P2025";
+const TRANSIENT_DATABASE_ERROR_CODES = new Set([
+    "ECONNREFUSED",
+    "ECONNRESET",
+    "ENOTFOUND",
+    "ETIMEDOUT",
+    "EPIPE",
+]);
 
 function wait(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -44,6 +51,32 @@ export function isRecordNotFoundError(error: unknown) {
 
 function isRetryableTransactionError(error: unknown) {
     return isPrismaCode(error, SERIALIZABLE_RETRY_CODE);
+}
+
+function getNodeStyleErrorCode(error: unknown) {
+    if (!(error instanceof Error) || !("code" in error)) {
+        return null;
+    }
+
+    const rawCode = error.code;
+    return typeof rawCode === "string" ? rawCode : null;
+}
+
+function isTransientDatabaseError(error: unknown) {
+    const code = getNodeStyleErrorCode(error);
+    return Boolean(code && TRANSIENT_DATABASE_ERROR_CODES.has(code));
+}
+
+function isDatabaseConfigurationError(error: unknown) {
+    return (
+        error instanceof Error &&
+        (
+            error.message.includes("DATABASE_URL is not configured") ||
+            error.message.includes("DATABASE_URL is invalid") ||
+            error.message.includes("Unsupported DATABASE_URL protocol") ||
+            error.message.includes("PostgreSQL-only")
+        )
+    );
 }
 
 export async function withSerializableTransaction<T>(
@@ -109,6 +142,14 @@ export function getActionErrorMessage(error: unknown, fallbackMessage: string) {
         error instanceof Prisma.PrismaClientRustPanicError
     ) {
         return "The database is temporarily unavailable. Please try again.";
+    }
+
+    if (isTransientDatabaseError(error)) {
+        return "The database connection is temporarily unavailable. Please try again.";
+    }
+
+    if (isDatabaseConfigurationError(error)) {
+        return "The database configuration is invalid. Please check the server environment.";
     }
 
     if (error instanceof Error && error.message.trim()) {

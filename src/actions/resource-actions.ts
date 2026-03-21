@@ -1,86 +1,61 @@
 "use server";
 
 import prisma from "@/lib/prisma/client";
-import { revalidatePath } from "next/cache";
+import { getActionErrorMessage } from "@/lib/server/action-utils";
+import {
+  getPublicResourceCatalogInsights,
+  listPublicResources,
+} from "@/lib/server/resource-intelligence";
+import type {
+  PublicResource,
+  PublicResourceCatalogInsight,
+  PublicResourceFilters,
+} from "@/types/resource";
 import { ActionResponse } from "@/types/shared";
+import { revalidatePath } from "next/cache";
 
-export type PublicResource = {
-    id: string;
-    title: string;
-    description: string | null;
-    fileUrl: string;
-    fileType: string;
-    category: string;
-    subType: string;
-    providerType: string;
-    downloads: number;
-    shareCount: number;
-    rating: number;
-    isTrending: boolean;
-    author: string;
-    createdAt: Date;
-    authorId: string | null;
-    specialty: string;
-    date: string;
-};
+function normalizeResourceId(id: string) {
+    const normalized = id.trim();
+    if (!normalized) {
+        throw new Error("Resource id is required.");
+    }
+
+    return normalized;
+}
+
+async function incrementPublicResourceMetric(
+    id: string,
+    field: "downloads" | "shareCount",
+    expectedSubType?: string,
+) {
+    const normalizedId = normalizeResourceId(id);
+    const updatedResources = await prisma.studyMaterial.updateMany({
+        where: {
+            id: normalizedId,
+            isPublic: true,
+            ...(expectedSubType ? { subType: expectedSubType } : {}),
+        },
+        data: {
+            [field]: {
+                increment: 1,
+            },
+        },
+    });
+
+    if (updatedResources.count === 0) {
+        throw new Error("Resource not found.");
+    }
+}
 
 /**
  * Fetches public study materials based on filters.
  */
-export async function getPublicResources(filters: { category?: string; subType?: string; isTrending?: boolean; search?: string }): Promise<ActionResponse<PublicResource[]>> {
+export async function getPublicResources(filters: PublicResourceFilters): Promise<ActionResponse<PublicResource[]>> {
     try {
-        const resources = await prisma.studyMaterial.findMany({
-            where: {
-                isPublic: true,
-                ...(filters.category && filters.category !== "All" ? { category: filters.category } : {}),
-                ...(filters.subType && filters.subType !== "All" ? { subType: filters.subType } : {}),
-                ...(filters.isTrending ? { isTrending: true } : {}),
-                ...(filters.search ? {
-                    OR: [
-                        { title: { contains: filters.search, mode: 'insensitive' } },
-                        { description: { contains: filters.search, mode: 'insensitive' } },
-                    ]
-                } : {}),
-            },
-            include: {
-                uploadedBy: {
-                    select: {
-                        id: true,
-                        fullName: true,
-                        designation: true,
-                        expertise: true,
-                    }
-                }
-            },
-            orderBy: {
-                createdAt: "desc"
-            }
-        });
-
-        const formatted: PublicResource[] = resources.map((res) => ({
-            id: res.id,
-            title: res.title,
-            description: res.description,
-            fileUrl: res.fileUrl,
-            fileType: res.fileType,
-            category: res.category,
-            subType: res.subType,
-            providerType: res.providerType,
-            downloads: res.downloads,
-            shareCount: res.shareCount,
-            rating: res.rating,
-            isTrending: res.isTrending,
-            author: res.uploadedBy?.fullName || "Anonymous",
-            authorId: res.uploadedBy?.id || null,
-            createdAt: res.createdAt,
-            specialty: res.uploadedBy?.expertise || res.uploadedBy?.designation || "Expert",
-            date: new Date(res.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        }));
-
-        return { success: true, data: formatted };
+        return { success: true, data: await listPublicResources(filters) };
     } catch (error) {
         console.error("getPublicResources error:", error);
-        return { success: false, message: "Failed to fetch public resources." };
+        return { success: false, message: getActionErrorMessage(error, "Failed to fetch public resources.") };
     }
 }
 
@@ -89,17 +64,14 @@ export async function getPublicResources(filters: { category?: string; subType?:
  */
 export async function incrementDownloadCount(id: string): Promise<ActionResponse<void>> {
     try {
-        await prisma.studyMaterial.update({
-            where: { id },
-            data: { downloads: { increment: 1 } }
-        });
+        await incrementPublicResourceMetric(id, "downloads");
         revalidatePath("/study-material");
         revalidatePath("/student/past-year-questions");
         revalidatePath("/past-year-questions");
         return { success: true, data: undefined };
     } catch (error) {
         console.error("incrementDownloadCount error:", error);
-        return { success: false, message: "Failed to increment download count." };
+        return { success: false, message: getActionErrorMessage(error, "Failed to increment download count.") };
     }
 }
 
@@ -109,21 +81,32 @@ export async function incrementDownloadCount(id: string): Promise<ActionResponse
 export async function trackPYQAction(id: string, action: "DOWNLOAD" | "SHARE"): Promise<ActionResponse<void>> {
     try {
         if (action === "DOWNLOAD") {
-            await prisma.studyMaterial.update({
-                where: { id },
-                data: { downloads: { increment: 1 } }
-            });
+            await incrementPublicResourceMetric(id, "downloads", "PYQ");
         } else {
-            await prisma.studyMaterial.update({
-                where: { id },
-                data: { shareCount: { increment: 1 } }
-            });
+            await incrementPublicResourceMetric(id, "shareCount", "PYQ");
         }
         revalidatePath("/student/past-year-questions");
         revalidatePath("/past-year-questions");
         return { success: true, data: undefined };
     } catch (error) {
         console.error("trackPYQAction error:", error);
-        return { success: false, message: `Failed to track ${action}.` };
+        return { success: false, message: getActionErrorMessage(error, `Failed to track ${action}.`) };
+    }
+}
+
+export async function getPublicResourceInsights(
+    filters: PublicResourceFilters = {},
+): Promise<ActionResponse<PublicResourceCatalogInsight>> {
+    try {
+        return {
+            success: true,
+            data: await getPublicResourceCatalogInsights(filters),
+        };
+    } catch (error) {
+        console.error("getPublicResourceInsights error:", error);
+        return {
+            success: false,
+            message: getActionErrorMessage(error, "Failed to fetch resource insights."),
+        };
     }
 }

@@ -1,7 +1,6 @@
 "use client";
 
-import { Edit3, Download } from "lucide-react";
-import Image from "next/image";
+import { Download,Edit3 } from "lucide-react";
 
 interface ProfileHeaderProps {
     fullName: string;

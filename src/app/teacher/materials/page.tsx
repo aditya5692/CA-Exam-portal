@@ -1,25 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getTeacherMaterials, publishMaterial, getTeacherBatchesForMaterials } from "@/actions/educator-actions";
-import { 
-    Upload, 
-    FilePdf, 
-    Lock, 
-    Users, 
-    Pulse, 
-    Link as LinkIcon, 
-    ShieldCheck, 
-    Folder as FolderIcon, 
-    BookOpen, 
-    Clock,
-    Plus,
-    CaretRight,
-    Globe,
-    CheckCircle,
-    Info
-} from "@phosphor-icons/react";
+import { getTeacherBatchesForMaterials,getTeacherMaterials,publishMaterial } from "@/actions/educator-actions";
 import { cn } from "@/lib/utils";
+import {
+  BookOpen,
+  CaretRight,
+  CheckCircle,
+  Clock,
+  FilePdf,
+  Globe,
+  Info,
+  Link as LinkIcon,
+  Lock,
+  Plus,
+  Pulse,
+  ShieldCheck,
+  Upload,
+  Users
+} from "@phosphor-icons/react";
+import { useEffect,useState } from "react";
 
 type EducatorOption = {
     id: string;
@@ -45,7 +44,6 @@ type MaterialItem = {
 type BatchOption = { id: string; name: string; studentCount: number };
 
 export default function EducatorHubPage() {
-    const [activeTab, setActiveTab] = useState<"PUBLISH">("PUBLISH");
     const [materials, setMaterials] = useState<MaterialItem[]>([]);
     const [availableEducators, setAvailableEducators] = useState<EducatorOption[]>([]);
     const [batches, setBatches] = useState<BatchOption[]>([]);
@@ -80,7 +78,15 @@ export default function EducatorHubPage() {
         }
     };
 
-    useEffect(() => { void loadData(); }, []);
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            void loadData();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, []);
 
     const toggleBatch = (id: string) => {
         setSelectedBatchIds((prev) =>

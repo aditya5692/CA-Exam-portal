@@ -1,62 +1,21 @@
 "use server";
 
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { CA_FINAL_CONTENT,CA_FOUNDATION_CONTENT,CA_INTER_CONTENT } from "@/lib/constants/chapters";
 import prisma from "@/lib/prisma/client";
-import { startExamAttemptRecord } from "@/lib/server/exam-workflow";
 import {
-    getActionErrorMessage,
-    isUniqueConstraintError,
-    readJsonStringArray,
-    withSerializableTransaction,
+  getActionErrorMessage,
+  isUniqueConstraintError,
+  readJsonStringArray,
+  withSerializableTransaction,
 } from "@/lib/server/action-utils";
-import { ActionResponse, UnifiedMaterial, UnifiedExam } from "@/types/shared";
+import { startExamAttemptRecord } from "@/lib/server/exam-workflow";
+import { getStudentStudyRecommendations } from "@/lib/server/study-intelligence";
+import { ActionResponse,UnifiedExam,UnifiedMaterial } from "@/types/shared";
+import type { ExamHubData,StudentAttempt,StudentHistoryData } from "@/types/student";
 import { revalidatePath } from "next/cache";
-import { CA_FOUNDATION_CONTENT, CA_INTER_CONTENT, CA_FINAL_CONTENT } from "@/lib/constants/chapters";
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-export type StudentAttempt = {
-    id: string;
-    examId: string;
-    seriesTitle: string;
-    subject: string;
-    category: string;
-    attemptedAt: string; // ISO date string
-    durationUsedMinutes: number;
-    totalDurationMinutes: number;
-    correct: number;
-    total: number;
-    accuracy: number;
-    xpEarned: number;
-    status: "completed" | "in-progress" | "abandoned";
-    topicBreakdown: { topic: string; accuracy: number; correct: number; total: number }[];
-    weakTopics: string[];
-};
-
-export type StudentHistoryData = {
-    profile: {
-        name: string;
-        caLevel: string;
-        level: number;
-        totalXP: number;
-        xpToNextLevel: number;
-        streak: number;
-        longestStreak: number;
-        totalAttempts: number;
-        totalCorrect: number;
-        totalQuestions: number;
-        avgAccuracy: number;
-        joinedDaysAgo: number;
-        badges: string[];
-    };
-    subjectAccuracy: { subject: string; accuracy: number; attempts: number }[];
-    attempts: StudentAttempt[];
-    performanceTrend: { date: string; score: number }[];
-    comparativeAnalysis: { name: string; value: number; color: string }[];
-    weakTopics: string[];
-    examTargetDays: number;
-    examTargetLabel: string;
-};
 
 // ── Main server action ───────────────────────────────────────────────────────
 
@@ -219,12 +178,14 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
                 : 0
         }));
 
-        // 5. Comparative Analysis (Stubbed cohort data for now, could be real benchmarks)
+        const studyRecommendations = await getStudentStudyRecommendations(user.id, 5);
+
+        // 5. Comparative Analysis (real cohort benchmark derived from learning profiles)
         const myAvg = profile.avgAccuracy;
         const comparativeAnalysis = [
             { name: "My Score", value: myAvg, color: "#4f46e5" },
-            { name: "Cohort Avg", value: 68, color: "#94a3b8" }, // Mocked
-            { name: "Topper Avg", value: 92, color: "#10b981" }, // Mocked
+            { name: "Cohort Avg", value: studyRecommendations.summary.cohortAverageAccuracy ?? 0, color: "#94a3b8" },
+            { name: "Topper Avg", value: studyRecommendations.summary.benchmarkAccuracy ?? 0, color: "#10b981" },
         ];
 
         const allWeakTopics = Array.from(new Set(attempts.flatMap(a => a.weakTopics))).slice(0, 5);
@@ -443,46 +404,6 @@ export async function getSavedItems(): Promise<ActionResponse<{ materials: Unifi
     }
 }
 // ── Exam Hub Action ─────────────────────────────────────────────────────────
-
-export type ExamHubData = {
-    stats: {
-        totalStudyTimeHours: number;
-        avgProficiency: number;
-        examsMastered: number;
-    };
-    practiceGoal: {
-        current: number;
-        target: number;
-    };
-    chapterWiseMCQs: {
-        id: string;
-        title: string;
-        chapters: number;
-        questions: number;
-        progress: number;
-        color: "emerald" | "amber" | "rose" | "indigo";
-        chapterDetails?: {
-            name: string;
-            progress: number;
-            questions: number;
-            examId?: string;
-        }[];
-    }[];
-    mockTests: {
-        id: string;
-        title: string;
-        isNew: boolean;
-        isCompleted: boolean;
-        score?: number;
-        totalMarks: number;
-        attemptedDate?: string;
-        questions: number;
-        duration: number;
-        isLocked?: boolean;
-        lockedReason?: string;
-        lastAttemptId?: string;
-    }[];
-};
 
 export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
     try {

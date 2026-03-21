@@ -1,35 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { getTeacherOverview } from "@/actions/educator-actions";
 import { cn } from "@/lib/utils";
-import { getTeacherOverview, type TeacherOverviewData } from "@/actions/educator-actions";
+import type { TeacherOverviewData } from "@/types/educator";
 import {
-    Users,
-    TrendUp,
-    Clock,
-    CheckCircle,
-    CaretRight,
-    Plus,
-    FileText,
-    Books,
-    BellSimple,
-    Trophy,
-    Sparkle,
-    FilePdf,
-    List,
-    Calendar,
-    Target,
-    Medal
+  BellSimple,
+  Books,
+  Calendar,
+  CaretRight,
+  CheckCircle,
+  Clock,
+  FilePdf,
+  Medal,
+  Plus,
+  Sparkle,
+  Target,
+  TrendUp,
+  Trophy,
+  Users
 } from "@phosphor-icons/react";
+import Link from "next/link";
+import { useEffect,useState } from "react";
 import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
 } from "recharts";
 
 export default function DashboardOverview() {

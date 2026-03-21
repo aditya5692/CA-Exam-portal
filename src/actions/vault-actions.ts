@@ -1,14 +1,21 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
+import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { Prisma } from "@prisma/client";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { randomUUID } from "crypto";
-import { revalidatePath } from "next/cache";
+import { getActionErrorMessage,withSerializableTransaction } from "@/lib/server/action-utils";
+import { revalidateMaterialSurfaces } from "@/lib/server/revalidation";
+import {
+  assertStorageCapacity,
+  removeSavedFileByUrl,
+  saveUploadedFile,
+} from "@/lib/server/storage-utils";
+import {
+  createOwnedStudyMaterial,
+  deleteStudyMaterialWithAccessCleanup,
+} from "@/lib/server/study-material-service";
 import { ActionResponse } from "@/types/shared";
+import { Prisma } from "@prisma/client";
 
 async function getOrCreateMockUser() {
     return getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
@@ -22,27 +29,27 @@ function isAdminUser(user: { role: string }) {
  * Checks if a user has sufficient storage quota for an incoming file.
  */
 export async function checkStorageQuota(userId: string, incomingSize: number): Promise<boolean> {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { storageUsed: true, storageLimit: true },
-    });
+    try {
+        await withSerializableTransaction(async (tx) => {
+            await assertStorageCapacity(tx, userId, incomingSize);
+            return true;
+        });
 
-    if (!user) throw new Error("User not found");
-
-    if (user.storageUsed + incomingSize > user.storageLimit) {
-        throw new Error("Storage Limit Exceeded");
+        return true;
+    } catch (error) {
+        throw new Error(getActionErrorMessage(error, "Unable to verify storage quota."));
     }
-
-    return true;
 }
 
 /**
  * Uploads a personal study material to the user's vault.
  */
-export async function uploadPersonalMaterial(formData: FormData): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<{}>>> {
+export async function uploadPersonalMaterial(formData: FormData): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<Record<string, never>>>> {
+    let savedFileUrl: string | null = null;
+
     try {
         const file = formData.get("file") as File | null;
-        if (!file) throw new Error("No file provided");
+        if (!file || !(file instanceof File)) throw new Error("No file provided");
 
         const user = await getOrCreateMockUser();
         await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "create");
@@ -51,62 +58,39 @@ export async function uploadPersonalMaterial(formData: FormData): Promise<Action
             throw new Error("Admin cannot upload from the student vault surface. Use a student account for personal notes.");
         }
 
-        await checkStorageQuota(user.id, file.size);
+        const savedFile = await saveUploadedFile(file, ["vault"], "tmp");
+        savedFileUrl = savedFile.fileUrl;
 
-        const uploadDir = join(process.cwd(), "public", "uploads");
-        try {
-            await mkdir(uploadDir, { recursive: true });
-        } catch { }
+        const material = await createOwnedStudyMaterial({
+            title: file.name,
+            fileUrl: savedFile.fileUrl,
+            fileType: file.type || "application/octet-stream",
+            sizeInBytes: file.size,
+            isPublic: false,
+            isProtected: false,
+            uploadedById: user.id,
+        });
 
-        const fileExt = file.name.split(".").pop() || "tmp";
-        const fileName = `${randomUUID()}.${fileExt}`;
-        const filePath = join(uploadDir, fileName);
-
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        await writeFile(filePath, buffer);
-
-        const fileUrl = `/uploads/${fileName}`;
-
-        const [material] = await prisma.$transaction([
-            prisma.studyMaterial.create({
-                data: {
-                    title: file.name,
-                    fileUrl,
-                    fileType: file.type,
-                    sizeInBytes: file.size,
-                    isPublic: false,
-                    isProtected: false,
-                    uploadedById: user.id,
-                },
-            }),
-            prisma.user.update({
-                where: { id: user.id },
-                data: {
-                    storageUsed: {
-                        increment: file.size,
-                    },
-                },
-            }),
-        ]);
-
-        revalidatePath("/student/materials");
+        revalidateMaterialSurfaces();
         return { success: true, data: material, message: "File uploaded successfully." };
     } catch (error: unknown) {
         console.error("uploadPersonalMaterial error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Upload failed." };
+        if (savedFileUrl) {
+            await removeSavedFileByUrl(savedFileUrl);
+        }
+
+        return { success: false, message: getActionErrorMessage(error, "Upload failed.") };
     }
 }
 
-export type VaultMaterialWithOwner = Prisma.StudyMaterialGetPayload<{
+type VaultMaterialWithOwner = Prisma.StudyMaterialGetPayload<{
     include: { uploadedBy: { select: { id: true, fullName: true, email: true } } }
 }>;
 
 /**
  * Result data for vault material retrieval.
  */
-export type VaultMaterialsData = {
+type VaultMaterialsData = {
     materials: VaultMaterialWithOwner[];
     storageUsed: number;
     storageLimit: number;
@@ -199,53 +183,37 @@ export async function getMyVaultMaterials(): Promise<ActionResponse<VaultMateria
  * Deletes a personal material from the user's vault.
  */
 export async function deletePersonalMaterial(materialId: string): Promise<ActionResponse<void>> {
+    let removedFileUrl: string | null = null;
+
     try {
         const user = await getOrCreateMockUser();
         await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "delete");
+        const normalizedMaterialId = materialId.trim();
+        if (!normalizedMaterialId) {
+            throw new Error("Material id is required.");
+        }
 
-        const material = await prisma.studyMaterial.findUnique({
-            where: { id: materialId },
-            include: {
-                uploadedBy: {
-                    select: {
-                        id: true,
-                        role: true,
-                    },
-                },
+        const deletedMaterial = await deleteStudyMaterialWithAccessCleanup(
+            normalizedMaterialId,
+            (material) => {
+                const canDelete = isAdminUser(user)
+                    ? material.uploadedBy?.role === "STUDENT"
+                    : material.uploadedById === user.id;
+
+                if (!canDelete) {
+                    throw new Error("Unauthorized or not found");
+                }
             },
-        });
+        );
 
-        if (!material) {
-            throw new Error("Material not found.");
-        }
+        removedFileUrl = deletedMaterial.fileUrl;
 
-        const canDelete = isAdminUser(user)
-            ? material.uploadedBy.role === "STUDENT"
-            : material.uploadedById === user.id;
+        await removeSavedFileByUrl(removedFileUrl);
 
-        if (!canDelete) {
-            throw new Error("Unauthorized or not found");
-        }
-
-        await prisma.$transaction([
-            prisma.studyMaterial.delete({
-                where: { id: materialId },
-            }),
-            prisma.user.update({
-                where: { id: material.uploadedById },
-                data: {
-                    storageUsed: {
-                        decrement: material.sizeInBytes,
-                    },
-                },
-            }),
-        ]);
-
-        revalidatePath("/student/materials");
+        revalidateMaterialSurfaces();
         return { success: true, message: "Material deleted successfully.", data: undefined };
     } catch (error: unknown) {
         console.error("deletePersonalMaterial error:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to delete material." };
+        return { success: false, message: getActionErrorMessage(error, "Failed to delete material.") };
     }
 }
-

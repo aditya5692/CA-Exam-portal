@@ -1,21 +1,21 @@
-import Link from "next/link";
+import { Footer } from "@/components/common/footer";
+import { Navbar } from "@/components/common/navbar";
+import { Testimonials } from "@/components/common/testimonials";
+import { getSessionPayload } from "@/lib/auth/session";
 import {
-  GraduationCap,
   CaretRight,
   ChalkboardTeacher,
-  Exam,
-  ShieldCheck,
   ChartLineUp,
-  Sparkle,
+  CheckCircle,
+  Exam,
+  GraduationCap,
   Play,
-  Timer,
-  CheckCircle
+  ShieldCheck,
+  Sparkle,
+  Timer
 } from "@phosphor-icons/react/dist/ssr";
-import { getSessionPayload } from "@/lib/auth/session";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Navbar } from "@/components/common/navbar";
-import { Footer } from "@/components/common/footer";
-import { Testimonials } from "@/components/common/testimonials";
 
 export default async function Home() {
   const session = await getSessionPayload();

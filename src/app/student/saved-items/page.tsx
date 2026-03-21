@@ -1,12 +1,12 @@
 import { getSavedItems } from "@/actions/student-actions";
 import { SavedItemsList } from "@/components/student/saved/saved-items-list";
 import { getCurrentUser } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
 import { Calendar } from "@phosphor-icons/react/dist/ssr";
+import { redirect } from "next/navigation";
 
 export default async function SavedItemsPage() {
     const user = await getCurrentUser(["STUDENT", "ADMIN"]);
-    const res = await getSavedItems() as any;
+    const res = await getSavedItems();
 
     if (!res.success) {
         // If we have a message indicating auth failure, redirect

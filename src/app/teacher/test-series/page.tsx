@@ -1,21 +1,20 @@
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import {
-    Plus,
-    Monitor,
-    Users,
-    TrendUp,
-    MagnifyingGlass,
-    DotsThreeVertical,
-    Globe,
-    Stack,
-    FileText,
-    Clock,
-    CaretRight,
-    ArrowUpRight,
-    Sparkle
-} from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
+import {
+  ArrowUpRight,
+  CaretRight,
+  Clock,
+  DotsThreeVertical,
+  FileText,
+  Globe,
+  MagnifyingGlass,
+  Monitor,
+  Plus,
+  Sparkle,
+  Stack,
+  Users
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
 export default async function TeacherExamsPage() {

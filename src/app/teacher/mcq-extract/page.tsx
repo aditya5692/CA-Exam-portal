@@ -1,25 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { analyzePdfForMCQs, getMyDraftMCQs, confirmAndImportMCQs } from "@/actions/mcq-actions";
-import { 
-    CloudArrowUp, 
-    Sparkle, 
-    CheckCircle, 
-    CurrencyInr, 
-    Brain, 
-    FileText, 
-    ShieldCheck, 
-    Lightning, 
-    Clock, 
-    SelectionBackground,
-    CaretRight,
-    CaretLeft,
-    IdentificationBadge,
-    Users,
-    Robot
-} from "@phosphor-icons/react";
+import { analyzePdfForMCQs,confirmAndImportMCQs,getMyDraftMCQs } from "@/actions/mcq-actions";
 import { cn } from "@/lib/utils";
+import {
+  CaretLeft,
+  CaretRight,
+  CheckCircle,
+  CloudArrowUp,
+  CurrencyInr,
+  FileText,
+  IdentificationBadge,
+  Lightning,
+  Robot,
+  SelectionBackground,
+  ShieldCheck,
+  Sparkle
+} from "@phosphor-icons/react";
+import { useCallback,useEffect,useState } from "react";
 
 type EducatorOption = {
     id: string;
@@ -71,7 +68,13 @@ export default function TeacherMCQExtractPage() {
     }, [selectedOwnerId]);
 
     useEffect(() => {
-        loadExistingDrafts(selectedOwnerId || undefined);
+        const timer = window.setTimeout(() => {
+            void loadExistingDrafts(selectedOwnerId || undefined);
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
     }, [loadExistingDrafts, selectedOwnerId]);
 
     const handleAnalyze = async () => {

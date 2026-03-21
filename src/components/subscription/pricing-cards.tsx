@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Check, Sparkle, Rocket, Buildings, CaretRight } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { Buildings,CaretRight,Check,Rocket,Sparkle } from "@phosphor-icons/react";
+import { useCallback,useState } from "react";
 
 interface PlanFeature {
     text: string;

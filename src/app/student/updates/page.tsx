@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { getStudentFeed, joinBatch } from "@/actions/batch-actions";
+import { getStudentFeed,joinBatch } from "@/actions/batch-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
-import { Bell, Users, BookOpen, Plus, X, Clock, ShieldCheck, Sparkle, Megaphone, CalendarBlank, Calendar } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { Calendar,Plus,ShieldCheck,X } from "@phosphor-icons/react";
+import { useCallback,useEffect,useRef,useState } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -24,17 +24,10 @@ type FeedItem = {
     link?: string;
 };
 
-type MyBatch = {
-    id: string;
-    name: string;
-    teacherName: string;
-};
-
 // ── Page Component ─────────────────────────────────────────────────────────────
 
 export default function StudentUpdatesPage() {
     const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-    const [myBatches, setMyBatches] = useState<MyBatch[]>([]);
     const [isAdminView, setIsAdminView] = useState(false);
     const [selectedSubject, setSelectedSubject] = useState("All Updates");
     const [visibleCount, setVisibleCount] = useState(6);
@@ -154,12 +147,17 @@ export default function StudentUpdatesPage() {
         ];
 
         setFeedItems(mockUpdates);
-        setMyBatches((res.data.myBatches ?? []) as MyBatch[]);
         setIsAdminView(Boolean(res.data.isAdminView));
     }, []);
 
     useEffect(() => {
-        loadFeed();
+        const timer = window.setTimeout(() => {
+            void loadFeed();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
     }, [loadFeed]);
 
     const handleJoin = async (event: React.FormEvent) => {

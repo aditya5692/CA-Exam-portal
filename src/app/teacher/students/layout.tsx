@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { FeatureRouteGate } from "@/components/access/feature-route-gate";
+import type { ReactNode } from "react";
 
 export default function FeatureLayout({ children }: { children: ReactNode }) {
   return (

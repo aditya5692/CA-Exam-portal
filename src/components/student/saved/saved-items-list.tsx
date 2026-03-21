@@ -1,22 +1,40 @@
 "use client";
 
+import { toggleSavedItem } from "@/actions/student-actions";
+import { cn } from "@/lib/utils";
+import type { UnifiedExam,UnifiedMaterial } from "@/types/shared";
+import { ArrowRight,BookmarkSimple,BookOpen,ClipboardText,Trash } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { BookOpen, ClipboardText, Trash, ArrowRight, BookmarkSimple } from "@phosphor-icons/react";
-import { toggleSavedItem } from "@/actions/student-actions";
-import { useRouter } from "next/navigation";
+
+type ActiveTab = "ALL" | "MATERIAL" | "EXAM";
+
+type SavedMaterial = UnifiedMaterial & {
+    subType?: string;
+    fileUrl?: string;
+    uploadedBy?: { fullName?: string | null } | null;
+};
+
+type SavedExam = UnifiedExam & {
+    duration?: number;
+    teacher?: { fullName?: string | null } | null;
+};
+
+const TABS: Array<{ id: ActiveTab; label: string }> = [
+    { id: "ALL", label: "All Items" },
+    { id: "MATERIAL", label: "Materials" },
+    { id: "EXAM", label: "Exams" },
+];
 
 interface Props {
-    materials: any[];
-    exams: any[];
+    materials: SavedMaterial[];
+    exams: SavedExam[];
 }
 
 export function SavedItemsList({ materials: initialMaterials, exams: initialExams }: Props) {
     const [materials, setMaterials] = useState(initialMaterials);
     const [exams, setExams] = useState(initialExams);
-    const [activeTab, setActiveTab] = useState<"ALL" | "MATERIAL" | "EXAM">("ALL");
-    const router = useRouter();
+    const [activeTab, setActiveTab] = useState<ActiveTab>("ALL");
 
     const handleUnsave = async (id: string, type: "MATERIAL" | "EXAM") => {
         const res = await toggleSavedItem(id, type);
@@ -39,7 +57,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                 </div>
                 <h3 className="text-2xl font-bold text-slate-950 font-outfit mb-3 tracking-tight">No saved items</h3>
                 <p className="text-slate-500 max-w-sm mx-auto mb-8 text-base font-medium leading-relaxed font-sans opacity-70">
-                    You haven't saved any materials or exams yet. Start exploring to build your collection.
+                    You haven&apos;t saved any materials or exams yet. Start exploring to build your collection.
                 </p>
                 <Link 
                     href="/student/dashboard"
@@ -55,14 +73,10 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
         <div className="space-y-8 pb-20">
             {/* Professional Category Switcher */}
             <div className="inline-flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                {[
-                    { id: "ALL", label: "All Items" },
-                    { id: "MATERIAL", label: "Materials" },
-                    { id: "EXAM", label: "Exams" }
-                ].map((tab) => (
+                {TABS.map((tab) => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
+                        onClick={() => setActiveTab(tab.id)}
                         className={cn(
                             "px-6 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-200",
                             activeTab === tab.id 
@@ -96,7 +110,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold tracking-widest text-indigo-500/80 uppercase opacity-70">{item.category}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase opacity-70">{item.subType}</span>
+                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase opacity-70">{item.subType ?? item.type}</span>
                             </div>
                             <h4 className="text-lg font-bold text-slate-900 font-outfit leading-tight group-hover:text-indigo-500/80 transition-colors line-clamp-2 min-h-[44px] tracking-tight">
                                 {item.title}
@@ -109,7 +123,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                                 <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight font-outfit opacity-80">{item.uploadedBy?.fullName || "Verified Faculty"}</span>
                             </div>
                             <Link 
-                                href={item.fileUrl} 
+                                href={item.fileUrl ?? "#"} 
                                 target="_blank"
                                 className="h-10 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center shadow-lg shadow-slate-900/10 border border-slate-900"
                             >
@@ -139,7 +153,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold tracking-widest text-indigo-500/80 uppercase opacity-70">{item.category}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase opacity-70">{item.duration} Mins</span>
+                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase opacity-70">{item.duration ?? item.durationMinutes} Mins</span>
                             </div>
                             <h4 className="text-lg font-bold text-slate-900 font-outfit leading-tight group-hover:text-indigo-500/80 transition-colors line-clamp-2 min-h-[44px] tracking-tight">
                                 {item.title}

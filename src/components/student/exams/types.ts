@@ -1,4 +1,3 @@
-import { ExamHubData } from "@/actions/student-actions";
 
 export type ExamShape = {
     id: string;

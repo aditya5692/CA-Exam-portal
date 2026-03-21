@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import type { StudentAttempt } from "@/types/student";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { ArrowRight, Target, TrendUp, Sparkle, Brain, Info } from "@phosphor-icons/react/dist/ssr";
-import { StudentAttempt } from "@/actions/student-actions";
 
 interface Props {
     attempts: StudentAttempt[];

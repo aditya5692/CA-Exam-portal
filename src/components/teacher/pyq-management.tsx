@@ -1,26 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { deletePYQ,getTeacherResources } from "@/actions/educator-actions";
 import { cn } from "@/lib/utils";
-import { 
-    FilePdf, 
-    DownloadSimple, 
-    ShareNetwork, 
-    Trash, 
-    PencilSimple,
-    ChartBar,
-    Plus,
-    IdentificationBadge,
-    CalendarCheck,
-    SelectionBackground,
-    CaretRight,
-    CaretLeft,
-    Sparkle,
-    CloudArrowUp,
-    ShieldCheck,
-    Archive
+import {
+  Archive,
+  CloudArrowUp,
+  DownloadSimple,
+  FilePdf,
+  PencilSimple,
+  ShareNetwork,
+  Trash
 } from "@phosphor-icons/react";
-import { getTeacherResources, deletePYQ } from "@/actions/educator-actions";
+import { useEffect,useState } from "react";
 
 type PYQResource = {
     id: string;
@@ -37,6 +28,7 @@ export default function TeacherPYQManagement() {
     const [resources, setResources] = useState<PYQResource[]>([]);
     const [loading, setLoading] = useState(true);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    void isUploadModalOpen;
 
     const fetchResources = async () => {
         setLoading(true);

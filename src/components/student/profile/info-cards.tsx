@@ -1,6 +1,6 @@
 "use client";
 
-import { GraduationCap, Briefcase, AtSign, Database, Mail, Phone, ExternalLink } from "lucide-react";
+import { AtSign,Briefcase,Database,GraduationCap,Mail,Phone } from "lucide-react";
 
 interface InfoCardsProps {
     batch: string | null;

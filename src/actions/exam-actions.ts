@@ -1,46 +1,24 @@
 "use server";
 
-import { ExamAttempt, Prisma } from "@prisma/client";
-import prisma from "@/lib/prisma/client";
-import { revalidatePath } from "next/cache";
-import { startExamAttemptRecord, submitExamAttemptRecord, type SubmittedExamAnswerInput } from "@/lib/server/exam-workflow";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
+import {
+  getExamAttemptResultsRecord,
+  getExamDetailsRecord,
+  startExamAttemptRecord,
+  submitExamAttemptRecord,
+  type SubmittedExamAnswerInput,
+} from "@/lib/server/exam-workflow";
+import { revalidateExamSurfaces } from "@/lib/server/revalidation";
+import type { AttemptWithResults,ExamWithQuestions } from "@/types/exam";
 import { ActionResponse } from "@/types/shared";
-
-export type ExamWithQuestions = Prisma.ExamGetPayload<{
-    include: {
-        questions: {
-            include: {
-                question: {
-                    include: {
-                        options: true
-                    }
-                }
-            }
-        }
-    }
-}>;
+import type { ExamAttempt } from "@prisma/client";
 
 /**
  * Fetches the full details of an exam, including its questions and options.
  */
 export async function getExamDetails(examId: string): Promise<ActionResponse<ExamWithQuestions>> {
     try {
-        const exam = await prisma.exam.findUnique({
-            where: { id: examId },
-            include: {
-                questions: {
-                    orderBy: { order: 'asc' },
-                    include: {
-                        question: {
-                            include: {
-                                options: true,
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        const exam = await getExamDetailsRecord(examId);
 
         if (!exam) return { success: false, message: "Exam not found." };
 
@@ -75,8 +53,7 @@ export async function submitExamAttempt(
     try {
         const updatedAttempt = await submitExamAttemptRecord(attemptId, answers);
 
-        revalidatePath(`/student/results/${attemptId}`);
-        revalidatePath("/student/exams");
+        revalidateExamSurfaces(attemptId);
         return { success: true, data: updatedAttempt, message: "Exam submitted successfully." };
     } catch (error) {
         console.error("submitExamAttempt error:", error);
@@ -84,62 +61,12 @@ export async function submitExamAttempt(
     }
 }
 
-export type AttemptWithResults = Prisma.ExamAttemptGetPayload<{
-    include: {
-        exam: {
-            include: {
-                _count: {
-                    select: { questions: true }
-                }
-            }
-        },
-        answers: {
-            include: {
-                question: {
-                    include: {
-                        options: true
-                    }
-                },
-                selectedOption: true
-            }
-        }
-    }
-}>;
-
 /**
  * Fetches the results of a completed exam attempt.
  */
 export async function getExamResults(attemptId: string): Promise<ActionResponse<AttemptWithResults>> {
     try {
-        const attempt = await prisma.examAttempt.findUnique({
-            where: { id: attemptId },
-            include: {
-                exam: {
-                    include: {
-                        _count: {
-                            select: { questions: true }
-                        }
-                    }
-                },
-                answers: {
-                    include: {
-                        question: {
-                            select: {
-                                text: true,
-                                explanation: true,
-                                difficulty: true,
-                                subject: true,
-                                topic: true,
-                                options: true,
-                            }
-                        },
-                        selectedOption: true
-                    }
-                }
-            }
-        });
-
-        if (!attempt) return { success: false, message: "Results not found." };
+        const attempt = await getExamAttemptResultsRecord(attemptId);
 
         return { success: true, data: attempt as AttemptWithResults };
     } catch (error) {

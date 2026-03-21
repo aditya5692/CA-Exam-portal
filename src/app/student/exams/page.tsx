@@ -1,6 +1,8 @@
-import { getCurrentUser } from "@/lib/auth/session";
 import { getStudentVisibleExams } from "@/actions/publish-exam-actions";
+import { getCurrentUser } from "@/lib/auth/session";
 import StudentExamsClient from "./client";
+
+export const dynamic = "force-dynamic";
 
 // Normalize the student's examTarget to a CA level key
 function resolveCALevel(examTarget: string | null | undefined): "foundation" | "ipc" | "final" {

@@ -5,7 +5,6 @@ import { Props } from "./types";
 
 export function ExamHero({
     caLevelKey,
-    caLevelLabel,
     onLevelChange
 }: {
     caLevelKey: Props["caLevelKey"];

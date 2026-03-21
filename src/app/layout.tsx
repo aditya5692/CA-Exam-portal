@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
-import "./globals.css";
+/* eslint-disable @next/next/no-page-custom-font */
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+import type { Metadata } from "next";
+import { Toaster } from "sonner";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CA Exam Portal - Modern Edition",
@@ -25,9 +22,7 @@ export default function RootLayout({
       </head>
       <body 
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          inter.variable,
-          outfit.variable
+          "min-h-screen bg-background font-sans antialiased"
         )}
         suppressHydrationWarning
       >

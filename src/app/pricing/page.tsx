@@ -1,7 +1,6 @@
-import { PricingCards } from "@/components/subscription/pricing-cards";
-import { ShieldCheck, CheckCircle, Question, Info } from "@phosphor-icons/react/dist/ssr";
-import { Navbar } from "@/components/common/navbar";
 import { Footer } from "@/components/common/footer";
+import { Navbar } from "@/components/common/navbar";
+import { PricingCards } from "@/components/subscription/pricing-cards";
 import { getSessionPayload } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 

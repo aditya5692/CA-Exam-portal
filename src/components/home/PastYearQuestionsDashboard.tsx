@@ -1,79 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { getPublicResources,trackPYQAction } from "@/actions/resource-actions";
 import { cn } from "@/lib/utils";
-import {
-    BookmarkSimple,
-    Funnel,
-    CaretDown,
-    FilePdf,
-    DownloadSimple,
-    ShareNetwork,
-    Eye,
-    CheckCircle,
-    Info,
-    Lock
-} from "@phosphor-icons/react";
-import { getPublicResources, trackPYQAction, PublicResource } from "@/actions/resource-actions";
-import { toggleSavedItem, getSavedItems } from "@/actions/student-actions";
+import type { PublicResource } from "@/types/resource";
+import { useEffect,useState } from "react";
 
 export function PastYearQuestionsDashboard({ 
     headerContent 
 }: { 
     headerContent?: React.ReactNode;
 }) {
-    const [activeLevel, setActiveLevel] = useState("CA Final");
+    const activeLevel = "CA Final";
     const [resources, setResources] = useState<PublicResource[]>([]);
-    const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const [data, savedRes] = await Promise.all([
-                getPublicResources({
-                    category: activeLevel,
-                    subType: "PYQ"
-                }),
-                getSavedItems()
-            ]);
+            const data = await getPublicResources({
+                category: activeLevel,
+                subType: "PYQ"
+            });
             if (data.success) {
                 setResources(data.data || []);
-            }
-            if (savedRes.success && savedRes.data) {
-                const ids = new Set([
-                    ...(savedRes.data.materials || []).map((m: any) => m.id),
-                    ...(savedRes.data.exams || []).map((e: any) => e.id)
-                ]);
-                setSavedIds(ids);
             }
             setLoading(false);
         };
         fetchData();
     }, [activeLevel]);
 
-    const handleToggleSave = async (id: string, type: "MATERIAL" | "EXAM") => {
-        const res = await toggleSavedItem(id, type);
-        if (res.success && res.data) {
-            setSavedIds(prev => {
-                const next = new Set(prev);
-                if (res.data!.saved) next.add(id);
-                else next.delete(id);
-                return next;
-            });
-        }
-    };
-
     const handleDownload = async (id: string, url: string) => {
         await trackPYQAction(id, "DOWNLOAD");
         window.open(url, '_blank');
-    };
-
-    const handleShare = async (id: string) => {
-        await trackPYQAction(id, "SHARE");
-        navigator.clipboard.writeText(`${window.location.origin}/past-year-questions/${id}`);
-        alert("Link copied to clipboard!");
     };
 
     const [searchQuery, setSearchQuery] = useState("");
