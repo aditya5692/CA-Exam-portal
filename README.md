@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## CA Exam Portal
+
+Next.js 16 + TypeScript + Prisma PostgreSQL deployment for CA students and educators.
+
+## Environment Setup
+
+Use the right database URL for the environment you are running in.
+
+### Dokploy App Runtime
+
+Set this in the Dokploy app environment:
+
+```env
+DOKPLOY_DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@YOUR_DOKPLOY_DB_HOST:5432/DB_NAME
+```
+
+For your current Dokploy database, that host should be the internal host, not the public IP:
+
+```env
+DOKPLOY_DATABASE_URL=postgresql://aditya424:aditya424@financly-cadatabase-bxixqg:5432/financlycadatabase
+```
+
+### Local Development
+
+If you want to test from your laptop, expose Postgres on a dedicated external port like `5433`, then use:
+
+```env
+LOCAL_DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@YOUR_SERVER_IP:5433/DB_NAME
+```
+
+Do not use port `3000` for the external database if the app is also running there.
 
 ## Getting Started
 
-First, run the development server:
+Create your local env file, then run:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Check
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+You can verify the current DB target quickly with:
 
-## Learn More
+```bash
+npm run db:check
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+It prints which env key was selected and whether the database is reachable.

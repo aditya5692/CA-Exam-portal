@@ -3,12 +3,14 @@ import { PrismaClient } from "@prisma/client";
 import { Pool,type PoolConfig } from "pg";
 
 const DEFAULT_POOL_MAX = 10;
-const DEFAULT_CONNECT_TIMEOUT_MS = 10_000;
+const DEFAULT_DEVELOPMENT_CONNECT_TIMEOUT_MS = 3_000;
+const DEFAULT_PRODUCTION_CONNECT_TIMEOUT_MS = 10_000;
 const DEFAULT_IDLE_TIMEOUT_MS = 30_000;
 const SUPPORTED_DATABASE_PROTOCOLS = new Set(["postgresql:", "postgres:"]);
 
 export type DatabaseRuntimeConfig = {
     databaseUrl: string;
+    sourceEnvKey: string;
     redactedDatabaseUrl: string;
     protocol: string;
     poolConfig: PoolConfig;
@@ -16,8 +18,12 @@ export type DatabaseRuntimeConfig = {
 
 type EnvLike = Record<string, string | undefined>;
 
-const DATABASE_URL_ENV_KEYS = [
+const SHARED_DATABASE_URL_ENV_KEYS = [
     "DATABASE_URL",
+    "DOKPLOY_DATABASE_URL",
+    "LOCAL_DATABASE_URL",
+    "POSTGRES_INTERNAL_URL",
+    "POSTGRES_EXTERNAL_URL",
     "POSTGRES_URL",
     "POSTGRES_PRISMA_URL",
     "POSTGRESQL_URL",
@@ -37,15 +43,49 @@ function normalizeEnvString(rawValue: string | undefined) {
     return quoteWrapped ? trimmed.slice(1, -1).trim() : trimmed;
 }
 
+function getDatabaseUrlEnvKeys(env: EnvLike) {
+    const preferredKeys = env.NODE_ENV === "production"
+        ? [
+            "DOKPLOY_DATABASE_URL",
+            "POSTGRES_INTERNAL_URL",
+            "DATABASE_URL",
+            "POSTGRES_URL",
+            "POSTGRES_PRISMA_URL",
+            "POSTGRESQL_URL",
+            "DATABASE_URI",
+            "LOCAL_DATABASE_URL",
+            "POSTGRES_EXTERNAL_URL",
+        ]
+        : [
+            "DATABASE_URL",
+            "LOCAL_DATABASE_URL",
+            "POSTGRES_EXTERNAL_URL",
+            "DOKPLOY_DATABASE_URL",
+            "POSTGRES_INTERNAL_URL",
+            "POSTGRES_URL",
+            "POSTGRES_PRISMA_URL",
+            "POSTGRESQL_URL",
+            "DATABASE_URI",
+        ];
+
+    return [...new Set([...preferredKeys, ...SHARED_DATABASE_URL_ENV_KEYS])];
+}
+
 function readDatabaseUrlFromEnv(env: EnvLike) {
-    for (const key of DATABASE_URL_ENV_KEYS) {
+    for (const key of getDatabaseUrlEnvKeys(env)) {
         const value = normalizeEnvString(env[key]);
         if (value) {
-            return value;
+            return { key, value };
         }
     }
 
-    return "";
+    return { key: "", value: "" };
+}
+
+function getDefaultConnectTimeoutMs(env: EnvLike) {
+    return env.NODE_ENV === "production"
+        ? DEFAULT_PRODUCTION_CONNECT_TIMEOUT_MS
+        : DEFAULT_DEVELOPMENT_CONNECT_TIMEOUT_MS;
 }
 
 function parseDatabaseIntegerEnv(
@@ -85,7 +125,7 @@ export function redactDatabaseUrl(databaseUrl: string) {
 }
 
 export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseRuntimeConfig {
-    const databaseUrl = readDatabaseUrlFromEnv(env);
+    const { key: sourceEnvKey, value: databaseUrl } = readDatabaseUrlFromEnv(env);
     if (!databaseUrl) {
         throw new Error("DATABASE_URL is not configured.");
     }
@@ -109,6 +149,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
 
     return {
         databaseUrl,
+        sourceEnvKey,
         redactedDatabaseUrl: redactDatabaseUrl(databaseUrl),
         protocol,
         poolConfig: {
@@ -116,7 +157,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
             max: parseDatabaseIntegerEnv(env.DATABASE_POOL_MAX, DEFAULT_POOL_MAX, "DATABASE_POOL_MAX"),
             connectionTimeoutMillis: parseDatabaseIntegerEnv(
                 env.DATABASE_CONNECT_TIMEOUT_MS,
-                DEFAULT_CONNECT_TIMEOUT_MS,
+                getDefaultConnectTimeoutMs(env),
                 "DATABASE_CONNECT_TIMEOUT_MS",
             ),
             idleTimeoutMillis: parseDatabaseIntegerEnv(

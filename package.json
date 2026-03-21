@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:check": "tsx ./scripts/check-db.ts",
     "test:backend": "node ./tests/backend/run-backend-tests.mjs",
     "test:integration": "node ./tests/integration/run-integration-tests.mjs"
   },
