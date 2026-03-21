@@ -138,7 +138,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
     }
 
     if (!SUPPORTED_DATABASE_PROTOCOLS.has(protocol)) {
-        throw new Error(`Unsupported DATABASE_URL protocol "${protocol}". Use a PostgreSQL connection string.`);
+        throw new Error(`Unsupported DATABASE_URL protocol "${protocol}". Use a PostgreSQL or SQLite connection string.`);
     }
 
     return {
@@ -179,6 +179,19 @@ export function createPostgresPool(config: DatabaseRuntimeConfig) {
 
 export function createRuntimePrismaClient(env: EnvLike = process.env) {
     const config = readDatabaseRuntimeConfig(env);
+    
+    if (config.protocol === "file:" || config.protocol === "sqlite:") {
+        try {
+            const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
+            const dbPath = config.databaseUrl.replace(/^(file:|sqlite:)/, "");
+            const adapter = new PrismaBetterSqlite3({ url: dbPath });
+            const prisma = new PrismaClient({ adapter });
+            return { prisma, config };
+        } catch (e: any) {
+            throw new Error(`SQLite adapter failed to load: ${e.message}. Ensure better-sqlite3 and @prisma/adapter-better-sqlite3 are installed.`);
+        }
+    }
+
     const pool = createPostgresPool(config);
     const adapter = new PrismaPg(pool);
     const prisma = new PrismaClient({ adapter });

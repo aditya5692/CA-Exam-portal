@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { cn } from "@/lib/utils";
 import {
@@ -18,8 +18,7 @@ import {
 import Link from "next/link";
 
 export default async function TeacherExamsPage() {
-    const teacher = await getCurrentUser(["TEACHER", "ADMIN"]);
-    if (!teacher) throw new Error("Unauthorized");
+    const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
 
     const exams = await prisma.exam.findMany({
         where: teacher.role === "ADMIN"

@@ -12,7 +12,8 @@
     "lint": "eslint",
     "db:check": "tsx ./scripts/check-db.ts",
     "test:backend": "node ./tests/backend/run-backend-tests.mjs",
-    "test:integration": "node ./tests/integration/run-integration-tests.mjs"
+    "test:integration": "node ./tests/integration/run-integration-tests.mjs",
+    "dev:local": "powershell ./scripts/local-dev.ps1"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"
@@ -59,5 +60,10 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.5.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.8.0"
   }
 }
