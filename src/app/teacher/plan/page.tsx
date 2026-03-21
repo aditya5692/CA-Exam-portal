@@ -1,6 +1,6 @@
 import { PricingCards } from "@/components/subscription/pricing-cards";
 import { getSessionPayload } from "@/lib/auth/session";
-import { getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
+import { buildPlanSummary,getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
 import { CheckCircle,CreditCard,Crown,Info,ShieldCheck,Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 
@@ -9,7 +9,20 @@ export default async function TeacherPlanPage() {
     if (!session || session.role !== "TEACHER") redirect("/auth/login");
 
     const isPro = session.plan === "PRO";
-    const planSummary = await getCurrentUserPlanSummary(session.userId);
+    let planSummary = buildPlanSummary({
+        plan: session.plan,
+        role: session.role,
+        storageUsed: 0,
+        storageLimit: 0,
+    });
+    let planStatusNotice: string | null = null;
+
+    try {
+        planSummary = await getCurrentUserPlanSummary(session.userId);
+    } catch (error) {
+        console.error("TeacherPlanPage: failed to load live plan summary", error);
+        planStatusNotice = "Live entitlement metrics are temporarily unavailable. Upgrade options remain available below.";
+    }
 
     return (
         <div className="space-y-10 pb-24 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -26,6 +39,12 @@ export default async function TeacherPlanPage() {
                     </p>
                 </div>
             </div>
+
+            {planStatusNotice && (
+                <div className="rounded-[24px] border border-amber-100 bg-amber-50 px-6 py-4 text-sm font-semibold text-amber-700">
+                    {planStatusNotice}
+                </div>
+            )}
 
             {/* Status Banner - Premium Card */}
             <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 text-white shadow-2xl group border border-slate-800">

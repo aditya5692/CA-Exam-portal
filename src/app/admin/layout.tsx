@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth/session";
+import { getSessionPayload } from "@/lib/auth/session";
 import {
   Bell,
   BookOpen,
@@ -13,9 +13,9 @@ import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-    const admin = await getCurrentUser("ADMIN");
+    const admin = await getSessionPayload();
 
-    if (!admin) {
+    if (!admin || admin.role !== "ADMIN") {
         redirect("/auth/login");
     }
 

@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth/session";
+import { getSessionPayload } from "@/lib/auth/session";
 import { Bell,MagnifyingGlass,Question } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -6,11 +6,11 @@ import { ReactNode } from "react";
 import { StudentSidebar } from "../sidebar";
 
 export default async function StudentLayout({ children }: { children: ReactNode }) {
-    const student = await getCurrentUser(["STUDENT", "ADMIN"]);
-    if (!student) {
+    const session = await getSessionPayload();
+    if (!session || (session.role !== "STUDENT" && session.role !== "ADMIN")) {
         redirect("/auth/login");
     }
-    const initials = (student.fullName ?? "Student")
+    const initials = (session.fullName ?? "Student")
         .split(" ")
         .map((word) => word[0] ?? "")
         .join("")
@@ -25,7 +25,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
                 <div className="absolute top-[20%] right-[-10%] w-[35%] h-[35%] bg-purple-100/40 rounded-full blur-[100px] opacity-50" />
                 <div className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[120px] opacity-60" />
             </div>
-            <StudentSidebar showAdminLink={student.role === "ADMIN"} />
+            <StudentSidebar showAdminLink={session.role === "ADMIN"} />
             <main className="flex-1 flex flex-col h-screen overflow-y-auto">
                 {/* Global Top Navigation: Smart & Modern Vista */}
                 <header className="sticky top-0 z-40 w-full bg-white/70 backdrop-blur-xl border-b border-slate-100/50 flex justify-between items-center h-16 md:h-20 px-8 transition-all shadow-sm">
@@ -60,14 +60,14 @@ export default async function StudentLayout({ children }: { children: ReactNode 
                         <Link href="/student/profile" className="flex items-center gap-4 group">
                             <div className="text-right hidden md:block">
                                 <p className="text-sm font-bold text-slate-900 leading-none font-outfit group-hover:text-indigo-600 transition-colors">
-                                    {student.fullName ?? "Student"}
+                                    {session.fullName ?? "Student"}
                                 </p>
                                 <div className="flex items-center justify-end gap-2 mt-1.5">
                                     <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                                        {student.plan === "PRO" ? "Premium" : "Free"}
+                                        {session.plan === "PRO" ? "Premium" : session.plan === "ELITE" ? "Elite" : session.plan === "ENTERPRISE" ? "Enterprise" : "Free"}
                                     </span>
                                     <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest">
-                                        {student.examTarget || "Select Level"}
+                                        Select Level
                                     </span>
                                 </div>
                             </div>

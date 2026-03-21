@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth/session";
+import { getSessionPayload } from "@/lib/auth/session";
 import { Bell,MagnifyingGlass,UserCircle } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -6,15 +6,15 @@ import { ReactNode } from "react";
 import { TeacherSidebar } from "./sidebar";
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
-    const teacher = await getCurrentUser(["TEACHER", "ADMIN"]);
+    const session = await getSessionPayload();
 
-    if (!teacher) {
+    if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
         redirect("/auth/login");
     }
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc]">
-            <TeacherSidebar showAdminLink={teacher.role === "ADMIN"} />
+            <TeacherSidebar showAdminLink={session.role === "ADMIN"} />
             <div className="flex-1 flex flex-col">
                 <header className="h-14 border-b border-gray-100 bg-white/70 backdrop-blur-md sticky top-0 z-40 px-6 flex items-center justify-between">
                     <div className="relative w-80">
@@ -35,10 +35,10 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
                         <Link href="/teacher/profile" className="flex items-center gap-3 cursor-pointer group">
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-all">
-                                    {teacher.fullName ?? "Teacher"}
+                                    {session.fullName ?? "Teacher"}
                                 </p>
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                                    {teacher.designation ?? "Faculty"}
+                                    Faculty
                                 </p>
                             </div>
                             <div className="w-10 h-10 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/20 p-0.5">
@@ -57,5 +57,4 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
         </div>
     );
 }
-
 

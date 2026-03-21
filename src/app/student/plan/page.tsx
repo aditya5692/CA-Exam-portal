@@ -1,6 +1,6 @@
 import { PricingCards } from "@/components/subscription/pricing-cards";
 import { getSessionPayload } from "@/lib/auth/session";
-import { getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
+import { buildPlanSummary,getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
 import { CheckCircle,ShieldCheck,Sparkle } from "lucide-react";
 import { redirect } from "next/navigation";
 
@@ -9,7 +9,20 @@ export default async function StudentPlanPage() {
     if (!session || session.role !== "STUDENT") redirect("/auth/login");
 
     const isPro = session.plan === "PRO";
-    const planSummary = await getCurrentUserPlanSummary(session.userId);
+    let planSummary = buildPlanSummary({
+        plan: session.plan,
+        role: session.role,
+        storageUsed: 0,
+        storageLimit: 0,
+    });
+    let planStatusNotice: string | null = null;
+
+    try {
+        planSummary = await getCurrentUserPlanSummary(session.userId);
+    } catch (error) {
+        console.error("StudentPlanPage: failed to load live plan summary", error);
+        planStatusNotice = "Live plan metrics are temporarily unavailable. You can still review and activate plans below.";
+    }
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-24">
@@ -21,6 +34,12 @@ export default async function StudentPlanPage() {
                     Manage your current billing status and unlock premium features.
                 </p>
             </div>
+
+            {planStatusNotice && (
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
+                    {planStatusNotice}
+                </div>
+            )}
 
             {/* Status Banner */}
             <div className={`p-6 rounded-2xl border ${isPro ? "bg-indigo-50 border-indigo-100" : "bg-gray-50 border-gray-200"} flex items-center justify-between`}>
