@@ -83,6 +83,7 @@ export function StudentProfile() {
                 attemptDue={profile.examTarget}
                 location={profile.location}
                 dob={profile.dob}
+                plan={profile.plan}
                 firm={profile.firm}
                 firmRole={profile.firmRole}
                 articleshipYear={profile.articleshipYear}

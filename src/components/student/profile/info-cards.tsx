@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AtSign,Briefcase,Database,GraduationCap,Mail,Phone } from "lucide-react";
 
 interface InfoCardsProps {
@@ -7,6 +8,7 @@ interface InfoCardsProps {
     attemptDue: string | null;
     location: string | null;
     dob: string | null;
+    plan: string | null;
     firm: string | null;
     firmRole: string | null;
     articleshipYear: number | null;
@@ -25,6 +27,15 @@ export function InfoCards(props: InfoCardsProps) {
     const storageProgress = props.storageLimit > 0 
         ? Math.round((props.storageUsed / props.storageLimit) * 100) 
         : 0;
+    const normalizedPlan = props.plan?.trim().toUpperCase() || "FREE";
+    const planStatusLabel = normalizedPlan === "PRO"
+        ? "Premium"
+        : normalizedPlan === "ELITE"
+            ? "Elite"
+            : normalizedPlan === "ENTERPRISE"
+                ? "Enterprise"
+                : "Free";
+    const planStatusActionLabel = normalizedPlan === "FREE" ? "View Pricing" : "Manage Plan";
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-outfit">
@@ -97,6 +108,23 @@ export function InfoCards(props: InfoCardsProps) {
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                         {Math.round(props.storageUsed / 1024 / 1024)}MB / {Math.round(props.storageLimit / 1024 / 1024)}MB Available
                     </p>
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Plan Status</p>
+                                <p className="mt-1 text-sm font-black tracking-tight text-slate-900">{planStatusLabel}</p>
+                            </div>
+                            <span className="rounded-full border border-indigo-100 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-500">
+                                {normalizedPlan}
+                            </span>
+                        </div>
+                        <Link
+                            href="/pricing"
+                            className="mt-4 inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-indigo-700"
+                        >
+                            {planStatusActionLabel}
+                        </Link>
+                    </div>
                 </div>
             </Card>
         </div>

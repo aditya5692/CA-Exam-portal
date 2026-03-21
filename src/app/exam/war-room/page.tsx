@@ -5,7 +5,7 @@ import { saveExamResultsAndUpdateLearning } from "@/actions/learning-actions";
 import { startMyExamAttempt } from "@/actions/student-actions";
 import { cn } from "@/lib/utils";
 import type { ExamWithQuestions } from "@/types/exam";
-import { useSearchParams } from "next/navigation";
+import { useRouter,useSearchParams } from "next/navigation";
 import { useCallback,useEffect,useRef,useState } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -48,6 +48,7 @@ function LoadingScreen({ msg = "Loading exam…" }: { msg?: string }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function MCQExamPage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const examId = searchParams.get("examId");
     const modeParam = searchParams.get("mode");
@@ -232,6 +233,20 @@ export default function MCQExamPage() {
             setPaused(p => !p);
         }
     };
+    const handleExitExam = useCallback(() => {
+        if (phase === "exam") {
+            const shouldExit = window.confirm(
+                mode === "mock"
+                    ? "Leave this mock test? Your current answers will not be submitted."
+                    : "Leave practice mode? Your current progress will be lost."
+            );
+            if (!shouldExit) {
+                return;
+            }
+        }
+
+        router.push("/student/exams");
+    }, [mode, phase, router]);
 
     // Counts
     const answered = Object.values(answers).filter(a => a.status === "answered" || a.status === "answered-marked").length;
@@ -406,7 +421,7 @@ export default function MCQExamPage() {
 
                     {/* Actions */}
                     <div className="flex gap-4 flex-wrap">
-                        <button onClick={() => window.history.back()} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">← Back to Hub</button>
+                        <button onClick={handleExitExam} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">Back to Exams</button>
                         <button onClick={() => { window.location.href = "/student/history"; }} className="flex-1 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">📜 History</button>
                         {attemptId && <button onClick={() => { window.location.href = `/student/results/${attemptId}`; }} className="flex-1 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">🔗 Full Results Page</button>}
                     </div>
@@ -444,6 +459,17 @@ export default function MCQExamPage() {
                     {mode === "practice" && <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold border border-blue-100">📖 Practice Mode</span>}
                 </div>
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleExitExam}
+                        className={cn(
+                            "rounded-lg border px-3 py-1.5 text-xs font-bold transition-all",
+                            highContrast
+                                ? "border-gray-600 text-gray-200 hover:bg-gray-800"
+                                : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                        )}
+                    >
+                        Exit Test
+                    </button>
                     {/* Font size */}
                     <div className="hidden sm:flex items-center gap-1">
                         {(["sm", "md", "lg"] as const).map(s => (
