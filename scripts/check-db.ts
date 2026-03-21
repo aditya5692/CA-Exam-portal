@@ -1,7 +1,6 @@
 import { existsSync,readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Client } from "pg";
-import { readDatabaseRuntimeConfig } from "../src/lib/prisma/runtime";
+import { createRuntimePrismaClient } from "../src/lib/prisma/runtime";
 
 function applyEnvFile(fileName: string) {
     const filePath = resolve(process.cwd(), fileName);
@@ -44,30 +43,22 @@ async function main() {
     applyEnvFile(".env");
     applyEnvFile(".env.local");
 
-    const config = readDatabaseRuntimeConfig();
-    const client = new Client({
-        connectionString: config.databaseUrl,
-        connectionTimeoutMillis: config.poolConfig.connectionTimeoutMillis,
-    });
+    const { prisma, config } = createRuntimePrismaClient();
 
     console.log("Checking database connectivity...");
     console.log(`Env key: ${config.sourceEnvKey}`);
     console.log(`Target: ${config.redactedDatabaseUrl}`);
-    console.log(`Connect timeout: ${config.poolConfig.connectionTimeoutMillis}ms`);
+    console.log(`Protocol: ${config.protocol}`);
 
     try {
-        await client.connect();
-        const result = await client.query<{
-            current_database: string;
-            current_user: string;
-        }>("select current_database(), current_user");
-
-        const row = result.rows[0];
+        // A simple query that works in both PostgreSQL and SQLite
+        const result = await prisma.$queryRawUnsafe("SELECT 1 as connected");
         console.log("Connection successful.");
-        console.log(`Database: ${row?.current_database ?? "unknown"}`);
-        console.log(`User: ${row?.current_user ?? "unknown"}`);
+        // console.log("Result:", result); // Optional debug
+    } catch (error) {
+        throw error;
     } finally {
-        await client.end().catch(() => undefined);
+        await prisma.$disconnect();
     }
 }
 

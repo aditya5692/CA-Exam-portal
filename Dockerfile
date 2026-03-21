@@ -13,7 +13,7 @@ COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 
 RUN npm ci
-RUN node ./node_modules/prisma/build/index.js generate
+RUN sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma && npx prisma generate
 
 FROM base AS builder
 
