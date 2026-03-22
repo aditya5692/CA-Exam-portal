@@ -74,7 +74,33 @@ async function updateProfile(role: ProfileRole, formData: FormData): Promise<Act
         const designation = normalizeOptionalString(formData.get("designation"));
         const expertise = normalizeOptionalString(formData.get("expertise"));
         const examTarget = normalizeOptionalString(formData.get("examTarget"));
+        const caLevel = normalizeOptionalString(formData.get("caLevel")); // "foundation", "ipc", "final"
         const isPublicProfile = formData.get("isPublicProfile") === "true";
+
+        let synchronizedExamTarget = examTarget;
+
+        // If a specific CA Level was chosen via the dropdown, ensure examTarget reflects it
+        if (caLevel) {
+            const levelPrefixMap: Record<string, string> = {
+                foundation: "CA Foundation",
+                ipc: "CA Intermediate",
+                final: "CA Final",
+            };
+            const prefix = levelPrefixMap[caLevel];
+            
+            if (prefix) {
+                // If examTarget already starts with a known level, replace it. Otherwise, prepend.
+                const existingTarget = examTarget || "";
+                const knownPrefixes = ["CA Foundation", "CA Intermediate", "CA Final", "CA Inter", "IPC"];
+                const matchedPrefix = knownPrefixes.find(p => existingTarget.startsWith(p));
+                
+                if (matchedPrefix) {
+                    synchronizedExamTarget = existingTarget.replace(matchedPrefix, prefix);
+                } else {
+                    synchronizedExamTarget = existingTarget ? `${prefix} ${existingTarget}` : prefix;
+                }
+            }
+        }
 
         const batch = normalizeOptionalString(formData.get("batch"));
         const dob = normalizeOptionalString(formData.get("dob"));
@@ -131,7 +157,7 @@ async function updateProfile(role: ProfileRole, formData: FormData): Promise<Act
             bio,
             designation: role === "TEACHER" ? designation : null,
             expertise: role === "TEACHER" ? expertise : null,
-            examTarget: role === "STUDENT" ? examTarget : null,
+            examTarget: role === "STUDENT" ? synchronizedExamTarget : null,
             isPublicProfile: role === "TEACHER" ? isPublicProfile : true,
             batch,
             dob,

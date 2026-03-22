@@ -1,28 +1,16 @@
 import { getStudentVisibleExams } from "@/actions/publish-exam-actions";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getStudentCACategory,resolveStudentCALevel } from "@/lib/student-level";
 import StudentExamsClient from "./client";
 
 export const dynamic = "force-dynamic";
-
-// Normalize the student's examTarget to a CA level key
-function resolveCALevel(examTarget: string | null | undefined): "foundation" | "ipc" | "final" {
-    const t = (examTarget ?? "").toLowerCase();
-    if (t.includes("foundation")) return "foundation";
-    if (t.includes("inter") || t.includes("ipc")) return "ipc";
-    return "final"; // default to final
-}
 
 export default async function StudentExamsPage() {
     // 1. Get current student
     const user = await getCurrentUser(["STUDENT", "ADMIN"]).catch(() => null);
 
-    const caLevelKey = resolveCALevel(user?.examTarget);
-    const CA_LEVEL_CATEGORY: Record<string, string> = {
-        foundation: "CA Foundation",
-        ipc: "CA Intermediate",
-        final: "CA Final",
-    };
-    const caLevelLabel = CA_LEVEL_CATEGORY[caLevelKey];
+    const caLevelKey = resolveStudentCALevel(user?.examTarget, user?.department);
+    const caLevelLabel = getStudentCACategory(caLevelKey);
 
     // 2. Fetch visible exams
     const examsRes = await getStudentVisibleExams(caLevelKey);

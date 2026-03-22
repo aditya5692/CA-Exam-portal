@@ -1,15 +1,13 @@
 "use client";
 
-import { getExamHubData, updateStudentLevel } from "@/actions/student-actions";
+import { getExamHubData } from "@/actions/student-actions";
 import type { ExamHubData } from "@/types/student";
 import { useRouter } from "next/navigation";
 import { useEffect,useState } from "react";
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import { ChapterMCQSection } from "@/components/student/exams/ChapterMCQSection";
-import { ExamHero } from "@/components/student/exams/ExamHero";
 import { ExamHubFooter } from "@/components/student/exams/ExamHubFooter";
-import { ExamStats } from "@/components/student/exams/ExamStats";
 import { MockTestSection } from "@/components/student/exams/MockTestSection";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { Props } from "@/components/student/exams/types";
@@ -33,25 +31,12 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, daysToExa
                     setHubData(hubRes.data);
                 }
                 setLoading(false);
+                setLoading(false);
             }
         };
         init();
         return () => { mounted = false; };
     }, []);
-
-    const handleLevelChange = async (level: string) => {
-        if (level === "foundation" || level === "ipc" || level === "final") {
-            const res = await updateStudentLevel(level);
-            if (res.success) {
-                // Manually re-fetch hubData to show the new level's subjects immediately
-                const hubRes = await getExamHubData();
-                if (hubRes.success && hubRes.data) {
-                    setHubData(hubRes.data);
-                }
-                router.refresh();
-            }
-        }
-    };
 
     if (loading) {
         return (
@@ -77,19 +62,16 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, daysToExa
                 daysToExam={daysToExam}
             />
 
-            <ExamHero 
-                caLevelKey={caLevelKey} 
-                caLevelLabel={caLevelLabel} 
-                onLevelChange={handleLevelChange} 
-            />
 
-            <ExamStats hubData={hubData} />
 
-            <ChapterMCQSection 
-                hubData={hubData} 
-                selectedSubject={selectedSubject} 
-                setSelectedSubject={setSelectedSubject} 
-            />
+            
+            {caLevelKey !== "foundation" && (
+                <ChapterMCQSection 
+                    hubData={hubData} 
+                    selectedSubject={selectedSubject} 
+                    setSelectedSubject={setSelectedSubject} 
+                />
+            )}
 
             <MockTestSection hubData={hubData} />
 
@@ -97,4 +79,3 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, daysToExa
         </div>
     );
 }
-

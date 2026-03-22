@@ -16,6 +16,8 @@ import {
 import { useState,type ReactNode } from "react";
 import { StudentPageHeader } from "../shared/page-header";
 
+import { resolveStudentCALevel } from "@/lib/student-level";
+
 type ProfileFormState = {
     fullName: string;
     email: string;
@@ -26,6 +28,7 @@ type ProfileFormState = {
     timezone: string;
     bio: string;
     examTarget: string;
+    caLevel: string;
     batch: string;
     dob: string;
     location: string;
@@ -64,6 +67,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
         timezone: profile.timezone ?? "",
         bio: profile.bio ?? "",
         examTarget: profile.examTarget ?? "",
+        caLevel: resolveStudentCALevel(profile.examTarget, profile.department),
         batch: profile.batch ?? "",
         dob: profile.dob ? String(profile.dob) : "",
         location: profile.location ?? "",
@@ -168,9 +172,20 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                     </div>
                 </Section>
 
-                {/* Personal Details Section */}
-                <Section title="Personal Details" icon={<Calendar className="w-5 h-5" />}>
+                 <Section title="Personal Details" icon={<Calendar className="w-5 h-5" />}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SelectField 
+                            label="CA Level" 
+                            name="caLevel" 
+                            value={formData.caLevel} 
+                            onChange={(key, val) => setFormData(prev => ({ ...prev, [key]: val }))}
+                            options={[
+                                { value: "foundation", label: "CA Foundation" },
+                                { value: "ipc", label: "CA Intermediate (IPC)" },
+                                { value: "final", label: "CA Final" }
+                            ]}
+                            icon={<ShieldCheck className="w-4 h-4" />}
+                        />
                          <InputField 
                             label="Batch" 
                             name="batch" 
@@ -334,6 +349,38 @@ function InputField({ label, name, value, onChange, placeholder, type = "text", 
                     placeholder={placeholder}
                     className={`w-full rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-6 text-sm font-bold text-[var(--student-text)] placeholder:text-[var(--student-muted)]/45 focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 focus:ring-[var(--student-accent-soft)]/70 transition-all shadow-inner`}
                 />
+            </div>
+        </label>
+    );
+}
+
+type SelectFieldProps = {
+    label: string;
+    name: TextFieldName;
+    value: string;
+    onChange: (key: TextFieldName, value: string) => void;
+    options: { value: string; label: string }[];
+    icon?: ReactNode;
+};
+
+function SelectField({ label, name, value, onChange, options, icon }: SelectFieldProps) {
+    return (
+        <label className="block space-y-2.5">
+            <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">{label}</span>
+            <div className="relative group">
+                {icon && <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--student-muted)]/50 transition-colors group-focus-within:text-[var(--student-accent-strong)] z-10">{icon}</div>}
+                <select 
+                    value={value}
+                    onChange={(e) => onChange(name, e.target.value)}
+                    className={`w-full appearance-none rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-10 text-sm font-bold text-[var(--student-text)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 focus:ring-[var(--student-accent-soft)]/70 transition-all shadow-inner cursor-pointer`}
+                >
+                    {options.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                </select>
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--student-muted)]/50">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
             </div>
         </label>
     );

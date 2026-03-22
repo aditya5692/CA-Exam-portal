@@ -1,9 +1,5 @@
-import TeacherPYQManagement from "@/components/teacher/pyq-management";
+import { redirect } from "next/navigation";
 
-export default function TeacherPastYearQuestionsPage() {
-    return (
-        <div className="p-6 max-w-[1280px] mx-auto space-y-6 animate-in fade-in duration-500">
-            <TeacherPYQManagement />
-        </div>
-    );
+export default function TeacherPastYearQuestionsRedirect() {
+    redirect("/teacher/free-resources?type=PYQ");
 }

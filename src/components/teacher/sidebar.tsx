@@ -9,6 +9,7 @@ import {
     CaretLeft,
     CaretRight,
     ChartPieSlice,
+    CurrencyInr,
     FileText,
     Files,
     Gear,
@@ -36,13 +37,19 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Test Series", href: "/teacher/test-series", icon: FileText },
     { label: "Question Bank", href: "/teacher/questions", icon: Books },
     { label: "Study Materials", href: "/teacher/materials", icon: Books },
-    { label: "Free Resources", href: "/teacher/free-resources", icon: Sparkle },
-    { label: "Past Year Questions", href: "/teacher/past-year-questions", icon: Files },
+    { label: "Resource Library", href: "/teacher/free-resources", icon: Sparkle },
     { label: "My Batches", href: "/teacher/batches", icon: GraduationCap },
     { label: "Updates", href: "/teacher/updates", icon: BellSimple },
     { label: "Students", href: "/teacher/students", icon: Users },
     { label: "Analytics", href: "/teacher/analytics", icon: ChartPieSlice },
     { label: "My Plan", href: "/teacher/plan", icon: Sparkle },
+];
+
+const ADMIN_NAV_ITEMS: NavItem[] = [
+    { label: "User Management", href: "/admin/dashboard", icon: Users },
+    { label: "Control Center", href: "/admin/control-center", icon: IdentificationBadge },
+    { label: "Global Marketplace", href: "/admin/past-year-questions", icon: Books },
+    { label: "Subscriptions", href: "/teacher/subscriptions", icon: CurrencyInr },
 ];
 
 function SidebarNavItem({
@@ -95,6 +102,7 @@ function UserProfile({
     setIsProfileOpen: (open: boolean) => void;
     handleLogout: () => void;
     showAdminLink: boolean;
+    isSuperAdmin: boolean;
 }) {
     return (
         <div className="mt-auto border-t border-[var(--student-border)] p-3">
@@ -121,7 +129,9 @@ function UserProfile({
                         <div className="flex flex-1 items-center justify-between overflow-hidden text-left">
                             <div>
                                 <div className="truncate text-xs font-bold text-[var(--student-text)]">My Account</div>
-                                <div className="text-[10px] font-medium uppercase tracking-tighter text-[var(--student-muted)]">Faculty</div>
+                                <div className="text-[10px] font-medium uppercase tracking-tighter text-[var(--student-muted)]">
+                                    {showAdminLink ? "Super Admin" : "Faculty"}
+                                </div>
                             </div>
                             <CaretDown size={12} weight="bold" className={cn("text-[var(--student-muted)] transition-transform", isProfileOpen && "rotate-180")} />
                         </div>
@@ -163,11 +173,13 @@ function UserProfile({
 export function TeacherSidebar({
     showAdminLink = false,
     isOpen,
-    onClose
+    onClose,
+    isSuperAdmin
 }: {
     showAdminLink?: boolean;
     isOpen?: boolean;
     onClose?: () => void;
+    isSuperAdmin?: boolean;
 }) {
     const pathname = usePathname();
     const router = useRouter();
@@ -248,6 +260,26 @@ export function TeacherSidebar({
                         isCollapsed={isCollapsed}
                     />
                 ))}
+
+                {isSuperAdmin && (
+                    <div className="mt-8 space-y-2">
+                        {!isCollapsed && (
+                            <div className="px-4 py-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted-strong)]">
+                                    Admin Center
+                                </p>
+                            </div>
+                        )}
+                        {ADMIN_NAV_ITEMS.map((item) => (
+                            <SidebarNavItem
+                                key={item.href}
+                                item={item}
+                                isActive={pathname === item.href}
+                                isCollapsed={isCollapsed}
+                            />
+                        ))}
+                    </div>
+                )}
             </nav>
 
             <UserProfile
@@ -256,6 +288,7 @@ export function TeacherSidebar({
                 setIsProfileOpen={setIsProfileOpen}
                 handleLogout={handleLogout}
                 showAdminLink={showAdminLink}
+                isSuperAdmin={isSuperAdmin || false}
             />
         </aside>
     );

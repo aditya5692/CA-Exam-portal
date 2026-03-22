@@ -6,12 +6,13 @@ import { clampNumber,withSerializableTransaction } from "./action-utils";
 
 export type SubmittedExamAnswerInput = {
     questionId: string;
-    selectedOptionId: string;
+    selectedOptionId: string | null;
     timeSpent: number;
 };
 
-type StartAttemptOptions = {
+export type StartAttemptOptions = {
     enforceVisibility?: boolean;
+    mode?: "MOCK" | "PRACTICE";
 };
 
 export type ExamDetailsRecord = Prisma.ExamGetPayload<{
@@ -62,8 +63,8 @@ export type AttemptResultsRecord = Prisma.ExamAttemptGetPayload<{
     };
 }>;
 
-function normalizeId(value: string) {
-    return value.trim();
+function normalizeId(value: string | null | undefined) {
+    return value?.trim() || "";
 }
 
 export function calculateExamAttemptDeadline(startTime: Date, durationMinutes: number) {
@@ -82,10 +83,10 @@ export function normalizeSubmittedAnswers(answers: SubmittedExamAnswerInput[]) {
     const dedupedAnswers = new Map<string, SubmittedExamAnswerInput>();
 
     for (const answer of answers) {
-        const questionId = normalizeId(answer.questionId);
-        const selectedOptionId = normalizeId(answer.selectedOptionId);
+        const questionId = answer.questionId?.trim() || "";
+        const selectedOptionId = (answer.selectedOptionId && answer.selectedOptionId.trim()) ? answer.selectedOptionId.trim() : null;
 
-        if (!questionId || !selectedOptionId) {
+        if (!questionId) {
             continue;
         }
 
@@ -407,6 +408,12 @@ export async function startExamAttemptRecord(
             if (currentAttempt.status === "STARTED") {
                 return tx.examAttempt.findUniqueOrThrow({
                     where: { id: currentAttempt.id },
+                    include: {
+                        answers: true,
+                        exam: {
+                            select: { duration: true }
+                        }
+                    }
                 });
             }
         }
@@ -417,8 +424,91 @@ export async function startExamAttemptRecord(
                 studentId: normalizedStudentId,
                 status: "STARTED",
                 startTime: new Date(),
+                attemptMode: options.mode ?? "MOCK",
             },
+            include: {
+                answers: true,
+                exam: {
+                    select: { duration: true }
+                }
+            }
         });
+    });
+}
+
+/**
+ * Saves a single answer or multiple answers incrementally during an active exam.
+ * Does NOT calculate score or finalize the attempt.
+ */
+export async function saveExamProgressRecord(
+    attemptId: string,
+    rawAnswers: SubmittedExamAnswerInput[],
+): Promise<void> {
+    const normalizedAttemptId = normalizeId(attemptId);
+    if (!normalizedAttemptId) return;
+
+    const answers = normalizeSubmittedAnswers(rawAnswers);
+    if (answers.length === 0) return;
+
+    await withSerializableTransaction(async (tx) => {
+        const attempt = await tx.examAttempt.findUnique({
+            where: { id: normalizedAttemptId },
+            include: {
+                exam: { select: { duration: true } }
+            }
+        });
+
+        if (!attempt || attempt.status !== "STARTED") {
+            throw new Error("Cannot save progress for an inactive attempt.");
+        }
+
+        if (isExamAttemptExpired(attempt.startTime, attempt.exam.duration)) {
+             await expireStartedAttemptIfNeeded(tx, attempt);
+             throw new Error("This attempt has expired.");
+        }
+
+        for (const answer of answers) {
+             const examQuestion = await tx.examQuestion.findUnique({
+                where: {
+                    examId_questionId: {
+                        examId: attempt.examId,
+                        questionId: answer.questionId,
+                    },
+                },
+                include: {
+                    question: { include: { options: true } }
+                }
+            });
+
+            if (!examQuestion) continue;
+
+            const selectedOption = examQuestion.question.options.find(
+                (o) => o.id === answer.selectedOptionId
+            );
+            const selectedOptionId = selectedOption?.id ?? null;
+            const isCorrect = selectedOption?.isCorrect ?? false;
+
+            await tx.studentAnswer.upsert({
+                where: {
+                    attemptId_questionId: {
+                        attemptId: normalizedAttemptId,
+                        questionId: answer.questionId,
+                    },
+                },
+                update: {
+                    selectedOptionId,
+                    isCorrect,
+                    timeSpent: answer.timeSpent,
+                },
+                create: {
+                    attemptId: normalizedAttemptId,
+                    questionId: answer.questionId,
+                    selectedOptionId,
+                    isCorrect,
+                    timeSpent: answer.timeSpent,
+                },
+            });
+        }
     });
 }
 
@@ -473,6 +563,10 @@ export async function submitExamAttemptRecord(
             throw new Error("This attempt is no longer active.");
         }
 
+        const submittedAt = new Date();
+        const deadline = calculateExamAttemptDeadline(attempt.startTime, attempt.exam.duration);
+        const isActuallyLate = submittedAt.getTime() > deadline.getTime() + 5000; // 5s grace for network
+
         const answers = normalizeSubmittedAnswers(rawAnswers);
         const questionMap = new Map(
             attempt.exam.questions.map((examQuestion) => [examQuestion.questionId, examQuestion]),
@@ -481,17 +575,19 @@ export async function submitExamAttemptRecord(
 
         for (const answer of answers) {
             const examQuestion = questionMap.get(answer.questionId);
-            if (!examQuestion) {
-                continue;
-            }
+            if (!examQuestion) continue;
 
+            // If late, we still save the answers so they are not lost, but we don't count them for score
+            // unless they were already saved correctly before the deadline (which we can't easily tell here
+            // without individual answer timestamps, but we can at least block new late answers).
+            
             const selectedOption = examQuestion.question.options.find(
                 (option) => option.id === answer.selectedOptionId,
             );
             const selectedOptionId = selectedOption?.id ?? null;
             const isCorrect = selectedOption?.isCorrect ?? false;
 
-            if (isCorrect) {
+            if (isCorrect && !isActuallyLate) {
                 totalScore += examQuestion.marks;
             }
 
@@ -517,19 +613,12 @@ export async function submitExamAttemptRecord(
             });
         }
 
-        const submittedAt = new Date();
-        const effectiveEndTime = isExamAttemptExpired(
-            attempt.startTime,
-            attempt.exam.duration,
-            submittedAt,
-        )
-            ? calculateExamAttemptDeadline(attempt.startTime, attempt.exam.duration)
-            : submittedAt;
+        const effectiveEndTime = isActuallyLate ? deadline : submittedAt;
 
         return tx.examAttempt.update({
             where: { id: normalizedAttemptId },
             data: {
-                status: "SUBMITTED",
+                status: isActuallyLate ? "EXPIRED" : "SUBMITTED",
                 endTime: effectiveEndTime,
                 score: totalScore,
             },

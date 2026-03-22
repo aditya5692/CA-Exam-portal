@@ -14,6 +14,7 @@ const testFiles = [
   resolve("tests/backend/prisma-runtime.test.ts"),
   resolve("tests/backend/resource-intelligence.test.ts"),
   resolve("tests/backend/storage-utils.test.ts"),
+  resolve("tests/backend/student-level.test.ts"),
   resolve("tests/backend/study-intelligence.test.ts"),
 ];
 

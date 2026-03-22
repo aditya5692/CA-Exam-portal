@@ -1,10 +1,11 @@
 "use client";
 
-import { Bell, List, MagnifyingGlass, Question } from "@phosphor-icons/react";
+import { List, MagnifyingGlass } from "@phosphor-icons/react";
 import Link from "next/link";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { StudentSidebar } from "../sidebar";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 interface StudentLayoutClientProps {
     children: ReactNode;
@@ -18,15 +19,35 @@ interface StudentLayoutClientProps {
 
 export function StudentLayoutClient({ children, session, initials }: StudentLayoutClientProps) {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [whiteBackground, setWhiteBackground] = useState(false);
+
+    // Persist preference
+    useEffect(() => {
+        const saved = localStorage.getItem("student-white-bg");
+        if (saved === "true") setWhiteBackground(true);
+    }, []);
+
+    const toggleBackground = () => {
+        setWhiteBackground(prev => {
+            const next = !prev;
+            localStorage.setItem("student-white-bg", String(next));
+            return next;
+        });
+    };
 
     return (
-        <div className="student-theme student-shell flex h-screen overflow-hidden font-sans relative text-[var(--student-text)]">
-            {/* Ambient Background Blobs */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[-10%] left-[-10%] h-[42%] w-[42%] rounded-full bg-[rgba(242,227,192,0.44)] blur-[120px] opacity-70" />
-                <div className="absolute right-[-8%] top-[16%] h-[34%] w-[34%] rounded-full bg-[rgba(220,235,230,0.5)] blur-[105px] opacity-70" />
-                <div className="absolute bottom-[-12%] left-[22%] h-[38%] w-[38%] rounded-full bg-[rgba(223,214,198,0.44)] blur-[120px] opacity-70" />
-            </div>
+        <div className={cn(
+            "student-theme student-shell flex h-screen overflow-hidden font-sans relative text-[var(--student-text)]",
+            whiteBackground && "bg-white"
+        )}>
+            {/* Ambient Background Blobs - hidden when white bg is active */}
+            {!whiteBackground && (
+                <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+                    <div className="absolute top-[-10%] left-[-10%] h-[42%] w-[42%] rounded-full bg-[rgba(242,227,192,0.44)] blur-[120px] opacity-70" />
+                    <div className="absolute right-[-8%] top-[16%] h-[34%] w-[34%] rounded-full bg-[rgba(220,235,230,0.5)] blur-[105px] opacity-70" />
+                    <div className="absolute bottom-[-12%] left-[22%] h-[38%] w-[38%] rounded-full bg-[rgba(223,214,198,0.44)] blur-[120px] opacity-70" />
+                </div>
+            )}
 
             {/* Backdrop for mobile */}
             {isMobileSidebarOpen && (
@@ -49,7 +70,10 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
 
             <main className="flex-1 flex flex-col h-screen overflow-y-auto">
                 {/* Global Top Navigation */}
-                <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-[var(--student-border)] bg-[rgba(255,250,242,0.8)] px-4 shadow-[0_12px_30px_rgba(55,48,38,0.06)] backdrop-blur-xl transition-all md:h-20 md:px-8">
+                <header 
+                    className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-[var(--student-border)] bg-[rgba(255,250,242,0.8)] px-4 shadow-[0_12px_30px_rgba(55,48,38,0.06)] backdrop-blur-xl transition-all md:px-8"
+                    style={{ height: "var(--tuner-header-height, 80px)", display: "var(--tuner-header-display, flex)" }}
+                >
                     <div className="flex items-center gap-4 flex-1">
                         {/* Mobile Toggle */}
                         <button 
@@ -73,12 +97,21 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                     <div className="flex items-center gap-3 md:gap-8">
                         {/* Action Suite */}
                         <div className="flex items-center gap-1 md:gap-2">
-                            <button className="group relative rounded-xl p-2 text-[var(--student-muted)] transition-all hover:bg-white/80 hover:text-[var(--student-accent-strong)] md:p-2.5">
-                                <Bell size={22} weight="bold" />
-                                <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-[rgba(255,250,242,0.95)] bg-[var(--student-support)]"></span>
-                            </button>
-                            <button className="hidden rounded-xl p-2.5 text-[var(--student-muted)] transition-all hover:bg-white/80 hover:text-[var(--student-accent-strong)] sm:block">
-                                <Question size={22} weight="bold" />
+                            <NotificationBell />
+                            {/* White Background Toggle */}
+                            <button
+                                onClick={toggleBackground}
+                                title={whiteBackground ? "Switch to warm background" : "Switch to white background"}
+                                className={cn(
+                                    "hidden rounded-xl p-2.5 transition-all sm:block",
+                                    whiteBackground
+                                        ? "bg-[var(--student-accent-strong)] text-white shadow-md"
+                                        : "text-[var(--student-muted)] hover:bg-white/80 hover:text-[var(--student-accent-strong)]"
+                                )}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M221.67,90.91,141.41,25.18a20,20,0,0,0-26.82,0L34.33,90.91A19.93,19.93,0,0,0,28,105.47V208a12,12,0,0,0,12,12H104a12,12,0,0,0,12-12V160h24v48a12,12,0,0,0,12,12h64a12,12,0,0,0,12-12V105.47A19.93,19.93,0,0,0,221.67,90.91ZM216,208H152V160a12,12,0,0,0-12-12H116a12,12,0,0,0-12,12v48H52V105.47l76-65.78,88,76Z"/>
+                                </svg>
                             </button>
                         </div>
 
@@ -109,7 +142,9 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                 </header>
 
                 {/* Page Content */}
-                <div className="mx-auto w-full max-w-[1600px] animate-in px-4 py-6 font-outfit fade-in slide-in-from-bottom-2 duration-700 sm:px-6 md:px-8 md:py-10">
+                <div 
+                    className="mx-auto w-full max-w-[1600px] animate-in px-4 font-outfit fade-in slide-in-from-bottom-2 duration-700 sm:px-6 md:px-8 tuner-content-container"
+                >
                     {children}
                 </div>
             </main>

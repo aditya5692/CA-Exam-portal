@@ -80,10 +80,10 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
 
         // 3. Exam attempts history
         const rawAttempts = await prisma.examAttempt.findMany({
-            where: { studentId: user.id },
+            where: { studentId: user.id, attemptMode: "MOCK" },
             include: {
                 exam: {
-                    select: { title: true, category: true, duration: true, totalMarks: true },
+                    select: { title: true, category: true, subject: true, duration: true, totalMarks: true },
                 },
                 answers: {
                     include: {
@@ -137,7 +137,7 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
                 id: a.id,
                 examId: a.examId,
                 seriesTitle: a.exam.title,
-                subject: a.exam.category,
+                subject: a.exam.subject || a.exam.category,
                 category: a.exam.category,
                 attemptedAt: a.startTime.toISOString().split("T")[0],
                 durationUsedMinutes: Math.max(1, durationUsedMinutes),
@@ -517,8 +517,7 @@ export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
         const examsRaw = await prisma.exam.findMany({
             where: { 
                 category: {
-                    contains: resolvedCategory,
-                    mode: 'insensitive'
+                    contains: resolvedCategory
                 },
                 status: "PUBLISHED"
             },

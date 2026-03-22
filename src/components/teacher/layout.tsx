@@ -12,7 +12,8 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
 
     const sessionData = {
         fullName: session.fullName,
-        role: session.role
+        role: session.role,
+        isSuperAdmin: session.isSuperAdmin ?? false
     };
 
     return (

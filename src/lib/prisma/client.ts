@@ -1,18 +1,19 @@
+// Cache buster: 2026-03-23-subscription-v1
 import "server-only";
 
 import { createRuntimePrismaClient } from "./runtime";
 import type { PrismaClient } from "@prisma/client";
 
 declare global {
-    var modernCaPortalPrisma: PrismaClient | undefined
+    var modernCaPortalPrismaV2: PrismaClient | undefined
 }
 
 function getPrismaClient() {
-    if (!globalThis.modernCaPortalPrisma) {
-        globalThis.modernCaPortalPrisma = createRuntimePrismaClient().prisma;
+    if (!globalThis.modernCaPortalPrismaV2) {
+        globalThis.modernCaPortalPrismaV2 = createRuntimePrismaClient().prisma;
     }
 
-    return globalThis.modernCaPortalPrisma;
+    return globalThis.modernCaPortalPrismaV2;
 }
 
 const prisma = new Proxy({} as PrismaClient, {
@@ -25,3 +26,4 @@ const prisma = new Proxy({} as PrismaClient, {
 });
 
 export default prisma;
+ 

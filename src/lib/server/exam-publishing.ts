@@ -1,6 +1,7 @@
 import "server-only";
 
 import prisma from "@/lib/prisma/client";
+import { getStudentCACategory,type CaLevelKey } from "@/lib/student-level";
 import type {
   BatchOption,
   PublishExamInput,
@@ -8,6 +9,7 @@ import type {
   PublishTarget,
   StudentVisibleExam,
 } from "@/types/publish-exam";
+import type { Prisma } from "@prisma/client";
 import { clampNumber,withSerializableTransaction } from "./action-utils";
 import { type ManagedActor,isAdminUser } from "./educator-management";
 import { expireStudentStartedAttempts } from "./exam-workflow";
@@ -252,28 +254,36 @@ export async function listTeacherBatchOptions(actor: ManagedActor): Promise<Batc
     }));
 }
 
-export async function listStudentVisibleExams(
+export async function buildStudentVisibleExamWhere(
     studentId: string,
-    caLevel: "foundation" | "ipc" | "final",
-): Promise<StudentVisibleExam[]> {
+    caLevel: CaLevelKey,
+): Promise<Prisma.ExamWhereInput> {
     await expireStudentStartedAttempts(studentId);
 
-    const category = CA_LEVEL_CATEGORY[caLevel];
     const enrollments = await prisma.enrollment.findMany({
         where: { studentId },
         select: { batchId: true },
     });
     const enrolledBatchIds = enrollments.map((enrollment) => enrollment.batchId);
 
+    return {
+        category: getStudentCACategory(caLevel),
+        status: "PUBLISHED",
+        OR: [
+            { batchId: null },
+            ...(enrolledBatchIds.length > 0 ? [{ batchId: { in: enrolledBatchIds } }] : []),
+        ],
+    };
+}
+
+export async function listStudentVisibleExams(
+    studentId: string,
+    caLevel: CaLevelKey,
+): Promise<StudentVisibleExam[]> {
+    const examWhere = await buildStudentVisibleExamWhere(studentId, caLevel);
+
     const exams = await prisma.exam.findMany({
-        where: {
-            category,
-            status: "PUBLISHED",
-            OR: [
-                { batchId: null },
-                { batchId: { in: enrolledBatchIds } },
-            ],
-        },
+        where: examWhere,
         include: {
             teacher: { select: { fullName: true, email: true } },
             batch: { select: { name: true } },

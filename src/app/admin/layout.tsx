@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export default async function AdminLayout({ children }: { children: ReactNode }) {
     const admin = await getSessionPayload();
 
-    if (!admin || admin.role !== "ADMIN") {
+    if (!admin || (admin.role !== "ADMIN" && !admin.isSuperAdmin)) {
         redirect("/auth/login");
     }
 

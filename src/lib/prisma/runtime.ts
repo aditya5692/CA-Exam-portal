@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "@prisma/client";
 import { Pool,type PoolConfig } from "pg";
 
@@ -181,9 +182,11 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
     const config = readDatabaseRuntimeConfig(env);
 
     if (config.protocol === "file:") {
-        // For SQLite, the native Prisma engine is usually sufficient and more stable for local dev.
-        // The local-dev.ps1 script handles the provider swap in schema.prisma.
-        const prisma = new PrismaClient();
+        // Use the better-sqlite3 adapter for Prisma 7 compatibility
+        const adapter = new PrismaBetterSqlite3({
+            url: config.databaseUrl.replace("file:", ""),
+        });
+        const prisma = new PrismaClient({ adapter });
         return { prisma, config };
     }
 

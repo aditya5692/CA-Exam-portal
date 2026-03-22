@@ -15,11 +15,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-type LoginRole = "student" | "teacher" | "admin";
+type LoginRole = "student" | "teacher";
 
 const DEMO_ACCOUNT_CARDS = [
-    { label: "admin", registrationNumber: "ADMIN001", email: "admin@demo.local", role: "admin" as LoginRole },
-    { label: "teacher1", registrationNumber: "TCHR001", email: "teacher1@demo.local", role: "teacher" as LoginRole },
+    { label: "teacher1 (Super Admin)", registrationNumber: "TCHR001", email: "teacher1@demo.local", role: "teacher" as LoginRole },
     { label: "teacher2", registrationNumber: "TCHR002", email: "teacher2@demo.local", role: "teacher" as LoginRole },
     { label: "student1", registrationNumber: "STUD001", email: "student1@demo.local", role: "student" as LoginRole },
     { label: "student2", registrationNumber: "STUD002", email: "student2@demo.local", role: "student" as LoginRole },
@@ -35,11 +34,6 @@ const ROLE_META: Record<LoginRole, { title: string; description: string; icon: t
         title: "Teacher workspace",
         description: "Manage batches, publish materials, monitor attempts, and intervene where students are actually slipping.",
         icon: ChalkboardTeacher
-    },
-    admin: {
-        title: "Admin workspace",
-        description: "Oversee platform health, control content, and coordinate the wider exam ecosystem from a calmer dashboard.",
-        icon: ShieldCheck
     }
 };
 
@@ -66,7 +60,7 @@ export default function LoginPage() {
         const result = await login({
             identifier,
             password,
-            role: role.toUpperCase() as "ADMIN" | "TEACHER" | "STUDENT",
+            role: role.toUpperCase() as "TEACHER" | "STUDENT",
         });
 
         setIsSubmitting(false);
@@ -83,7 +77,7 @@ export default function LoginPage() {
         const redirectTo =
             result.data?.redirectTo ??
             nextPath ??
-            (role === "admin" ? "/admin/dashboard" : role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
+            (role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
 
         router.push(redirectTo);
         router.refresh();
@@ -147,7 +141,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="mt-4 hidden space-y-4 sm:block">
-                            {(["student", "teacher", "admin"] as LoginRole[]).map((itemRole) => {
+                            {(["student", "teacher"] as LoginRole[]).map((itemRole) => {
                                 const meta = ROLE_META[itemRole];
                                 const Icon = meta.icon;
                                 const isActive = itemRole === role;
@@ -195,11 +189,10 @@ export default function LoginPage() {
                     </div>
 
                     <div className="mb-6 rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] p-2 sm:mb-8 sm:rounded-[24px]">
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             {([
                                 { value: "student", label: "Student", icon: IdentificationBadge },
-                                { value: "teacher", label: "Teacher", icon: ChalkboardTeacher },
-                                { value: "admin", label: "Admin", icon: ShieldCheck }
+                                { value: "teacher", label: "Teacher", icon: ChalkboardTeacher }
                             ] as const).map((item) => {
                                 const Icon = item.icon;
                                 const isActive = role === item.value;
@@ -246,7 +239,7 @@ export default function LoginPage() {
                                     type="text"
                                     value={identifier}
                                     onChange={(event) => setIdentifier(event.target.value)}
-                                    placeholder={role === "admin" ? "ADMIN001 or admin@demo.local" : "TCHR001 / STUD001 or email"}
+                                    placeholder="TCHR001 / STUD001 or email"
                                     className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
                                     required
                                 />

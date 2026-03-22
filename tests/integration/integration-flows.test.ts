@@ -162,13 +162,16 @@ test("publishing a batch exam controls visibility and attempt lifecycle", async 
 
     const visibleToStudent = await listStudentVisibleExams(student.id, "ipc");
     const visibleToOutsider = await listStudentVisibleExams(outsider.id, "ipc");
+    const publishedExamId = published.examIds[0];
+
+    assert.ok(publishedExamId);
 
     assert.equal(visibleToStudent.length, 1);
-    assert.equal(visibleToStudent[0].id, published.examId);
+    assert.equal(visibleToStudent[0].id, publishedExamId);
     assert.equal(visibleToOutsider.length, 0);
 
     const exam = await prisma.exam.findUniqueOrThrow({
-        where: { id: published.examId },
+        where: { id: publishedExamId },
         include: {
             questions: {
                 orderBy: { order: "asc" },
@@ -251,9 +254,12 @@ test("learning progression remains idempotent for the same submitted attempt", a
             },
         ],
     });
+    const publishedExamId = published.examIds[0];
+
+    assert.ok(publishedExamId);
 
     const exam = await prisma.exam.findUniqueOrThrow({
-        where: { id: published.examId },
+        where: { id: publishedExamId },
         include: {
             questions: {
                 orderBy: { order: "asc" },

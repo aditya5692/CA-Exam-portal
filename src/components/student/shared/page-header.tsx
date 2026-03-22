@@ -30,7 +30,9 @@ export function StudentPageHeader({
     const sideContent = aside ?? milestone;
 
     return (
-        <div className={cn("flex flex-col gap-6 md:flex-row md:items-end md:justify-between", className)}>
+        <div 
+            className={cn("flex flex-col gap-6 md:flex-row md:items-end md:justify-between transition-all duration-300 tuner-heading-container", className)}
+        >
             <div className="space-y-4">
                 <div className="student-chip inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.18em]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--student-accent)]" />

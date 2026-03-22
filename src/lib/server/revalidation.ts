@@ -29,6 +29,8 @@ export function revalidatePastYearQuestionSurfaces() {
 export function revalidateExamSurfaces(attemptId?: string) {
     revalidatePath("/teacher/test-series");
     revalidatePath("/student/exams");
+    revalidatePath("/student/dashboard");
+    revalidatePath("/", "layout");
 
     if (attemptId) {
         revalidatePath(`/student/results/${attemptId}`);

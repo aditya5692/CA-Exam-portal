@@ -4,10 +4,11 @@ import { getTeacherBatchOptions,publishExamFromQuestions } from "@/actions/publi
 import {
   clearBulkUploadSession,
   readBulkUploadSession,
-  readStoredQuestionBank,
   TEMPLATE_COLUMNS,
-  writeStoredQuestionBank,
+  type UploadReport,
+  type Question,
 } from "@/lib/question-bank-upload";
+import { saveQuestionsToVault } from "@/actions/mcq-vault-actions";
 import { cn } from "@/lib/utils";
 import type { BatchOption } from "@/types/publish-exam";
 import {
@@ -42,12 +43,15 @@ const CA_LEVELS = [
     { value: "final", label: "CA Final" },
 ] as const;
 
+import { CA_FINAL_CONTENT, CA_FOUNDATION_CONTENT, CA_INTER_CONTENT } from "@/lib/constants/chapters";
+
 export function QuestionBulkUploadReview() {
     const router = useRouter();
+    const [report, setReport] = useState<UploadReport | null>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
     const [stage, setStage] = useState<Stage>("processing");
     const [isSaving, setIsSaving] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
-    const report = readBulkUploadSession();
 
     // Publish form state
     const [audienceMode, setAudienceMode] = useState<AudienceMode>("all");
@@ -67,17 +71,38 @@ export function QuestionBulkUploadReview() {
     
     const [publishResult, setPublishResult] = useState<{ success: boolean; examTitles?: string[]; targetLabel?: string } | null>(null);
 
+    // Get available subjects based on selected CA level
+    const getAvailableSubjects = () => {
+        if (caLevel === "foundation") return CA_FOUNDATION_CONTENT.subjects;
+        if (caLevel === "ipc") return CA_INTER_CONTENT.subjects;
+        return CA_FINAL_CONTENT.subjects;
+    };
+
+    const availableSubjects = getAvailableSubjects();
+
+    // Reset subject when CA level changes if the current subject is not in the new level
     useEffect(() => {
-        if (!report) {
-            router.replace("/teacher/questions");
+        const subs = getAvailableSubjects();
+        if (!subs.some(s => s.name === subject)) {
+            setSubject("");
+        }
+    }, [caLevel]);
+
+    useEffect(() => {
+        const data = readBulkUploadSession();
+        if (!data) {
+            setIsLoaded(true);
             return;
         }
-        const base = report.fileName.replace(/\.(xlsx?|csv)$/i, "").replace(/[-_]+/g, " ").trim();
+        
+        setReport(data);
+        setIsLoaded(true);
+
+        const base = data.fileName.replace(/\.(xlsx?|csv)$/i, "").replace(/[-_]+/g, " ").trim();
         if (base) setSeriesTitle(base);
 
         const timer = window.setTimeout(() => setStage("ready"), 1200);
         return () => window.clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -88,37 +113,61 @@ export function QuestionBulkUploadReview() {
         });
     }, [stage, batchesLoaded]);
 
-    const handleSaveToBank = () => {
+    const handleSaveToBank = async () => {
         if (!report || report.questions.length === 0) return;
         setIsSaving(true);
-        const existing = readStoredQuestionBank();
-        writeStoredQuestionBank([...report.questions, ...existing]);
-        clearBulkUploadSession();
-        router.push("/teacher/questions");
+        try {
+            const questionsToSave = report.questions.map((q: Question) => ({
+                prompt: q.prompt,
+                options: q.options,
+                correct: q.correct,
+                subject: q.subject || subject, // Use selected subject as fallback
+                topic: q.topic,
+                difficulty: q.difficulty,
+                explanation: q.explanation,
+            }));
+
+            const res = await saveQuestionsToVault(questionsToSave);
+            if (res.success) {
+                clearBulkUploadSession();
+                router.push("/teacher/questions");
+            } else {
+                alert(`Failed to archive: ${res.message}`);
+            }
+        } catch (error) {
+            console.error("Archive to vault error:", error);
+            alert("An unexpected error occurred while archiving.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handlePublish = async () => {
         if (!report || report.questions.length === 0) return;
-        if (!seriesTitle.trim()) { alert("Please enter a series title."); return; }
-        if (!subject.trim()) { alert("Please enter the subject."); return; }
+        if (!seriesTitle.trim()) { alert("Please enter a title for this test series."); return; }
+        if (!subject.trim()) { alert("Please select a subject."); return; }
         if (audienceMode === "batch" && !selectedBatchId) { alert("Please select a batch."); return; }
+
+        // Find the dbMatch for the selected subject display name
+        const selectedSubObj = availableSubjects.find(s => s.name === subject);
+        const subjectToPublish = selectedSubObj ? selectedSubObj.dbMatch : subject;
 
         setIsPublishing(true);
         try {
             const res = await publishExamFromQuestions({
                 title: seriesTitle.trim(),
                 caLevel,
-                subject: subject.trim(),
+                subject: subjectToPublish,
                 durationMinutes: duration,
                 examType,
                 target: audienceMode === "batch"
                     ? { kind: "batch", batchId: selectedBatchId }
                     : { kind: "all" },
-                questions: report.questions.map((q) => ({
+                questions: report.questions.map((q: Question) => ({
                     prompt: q.prompt,
                     options: q.options,
                     correct: q.correct,
-                    subject: q.subject,
+                    subject: q.subject || subjectToPublish,
                     topic: q.topic,
                     difficulty: q.difficulty,
                 })),
@@ -140,6 +189,14 @@ export function QuestionBulkUploadReview() {
             setIsPublishing(false);
         }
     };
+
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center min-h-[500px]">
+                <SpinnerGap size={32} className="animate-spin text-slate-300" />
+            </div>
+        );
+    }
 
     if (!report) {
         return (
@@ -222,11 +279,11 @@ export function QuestionBulkUploadReview() {
                 <div className="space-y-4">
                     <div className="flex items-center gap-2.5 mb-2">
                         <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Validation Protocol</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Review & Publish</span>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tighter text-slate-900">Review & Deploy</h1>
+                    <h1 className="text-3xl font-bold tracking-tighter text-slate-900">Review Questions</h1>
                     <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
-                        Verify the integrity of your bulk question upload. You can archive these in your <strong>MCQ Vault</strong> or deploy them as a live assessment series.
+                        Verify your uploaded questions and publish them to your students.
                     </p>
                 </div>
                 <Link
@@ -250,7 +307,7 @@ export function QuestionBulkUploadReview() {
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900 truncate max-w-[280px]">{report.fileName}</h3>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                                    {stage === "processing" ? "Analyzing data packets..." : "Validation Checksum Passed"}
+                                    {stage === "processing" ? "Analyzing file..." : "Questions Ready"}
                                 </p>
                             </div>
                         </div>
@@ -284,10 +341,10 @@ export function QuestionBulkUploadReview() {
                             {report.errors.length > 0 && (
                                 <div className="rounded-[24px] border border-rose-100 bg-rose-50/30 p-6">
                                      <p className="text-[9px] font-black text-rose-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                         <WarningCircle size={14} weight="fill" /> Syntax Conflicts Detected
+                                         <WarningCircle size={14} weight="fill" /> Formatting Issues Detected
                                      </p>
                                      <div className="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
-                                        {report.errors.map((err, i) => (
+                                        {report.errors.map((err: string, i: number) => (
                                             <div key={i} className="text-[11px] font-medium text-rose-600 bg-white border border-rose-100/50 px-3 py-2 rounded-xl flex items-start gap-2">
                                                 <span className="opacity-40 font-black shrink-0">{i+1}</span>
                                                 {err}
@@ -319,7 +376,7 @@ export function QuestionBulkUploadReview() {
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Analysis Engine</h3>
-                                <p className="text-sm font-bold text-slate-400 max-w-xs leading-relaxed animate-pulse">Running semantic validation and mapping Excel indices to schema...</p>
+                                <p className="text-sm font-bold text-slate-400 max-w-xs leading-relaxed animate-pulse">Checking your questions for any formatting issues...</p>
                             </div>
                         </div>
                     ) : (
@@ -337,7 +394,7 @@ export function QuestionBulkUploadReview() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
                                 {/* Series title */}
                                 <div className="md:col-span-2 space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Engagement Identity</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Series Title</label>
                                     <input
                                         type="text"
                                         value={seriesTitle}
@@ -349,7 +406,7 @@ export function QuestionBulkUploadReview() {
 
                                 {/* CA Level */}
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Phase Tier</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">CA Level</label>
                                     <select
                                         value={caLevel}
                                         onChange={(e) => setCaLevel(e.target.value as typeof caLevel)}
@@ -363,19 +420,22 @@ export function QuestionBulkUploadReview() {
 
                                 {/* Subject */}
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Domain Classification</label>
-                                    <input
-                                        type="text"
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Subject</label>
+                                    <select
                                         value={subject}
                                         onChange={(e) => setSubject(e.target.value)}
-                                        placeholder="e.g. Advanced Auditing"
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold placeholder:text-slate-300"
-                                    />
+                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                    >
+                                        <option value="" disabled>Select Subject</option>
+                                        {availableSubjects.map((s) => (
+                                            <option key={s.name} value={s.name}>{s.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 
                                 {/* Exam Type */}
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Module Format</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Exam Category</label>
                                     <select 
                                         value={examType} 
                                         onChange={(e) => setExamType(e.target.value)}
@@ -413,8 +473,8 @@ export function QuestionBulkUploadReview() {
                                 <div className="md:col-span-2 space-y-6 pt-4 border-t border-slate-50">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Series Breakdown</label>
-                                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest px-1">Fragment large datasets into multiple tests</p>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Split into multiple tests</label>
+                                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest px-1">Automatically break a large file into smaller tests</p>
                                         </div>
                                         <button
                                             type="button"
@@ -435,7 +495,7 @@ export function QuestionBulkUploadReview() {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 flex justify-between">
-                                                    Module Capacity <span>{questionsPerTest} MCQs</span>
+                                                    Questions per test <span>{questionsPerTest} MCQs</span>
                                                 </label>
                                                 <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-2xl px-4 h-14">
                                                     <ListNumbers size={20} className="text-slate-400" />
@@ -448,7 +508,7 @@ export function QuestionBulkUploadReview() {
                                                 </div>
                                             </div>
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Distribution Logic</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Question Order</label>
                                                 <div className="flex p-1 bg-slate-50 border border-slate-100 rounded-2xl h-14">
                                                     <button
                                                         type="button"
@@ -458,7 +518,7 @@ export function QuestionBulkUploadReview() {
                                                             breakdownMode === "FIFO" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
                                                         )}
                                                     >
-                                                        <Selection size={14} weight="bold" /> FIFO
+                                                        <Selection size={14} weight="bold" /> Sequential
                                                     </button>
                                                     <button
                                                         type="button"
@@ -478,7 +538,7 @@ export function QuestionBulkUploadReview() {
 
                                 {/* Audience Mode */}
                                 <div className="md:col-span-2 space-y-4 pt-4 border-t border-slate-50">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Access Perimeter</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Who can access?</label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
                                             type="button"
@@ -490,8 +550,8 @@ export function QuestionBulkUploadReview() {
                                         >
                                             <Globe size={24} weight={audienceMode === "all" ? "fill" : "bold"} />
                                             <div>
-                                                <p className="font-bold text-sm tracking-tight leading-none">Global Broadcast</p>
-                                                <p className="text-[10px] font-bold mt-1.5 opacity-60 uppercase tracking-widest">Entire Level Access</p>
+                                                <p className="font-bold text-sm tracking-tight leading-none">All Students</p>
+                                                <p className="text-[10px] font-bold mt-1.5 opacity-60 uppercase tracking-widest">Available to everyone in this level</p>
                                             </div>
                                             {audienceMode === "all" && <Sparkle size={40} weight="fill" className="absolute -right-4 -top-4 opacity-10" />}
                                         </button>
@@ -505,8 +565,8 @@ export function QuestionBulkUploadReview() {
                                         >
                                             <Users size={24} weight={audienceMode === "batch" ? "fill" : "bold"} />
                                             <div>
-                                                <p className="font-bold text-sm tracking-tight leading-none">Segment Pulse</p>
-                                                <p className="text-[10px] font-bold mt-1.5 opacity-60 uppercase tracking-widest">Isolated Batch Only</p>
+                                                <p className="font-bold text-sm tracking-tight leading-none">Specific Batch</p>
+                                                <p className="text-[10px] font-bold mt-1.5 opacity-60 uppercase tracking-widest">Only for students in a selected batch</p>
                                             </div>
                                             {audienceMode === "batch" && <Sparkle size={40} weight="fill" className="absolute -right-4 -top-4 opacity-10" />}
                                         </button>
@@ -567,9 +627,9 @@ export function QuestionBulkUploadReview() {
                                     ) : (
                                         <CloudArrowUp size={20} weight="bold" className="group-hover:scale-110 transition-transform" />
                                     )}
-                                    {isPublishing ? "Synchronizing Datastores..." : `Deploy ${report.importedCount} Item Series`}
+                                    {isPublishing ? "Publishing Series..." : `Publish ${report.importedCount} Questions`}
                                 </button>
-                                <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-4 opacity-50">Authorized Assessment Deployment Protocol</p>
+                                <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-4 opacity-50">Secure Exam Publishing Protocol</p>
                             </div>
                         </div>
                     )}

@@ -41,8 +41,7 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
     { label: "Dashboard", href: "/student/dashboard", icon: House },
     { label: "Study Notes", href: "/student/materials", icon: Notebook },
-    { label: "Question Banks", href: "/student/past-year-questions", icon: Books },
-    { label: "Free Resources", href: "/student/free-resources", icon: Sparkle },
+    { label: "Resource Library", href: "/student/free-resources", icon: Sparkle },
     { label: "Mock Tests", href: "/student/exams", icon: SuitcaseSimple },
     { label: "Academy Updates", href: "/student/updates", icon: Megaphone },
 ];

@@ -24,6 +24,7 @@ type DemoAccountSeed = {
     timezone?: string;
     bio?: string;
     phone?: string;
+    isSuperAdmin?: boolean;
 };
 
 export const DEMO_LOGIN_PASSWORD = "demo123";
@@ -35,7 +36,8 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         email: "admin@demo.local",
         registrationNumber: "ADMIN001",
         department: "Administration",
-        role: "ADMIN",
+        role: "TEACHER",
+        isSuperAdmin: true,
         plan: "ENTERPRISE",
         storageLimit: 2147483647,
         designation: "Platform Administrator",
@@ -60,6 +62,7 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         timezone: "Asia/Kolkata",
         bio: "Handles taxation-focused CA batches and updates.",
         phone: "+91 90000 00011",
+        isSuperAdmin: true,
     },
     {
         key: "teacher2",
@@ -82,11 +85,11 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         fullName: "Aditya Sharma",
         email: "student1@demo.local",
         registrationNumber: "STUD001",
-        department: "CA Intermediate",
+        department: "CA Final",
         role: "STUDENT",
         plan: "ELITE",
         storageLimit: 536870912,
-        examTarget: "November 2026",
+        examTarget: "CA Final November 2026",
         preferredLanguage: "English",
         timezone: "Asia/Kolkata",
         bio: "Preparing for direct tax and accounting papers.",
@@ -97,11 +100,11 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         fullName: "Sneha Verma",
         email: "student2@demo.local",
         registrationNumber: "STUD002",
-        department: "CA Intermediate",
+        department: "CA Final",
         role: "STUDENT",
         plan: "PRO",
         storageLimit: 268435456,
-        examTarget: "May 2027",
+        examTarget: "CA Final May 2027",
         preferredLanguage: "English",
         timezone: "Asia/Kolkata",
         bio: "Focused on audit, law, and revision workflows.",
@@ -139,7 +142,7 @@ export function verifyPassword(password: string, storedHash: string | null | und
 }
 
 async function upsertDemoUser(seed: DemoAccountSeed) {
-  return prisma.user.upsert({
+  return (prisma.user as any).upsert({
     where: { registrationNumber: seed.registrationNumber },
     update: {
       fullName: seed.fullName,
@@ -156,6 +159,7 @@ async function upsertDemoUser(seed: DemoAccountSeed) {
       timezone: seed.timezone ?? null,
       bio: seed.bio ?? null,
       phone: seed.phone ?? null,
+      isSuperAdmin: seed.isSuperAdmin ?? false,
       passwordHash: createPasswordHash(DEMO_LOGIN_PASSWORD, seed.registrationNumber),
     },
     create: {
@@ -173,6 +177,7 @@ async function upsertDemoUser(seed: DemoAccountSeed) {
             timezone: seed.timezone ?? null,
             bio: seed.bio ?? null,
             phone: seed.phone ?? null,
+            isSuperAdmin: seed.isSuperAdmin ?? false,
             passwordHash: createPasswordHash(DEMO_LOGIN_PASSWORD, seed.registrationNumber),
         },
     });
@@ -256,3 +261,4 @@ export async function getDefaultDemoUser(role: AppRole) {
 export function generateTemporaryPassword() {
     return randomBytes(6).toString("base64url");
 }
+ 

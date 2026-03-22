@@ -8,6 +8,7 @@ export type Question = {
     difficulty?: string;
     type?: string;
     status?: string;
+    explanation?: string;
 };
 
 export type UploadReport = {
@@ -116,6 +117,7 @@ export const parseQuestionRows = (rows: Record<string, unknown>[], fileName: str
             difficulty: getCellValue(row, ["difficulty"]),
             type: getCellValue(row, ["examtype", "type"]) || "Practice",
             status: "Live",
+            explanation: getCellValue(row, ["explanation", "rationale", "feedback"]),
         });
     });
 
@@ -126,32 +128,6 @@ export const parseQuestionRows = (rows: Record<string, unknown>[], fileName: str
         errors,
         questions,
     };
-};
-
-export const readStoredQuestionBank = (): Question[] => {
-    if (typeof window === "undefined") {
-        return [];
-    }
-
-    const rawValue = window.localStorage.getItem(QUESTION_BANK_STORAGE_KEY);
-    if (!rawValue) {
-        return [];
-    }
-
-    try {
-        const parsed = JSON.parse(rawValue) as Question[];
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-};
-
-export const writeStoredQuestionBank = (questions: Question[]) => {
-    if (typeof window === "undefined") {
-        return;
-    }
-
-    window.localStorage.setItem(QUESTION_BANK_STORAGE_KEY, JSON.stringify(questions));
 };
 
 export const writeBulkUploadSession = (report: UploadReport) => {

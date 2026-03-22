@@ -80,6 +80,7 @@ export async function saveLearningProgressForExam(
                 examId: true,
                 status: true,
                 endTime: true,
+                attemptMode: true,
             },
         });
 
@@ -137,34 +138,37 @@ export async function saveLearningProgressForExam(
             };
         }
 
+        const isMock = attempt.attemptMode === "MOCK";
         const completedAt = attempt.endTime ?? new Date();
         const lastDate = profile?.lastAttemptAt;
         let newStreak = profile?.streak ?? 0;
 
-        if (lastDate) {
-            const completedMidnight = new Date(
-                completedAt.getFullYear(),
-                completedAt.getMonth(),
-                completedAt.getDate(),
-            ).getTime();
-            const lastMidnight = new Date(
-                lastDate.getFullYear(),
-                lastDate.getMonth(),
-                lastDate.getDate(),
-            ).getTime();
-            const dayDiff = Math.round((completedMidnight - lastMidnight) / 86_400_000);
+        if (isMock) {
+            if (lastDate) {
+                const completedMidnight = new Date(
+                    completedAt.getFullYear(),
+                    completedAt.getMonth(),
+                    completedAt.getDate(),
+                ).getTime();
+                const lastMidnight = new Date(
+                    lastDate.getFullYear(),
+                    lastDate.getMonth(),
+                    lastDate.getDate(),
+                ).getTime();
+                const dayDiff = Math.round((completedMidnight - lastMidnight) / 86_400_000);
 
-            if (dayDiff === 1) {
-                newStreak = (profile?.streak ?? 0) + 1;
-            } else if (dayDiff > 1) {
+                if (dayDiff === 1) {
+                    newStreak = (profile?.streak ?? 0) + 1;
+                } else if (dayDiff > 1) {
+                    newStreak = 1;
+                }
+            } else {
                 newStreak = 1;
             }
-        } else {
-            newStreak = 1;
         }
 
-        const xpGained = calcXP(correct, total, newStreak, avgTime);
-        if (newStreak >= 7) {
+        const xpGained = isMock ? calcXP(correct, total, newStreak, avgTime) : 0;
+        if (isMock && newStreak >= 7) {
             baseBadges.push("WEEK_STREAK");
         }
 
@@ -176,15 +180,15 @@ export async function saveLearningProgressForExam(
                     level: levelFromXP(xpGained),
                     streak: newStreak,
                     longestStreak: newStreak,
-                    totalAttempts: 1,
-                    totalCorrect: correct,
-                    avgAccuracy: total > 0 ? correct / total : 0,
-                    lastAttemptAt: completedAt,
+                    totalAttempts: isMock ? 1 : 0,
+                    totalCorrect: isMock ? correct : 0,
+                    avgAccuracy: isMock && total > 0 ? correct / total : 0,
+                    lastAttemptAt: isMock ? completedAt : undefined,
                     badgesJson: Array.from(new Set(baseBadges)),
                     weakTopicsJson: [],
                 },
             });
-        } else {
+        } else if (isMock) {
             const newTotalXP = profile.totalXP + xpGained;
             const newTotalAttempts = profile.totalAttempts + 1;
             const newTotalCorrect = profile.totalCorrect + correct;
@@ -213,20 +217,22 @@ export async function saveLearningProgressForExam(
             });
         }
 
-        await tx.xPEvent.create({
-            data: {
-                studentId: normalizedStudentId,
-                profileId: profile.id,
-                xpDelta: xpGained,
-                reason: "EXAM_COMPLETED",
-                meta: JSON.stringify({
-                    examId: normalizedExamId,
-                    attemptId: normalizedAttemptId,
-                    correct,
-                    total,
-                }),
-            },
-        });
+        if (isMock) {
+            await tx.xPEvent.create({
+                data: {
+                    studentId: normalizedStudentId,
+                    profileId: profile.id,
+                    xpDelta: xpGained,
+                    reason: "EXAM_COMPLETED",
+                    meta: JSON.stringify({
+                        examId: normalizedExamId,
+                        attemptId: normalizedAttemptId,
+                        correct,
+                        total,
+                    }),
+                },
+            });
+        }
 
         const topicMap = new Map<string, { correct: number; total: number; timeSpent: number }>();
         for (const result of normalizedResults) {

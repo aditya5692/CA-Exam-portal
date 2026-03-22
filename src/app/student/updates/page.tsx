@@ -65,90 +65,36 @@ export default function StudentUpdatesPage() {
             }
         }
 
-        // Mocking advanced data for UI redesign fidelity
-        const mockUpdates: FeedItem[] = [
-            {
-                id: "u1",
-                category: "STUDY MATERIAL",
-                title: "Consolidated Financial Statements - Revision Chart v2.1",
-                description: "Updated with the latest ICAI advisory on minority interest calculations.",
-                createdAt: new Date(Date.now() - 86400000), // Yesterday
-                isUnread: true,
-                subject: "Financial Reporting",
-                batchName: "FR Nov 24",
-                teacherName: "CA Ramesh"
-            },
-            {
-                id: "u2",
-                category: "STATUTORY UPDATE",
-                title: "MCA Notification on CSR Reporting Thresholds",
-                description: "Essential reading for corporate governance modules. Effective immediately.",
-                createdAt: new Date(Date.now() - 172800000), // 2 days ago
-                isUnread: true,
-                subject: "Financial Reporting",
-                batchName: "FR Nov 24",
-                teacherName: "CA Ramesh"
-            },
-            {
-                id: "u3",
-                category: "MOCK ASSESSMENT",
-                title: "GST - Input Tax Credit Advanced Mock Paper",
-                description: "3-hour practice focusing on recent tribunal judgments.",
-                createdAt: new Date(),
-                scheduledFor: "Apr 15",
-                isUnread: true,
-                subject: "Indirect Tax",
-                batchName: "IDT May 25",
-                teacherName: "CA Sahil"
-            },
-            {
-                id: "u4",
-                category: "ANNOUNCEMENT",
-                title: "Live Doubt Clearing Session: Chapter 4",
-                description: "Join us for a 2-hour intensive session covering all Chapter 4 topics, including complex case studies on director responsibilities.",
-                createdAt: new Date(Date.now() - 3600000 * 5),
-                isUnread: false,
-                subject: "Corporate Laws",
-                batchName: "Law Regular",
-                teacherName: "CA Vivek"
-            },
-            {
-                id: "u5",
-                category: "STUDY MATERIAL",
-                title: "Audit Standards - Quick Reference Guide",
-                description: "A 5-page PDF summarizing all key SA standards for the upcoming exams, including the latest amendments to SA 700 series.",
-                createdAt: new Date(Date.now() - 86400000 * 3),
-                isUnread: true,
-                subject: "Audit & Assurance",
-                batchName: "Audit Fast",
-                teacherName: "CA Anjali"
-            },
-            {
-                id: "u6",
-                category: "PRACTICE Q&A",
-                title: "RTP/MTP Questions Set - Nov 2024",
-                description: "Compilation of the most important questions from past 5 years RTPs and MTPs for comprehensive practice.",
-                createdAt: new Date(Date.now() - 86400000 * 5),
-                isUnread: false,
-                subject: "Strategic Management",
-                batchName: "SM Batch 1",
-                teacherName: "CA Amit"
-            },
-            {
-                id: "u7",
-                category: "REGULATORY NEWS",
-                title: "Update on SEBI LODR Regulations",
-                description: "Key changes in Clause 49 and related disclosures that every CA Final student must know for the Corporate Law paper.",
-                createdAt: new Date(Date.now() - 86400000 * 2),
-                isUnread: true,
-                subject: "Corporate Laws",
-                batchName: "Law Regular",
-                teacherName: "CA Vivek"
-            }
-        ];
+        const inferSubject = (batchName: string) => {
+            const lower = batchName.toLowerCase();
+            if (lower.includes("fr") || lower.includes("financial")) return "Financial Reporting";
+            if (lower.includes("tax") || lower.includes("idt") || lower.includes("gst")) return "Indirect Tax";
+            if (lower.includes("law")) return "Corporate Laws";
+            if (lower.includes("audit")) return "Audit & Assurance";
+            if (lower.includes("sm") || lower.includes("strategic")) return "Strategic Management";
+            return "General Updates";
+        };
 
-        setFeedItems(mockUpdates);
-        setIsAdminView(Boolean(res.data.isAdminView));
+        const mappedUpdates: FeedItem[] = (res.data?.feedItems || []).map(item => {
+            const lines = item.content.split('\n');
+            const title = lines[0].length > 60 ? lines[0].substring(0, 57) + "..." : lines[0];
+            const description = lines.length > 1 ? lines.slice(1).join('\n') : item.content;
+            
+            return {
+                id: item.id,
+                category: "ANNOUNCEMENT",
+                title: title,
+                description: description,
+                createdAt: item.createdAt,
+                isUnread: true,
+                subject: inferSubject(item.batchName),
+                batchName: item.batchName,
+                teacherName: item.teacherName
+            };
+        });
+
+        setFeedItems(mappedUpdates);
+        setIsAdminView(Boolean(res.data?.isAdminView));
     }, []);
 
     useEffect(() => {
@@ -211,7 +157,7 @@ export default function StudentUpdatesPage() {
         return acc;
     }, {} as Record<string, FeedItem[]>);
 
-    const filterOptions = ["All Updates", "Financial Reporting", "Indirect Tax", "Corporate Laws", "Audit & Assurance", "Strategic Management"];
+    const dynamicFilterOptions = ["All Updates", ...Array.from(new Set(feedItems.map(item => item.subject)))];
 
     const hasMore = visibleCount < feedItems.length;
 
@@ -257,7 +203,7 @@ export default function StudentUpdatesPage() {
 
             {/* Sub-nav filtering */}
             <nav className="flex items-center gap-3 mb-10 overflow-x-auto px-4 pb-2 no-scrollbar">
-                {filterOptions.map(sub => (
+                {dynamicFilterOptions.map(sub => (
                     <button
                         key={sub}
                         onClick={() => setSelectedSubject(sub)}

@@ -1,5 +1,7 @@
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
+import { resolveStudentCALevel } from "@/lib/student-level";
+import { buildStudentVisibleExamWhere } from "@/lib/server/exam-publishing";
 import { cn } from "@/lib/utils";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { BookOpen,ChartLineUp,Clock,FilePdf,FileText,List,Medal,Play,Sparkle,Target,Trophy } from "@phosphor-icons/react/dist/ssr";
@@ -44,7 +46,7 @@ export default async function StudentDashboardPage() {
 
     // Four cards stats
     let totalQuestionsAttempted = 0;
-    let totalQuestionsAvailable = 100;
+    let totalQuestionsAvailable = 0;
     let mcqProgressPct = 0;
 
     let totalStudyMinutes = 0;
@@ -78,6 +80,10 @@ export default async function StudentDashboardPage() {
         if (!user) throw new Error("Unauthorized");
         userName = user.fullName?.split(" ")[0] ?? user.email?.split("@")[0] ?? "Student";
         userTarget = user.examTarget || "";
+        const visibleExamWhere = await buildStudentVisibleExamWhere(
+            user.id,
+            resolveStudentCALevel(user.examTarget, user.department),
+        );
 
         // Logic for days remaining using examTarget (like "May 2026" or "CA Foundation May 2026")
         if (userTarget) {
@@ -103,13 +109,15 @@ export default async function StudentDashboardPage() {
         });
 
         if (profile) {
-            totalMCQScore = profile.totalCorrect;
+            totalMCQScore = profile.totalXP;
             avgAccuracy = profile.avgAccuracy;
 
-            // Calculate pseudo level progress (each level is 1000 XP)
-            const currentLevelBaseline = (profile.level - 1) * 1000;
+            // Calculate level progress (each level uses formula: 50 * (level - 1)^2)
+            const currentLevelBaseline = 50 * Math.pow(profile.level - 1, 2);
+            const nextLevelBaseline = 50 * Math.pow(profile.level, 2);
             const xpIntoLevel = profile.totalXP - currentLevelBaseline;
-            levelProgressPct = Math.min(100, Math.round((xpIntoLevel / 1000) * 100));
+            const xpRequiredForNext = nextLevelBaseline - currentLevelBaseline;
+            levelProgressPct = Math.min(100, Math.round((xpIntoLevel / xpRequiredForNext) * 100));
         }
 
         // Ranking (calculate global rank based on totalXP)
@@ -160,9 +168,9 @@ export default async function StudentDashboardPage() {
         });
         totalQuestionsAttempted = answersCount;
 
-        // Count total unique published questions to serve as "total MCQs" available
-        totalQuestionsAvailable = await prisma.question.count();
-        if (totalQuestionsAvailable < 100) totalQuestionsAvailable = 1000; // Provide a sensible denominator if DB is empty
+        totalQuestionsAvailable = await prisma.examQuestion.count({
+            where: { exam: visibleExamWhere },
+        });
 
         if (totalQuestionsAvailable > 0) {
             mcqProgressPct = Math.round((totalQuestionsAttempted / totalQuestionsAvailable) * 100);
@@ -201,15 +209,13 @@ export default async function StudentDashboardPage() {
 
         // Top Practice Questions (Exams)
         const practiceExamsRaw = await prisma.exam.findMany({
-            where: { status: "PUBLISHED" },
+            where: visibleExamWhere,
+            orderBy: { createdAt: "desc" },
             take: 4,
             include: { _count: { select: { questions: true } }, attempts: { select: { id: true } } }
         });
 
-        // Sort by attempt count manually since we couldn't do it cleanly in Prisma aggregate simply here
-        const sortedExams = practiceExamsRaw.sort((a, b) => b.attempts.length - a.attempts.length);
-
-        topPracticeExams = sortedExams.map(e => ({
+        topPracticeExams = practiceExamsRaw.map(e => ({
             id: e.id,
             title: e.title,
             questions: e._count.questions,
@@ -222,7 +228,7 @@ export default async function StudentDashboardPage() {
             take: 4,
             orderBy: { createdAt: "desc" }
         });
-        freeResources = freeResRaw.map(r => ({
+        freeResources = freeResRaw.map(r => ({
             id: r.id,
             title: r.title,
             category: r.category,
@@ -414,7 +420,7 @@ export default async function StudentDashboardPage() {
                                                     {item.name}
                                                 </div>
                                                 <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-[rgba(220,235,230,0.74)]" : "text-[var(--student-muted)]")}>
-                                                    LVL {Math.floor(item.score / 1000) + 1}
+                                                    LVL {Math.floor(1 + Math.sqrt(item.score / 50))}
                                                 </div>
                                             </div>
                                         </div>

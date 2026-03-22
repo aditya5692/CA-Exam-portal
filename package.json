@@ -13,7 +13,8 @@
     "db:check": "tsx ./scripts/check-db.ts",
     "test:backend": "node ./tests/backend/run-backend-tests.mjs",
     "test:integration": "node ./tests/integration/run-integration-tests.mjs",
-    "dev:local": "powershell ./scripts/local-dev.ps1"
+    "dev:local": "powershell ./scripts/local-dev.ps1",
+    "dev:db": "npm run dev:local"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"
@@ -40,6 +41,7 @@
     "next": "16.1.6",
     "next-themes": "^0.4.6",
     "pg": "^8.20.0",
+    "razorpay": "^2.9.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-quill-new": "^3.8.3",

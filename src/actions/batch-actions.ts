@@ -330,6 +330,26 @@ export async function postAnnouncement(formData: FormData): Promise<ActionRespon
             batchIds: targetBatchIds,
         });
 
+        // Feature: Push Notification
+        try {
+            const enrollments = await prisma.enrollment.findMany({
+                where: { batchId: { in: targetBatchIds } },
+                select: { studentId: true, batch: { select: { name: true } } }
+            });
+            
+            if (enrollments.length > 0) {
+                await prisma.notification.createMany({
+                    data: enrollments.map(e => ({
+                        userId: e.studentId,
+                        title: `New Update: ${e.batch.name}`,
+                        message: content.length > 60 ? content.substring(0, 57) + "..." : content,
+                        type: "UPDATE",
+                        link: "/student/updates"
+                    }))
+                });
+            }
+        } catch(e) { console.error("Notification creation failed", e) }
+
         revalidateBatchSurfaces();
         return {
             success: true,

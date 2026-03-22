@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 generator client {
@@ -23,7 +23,9 @@ model User {
   storageUsed        Int                 @default(0)
   storageLimit       Int                 @default(52428800) // 50MB default
   plan               String              @default("FREE")
+  planExpiresAt      DateTime?
   passwordHash       String?
+  isSuperAdmin       Boolean             @default(false)
   isBlocked          Boolean             @default(false)
   blockedReason      String?
   isPublicProfile    Boolean             @default(true)
@@ -56,14 +58,21 @@ model User {
   announcements      Announcement[]      @relation("TeacherAnnouncements")
   draftMCQs          DraftMCQ[]          @relation("DraftMCQs")
 
+  // Extended Relations
+  notifications      Notification[]      @relation("UserNotifications")
+
   // Exam Relations
   examsCreated       Exam[]              @relation("TeacherExams")
+  ownedQuestions     Question[]          @relation("TeacherOwnedQuestions")
   examAttempts       ExamAttempt[]
 
   // Adaptive Learning
   learningProfile    StudentLearningProfile?
   topicProgress      TopicProgress[]
   xpEvents           XPEvent[]
+
+  // Subscription
+  subscriptions      Subscription[]
 }
 
 model StudyMaterial {
@@ -254,6 +263,9 @@ model Question {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  teacherId     String?
+  teacher       User?          @relation("TeacherOwnedQuestions", fields: [teacherId], references: [id])
+
   options       Option[]
   exams         ExamQuestion[]
   studentAnswers StudentAnswer[]
@@ -290,12 +302,13 @@ model ExamAttempt {
   endTime       DateTime?
   score         Float          @default(0)
   status        String         @default("STARTED") // STARTED, SUBMITTED, EXPIRED
+  attemptMode   String         @default("MOCK") // MOCK, PRACTICE
   
   studentId     String
   student       User           @relation(fields: [studentId], references: [id])
 
   examId        String
-  exam          Exam           @relation(fields: [examId], references: [id])
+  exam          Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   answers       StudentAnswer[]
 }
@@ -374,4 +387,41 @@ model XPEvent {
   student     User                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
   profileId   String
   profile     StudentLearningProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// Notification System
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // SYSTEM, ALERT, UPDATE, BADGE
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Subscription / Payment model
+model Subscription {
+  id                  String   @id @default(cuid())
+  plan                String   // "PRO", "BASIC"
+  role                String   // "STUDENT" | "TEACHER"
+  status              String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED, PENDING
+  amountPaise         Int      // Amount in paise (e.g., 39900 = ₹399)
+  razorpayOrderId     String?  @unique
+  razorpayPaymentId   String?  @unique
+  razorpaySignature   String?
+  grantedByAdminId    String?  // Set if manually granted by admin
+  startedAt           DateTime @default(now())
+  expiresAt           DateTime
+  createdAt           DateTime @default(now())
+
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }

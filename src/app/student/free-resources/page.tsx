@@ -1,8 +1,16 @@
 import { FreeResourcesDashboard } from "@/components/home/FreeResourcesDashboard";
 import { getCurrentUser } from "@/lib/auth/session";
+import { resolveStudentCALevel, getStudentCACategory } from "@/lib/student-level";
 import { getPublicResourceCatalogInsights } from "@/lib/server/resource-intelligence";
 
-export default async function StudentFreeResourcesPage() {
+export default async function StudentFreeResourcesPage({
+    searchParams
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const params = await searchParams;
+    const initialSubType = typeof params.type === 'string' ? params.type : "All";
+
     const user = await getCurrentUser(["STUDENT", "ADMIN"]);
     const insights = await getPublicResourceCatalogInsights({});
     
@@ -23,6 +31,9 @@ export default async function StudentFreeResourcesPage() {
             }
         }
     }
+
+    const caLevel = resolveStudentCALevel(user?.examTarget, user?.department);
+    const initialCategory = getStudentCACategory(caLevel);
 
     return (
         <div className="p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
@@ -46,7 +57,14 @@ export default async function StudentFreeResourcesPage() {
                     </div>
                 </div>
             </div>
-            <FreeResourcesDashboard daysToExam={daysToExam} saveState="enabled" />
+            <FreeResourcesDashboard 
+                initialCategory={initialCategory === "CA Intermediate" ? "CA Inter" : initialCategory} 
+                initialSubType={initialSubType}
+                daysToExam={daysToExam} 
+                saveState="enabled"
+                mode="STUDENT"
+                defaultView="GRID"
+            />
         </div>
     );
 }

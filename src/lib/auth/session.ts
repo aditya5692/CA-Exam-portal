@@ -11,6 +11,7 @@ type SessionPayload = {
     fullName: string | null;
     registrationNumber: string | null;
     plan: string;
+    isSuperAdmin?: boolean;
 };
 
 const SESSION_COOKIE_NAME = "modern_ca_portal_session";
@@ -58,6 +59,7 @@ export async function setAuthSession(user: User) {
             fullName: user.fullName ?? null,
             registrationNumber: user.registrationNumber ?? null,
             plan: user.plan,
+            isSuperAdmin: !!user.isSuperAdmin,
         }),
         {
             httpOnly: true,

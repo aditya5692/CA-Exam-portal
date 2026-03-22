@@ -6,6 +6,11 @@ import {
   readStoredQuestionBank,
   writeBulkUploadSession
 } from "@/lib/question-bank-upload";
+import { 
+  getVaultQuestions, 
+  deleteVaultQuestion, 
+  saveQuestionsToVault 
+} from "@/actions/mcq-vault-actions";
 import { cn } from "@/lib/utils";
 import {
   CaretDown,
@@ -17,6 +22,7 @@ import {
   MagnifyingGlass,
   PencilSimple,
   Plus,
+  SpinnerGap,
   Trash
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -24,28 +30,31 @@ import { useRouter } from "next/navigation";
 import { useEffect,useRef,useState } from "react";
 import * as XLSX from "xlsx";
 
-const DEFAULT_QUESTIONS: Question[] = [
-    { id: 1, prompt: "As per Ind AS 116, which of the following is included in the measurement of a right-of-use asset?", options: ["Initial direct costs incurred by the lessee", "Variable lease payments not included in lease liability", "General overheads of the lessor", "Costs incurred after lease commencement"], correct: [0] },
-];
-
 export function QuestionManager() {
-    // Note: In Next.js this usually comes from next/navigation, but following previous pattern
-    // if it was router from react-router-dom in this specific project context.
-    // However, the previous viewed code used next/navigation.
-    // I will stick to the previous imports seen in Step 184.
-    
-    const [questions] = useState<Question[]>(() => {
-        const storedQuestions = readStoredQuestionBank();
-        return storedQuestions.length > 0 ? storedQuestions : DEFAULT_QUESTIONS;
-    });
-    const [draft] = useState({ prompt: "", options: ["", "", "", ""], correct: [] });
+    const [questions, setQuestions] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [draft, setDraft] = useState({ prompt: "", options: ["", "", "", ""], correct: [] as number[], subject: "", topic: "", difficulty: "Medium" });
     const [isPreparingUpload, setIsPreparingUpload] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isSavingManual, setIsSavingManual] = useState(false);
     
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+    const fetchQuestions = async () => {
+        setIsLoading(true);
+        const res = await getVaultQuestions();
+        if (res.success) {
+            setQuestions(res.data || []);
+        }
+        setIsLoading(false);
+    };
+
+    useEffect(() => {
+        fetchQuestions();
+    }, []);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -101,6 +110,48 @@ export function QuestionManager() {
             event.target.value = "";
             setIsPreparingUpload(false);
         }
+    };
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this question?")) return;
+        const res = await deleteVaultQuestion(id);
+        if (res.success) {
+            fetchQuestions();
+        } else {
+            alert(res.message);
+        }
+    };
+
+    const handleManualSave = async () => {
+        if (!draft.prompt.trim()) return alert("Prompt is required");
+        if (draft.options.some(opt => !opt.trim())) return alert("All 4 options are required");
+        if (draft.correct.length === 0) return alert("Select at least one correct answer");
+
+        setIsSavingManual(true);
+        const res = await saveQuestionsToVault([{
+            prompt: draft.prompt,
+            options: draft.options,
+            correct: draft.correct,
+            subject: draft.subject,
+            topic: draft.topic,
+            difficulty: draft.difficulty,
+        }]);
+
+        if (res.success) {
+            setDraft({ prompt: "", options: ["", "", "", ""], correct: [], subject: "", topic: "", difficulty: "Medium" });
+            fetchQuestions();
+        } else {
+            alert(res.message);
+        }
+        setIsSavingManual(false);
+    };
+
+    const toggleCorrect = (idx: number) => {
+        setDraft(prev => {
+            const newCorrect = prev.correct.includes(idx)
+                ? prev.correct.filter(i => i !== idx)
+                : [...prev.correct, idx];
+            return { ...prev, correct: newCorrect };
+        });
     };
 
     return (
@@ -198,7 +249,12 @@ export function QuestionManager() {
                             <div key={i} className="group bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 transition-all hover:shadow-md hover:border-indigo-100 relative">
                                 <div className="absolute top-6 right-8 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                     <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-white border border-transparent hover:border-indigo-100 transition-all flex items-center justify-center"><PencilSimple size={18} weight="bold" /></button>
-                                    <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-white border border-transparent hover:border-rose-100 transition-all flex items-center justify-center"><Trash size={18} weight="bold" /></button>
+                                    <button 
+                                        onClick={() => handleDelete(q.id)}
+                                        className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-white border border-transparent hover:border-rose-100 transition-all flex items-center justify-center"
+                                    >
+                                        <Trash size={18} weight="bold" />
+                                    </button>
                                 </div>
                                 
                                 <div className="flex gap-6">
@@ -208,7 +264,7 @@ export function QuestionManager() {
                                     
                                     <div className="space-y-6 flex-1">
                                         <div className="space-y-4">
-                                            <h3 className="text-lg font-bold text-slate-900 leading-tight pr-24 font-outfit">{q.prompt}</h3>
+                                            <h3 className="text-lg font-bold text-slate-900 leading-tight pr-24 font-outfit">{q.text}</h3>
                                             <div className="flex gap-3">
                                                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest border border-emerald-100">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Repository
@@ -225,18 +281,18 @@ export function QuestionManager() {
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {q.options.map((opt, idx) => (
+                                            {q.options.map((opt: any, idx: number) => (
                                                 <div key={idx} className={cn(
                                                     "p-4 rounded-2xl border flex items-center justify-between text-xs font-bold transition-all",
-                                                    q.correct.includes(idx)
+                                                    opt.isCorrect
                                                         ? "bg-indigo-50/50 border-indigo-200 text-indigo-900"
                                                         : "bg-slate-50/50 border-slate-100 text-slate-500 group-hover:bg-white"
                                                 )}>
                                                     <div className="flex items-center gap-3">
                                                         <span className="opacity-40 uppercase">{String.fromCharCode(65 + idx)}.</span>
-                                                        {opt}
+                                                        {opt.text}
                                                     </div>
-                                                    {q.correct.includes(idx) && <Check size={16} weight="bold" />}
+                                                    {opt.isCorrect && <Check size={16} weight="bold" />}
                                                 </div>
                                             ))}
                                         </div>
@@ -265,6 +321,8 @@ export function QuestionManager() {
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Challenge Prompt</label>
                                 <textarea
                                     rows={5}
+                                    value={draft.prompt}
+                                    onChange={(e) => setDraft(prev => ({ ...prev, prompt: e.target.value }))}
                                     placeholder="Type your question prompt..."
                                     className="w-full bg-slate-50 border border-slate-100 rounded-3xl p-6 text-sm text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-medium"
                                 />
@@ -276,16 +334,30 @@ export function QuestionManager() {
                                     <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">Mark Validity</span>
                                 </div>
                                 <div className="space-y-3">
-                                    {draft.options.map((_, i) => (
+                                    {draft.options.map((opt, i) => (
                                         <div key={i} className="flex gap-3">
                                             <div className="flex-1 relative">
                                                 <input
                                                     type="text"
+                                                    value={opt}
+                                                    onChange={(e) => {
+                                                        const newOptions = [...draft.options];
+                                                        newOptions[i] = e.target.value;
+                                                        setDraft(prev => ({ ...prev, options: newOptions }));
+                                                    }}
                                                     placeholder={`Variant ${String.fromCharCode(65 + i)}`}
                                                     className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 text-sm text-slate-900 focus:border-indigo-500/50 focus:bg-white outline-none transition-all font-sans font-medium"
                                                 />
                                             </div>
-                                            <button className="w-14 h-14 shrink-0 rounded-2xl border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 hover:border-emerald-200 transition-all active:scale-95 group/check">
+                                            <button 
+                                                onClick={() => toggleCorrect(i)}
+                                                className={cn(
+                                                    "w-14 h-14 shrink-0 rounded-2xl border transition-all active:scale-95 group/check flex items-center justify-center",
+                                                    draft.correct.includes(i)
+                                                        ? "bg-emerald-50 border-emerald-200 text-emerald-500"
+                                                        : "bg-slate-50 border-slate-100 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 hover:border-emerald-200"
+                                                )}
+                                            >
                                                 <Check size={22} weight="bold" className="group-hover:scale-110 transition-transform" />
                                             </button>
                                         </div>
@@ -300,26 +372,36 @@ export function QuestionManager() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Difficulty</p>
-                                        <select className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-xs font-bold text-slate-700 outline-none">
-                                            <option>Entry Level</option>
-                                            <option>Intermediate</option>
-                                            <option>Advanced</option>
+                                        <select 
+                                            value={draft.difficulty}
+                                            onChange={(e) => setDraft(prev => ({ ...prev, difficulty: e.target.value }))}
+                                            className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-xs font-bold text-slate-700 outline-none"
+                                        >
+                                            <option>Easy</option>
+                                            <option>Medium</option>
+                                            <option>Hard</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Exam Type</p>
-                                        <select className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-xs font-bold text-slate-700 outline-none">
-                                            <option>General</option>
-                                            <option>Simulated</option>
-                                            <option>Archive</option>
-                                        </select>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Subject</p>
+                                        <input 
+                                            type="text"
+                                            value={draft.subject}
+                                            onChange={(e) => setDraft(prev => ({ ...prev, subject: e.target.value }))}
+                                            placeholder="e.g. Audit"
+                                            className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-xs font-bold text-slate-700 outline-none"
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            <button className="w-full h-16 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-700 shadow-xl shadow-indigo-600/10 transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-4">
-                                <FloppyDisk size={20} weight="bold" />
-                                Save to Inventory
+                            <button 
+                                onClick={handleManualSave}
+                                disabled={isSavingManual}
+                                className="w-full h-16 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-700 shadow-xl shadow-indigo-600/10 transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-4 disabled:opacity-50"
+                            >
+                                {isSavingManual ? <SpinnerGap size={20} className="animate-spin" /> : <FloppyDisk size={20} weight="bold" />}
+                                {isSavingManual ? "Saving..." : "Save to Inventory"}
                             </button>
                         </div>
                     </div>

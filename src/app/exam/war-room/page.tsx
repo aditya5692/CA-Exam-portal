@@ -1,8 +1,7 @@
 "use client";
 
-import { getExamDetails,submitExamAttempt } from "@/actions/exam-actions";
+import { getExamDetails, submitExamAttempt, saveExamProgress, startMyExamAttempt } from "@/actions/exam-actions";
 import { saveExamResultsAndUpdateLearning } from "@/actions/learning-actions";
-import { startMyExamAttempt } from "@/actions/student-actions";
 import { cn } from "@/lib/utils";
 import type { ExamWithQuestions } from "@/types/exam";
 import { useRouter,useSearchParams } from "next/navigation";
@@ -116,14 +115,50 @@ export default function MCQExamPage() {
             setExamTitle(exam.title);
             setExamCategory(exam.category);
             setTimeLeft(exam.duration * 60);
-            setAnswers(Object.fromEntries(mapped.map(q => [q.id, { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null }])));
 
-            // Auto start the exam
-            startedAtRef.current = Date.now();
-            const r = await startMyExamAttempt(examId);
+            // Auto start or resume the exam
+            const isPractice = mode === "practice";
+            const r = await startMyExamAttempt(examId, isPractice ? "PRACTICE" : "MOCK");
             if (r.success && r.data) { 
                 setAttemptId(r.data.attemptId); 
                 setStudentId(r.data.studentId); 
+
+                // Handle accurate timing for resumption
+                if (r.data.startTime) {
+                    const start = new Date(r.data.startTime).getTime();
+                    const now = Date.now();
+                    const elapsed = Math.floor((now - start) / 1000);
+                    const totalDuration = r.data.duration * 60;
+                    const remaining = Math.max(0, totalDuration - elapsed);
+                    setTimeLeft(remaining);
+                    startedAtRef.current = start;
+                } else {
+                    startedAtRef.current = Date.now();
+                }
+
+                // Restore existing answers
+                if (r.data.existingAnswers && r.data.existingAnswers.length > 0) {
+                    const restored: Record<string, Answer> = {};
+                    mapped.forEach(q => {
+                        const ea = (r.data!.existingAnswers as any[]).find((a: any) => a.questionId === q.id);
+                        if (ea) {
+                            restored[q.id] = {
+                                optionId: ea.selectedOptionId,
+                                status: "answered",
+                                startedAt: Date.now(),
+                                confidence: null
+                            };
+                        } else {
+                            restored[q.id] = { optionId: null, status: "not-visited", startedAt: Date.now(), confidence: null };
+                        }
+                    });
+                    setAnswers(restored);
+                } else {
+                    setAnswers(Object.fromEntries(mapped.map(q => [q.id, { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null }])));
+                }
+            } else {
+                startedAtRef.current = Date.now();
+                setAnswers(Object.fromEntries(mapped.map(q => [q.id, { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null }])));
             }
 
             setPhase("exam");
@@ -179,15 +214,15 @@ export default function MCQExamPage() {
             .map(([topic, d]) => ({ topic, accuracy: Math.round((d.correct / d.total) * 100), correct: d.correct, total: d.total }))
             .sort((a, b) => a.accuracy - b.accuracy);
 
-        // Save to DB only in mock mode
-        if (mode === "mock" && attemptId && studentId) {
+        // Persist real exam attempts for both mock and untimed practice sessions.
+        if (attemptId && studentId && examId) {
             const payload = questions.filter(q => answers[q.id]?.optionId).map(q => ({
                 questionId: q.id,
                 selectedOptionId: answers[q.id].optionId!,
                 timeSpent: Math.max(1, Math.round((now - (answers[q.id].startedAt ?? now)) / 1000)),
             }));
             await submitExamAttempt(attemptId, payload);
-            await saveExamResultsAndUpdateLearning(studentId, examId ?? "", attemptId,
+            await saveExamResultsAndUpdateLearning(studentId, examId, attemptId,
                 questions.map(q => {
                     const a = answers[q.id];
                     return { 
@@ -210,17 +245,29 @@ export default function MCQExamPage() {
     // ── Answer interactions ────────────────────────────────────────────────────
     const selectOption = (optId: string) => {
         const qId = questions[current]?.id; if (!qId) return;
-        setAnswers(prev => ({ ...prev, [qId]: { ...prev[qId], optionId: optId, status: prev[qId].status === "marked" ? "answered-marked" : "answered" } }));
+        setAnswers(prev => ({ ...prev, [qId]: { ...prev[qId], optionId: optId, status: prev[qId]?.status === "marked" ? "answered-marked" : "answered" } }));
         if (mode === "practice") setShowPracticeAnswer(true);
+
+        // Incremental save
+        if (attemptId) {
+            const now = Date.now();
+            const timeSpentValue = Math.max(1, Math.round((now - (answers[qId]?.startedAt ?? now)) / 1000));
+            void saveExamProgress(attemptId, [{ questionId: qId, selectedOptionId: optId, timeSpent: timeSpentValue }]);
+        }
     };
     const clearAnswer = () => {
         const qId = questions[current]?.id; if (!qId) return;
         setAnswers(prev => ({ ...prev, [qId]: { ...prev[qId], optionId: null, status: "not-answered" } }));
         setShowPracticeAnswer(false);
+
+        // Incremental save
+        if (attemptId) {
+            void saveExamProgress(attemptId, [{ questionId: qId, selectedOptionId: null, timeSpent: 0 }]);
+        }
     };
     const markForReview = () => {
         const qId = questions[current]?.id; if (!qId) return;
-        setAnswers(prev => { const c = prev[qId]; return { ...prev, [qId]: { ...c, status: c.optionId ? "answered-marked" : "marked" } }; });
+        setAnswers(prev => { const c = prev[qId] || {}; return { ...prev, [qId]: { ...c, status: c.optionId ? "answered-marked" : "marked" } }; });
         if (current < questions.length - 1) setCurrent(c => c + 1);
     };
     const setConfidence = (conf: "sure" | "unsure" | "guess") => {
@@ -249,10 +296,10 @@ export default function MCQExamPage() {
     }, [mode, phase, router]);
 
     // Counts
-    const answered = Object.values(answers).filter(a => a.status === "answered" || a.status === "answered-marked").length;
-    const notAnswered = Object.values(answers).filter(a => a.status === "not-answered").length;
-    const marked = Object.values(answers).filter(a => a.status === "marked" || a.status === "answered-marked").length;
-    const notVisited = Object.values(answers).filter(a => a.status === "not-visited").length;
+    const answered = Object.values(answers).filter(a => a?.status === "answered" || a?.status === "answered-marked").length;
+    const notAnswered = Object.values(answers).filter(a => a?.status === "not-answered").length;
+    const marked = Object.values(answers).filter(a => a?.status === "marked" || a?.status === "answered-marked").length;
+    const notVisited = Object.values(answers).filter(a => a?.status === "not-visited").length;
     const fontClass = { sm: "text-sm", md: "text-base", lg: "text-lg" }[fontSize];
 
     // ── Render phases ──────────────────────────────────────────────────────────
