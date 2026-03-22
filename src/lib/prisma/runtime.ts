@@ -159,7 +159,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
                 DEFAULT_IDLE_TIMEOUT_MS,
                 "DATABASE_IDLE_TIMEOUT_MS",
             ),
-            allowExitOnIdle: env.NODE_ENV !== "production",
+            allowExitOnIdle: true,
         },
     };
 }
