@@ -331,6 +331,7 @@ test("teacher material distribution updates access and storage counters transact
         fileType: "application/pdf",
         fileSize: 1_024,
         isProtected: true,
+        isPublic: false,
         batchIds: [batch.id],
         studentEmails: [],
     });
