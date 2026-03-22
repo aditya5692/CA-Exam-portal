@@ -18,7 +18,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
     const sessionData = {
         fullName: session.fullName,
         role: session.role,
-        plan: (session as any).plan ?? "Free"
+        plan: session.plan ?? "Free"
     };
 
     return (

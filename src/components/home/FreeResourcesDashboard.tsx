@@ -21,6 +21,7 @@ import { useCallback,useEffect,useState } from "react";
 
 const CATEGORIES = ["All", "CA Final", "CA Inter", "CA Foundation", "Case Studies", "Amendments"];
 const CONTENT_TYPES = ["All", "PDF", "VIDEO", "RTP", "MTP", "PYQ"];
+const EMPTY_SAVED_IDS = new Set<string>();
 
 type SaveState = "enabled" | "login" | "hidden";
 
@@ -47,6 +48,7 @@ export function FreeResourcesDashboard({
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const canSave = saveState === "enabled";
+    const visibleSavedIds = canSave ? savedIds : EMPTY_SAVED_IDS;
 
     // Debounce search to avoid too many requests
     useEffect(() => {
@@ -81,7 +83,6 @@ export function FreeResourcesDashboard({
 
     useEffect(() => {
         if (!canSave) {
-            setSavedIds(new Set());
             return;
         }
 
@@ -260,14 +261,14 @@ export function FreeResourcesDashboard({
                                             title={saveState === "login" ? "Login to save" : "Save resource"}
                                             className={cn(
                                                 "p-2 rounded-lg transition-all duration-200 active:scale-95 border shadow-sm",
-                                                canSave && savedIds.has(res.id)
+                                                canSave && visibleSavedIds.has(res.id)
                                                     ? "bg-indigo-500 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
                                                     : saveState === "login"
                                                         ? "bg-[#f2e3c0] border-[#e5d2a3] text-[#b7791f] hover:bg-[#ecd8ad]"
                                                         : "bg-white border-slate-100 text-slate-300 hover:text-indigo-500 hover:border-indigo-100 hover:bg-indigo-50/50"
                                             )}
                                         >
-                                            <BookmarkSimple size={18} weight={canSave && savedIds.has(res.id) ? "fill" : "bold"} />
+                                            <BookmarkSimple size={18} weight={canSave && visibleSavedIds.has(res.id) ? "fill" : "bold"} />
                                         </button>
                                     )}
                                 </div>

@@ -13,7 +13,7 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type LoginRole = "student" | "teacher" | "admin";
 
@@ -50,7 +50,6 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-    const [nextPath, setNextPath] = useState("");
 
     const activeCards = useMemo(
         () => DEMO_ACCOUNT_CARDS.filter((account) => account.role === role),
@@ -58,15 +57,6 @@ export default function LoginPage() {
     );
 
     const activeMeta = ROLE_META[role];
-
-    useEffect(() => {
-        if (typeof window === "undefined") {
-            return;
-        }
-
-        const nextValue = new URLSearchParams(window.location.search).get("next")?.trim() ?? "";
-        setNextPath(nextValue);
-    }, []);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -86,6 +76,10 @@ export default function LoginPage() {
             return;
         }
 
+        const nextPath =
+            typeof window === "undefined"
+                ? ""
+                : new URLSearchParams(window.location.search).get("next")?.trim() ?? "";
         const redirectTo =
             result.data?.redirectTo ??
             nextPath ??

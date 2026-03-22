@@ -120,7 +120,7 @@ export async function getUserRank(userId: string): Promise<ActionResponse<{ rank
                 level: allProfiles[myIndex].level
             } 
         };
-    } catch (error) {
+    } catch {
         return { success: false, message: "Failed to fetch user rank." };
     }
 }

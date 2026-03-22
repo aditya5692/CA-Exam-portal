@@ -166,7 +166,7 @@ export default async function Home() {
                                                     <Timer size={20} weight="bold" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d9e8e3]">Today's focus</div>
+                                                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d9e8e3]">Today&apos;s focus</div>
                                                     <div className="text-lg font-bold text-white">3-hour mock window</div>
                                                 </div>
                                             </div>
