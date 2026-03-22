@@ -25,19 +25,19 @@ export function ExamCard({
     };
 
     return (
-        <div className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
+        <div className="student-surface group relative flex h-full flex-col rounded-2xl p-6 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
             <div className="flex items-start justify-between mb-6">
                 <div className="flex flex-wrap gap-2">
                     <span className={cn("px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border shadow-sm", diffColors[difficulty])}>
                         {difficulty}
                     </span>
                     {exam.chapter && (
-                        <span className="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100 shadow-sm">
+                        <span className="student-chip rounded-lg px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
                             {exam.chapter}
                         </span>
                     )}
                     {exam.examType && exam.examType !== "GENERAL" && (
-                        <span className="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm">
+                        <span className="student-chip-accent rounded-lg px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
                             {exam.examType}
                         </span>
                     )}
@@ -47,15 +47,15 @@ export function ExamCard({
                     className={cn(
                         "p-2 rounded-lg transition-all duration-200 active:scale-95 border shadow-sm shrink-0",
                         isSaved
-                            ? "bg-indigo-500 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                            : "bg-white border-slate-100 text-slate-300 hover:text-indigo-500 hover:border-indigo-100 hover:bg-indigo-50/50"
+                            ? "border-[var(--student-accent-strong)] bg-[var(--student-accent-strong)] text-white shadow-md shadow-[rgba(31,92,80,0.16)]"
+                            : "bg-white border-[var(--student-border)] text-slate-300 hover:bg-[var(--student-accent-soft)] hover:border-[var(--student-accent-soft-strong)] hover:text-[var(--student-accent-strong)]"
                     )}
                 >
                     <BookmarkSimple size={18} weight={isSaved ? "fill" : "bold"} />
                 </button>
             </div>
 
-            <h3 className="text-lg font-bold font-outfit text-slate-950 leading-tight mb-5 group-hover:text-indigo-500/80 transition-colors line-clamp-2 min-h-[52px]">
+            <h3 className="mb-5 min-h-[52px] line-clamp-2 font-outfit text-lg font-bold leading-tight text-slate-950 transition-colors group-hover:text-[var(--student-accent-strong)]">
                 {exam.title}
             </h3>
 
@@ -64,14 +64,14 @@ export function ExamCard({
                     {exam.teacherName.charAt(0)}
                 </div>
                 <div>
-                    <div className="font-bold text-[11px] text-slate-900 group-hover/author:text-indigo-600 transition-colors tracking-widest uppercase">Prof. {exam.teacherName}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/80">Syllabus Expert</div>
+                    <div className="text-[11px] font-bold uppercase tracking-widest text-slate-900 transition-colors group-hover/author:text-[var(--student-accent-strong)]">Prof. {exam.teacherName}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-accent-strong)]/80">Syllabus Expert</div>
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-10">
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    <List size={16} weight="bold" className="text-indigo-500 opacity-60" />
+                    <List size={16} weight="bold" className="text-[var(--student-accent-strong)] opacity-70" />
                     {exam.questionCount} Questions
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
@@ -79,11 +79,11 @@ export function ExamCard({
                     {exam.totalMarks} Marks
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    <Clock size={16} weight="bold" className="text-indigo-500 opacity-60" />
+                    <Clock size={16} weight="bold" className="text-[var(--student-accent-strong)] opacity-70" />
                     {exam.duration} Mins
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    <Users size={16} weight="bold" className="text-indigo-500 opacity-60" />
+                    <Users size={16} weight="bold" className="text-[var(--student-accent-strong)] opacity-70" />
                     {exam.attemptCount} Students
                 </div>
             </div>
@@ -110,10 +110,10 @@ export function ExamCard({
 
                 <Link href={`/exam/war-room?examId=${exam.id}${exam.attempt?.status === "STARTED" ? "&mode=resume" : ""}`}
                     className={cn(
-                        "w-full h-12 rounded-xl text-[10px] font-bold uppercase tracking-widest text-center flex items-center justify-center transition-all duration-300 active:scale-95 shadow-sm border",
+                        "flex h-12 w-full items-center justify-center rounded-xl border text-center text-[10px] font-bold uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-sm",
                         exam.attempt?.status === "SUBMITTED"
-                            ? "bg-white text-slate-900 hover:bg-slate-50 border-slate-200"
-                            : "bg-slate-900 text-white hover:bg-slate-800 border-slate-900"
+                            ? "student-button-secondary"
+                            : "student-button-primary"
                     )}>
                     {exam.attempt?.status === "SUBMITTED" ? "Retake Exam" : exam.attempt?.status === "STARTED" ? "Resume Exam" : "Start Practice"}
                 </Link>

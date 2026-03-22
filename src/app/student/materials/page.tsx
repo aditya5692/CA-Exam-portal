@@ -4,8 +4,8 @@ import { getStudentSharedMaterials } from "@/actions/educator-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
 import { getSavedItems,toggleSavedItem } from "@/actions/student-actions";
 import { deletePersonalMaterial,getMyVaultMaterials,uploadPersonalMaterial } from "@/actions/vault-actions";
+import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@phosphor-icons/react";
 import { Bookmark,BookOpen,Clock,Download,FileText,Flame,Folder as FolderIcon,Lock,ShieldCheck,Star,Trash2,Unlock,Upload,Users,X } from "lucide-react";
 import { useEffect,useState } from "react";
 
@@ -173,45 +173,29 @@ export default function StudentVaultPage() {
 
     return (
         <div className="p-8 max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500 font-outfit">
-            {/* Standardized Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                            {isAdminView ? "Admin Protocol" : "Scholarly Assets"}
-                        </span>
-                    </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-3xl md:text-4xl font-black text-slate-900">
-                        {isAdminView ? "Materials" : "Study"} <span className="text-indigo-600">{isAdminView ? "Library" : "Notes"}</span>
-                    </h1>
-                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
-                        {isAdminView
-                            ? "Manage student storage and shared educator resources from a central dashboard."
-                            : "Access your personal study materials and resources shared by your educators."}
-                    </p>
-                </div>
-                {daysToExam > 0 && !isAdminView && (
-                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 mb-1 pointer-events-none">
-                        <Calendar size={18} weight="bold" className="text-indigo-400" />
-                        Next Milestone: {daysToExam} Days
-                    </div>
-                )}
-            </div>
+            <StudentPageHeader
+                eyebrow={isAdminView ? "Admin protocol" : "Scholarly assets"}
+                title={isAdminView ? "Materials" : "Study"}
+                accent={isAdminView ? "Library" : "Notes"}
+                description={isAdminView
+                    ? "Manage student storage and shared educator resources from a central dashboard."
+                    : "Access your personal study materials and resources shared by your educators."}
+                daysToExam={isAdminView ? 0 : daysToExam}
+            />
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div className="flex items-center gap-4">
                     {isAdminView && (
-                        <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-5 py-3.5 text-[10px] font-bold text-indigo-700 inline-flex items-center gap-2 uppercase tracking-widest shadow-sm">
+                        <div className="student-chip-accent inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest">
                             <ShieldCheck size={18} /> Admin View
                         </div>
                     )}
-                    <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                    <div className="flex rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1.5 shadow-inner">
                         <button
                             onClick={() => setActiveTab("MY_NOTES")}
                             className={cn(
                                 "px-6 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-200 flex items-center gap-2",
-                                activeTab === "MY_NOTES" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-900"
+                                activeTab === "MY_NOTES" ? "student-tab-active" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
                             )}
                         >
                             <FolderIcon size={16} /> {isAdminView ? "Student Files" : "Personal Notes"}
@@ -220,7 +204,7 @@ export default function StudentVaultPage() {
                             onClick={() => setActiveTab("EDUCATOR")}
                             className={cn(
                                 "px-6 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-200 flex items-center gap-2",
-                                activeTab === "EDUCATOR" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-900"
+                                activeTab === "EDUCATOR" ? "student-tab-active" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
                             )}
                         >
                             <Lock size={16} /> {isAdminView ? "Shared Resources" : "Educator Files"}
@@ -231,23 +215,23 @@ export default function StudentVaultPage() {
 
             {activeTab === "MY_NOTES" && (
                 <div className="space-y-6">
-                    <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="student-surface rounded-2xl p-8">
                         <div className="flex justify-between items-end mb-5 gap-4">
                             <div className="space-y-1">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-80">{isAdminView ? `Total Student Storage (${managedStudentsCount})` : "Personal Storage"}</span>
-                                <p className="text-3xl font-bold font-outfit text-slate-950 tracking-tight">
-                                    {formatBytes(storageUsed)} <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-2 font-sans opacity-60">Used</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-80">{isAdminView ? `Total Student Storage (${managedStudentsCount})` : "Personal Storage"}</span>
+                                <p className="font-outfit text-3xl font-bold tracking-tight text-[var(--student-text)]">
+                                    {formatBytes(storageUsed)} <span className="ml-2 font-sans text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-70">Used</span>
                                 </p>
                             </div>
                             <div className="text-right">
-                                <span className="text-[10px] font-bold text-indigo-500/80 tracking-widest uppercase bg-indigo-50/50 px-4 py-2 rounded-full border border-indigo-100/50">
+                                <span className="student-chip-accent rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
                                     Limit: {formatBytes(storageLimit)}
                                 </span>
                             </div>
                         </div>
-                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--student-panel-muted)] shadow-inner">
                             <div
-                                className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.2)] ${usagePercent > 90 ? "bg-rose-500" : "bg-indigo-500"}`}
+                                className={`h-full rounded-full transition-all duration-1000 ease-out ${usagePercent > 90 ? "bg-rose-500" : "bg-[var(--student-accent)]"}`}
                                 style={{ width: `${usagePercent}%` }}
                             />
                         </div>

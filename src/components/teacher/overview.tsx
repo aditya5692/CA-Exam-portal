@@ -31,6 +31,14 @@ import {
   YAxis
 } from "recharts";
 
+const TEACHER_CHART_THEME = {
+    accent: "#1f5c50",
+    accentSoft: "rgba(43, 122, 105, 0.14)",
+    border: "#e6dccd",
+    muted: "#667370",
+    surface: "#fffdfa"
+} as const;
+
 export default function DashboardOverview() {
     const [data, setData] = useState<TeacherOverviewData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -171,40 +179,40 @@ export default function DashboardOverview() {
                                 <AreaChart data={data.trends}>
                                     <defs>
                                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
-                                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                                            <stop offset="5%" stopColor={TEACHER_CHART_THEME.accent} stopOpacity={0.16} />
+                                            <stop offset="95%" stopColor={TEACHER_CHART_THEME.accent} stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={TEACHER_CHART_THEME.border} />
                                     <XAxis
                                         dataKey="name"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700, className: "uppercase tracking-widest" }}
+                                        tick={{ fill: TEACHER_CHART_THEME.muted, fontSize: 10, fontWeight: 700, className: "uppercase tracking-widest" }}
                                         dy={10}
                                     />
                                     <YAxis
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+                                        tick={{ fill: TEACHER_CHART_THEME.muted, fontSize: 10, fontWeight: 700 }}
                                     />
                                     <Tooltip
-                                        cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
+                                        cursor={{ stroke: TEACHER_CHART_THEME.border, strokeWidth: 2 }}
                                         contentStyle={{
-                                            backgroundColor: "#ffffff",
-                                            borderColor: "#f1f5f9",
+                                            backgroundColor: TEACHER_CHART_THEME.surface,
+                                            borderColor: TEACHER_CHART_THEME.border,
                                             borderRadius: "16px",
                                             boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                                            border: "1px solid #f1f5f9",
+                                            border: `1px solid ${TEACHER_CHART_THEME.border}`,
                                             padding: "12px",
                                             fontFamily: "Outfit, sans-serif"
                                         }}
-                                        itemStyle={{ color: "#4f46e5", fontWeight: "bold", fontSize: "12px" }}
+                                        itemStyle={{ color: TEACHER_CHART_THEME.accent, fontWeight: "bold", fontSize: "12px" }}
                                     />
                                     <Area
                                         type="monotone"
                                         dataKey="score"
-                                        stroke="#4f46e5"
+                                        stroke={TEACHER_CHART_THEME.accent}
                                         strokeWidth={4}
                                         fillOpacity={1}
                                         fill="url(#colorScore)"

@@ -76,6 +76,117 @@
   --ring: oklch(0.5 0 0);
 }
 
+@layer components {
+  .student-theme {
+    --student-bg: #f5efe5;
+    --student-bg-strong: rgba(255, 250, 242, 0.9);
+    --student-panel: rgba(255, 253, 249, 0.84);
+    --student-panel-solid: #fffdfa;
+    --student-panel-muted: #f4ede2;
+    --student-border: #e6dccd;
+    --student-border-strong: #d7c5a9;
+    --student-text: #1f2b2f;
+    --student-muted: #667370;
+    --student-muted-strong: #4f5b58;
+    --student-accent: #2b7a69;
+    --student-accent-strong: #1f5c50;
+    --student-accent-soft: #dcebe6;
+    --student-accent-soft-strong: #c5ddd5;
+    --student-support: #b7791f;
+    --student-support-soft: #f2e3c0;
+    --student-support-soft-strong: #e5d2a3;
+    --student-success: #2f7d55;
+    --student-ink: #223036;
+  }
+
+  .student-shell {
+    background-color: var(--student-bg);
+    background-image:
+      radial-gradient(circle at 8% 0%, rgba(242, 227, 192, 0.34), transparent 26%),
+      radial-gradient(circle at 85% 12%, rgba(220, 235, 230, 0.42), transparent 22%),
+      linear-gradient(180deg, rgba(255, 250, 242, 0.96), rgba(245, 239, 229, 0.92));
+  }
+
+  .student-surface {
+    background: var(--student-panel);
+    border: 1px solid var(--student-border);
+    box-shadow: 0 18px 40px rgba(55, 48, 38, 0.05);
+  }
+
+  .student-surface-strong {
+    background: var(--student-panel-solid);
+    border: 1px solid var(--student-border);
+    box-shadow: 0 14px 34px rgba(55, 48, 38, 0.06);
+  }
+
+  .student-surface-dark {
+    background: var(--student-ink);
+    border: 1px solid #314148;
+    box-shadow: 0 24px 46px rgba(24, 31, 34, 0.14);
+  }
+
+  .student-chip {
+    background: rgba(255, 253, 249, 0.9);
+    border: 1px solid var(--student-border);
+    color: var(--student-muted-strong);
+    box-shadow: 0 8px 18px rgba(55, 48, 38, 0.05);
+  }
+
+  .student-chip-accent {
+    background: var(--student-accent-soft);
+    border: 1px solid var(--student-accent-soft-strong);
+    color: var(--student-accent-strong);
+    box-shadow: 0 8px 18px rgba(31, 92, 80, 0.08);
+  }
+
+  .student-icon-tile {
+    background: var(--student-accent-soft);
+    border: 1px solid var(--student-accent-soft-strong);
+    color: var(--student-accent-strong);
+  }
+
+  .student-icon-tile-warm {
+    background: var(--student-support-soft);
+    border: 1px solid var(--student-support-soft-strong);
+    color: var(--student-support);
+  }
+
+  .student-icon-tile-success {
+    background: #e5f0e9;
+    border: 1px solid #cfe0d5;
+    color: var(--student-success);
+  }
+
+  .student-button-primary {
+    background: var(--student-accent-strong);
+    border: 1px solid var(--student-accent-strong);
+    color: white;
+    box-shadow: 0 14px 28px rgba(31, 92, 80, 0.12);
+  }
+
+  .student-button-primary:hover {
+    background: #18493f;
+  }
+
+  .student-button-secondary {
+    background: rgba(255, 253, 249, 0.92);
+    border: 1px solid var(--student-border);
+    color: var(--student-text);
+    box-shadow: 0 10px 20px rgba(55, 48, 38, 0.05);
+  }
+
+  .student-button-secondary:hover {
+    background: white;
+  }
+
+  .student-tab-active {
+    background: var(--student-panel-solid);
+    border: 1px solid var(--student-border);
+    color: var(--student-accent-strong);
+    box-shadow: 0 10px 20px rgba(55, 48, 38, 0.06);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -110,4 +221,192 @@
   h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
   h2 { @apply text-2xl md:text-3xl; }
   h3 { @apply text-xl; }
+}
+
+@layer utilities {
+  .student-theme [class~="bg-white"],
+  .student-theme [class*="bg-white/50"],
+  .student-theme [class*="bg-white/80"] {
+    background-color: var(--student-panel) !important;
+  }
+
+  .student-theme [class*="bg-slate-50"] {
+    background-color: var(--student-panel-muted) !important;
+  }
+
+  .student-theme [class*="bg-slate-100"] {
+    background-color: rgba(230, 220, 205, 0.72) !important;
+  }
+
+  .student-theme [class*="bg-slate-800"] {
+    background-color: #2b3a40 !important;
+  }
+
+  .student-theme [class*="bg-slate-900"] {
+    background-color: var(--student-ink) !important;
+  }
+
+  .student-theme [class*="border-slate-50"],
+  .student-theme [class*="border-slate-100"],
+  .student-theme [class*="border-slate-200"] {
+    border-color: var(--student-border) !important;
+  }
+
+  .student-theme [class*="border-white/10"] {
+    border-color: rgba(255, 248, 240, 0.14) !important;
+  }
+
+  .student-theme [class*="text-slate-900"] {
+    color: var(--student-text) !important;
+  }
+
+  .student-theme [class*="text-slate-700"],
+  .student-theme [class*="text-slate-600"] {
+    color: var(--student-muted-strong) !important;
+  }
+
+  .student-theme [class*="text-slate-500"],
+  .student-theme [class*="text-slate-400"],
+  .student-theme [class*="text-slate-300"] {
+    color: var(--student-muted) !important;
+  }
+
+  .student-theme [class*="bg-indigo-50"],
+  .student-theme [class*="bg-indigo-100"],
+  .student-theme [class*="bg-blue-50"],
+  .student-theme [class*="bg-blue-100"] {
+    background-color: var(--student-accent-soft) !important;
+  }
+
+  .student-theme [class*="bg-indigo-500"],
+  .student-theme [class*="bg-indigo-600"],
+  .student-theme [class*="bg-indigo-700"],
+  .student-theme [class*="bg-blue-500"],
+  .student-theme [class*="bg-blue-600"],
+  .student-theme [class*="bg-blue-700"] {
+    background-color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme [class*="text-indigo-"],
+  .student-theme [class*="text-blue-"] {
+    color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme [class*="border-indigo-"],
+  .student-theme [class*="border-blue-"] {
+    border-color: var(--student-accent-soft-strong) !important;
+  }
+
+  .student-theme [class*="border-t-indigo-"],
+  .student-theme [class*="border-t-blue-"] {
+    border-top-color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme [class*="bg-violet-50"],
+  .student-theme [class*="bg-violet-100"],
+  .student-theme [class*="bg-purple-50"],
+  .student-theme [class*="bg-purple-100"] {
+    background-color: var(--student-support-soft) !important;
+  }
+
+  .student-theme [class*="bg-violet-500"],
+  .student-theme [class*="bg-violet-600"],
+  .student-theme [class*="bg-purple-500"],
+  .student-theme [class*="bg-purple-600"] {
+    background-color: var(--student-support) !important;
+  }
+
+  .student-theme [class*="text-violet-"],
+  .student-theme [class*="text-purple-"] {
+    color: var(--student-support) !important;
+  }
+
+  .student-theme [class*="border-violet-"],
+  .student-theme [class*="border-purple-"] {
+    border-color: var(--student-support-soft-strong) !important;
+  }
+
+  .student-theme [class*="shadow-indigo-"],
+  .student-theme [class*="shadow-blue-"] {
+    --tw-shadow-color: rgba(31, 92, 80, 0.18) !important;
+  }
+
+  .student-theme [class*="shadow-violet-"],
+  .student-theme [class*="shadow-purple-"] {
+    --tw-shadow-color: rgba(183, 121, 31, 0.18) !important;
+  }
+
+  .student-theme [class*="ring-indigo-"],
+  .student-theme [class*="ring-blue-"] {
+    --tw-ring-color: rgba(43, 122, 105, 0.16) !important;
+  }
+
+  .student-theme [class*="ring-violet-"],
+  .student-theme [class*="ring-purple-"] {
+    --tw-ring-color: rgba(183, 121, 31, 0.16) !important;
+  }
+
+  .student-theme [class*="accent-indigo-"],
+  .student-theme [class*="accent-blue-"] {
+    accent-color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme [class*="hover:bg-indigo-"]:hover,
+  .student-theme [class*="hover:bg-blue-"]:hover {
+    background-color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme [class*="hover:text-indigo-"]:hover,
+  .student-theme [class*="hover:text-blue-"]:hover {
+    color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme [class*="hover:border-indigo-"]:hover,
+  .student-theme [class*="hover:border-blue-"]:hover {
+    border-color: var(--student-accent-soft-strong) !important;
+  }
+
+  .student-theme [class*="hover:bg-violet-"]:hover,
+  .student-theme [class*="hover:bg-purple-"]:hover {
+    background-color: var(--student-support) !important;
+  }
+
+  .student-theme [class*="hover:text-violet-"]:hover,
+  .student-theme [class*="hover:text-purple-"]:hover {
+    color: var(--student-support) !important;
+  }
+
+  .student-theme [class*="hover:border-violet-"]:hover,
+  .student-theme [class*="hover:border-purple-"]:hover {
+    border-color: var(--student-support-soft-strong) !important;
+  }
+
+  .student-theme .group:hover [class*="group-hover:bg-indigo-"],
+  .student-theme .group:hover [class*="group-hover:bg-blue-"] {
+    background-color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme .group:hover [class*="group-hover:text-indigo-"],
+  .student-theme .group:hover [class*="group-hover:text-blue-"] {
+    color: var(--student-accent-strong) !important;
+  }
+
+  .student-theme .group:hover [class*="group-hover:border-indigo-"],
+  .student-theme .group:hover [class*="group-hover:border-blue-"] {
+    border-color: var(--student-accent-soft-strong) !important;
+  }
+
+  .student-theme .group:hover [class*="group-hover:bg-violet-"],
+  .student-theme .group:hover [class*="group-hover:bg-purple-"] {
+    background-color: var(--student-support) !important;
+  }
+
+  .student-theme .group:hover [class*="group-hover:text-violet-"],
+  .student-theme .group:hover [class*="group-hover:text-purple-"] {
+    color: var(--student-support) !important;
+  }
+
+  .student-theme .group:hover [class*="group-hover:text-white"] {
+    color: white !important;
+  }
 }

@@ -5,31 +5,31 @@ import type { ExamHubData } from "@/types/student";
 export function ExamStats({ hubData }: { hubData: ExamHubData | null }) {
     return (
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-slate-50 flex items-center gap-4 group hover:shadow-md transition-shadow">
-                <div className="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <div className="student-surface flex items-center gap-4 rounded-2xl p-6 transition-shadow hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-xl">
                     <span className="material-symbols-outlined">history</span>
                 </div>
                 <div>
-                    <p className="text-2xl font-bold text-slate-900 font-outfit">{hubData?.stats.totalStudyTimeHours || 0}h</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-widest opacity-80">Total Study Time</p>
+                    <p className="font-outfit text-2xl font-bold text-[var(--student-text)]">{hubData?.stats.totalStudyTimeHours || 0}h</p>
+                    <p className="text-xs font-medium uppercase tracking-widest text-[var(--student-muted)] opacity-80">Total Study Time</p>
                 </div>
             </div>
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-slate-50 flex items-center gap-4 group hover:shadow-md transition-shadow">
-                <div className="h-12 w-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+            <div className="student-surface flex items-center gap-4 rounded-2xl p-6 transition-shadow hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                <div className="student-icon-tile-warm flex h-12 w-12 items-center justify-center rounded-xl">
                     <span className="material-symbols-outlined">trending_up</span>
                 </div>
                 <div>
-                    <p className="text-2xl font-bold text-slate-900 font-outfit">{hubData?.stats.avgProficiency || 0}%</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-widest opacity-80">Avg. Proficiency</p>
+                    <p className="font-outfit text-2xl font-bold text-[var(--student-text)]">{hubData?.stats.avgProficiency || 0}%</p>
+                    <p className="text-xs font-medium uppercase tracking-widest text-[var(--student-muted)] opacity-80">Avg. Proficiency</p>
                 </div>
             </div>
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-slate-50 flex items-center gap-4 group hover:shadow-md transition-shadow">
-                <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+            <div className="student-surface flex items-center gap-4 rounded-2xl p-6 transition-shadow hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                <div className="student-icon-tile-success flex h-12 w-12 items-center justify-center rounded-xl">
                     <span className="material-symbols-outlined">verified</span>
                 </div>
                 <div>
-                    <p className="text-2xl font-bold text-slate-900 font-outfit">{hubData?.stats.examsMastered || 0}</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-widest opacity-80">Exams Mastered</p>
+                    <p className="font-outfit text-2xl font-bold text-[var(--student-text)]">{hubData?.stats.examsMastered || 0}</p>
+                    <p className="text-xs font-medium uppercase tracking-widest text-[var(--student-muted)] opacity-80">Exams Mastered</p>
                 </div>
             </div>
         </section>

@@ -9,26 +9,26 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
         <section>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--student-accent-strong)] text-white">
                         <span className="material-symbols-outlined text-[20px]">fact_check</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Full Mock Tests</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--student-text)]">Full Mock Tests</h3>
                 </div>
-                <p className="text-xs font-medium text-slate-500">Official ICAI Simulation Platform</p>
+                <p className="text-xs font-medium text-[var(--student-muted)]">Official ICAI Simulation Platform</p>
             </div>
 
             <div className="space-y-4">
                 {hubData?.mockTests.map((test) => (
                     <div key={test.id} className={cn(
-                        "group flex flex-col md:flex-row md:items-center bg-white/70 backdrop-blur-md border border-slate-100 p-5 rounded-xl hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 gap-4",
+                        "student-surface group flex flex-col gap-4 rounded-xl p-5 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)] md:flex-row md:items-center",
                         test.isLocked && "opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
                     )}>
                         <div className="flex items-center gap-4 flex-1">
                             <div className={cn(
-                                "h-12 w-12 rounded-lg flex items-center justify-center shrink-0",
-                                test.isLocked ? "bg-slate-50" : "bg-indigo-50"
+                                "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg",
+                                test.isLocked ? "border border-[var(--student-border)] bg-[var(--student-panel-muted)]" : "student-icon-tile"
                             )}>
-                                <span className={cn("material-symbols-outlined", test.isLocked ? "text-slate-400" : "text-indigo-600")}>
+                                <span className={cn("material-symbols-outlined", test.isLocked ? "text-[var(--student-muted)]" : "text-[var(--student-accent-strong)]")}>
                                     {test.isLocked ? "lock" : "assignment"}
                                 </span>
                             </div>
@@ -39,7 +39,7 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">COMPLETED</span>
                                     )}
                                     {test.isNew && (
-                                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase">NEW</span>
+                                        <span className="student-chip-accent rounded-full px-2 py-0.5 text-[10px] font-bold uppercase">NEW</span>
                                     )}
                                 </div>
                                 <p className="text-xs text-slate-500">
@@ -82,7 +82,7 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                             ) : (
                                 <Link
                                     href={`/exam/war-room?examId=${test.id}&mode=mock`}
-                                    className="px-8 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm active:scale-95 duration-200 text-center"
+                                    className="student-button-primary rounded-lg px-8 py-2.5 text-center text-xs font-bold transition-colors active:scale-95 duration-200"
                                 >
                                     Start Practice
                                 </Link>

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AtSign,Briefcase,Database,GraduationCap,Mail,Phone } from "lucide-react";
+import { AtSign, Briefcase, Database, GraduationCap, Mail, Phone } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface InfoCardsProps {
     batch: string | null;
@@ -20,13 +21,14 @@ interface InfoCardsProps {
 }
 
 export function InfoCards(props: InfoCardsProps) {
-    const articleshipProgress = props.articleshipYear && props.articleshipTotal 
-        ? Math.round((props.articleshipYear / props.articleshipTotal) * 100) 
+    const articleshipProgress = props.articleshipYear && props.articleshipTotal
+        ? Math.round((props.articleshipYear / props.articleshipTotal) * 100)
         : 0;
-    
-    const storageProgress = props.storageLimit > 0 
-        ? Math.round((props.storageUsed / props.storageLimit) * 100) 
+
+    const storageProgress = props.storageLimit > 0
+        ? Math.round((props.storageUsed / props.storageLimit) * 100)
         : 0;
+
     const normalizedPlan = props.plan?.trim().toUpperCase() || "FREE";
     const planStatusLabel = normalizedPlan === "PRO"
         ? "Premium"
@@ -36,91 +38,94 @@ export function InfoCards(props: InfoCardsProps) {
                 ? "Enterprise"
                 : "Free";
     const planStatusActionLabel = normalizedPlan === "FREE" ? "View Pricing" : "Manage Plan";
+    const storageStatus = props.storageUsed < props.storageLimit * 0.9 ? "Active" : "Full";
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-outfit">
-            {/* Student Details */}
-            <Card icon={<GraduationCap className="w-5 h-5" />} title="Student Details">
-                <DetailItem label="Batch" value={props.batch || "Not Set"} />
-                <DetailItem label="Attempt Due" value={props.attemptDue || "Not Set"} />
-                <DetailItem label="Location" value={props.location || "Not Set"} />
-                <DetailItem label="DOB" value={props.dob || "Not Set"} />
+        <div className="grid grid-cols-1 gap-6 font-outfit md:grid-cols-2 lg:grid-cols-4">
+            <Card icon={<GraduationCap className="h-5 w-5" />} title="Student Details" iconTone="accent">
+                <DetailItem label="Batch" value={props.batch || "Not set"} />
+                <DetailItem label="Attempt Due" value={props.attemptDue || "Not set"} />
+                <DetailItem label="Location" value={props.location || "Not set"} />
+                <DetailItem label="DOB" value={props.dob || "Not set"} />
             </Card>
 
-            {/* Professional Info */}
-            <Card icon={<Briefcase className="w-5 h-5" />} title="Professional Info">
-                <DetailItem label="Firm" value={props.firm || "Not Set"} />
-                <DetailItem label="Role" value={props.firmRole || "Not Set"} />
-                <div className="pt-4 space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+            <Card icon={<Briefcase className="h-5 w-5" />} title="Professional Info" iconTone="warm">
+                <DetailItem label="Firm" value={props.firm || "Not set"} />
+                <DetailItem label="Role" value={props.firmRole || "Not set"} />
+                <div className="space-y-2 pt-4">
+                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                         <span>Articleship</span>
-                        <span className="text-slate-900">Year {props.articleshipYear || 0} of {props.articleshipTotal || 3}</span>
+                        <span className="text-[var(--student-text)]">Year {props.articleshipYear || 0} of {props.articleshipTotal || 3}</span>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-50 rounded-full border border-slate-100 overflow-hidden">
-                        <div 
-                            className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
+                    <div className="h-1.5 w-full overflow-hidden rounded-full border border-[var(--student-border)] bg-[var(--student-panel-muted)]">
+                        <div
+                            className="h-full rounded-full bg-[var(--student-support)] transition-all duration-1000"
                             style={{ width: `${articleshipProgress}%` }}
                         />
                     </div>
                 </div>
             </Card>
 
-            {/* Contact */}
-            <Card icon={<AtSign className="w-5 h-5" />} title="Contact">
+            <Card icon={<AtSign className="h-5 w-5" />} title="Contact" iconTone="accent">
                 <div className="space-y-4">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Email</p>
-                        <a href={`mailto:${props.email}`} className="text-indigo-600 font-bold hover:underline break-all block">{props.email}</a>
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Email</p>
+                        {props.email ? (
+                            <a href={`mailto:${props.email}`} className="block break-all text-sm font-bold text-[var(--student-accent-strong)] hover:underline">
+                                {props.email}
+                            </a>
+                        ) : (
+                            <p className="text-sm font-bold text-[var(--student-text)]">Not set</p>
+                        )}
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Phone</p>
-                        <p className="text-slate-900 font-bold">{props.phone}</p>
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Phone</p>
+                        <p className="text-sm font-bold text-[var(--student-text)]">{props.phone || "Not set"}</p>
                     </div>
                     <div className="flex gap-2 pt-2">
-                        <button className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
-                            <Mail className="w-4 h-4" />
+                        <button className="student-button-secondary flex h-10 w-10 items-center justify-center rounded-xl p-0 text-[var(--student-muted)] transition-colors hover:text-[var(--student-accent-strong)]">
+                            <Mail className="h-4 w-4" />
                         </button>
-                        <button className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
-                            <Phone className="w-4 h-4" />
+                        <button className="student-button-secondary flex h-10 w-10 items-center justify-center rounded-xl p-0 text-[var(--student-muted)] transition-colors hover:text-[var(--student-accent-strong)]">
+                            <Phone className="h-4 w-4" />
                         </button>
                     </div>
                 </div>
             </Card>
 
-            {/* Storage Details */}
-            <Card icon={<Database className="w-5 h-5" />} title="Storage Detail">
+            <Card icon={<Database className="h-5 w-5" />} title="Storage Detail" iconTone="success">
                 <div className="space-y-4">
-                    <div className="flex justify-between items-end">
+                    <div className="flex items-end justify-between">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Usage</p>
-                            <p className="text-2xl font-black text-slate-900 tracking-tighter">{storageProgress}%</p>
+                            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Usage</p>
+                            <p className="text-2xl font-black tracking-tighter text-[var(--student-text)]">{storageProgress}%</p>
                         </div>
-                        <p className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 uppercase tracking-widest">
-                            {props.storageUsed < props.storageLimit * 0.9 ? "Active" : "Full"}
+                        <p className="rounded-full border border-[var(--student-support-soft-strong)] bg-[var(--student-support-soft)] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-support)]">
+                            {storageStatus}
                         </p>
                     </div>
-                    <div className="h-2 w-full bg-slate-50 rounded-full border border-slate-100 overflow-hidden shadow-inner">
-                        <div 
-                            className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-1000"
+                    <div className="h-2 w-full overflow-hidden rounded-full border border-[var(--student-border)] bg-[var(--student-panel-muted)] shadow-inner">
+                        <div
+                            className="h-full rounded-full bg-gradient-to-r from-[var(--student-accent)] to-[var(--student-support)] transition-all duration-1000"
                             style={{ width: `${storageProgress}%` }}
                         />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                         {Math.round(props.storageUsed / 1024 / 1024)}MB / {Math.round(props.storageLimit / 1024 / 1024)}MB Available
                     </p>
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
+                    <div className="rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-4 py-4">
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Plan Status</p>
-                                <p className="mt-1 text-sm font-black tracking-tight text-slate-900">{planStatusLabel}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Plan Status</p>
+                                <p className="mt-1 text-sm font-black tracking-tight text-[var(--student-text)]">{planStatusLabel}</p>
                             </div>
-                            <span className="rounded-full border border-indigo-100 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-500">
+                            <span className="student-chip-accent rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest">
                                 {normalizedPlan}
                             </span>
                         </div>
                         <Link
                             href="/pricing"
-                            className="mt-4 inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-indigo-700"
+                            className="student-button-primary mt-4 inline-flex items-center rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all"
                         >
                             {planStatusActionLabel}
                         </Link>
@@ -131,14 +136,30 @@ export function InfoCards(props: InfoCardsProps) {
     );
 }
 
-function Card({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function Card({
+    icon,
+    title,
+    children,
+    iconTone = "accent"
+}: {
+    icon: ReactNode;
+    title: string;
+    children: ReactNode;
+    iconTone?: "accent" | "warm" | "success";
+}) {
+    const iconClasses = iconTone === "warm"
+        ? "student-icon-tile-warm"
+        : iconTone === "success"
+            ? "student-icon-tile-success"
+            : "student-icon-tile";
+
     return (
-        <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-xl shadow-slate-200/20 flex flex-col gap-6 group hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-500">
+        <div className="student-surface flex flex-col gap-6 rounded-[32px] p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(55,48,38,0.08)]">
             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
+                <div className={`${iconClasses} flex h-10 w-10 items-center justify-center rounded-xl`}>
                     {icon}
                 </div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">{title}</h3>
+                <h3 className="text-lg font-black tracking-tight text-[var(--student-text)]">{title}</h3>
             </div>
             <div className="flex-1 space-y-4">
                 {children}
@@ -149,9 +170,9 @@ function Card({ icon, title, children }: { icon: React.ReactNode; title: string;
 
 function DetailItem({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex justify-between items-center py-0.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</span>
-            <span className="text-slate-900 font-bold text-sm tracking-tight">{value}</span>
+        <div className="flex items-center justify-between py-0.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">{label}</span>
+            <span className="text-right text-sm font-bold tracking-tight text-[var(--student-text)]">{value}</span>
         </div>
     );
 }

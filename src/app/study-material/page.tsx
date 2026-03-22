@@ -1,24 +1,26 @@
 import { Footer } from "@/components/common/footer";
 import { Navbar } from "@/components/common/navbar";
 import { FreeResourcesDashboard } from "@/components/home/FreeResourcesDashboard";
-import { getSessionPayload } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export default async function StudyMaterialPage() {
-    const session = await getSessionPayload();
-
-    if (session) {
-        if (session.role === "ADMIN") redirect("/admin/dashboard");
-        if (session.role === "TEACHER") redirect("/teacher/free-resources");
-        redirect("/student/free-resources");
-    }
+    const user = await getCurrentUser();
+    const saveState = !user
+        ? "login"
+        : user.role === "STUDENT" || user.role === "ADMIN"
+            ? "enabled"
+            : "hidden";
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar user={session} />
+            <Navbar user={user} />
 
             <main className="pt-24 sm:pt-32 pb-20">
-                <FreeResourcesDashboard />
+                <FreeResourcesDashboard
+                    saveState={saveState}
+                    loginHref="/auth/login"
+                    showFeaturePrompt={!user}
+                />
             </main>
 
             <Footer />

@@ -1,9 +1,10 @@
 import { getStudentHistory } from "@/actions/student-actions";
 import { StudentAttemptHistory } from "@/components/student/analytics/attempt-history";
 import { StudentAnalyticsOverview } from "@/components/student/analytics/performance-overview";
+import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getStudentStudyRecommendations } from "@/lib/server/study-intelligence";
-import { Calendar,Info } from "@phosphor-icons/react/dist/ssr";
+import { Info } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 
 export default async function StudentAnalyticsPage() {
@@ -38,41 +39,27 @@ export default async function StudentAnalyticsPage() {
 
     return (
         <div className="space-y-12 pb-20 font-outfit">
-            {/* Standardized Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Performance Metrics</span>
-                    </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-3xl md:text-4xl font-black text-slate-900">
-                        Performance <span className="text-indigo-600">Insights</span>
-                    </h1>
-                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
-                        Track your progress, analyze your performance across subjects, and identify areas for improvement.
-                    </p>
-                </div>
-                {daysToExam > 0 && (
-                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 mb-1 pointer-events-none">
-                        <Calendar size={18} weight="bold" className="text-indigo-400" />
-                        Next Milestone: {daysToExam} Days
-                    </div>
-                )}
-            </div>
+            <StudentPageHeader
+                eyebrow="Performance metrics"
+                title="Performance"
+                accent="Insights"
+                description="Track your progress, analyze your performance across subjects, and identify areas for improvement."
+                daysToExam={daysToExam}
+            />
 
             <StudentAnalyticsOverview data={result.data} />
 
             {recommendations && (
                 <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+                    <div className="student-surface rounded-3xl p-8">
                         <div className="mb-6 flex items-center justify-between gap-4">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Study Intelligence</p>
-                                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Next Best Actions</h2>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">Study intelligence</p>
+                                <h2 className="mt-2 text-2xl font-black tracking-tight text-[var(--student-text)]">Next Best Actions</h2>
                             </div>
-                            <div className="rounded-2xl bg-indigo-50 px-4 py-3 text-right">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Due For Review</div>
-                                <div className="text-2xl font-black text-indigo-700">{recommendations.summary.dueForReviewCount}</div>
+                            <div className="student-chip-accent rounded-2xl px-4 py-3 text-right">
+                                <div className="text-[10px] font-bold uppercase tracking-widest">Due For Review</div>
+                                <div className="text-2xl font-black">{recommendations.summary.dueForReviewCount}</div>
                             </div>
                         </div>
                         <div className="space-y-4">
@@ -99,8 +86,8 @@ export default async function StudentAnalyticsPage() {
                     </div>
 
                     <div className="space-y-6">
-                        <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Subject Focus</p>
+                        <div className="student-surface rounded-3xl p-8">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">Subject focus</p>
                             <div className="mt-5 space-y-4">
                                 {recommendations.subjectFocus.slice(0, 4).map((subject) => (
                                     <div key={subject.subject} className="rounded-2xl border border-slate-100 p-4">
@@ -119,8 +106,8 @@ export default async function StudentAnalyticsPage() {
                             </div>
                         </div>
 
-                        <div className="rounded-3xl border border-slate-100 bg-slate-900 p-8 text-white shadow-sm">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Weekly Direction</p>
+                        <div className="student-surface-dark rounded-3xl p-8 text-white">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Weekly direction</p>
                             <div className="mt-5 space-y-3">
                                 {recommendations.nextActions.map((action) => (
                                     <div key={action} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm font-medium leading-relaxed text-slate-200">
@@ -136,19 +123,19 @@ export default async function StudentAnalyticsPage() {
             <StudentAttemptHistory attempts={result.data.attempts} />
 
             {/* Additional Guidance Section */}
-            <div className="p-10 rounded-2xl bg-slate-900 text-white border border-white/5 shadow-xl flex flex-col lg:flex-row items-center gap-10 relative overflow-hidden group">
-                <div className="w-16 h-16 rounded-2xl bg-white/5 text-indigo-400 flex items-center justify-center shrink-0 border border-white/10 shadow-inner">
-                    <div className="p-2.5 rounded-xl bg-slate-800/50 border border-white/5">
+            <div className="student-surface-dark relative flex flex-col items-center gap-10 overflow-hidden rounded-2xl p-10 text-white lg:flex-row">
+                <div className="student-icon-tile-warm flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl">
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
                         <Info size={28} weight="bold" />
                     </div>
                 </div>
                 <div className="flex-1 space-y-3 text-center lg:text-left relative z-10">
                     <h3 className="text-2xl font-bold text-white font-outfit tracking-tight">How is my ranking calculated?</h3>
-                    <p className="text-slate-400 text-base font-medium leading-relaxed font-sans max-w-4xl opacity-90">
+                    <p className="max-w-4xl font-sans text-base font-medium leading-relaxed text-white/70">
                         Your global ranking is based on your total XP earned across all practice sessions. We compare your performance with other students to provide a clear understanding of your competitive standing and overall progress.
                     </p>
                 </div>
-                <button className="px-8 py-4 rounded-xl bg-white text-slate-950 font-bold text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-50 transition-all active:scale-95 shrink-0 relative z-10">
+                <button className="student-button-secondary relative z-10 shrink-0 rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                     Learn More
                 </button>
             </div>

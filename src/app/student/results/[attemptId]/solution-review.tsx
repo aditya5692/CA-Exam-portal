@@ -1,11 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CheckCircle,XCircle } from "@phosphor-icons/react";
+import { CheckCircle, XCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
 export interface SolutionAnswer {
     id: string;
     questionId: string;
@@ -39,113 +38,144 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                 answers.filter((a) => a.isCorrect);
 
     const tabs: { key: FilterTab; label: string; active: string; inactive: string }[] = [
-        { key: "all", label: `All (${counts.all})`, active: "bg-slate-900 text-white", inactive: "bg-slate-100 text-slate-500 hover:bg-slate-200" },
-        { key: "wrong", label: `Wrong (${counts.wrong})`, active: "bg-rose-500 text-white", inactive: "bg-slate-100 text-slate-500 hover:bg-rose-50" },
-        { key: "correct", label: `Correct (${counts.correct})`, active: "bg-emerald-500 text-white", inactive: "bg-slate-100 text-slate-500 hover:bg-emerald-50" },
+        { key: "all", label: `All (${counts.all})`, active: "student-tab-active border-[var(--student-border)] text-[var(--student-accent-strong)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-panel-solid)]" },
+        { key: "wrong", label: `Wrong (${counts.wrong})`, active: "bg-rose-500 text-white border-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.18)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-rose-50" },
+        { key: "correct", label: `Correct (${counts.correct})`, active: "bg-[var(--student-accent-strong)] text-white border-[var(--student-accent-strong)] shadow-[0_12px_24px_rgba(31,92,80,0.18)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-accent-soft)]" },
     ];
 
     const optionLetters = ["A", "B", "C", "D", "E"];
 
     return (
         <div className="space-y-4">
-            {/* Filter tabs */}
-            <div className="flex items-center gap-3 flex-wrap mb-6">
+            <div className="mb-6 flex flex-wrap items-center gap-3">
                 {tabs.map((t) => (
-                    <button key={t.key} onClick={() => setFilter(t.key)}
-                        className={cn("px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-sm border",
-                            filter === t.key ? t.active + " border-transparent" : t.inactive + " border-slate-100")}>
+                    <button
+                        key={t.key}
+                        onClick={() => setFilter(t.key)}
+                        className={cn(
+                            "rounded-xl border px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95",
+                            filter === t.key ? t.active : `${t.inactive} border-[var(--student-border)]`
+                        )}
+                    >
                         {t.label}
                     </button>
                 ))}
             </div>
 
-            {/* Empty state */}
             {displayed.length === 0 && (
-                <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-                    <div className="text-4xl mb-2">{filter === "wrong" ? "🎉" : "📭"}</div>
-                    <div className="font-bold text-gray-600">
-                        {filter === "wrong" ? "No wrong answers — well done!" : "Nothing here."}
+                <div className="student-surface rounded-2xl py-16 text-center">
+                    <div className="mb-2 text-4xl">{filter === "wrong" ? "Clear" : "Empty"}</div>
+                    <div className="font-bold text-[var(--student-muted-strong)]">
+                        {filter === "wrong" ? "No wrong answers in this set." : "Nothing to review in this filter."}
                     </div>
                 </div>
             )}
 
-            {/* Question cards */}
             {displayed.map((answer, idx) => (
-                <div key={answer.id}
-                    className={cn("p-6 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all duration-300",
-                        !answer.isCorrect && "border-rose-100")}>
+                <div
+                    key={answer.id}
+                    className={cn(
+                        "student-surface rounded-[28px] p-6 transition-all duration-300",
+                        !answer.isCorrect && "border-rose-200"
+                    )}
+                >
                     <div className="flex items-start gap-4">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-inner border border-black/5",
-                            answer.isCorrect ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600")}>
+                        <div
+                            className={cn(
+                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-sm font-bold shadow-inner",
+                                answer.isCorrect
+                                    ? "border-[#cfe0d5] bg-[#e5f0e9] text-[var(--student-success)]"
+                                    : "border-rose-200 bg-rose-50 text-rose-600"
+                            )}
+                        >
                             {idx + 1}
                         </div>
 
-                        <div className="flex-1 space-y-4 min-w-0">
-                            {/* Tags */}
-                            <div className="flex items-center gap-3 flex-wrap">
+                        <div className="min-w-0 flex-1 space-y-4">
+                            <div className="flex flex-wrap items-center gap-3">
                                 {answer.question.topic && (
-                                    <span className="px-3 py-1 rounded-full bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                                    <span className="student-chip rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
                                         {answer.question.topic}
                                     </span>
                                 )}
                                 {answer.question.difficulty && (
-                                    <span className={cn("px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
-                                        answer.question.difficulty === "EASY" ? "bg-emerald-50 text-emerald-600/80 border-emerald-100" :
-                                            answer.question.difficulty === "HARD" ? "bg-rose-50 text-rose-600/80 border-rose-100" :
-                                                "bg-amber-50 text-amber-600/80 border-amber-100")}>
+                                    <span
+                                        className={cn(
+                                            "rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
+                                            answer.question.difficulty === "EASY"
+                                                ? "border-[#cfe0d5] bg-[#e5f0e9] text-[var(--student-success)]"
+                                                : answer.question.difficulty === "HARD"
+                                                    ? "border-rose-200 bg-rose-50 text-rose-600"
+                                                    : "border-[var(--student-support-soft-strong)] bg-[var(--student-support-soft)] text-[var(--student-support)]"
+                                        )}
+                                    >
                                         {answer.question.difficulty}
                                     </span>
                                 )}
                                 {answer.timeSpent > 0 && (
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">⏱ Time: {answer.timeSpent}s</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                        Time: {answer.timeSpent}s
+                                    </span>
                                 )}
                             </div>
 
-                            {/* Question text */}
-                            <p className="font-bold text-slate-900 leading-relaxed text-lg font-outfit tracking-tight">{answer.question.text}</p>
+                            <p className="font-outfit text-lg font-bold leading-relaxed tracking-tight text-[var(--student-text)]">
+                                {answer.question.text}
+                            </p>
 
-                            {/* Options */}
-                            <div className="grid sm:grid-cols-2 gap-3">
+                            <div className="grid gap-3 sm:grid-cols-2">
                                 {answer.question.options.map((opt, oi) => {
                                     const isChosen = opt.id === answer.selectedOptionId;
                                     const isCorrect = opt.isCorrect;
+
                                     return (
-                                        <div key={opt.id}
-                                            className={cn("p-4 rounded-xl border text-sm font-bold flex items-center justify-between gap-3 transition-all",
-                                                isCorrect ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm" :
-                                                    isChosen && !isCorrect ? "bg-rose-50 border-rose-100 text-rose-700 shadow-sm" :
-                                                        "bg-white border-slate-100 text-slate-500 hover:border-slate-200")}>
+                                        <div
+                                            key={opt.id}
+                                            className={cn(
+                                                "flex items-center justify-between gap-3 rounded-xl border p-4 text-sm font-bold transition-all",
+                                                isCorrect
+                                                    ? "border-[#cfe0d5] bg-[#e5f0e9] text-[var(--student-success)] shadow-sm"
+                                                    : isChosen && !isCorrect
+                                                        ? "border-rose-200 bg-rose-50 text-rose-700 shadow-sm"
+                                                        : "border-[var(--student-border)] bg-[var(--student-panel-solid)] text-[var(--student-muted-strong)]"
+                                            )}
+                                        >
                                             <span className="flex items-center gap-3">
-                                                <span className={cn("w-8 h-8 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 shadow-sm",
-                                                    isCorrect ? "bg-emerald-500 text-white" :
-                                                        isChosen ? "bg-rose-500 text-white" :
-                                                            "bg-slate-100 text-slate-400")}>
+                                                <span
+                                                    className={cn(
+                                                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold shadow-sm",
+                                                        isCorrect
+                                                            ? "bg-[var(--student-success)] text-white"
+                                                            : isChosen
+                                                                ? "bg-rose-500 text-white"
+                                                                : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]"
+                                                    )}
+                                                >
                                                     {optionLetters[oi] ?? String.fromCharCode(65 + oi)}
                                                 </span>
                                                 {opt.text}
                                             </span>
-                                            {isCorrect && <CheckCircle size={18} weight="fill" className="text-emerald-500 shrink-0" />}
-                                            {isChosen && !isCorrect && <XCircle size={18} weight="fill" className="text-rose-500 shrink-0" />}
+                                            {isCorrect && <CheckCircle size={18} weight="fill" className="shrink-0 text-[var(--student-success)]" />}
+                                            {isChosen && !isCorrect && <XCircle size={18} weight="fill" className="shrink-0 text-rose-500" />}
                                         </div>
                                     );
                                 })}
                             </div>
 
-                            {/* Explanation */}
                             {answer.question.explanation && (
-                                <div className="flex gap-4 p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                                    <span className="text-xl shrink-0">💡</span>
-                                    <div>
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 opacity-70">Explanation</div>
-                                        <p className="text-base text-slate-700 font-medium leading-relaxed font-sans">{answer.question.explanation}</p>
+                                <div className="rounded-2xl border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-5">
+                                    <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[var(--student-accent-strong)]">
+                                        Explanation
                                     </div>
+                                    <p className="text-base font-medium leading-relaxed text-[var(--student-text)]">
+                                        {answer.question.explanation}
+                                    </p>
                                 </div>
                             )}
 
-                            {/* Unanswered notice */}
                             {!answer.selectedOptionId && (
-                                <div className="flex gap-3 items-center p-4 rounded-xl bg-slate-50 border border-slate-100 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-                                    Not Answered
+                                <div className="rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                    Not answered
                                 </div>
                             )}
                         </div>
@@ -153,14 +183,17 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                 </div>
             ))}
 
-            {/* Back CTA */}
-            <div className="pt-8 flex gap-4">
-                <Link href="/student/exams"
-                    className="flex-1 py-4 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all text-center shadow-lg active:scale-95">
+            <div className="flex gap-4 pt-8">
+                <Link
+                    href="/student/exams"
+                    className="student-button-primary flex-1 rounded-xl px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest transition-all"
+                >
                     Start Next Exam
                 </Link>
-                <Link href="/student/analytics"
-                    className="flex-1 py-4 rounded-xl bg-white border border-slate-200 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all text-center active:scale-95 shadow-sm">
+                <Link
+                    href="/student/analytics"
+                    className="student-button-secondary flex-1 rounded-xl px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest transition-all"
+                >
                     View Analytics
                 </Link>
             </div>

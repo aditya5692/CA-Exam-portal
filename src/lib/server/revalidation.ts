@@ -12,7 +12,11 @@ export function revalidateBatchSurfaces() {
 
 export function revalidateMaterialSurfaces() {
     revalidatePath("/admin/dashboard");
+    revalidatePath("/study-material");
+    revalidatePath("/teacher/free-resources");
     revalidatePath("/teacher/materials");
+    revalidatePath("/student/dashboard");
+    revalidatePath("/student/free-resources");
     revalidatePath("/student/materials");
 }
 

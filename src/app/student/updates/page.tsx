@@ -2,8 +2,9 @@
 
 import { getStudentFeed,joinBatch } from "@/actions/batch-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
+import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { cn } from "@/lib/utils";
-import { Calendar,Plus,ShieldCheck,X } from "@phosphor-icons/react";
+import { Plus,ShieldCheck,X } from "@phosphor-icons/react";
 import { useCallback,useEffect,useRef,useState } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -216,61 +217,55 @@ export default function StudentUpdatesPage() {
 
     return (
         <div className="max-w-6xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000 font-outfit space-y-12">
-            {/* Standardized Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4 px-4">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Academy Intelligence</span>
-                    </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-3xl md:text-4xl font-black text-slate-900">
-                        Academy <span className="text-indigo-600">Updates</span>
-                    </h1>
-                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
-                        Focused news and regulatory changes for your curriculum.
-                    </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 shrink-0 mb-1">
-                    {daysToExam > 0 && (
-                        <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 pointer-events-none mr-2">
-                            <Calendar size={18} weight="bold" className="text-indigo-400" />
-                            Next Milestone: {daysToExam} Days
-                        </div>
-                    )}
-                    <button className="flex items-center gap-2 px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all active:scale-95 uppercase tracking-widest">
-                        <span className="material-symbols-outlined text-lg">filter_alt</span>
-                        Filter View
-                    </button>
-                    <button
-                        onClick={markAllAsRead}
-                        className="flex items-center gap-2 px-5 py-3.5 bg-indigo-600 border border-indigo-500 rounded-xl text-[10px] font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 uppercase tracking-widest"
-                    >
-                        <span className="material-symbols-outlined text-lg">done_all</span>
-                        Mark All Read
-                    </button>
-                    {!isAdminView && (
-                        <button
-                            onClick={() => setShowJoinModal(true)}
-                            className="flex items-center gap-2 px-5 py-3.5 bg-white border border-indigo-100 rounded-xl text-[10px] font-bold text-indigo-600 shadow-sm hover:bg-indigo-50 transition-all active:scale-95 uppercase tracking-widest"
-                        >
-                            <Plus size={16} weight="bold" />
-                            Join Batch
+            <StudentPageHeader
+                className="px-4"
+                eyebrow="Academy intelligence"
+                title="Academy"
+                accent="Updates"
+                description="Focused news and regulatory changes for your curriculum."
+                aside={
+                    <div className="mb-1 flex flex-wrap items-center gap-3">
+                        {daysToExam > 0 && (
+                            <div className="student-chip inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[11px] font-semibold">
+                                <span className="h-2 w-2 rounded-full bg-[var(--student-support)]" />
+                                Next milestone in {daysToExam} days
+                            </div>
+                        )}
+                        <button className="student-button-secondary flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                            <span className="material-symbols-outlined text-lg">filter_alt</span>
+                            Filter View
                         </button>
-                    )}
-                </div>
-            </div>
+                        <button
+                            onClick={markAllAsRead}
+                            className="student-button-primary flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
+                        >
+                            <span className="material-symbols-outlined text-lg">done_all</span>
+                            Mark All Read
+                        </button>
+                        {!isAdminView && (
+                            <button
+                                onClick={() => setShowJoinModal(true)}
+                                className="student-chip-accent flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
+                            >
+                                <Plus size={16} weight="bold" />
+                                Join Batch
+                            </button>
+                        )}
+                    </div>
+                }
+            />
 
             {/* Sub-nav filtering */}
-            <nav className="flex items-center gap-3 mb-10 pb-2 overflow-x-auto no-scrollbar px-4">
+            <nav className="flex items-center gap-3 mb-10 overflow-x-auto px-4 pb-2 no-scrollbar">
                 {filterOptions.map(sub => (
                     <button
                         key={sub}
                         onClick={() => setSelectedSubject(sub)}
                         className={cn(
-                            "px-5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap border shadow-sm",
+                            "rounded-full border px-5 py-2 text-xs font-bold whitespace-nowrap transition-all shadow-sm",
                             selectedSubject === sub
-                                ? "bg-indigo-600 border-indigo-500 text-white shadow-indigo-200"
-                                : "bg-white border-slate-100 text-slate-500 hover:border-slate-300"
+                                ? "student-tab-active"
+                                : "bg-white border-[var(--student-border)] text-[var(--student-muted)] hover:border-[var(--student-border-strong)]"
                         )}
                     >
                         {sub}

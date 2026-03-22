@@ -14,12 +14,12 @@ export function ExamHero({
     return (
         <div className="flex flex-col md:flex-row md:items-end justify-end mb-8">
             {/* Level Toggle - Premium Glass Implementation */}
-            <div className="flex items-center p-1.5 bg-white rounded-xl shadow-sm border border-slate-100 h-fit">
+            <div className="flex h-fit items-center rounded-xl border border-[var(--student-border)] bg-[rgba(255,253,249,0.92)] p-1.5 shadow-sm">
                 <button
                     onClick={() => onLevelChange("foundation")}
                     className={cn(
                         "px-6 py-2 text-xs font-bold rounded-lg transition-all duration-200",
-                        caLevelKey === "foundation" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50"
+                        caLevelKey === "foundation" ? "student-tab-active" : "text-[var(--student-muted)] hover:bg-white/80 hover:text-[var(--student-text)]"
                     )}
                 >
                     CA Foundation
@@ -28,7 +28,7 @@ export function ExamHero({
                     onClick={() => onLevelChange("ipc")}
                     className={cn(
                         "px-6 py-2 text-xs font-bold rounded-lg transition-all duration-200",
-                        caLevelKey === "ipc" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50"
+                        caLevelKey === "ipc" ? "student-tab-active" : "text-[var(--student-muted)] hover:bg-white/80 hover:text-[var(--student-text)]"
                     )}
                 >
                     CA IPC
@@ -37,7 +37,7 @@ export function ExamHero({
                     onClick={() => onLevelChange("final")}
                     className={cn(
                         "px-6 py-2 text-xs font-bold rounded-lg transition-all duration-200",
-                        caLevelKey === "final" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50"
+                        caLevelKey === "final" ? "student-tab-active" : "text-[var(--student-muted)] hover:bg-white/80 hover:text-[var(--student-text)]"
                     )}
                 >
                     CA Final

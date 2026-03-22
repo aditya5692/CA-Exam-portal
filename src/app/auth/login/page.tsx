@@ -2,18 +2,18 @@
 
 import { login } from "@/actions/auth-actions";
 import {
-  ArrowRight,
-  ChalkboardTeacher,
-  Envelope,
-  GoogleLogo,
-  GraduationCap,
-  IdentificationBadge,
-  Lock,
-  ShieldCheck,
+    ArrowRight,
+    ChalkboardTeacher,
+    Envelope,
+    GoogleLogo,
+    GraduationCap,
+    IdentificationBadge,
+    Lock,
+    ShieldCheck
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo,useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type LoginRole = "student" | "teacher" | "admin";
 
@@ -25,6 +25,24 @@ const DEMO_ACCOUNT_CARDS = [
     { label: "student2", registrationNumber: "STUD002", email: "student2@demo.local", role: "student" as LoginRole },
 ];
 
+const ROLE_META: Record<LoginRole, { title: string; description: string; icon: typeof IdentificationBadge }> = {
+    student: {
+        title: "Student workspace",
+        description: "Sign in to practice timed papers, revisit weak chapters, and keep revision material tied to real progress.",
+        icon: IdentificationBadge
+    },
+    teacher: {
+        title: "Teacher workspace",
+        description: "Manage batches, publish materials, monitor attempts, and intervene where students are actually slipping.",
+        icon: ChalkboardTeacher
+    },
+    admin: {
+        title: "Admin workspace",
+        description: "Oversee platform health, control content, and coordinate the wider exam ecosystem from a calmer dashboard.",
+        icon: ShieldCheck
+    }
+};
+
 export default function LoginPage() {
     const router = useRouter();
     const [role, setRole] = useState<LoginRole>("student");
@@ -32,11 +50,23 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [nextPath, setNextPath] = useState("");
 
     const activeCards = useMemo(
         () => DEMO_ACCOUNT_CARDS.filter((account) => account.role === role),
         [role]
     );
+
+    const activeMeta = ROLE_META[role];
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const nextValue = new URLSearchParams(window.location.search).get("next")?.trim() ?? "";
+        setNextPath(nextValue);
+    }, []);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -58,6 +88,7 @@ export default function LoginPage() {
 
         const redirectTo =
             result.data?.redirectTo ??
+            nextPath ??
             (role === "admin" ? "/admin/dashboard" : role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
 
         router.push(redirectTo);
@@ -65,146 +96,269 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
+        <div className="min-h-screen overflow-x-hidden bg-[#f5efe5] px-4 py-4 text-[#1f2b2f] sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+            <div className="absolute left-[-10rem] top-[-8rem] h-80 w-80 rounded-full bg-[#f2e3c0] blur-3xl opacity-70" />
+            <div className="absolute bottom-[-10rem] right-[-8rem] h-96 w-96 rounded-full bg-[#dcebe6] blur-3xl opacity-70" />
 
-            <Link href="/" className="flex items-center gap-3 mb-10 relative z-10 group">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-xl shadow-indigo-500/20 group-hover:scale-110 transition-transform">
-                    <GraduationCap size={28} weight="bold" className="text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-900 tracking-tight font-outfit">Financly</span>
-            </Link>
+            <div className="relative mx-auto grid w-full max-w-6xl gap-5 lg:min-h-[calc(100vh-4rem)] lg:grid-cols-[0.92fr_1.08fr] lg:gap-8">
+                <div className="order-2 flex flex-col justify-between rounded-[32px] border border-[#314148] bg-[#223036] p-6 text-[#fff8f0] shadow-[0_30px_70px_rgba(24,31,34,0.16)] sm:p-8 lg:order-1 lg:rounded-[40px] lg:p-10">
+                    <div className="space-y-8">
+                        <Link href="/" className="inline-flex items-center gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-[#f2e3c0]">
+                                <GraduationCap size={26} weight="bold" />
+                            </div>
+                            <div>
+                                <div className="font-outfit text-2xl font-black tracking-tight text-white">Financly</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d9e8e3]">CA Exam Workspace</div>
+                            </div>
+                        </Link>
 
-            <div className="w-full max-w-md bg-white rounded-[40px] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-12 relative z-10 animate-in fade-in zoom-in-95 duration-700">
-                <div className="text-center mb-10">
-                    <h1 className="text-4xl font-bold text-slate-900 font-outfit mb-3 tracking-tight">Welcome Back</h1>
-                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Access your learning studio</p>
-                </div>
-
-                <div className="flex p-1.5 bg-slate-50 rounded-2xl mb-10 gap-1 border border-slate-100">
-                    <button
-                        type="button"
-                        onClick={() => setRole("student")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${role === "student" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-600"}`}
-                    >
-                        <IdentificationBadge size={18} weight={role === "student" ? "fill" : "bold"} />
-                        Student
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setRole("teacher")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${role === "teacher" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-600"}`}
-                    >
-                        <ChalkboardTeacher size={18} weight={role === "teacher" ? "fill" : "bold"} />
-                        Teacher
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setRole("admin")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${role === "admin" ? "bg-white text-indigo-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-600"}`}
-                    >
-                        <ShieldCheck size={18} weight={role === "admin" ? "fill" : "bold"} />
-                        Admin
-                    </button>
-                </div>
-
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-4">Credentials</label>
-                        <div className="relative group">
-                            <Envelope size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" weight="bold" />
-                            <input
-                                type="text"
-                                value={identifier}
-                                onChange={(event) => setIdentifier(event.target.value)}
-                                placeholder={role === "admin" ? "ADMIN001 or admin@demo.local" : "TCHR001 / STUD001 or email"}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-[20px] py-4.5 pl-14 pr-6 text-sm font-medium focus:bg-white focus:border-indigo-200 focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none font-sans"
-                                required
-                            />
+                        <div className="space-y-5">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#d9e8e3]">
+                                Secure sign in
+                            </div>
+                            <h1 className="font-outfit text-4xl font-black leading-[0.98] tracking-[-0.05em] text-white sm:text-5xl">
+                                Enter the workspace without the usual dashboard noise
+                            </h1>
+                            <p className="max-w-xl text-base font-medium leading-relaxed text-[#d0d9d6]">
+                                Choose the role you need, sign in with registration number or email, and continue directly into the correct exam workflow.
+                            </p>
                         </div>
-                    </div>
 
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center ml-4">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Security Key</label>
-                            <Link href="#" className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.2em] hover:underline">Forgot?</Link>
-                        </div>
-                        <div className="relative group">
-                            <Lock size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" weight="bold" />
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(event) => setPassword(event.target.value)}
-                                placeholder="••••••••"
-                                className="w-full bg-slate-50 border border-slate-100 rounded-[20px] py-4.5 pl-14 pr-6 text-sm font-medium focus:bg-white focus:border-indigo-200 focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none font-sans"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {errorMessage ? (
-                        <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-                            {errorMessage}
-                        </div>
-                    ) : null}
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-5 rounded-[20px] bg-indigo-600 text-white font-bold text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-indigo-500/20 hover:bg-slate-900 transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-70 mt-6"
-                    >
-                        {isSubmitting ? "Authenticating..." : "Sign In Securely"} <ArrowRight size={18} weight="bold" />
-                    </button>
-                </form>
-
-                <div className="mt-8 rounded-[28px] border border-gray-100 bg-gray-50/70 p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Demo Logins</p>
-                    <p className="mt-1 text-sm font-medium text-gray-600">
-                        Use password <span className="font-bold text-indigo-600">demo123</span> for all demo accounts.
-                    </p>
-                    <div className="mt-4 grid gap-3">
-                        {activeCards.map((account) => (
-                            <button
-                                key={account.label}
-                                type="button"
-                                onClick={() => {
-                                    setRole(account.role);
-                                    setIdentifier(account.registrationNumber);
-                                    setPassword("demo123");
-                                    setErrorMessage("");
-                                }}
-                                className="rounded-2xl border border-gray-100 bg-white px-4 py-3 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50/40"
-                            >
-                                <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-900">{account.label}</p>
-                                        <p className="text-xs font-medium text-gray-500">{account.registrationNumber}</p>
-                                    </div>
-                                    <p className="text-xs font-medium text-indigo-600">{account.email}</p>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            {[
+                                { value: "3", label: "Access roles" },
+                                { value: "Timed", label: "Exam workflows" },
+                                { value: "Demo", label: "Credentials ready" }
+                            ].map((metric) => (
+                                <div key={metric.label} className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-4 sm:rounded-[24px] sm:py-5">
+                                    <div className="font-outfit text-3xl font-black tracking-tight text-white">{metric.value}</div>
+                                    <div className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#d9e8e3]">{metric.label}</div>
                                 </div>
-                            </button>
-                        ))}
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-8 sm:mt-10">
+                        <div className="sm:hidden rounded-[22px] border border-[#c5ddd5] bg-[#dcebe6] px-5 py-4 text-[#1f5c50]">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#1f5c50] shadow-sm">
+                                    <activeMeta.icon size={20} weight="bold" />
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-black uppercase tracking-[0.18em]">{activeMeta.title}</div>
+                                    <div className="mt-1 text-sm font-medium leading-relaxed">{activeMeta.description}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 hidden space-y-4 sm:block">
+                            {(["student", "teacher", "admin"] as LoginRole[]).map((itemRole) => {
+                                const meta = ROLE_META[itemRole];
+                                const Icon = meta.icon;
+                                const isActive = itemRole === role;
+
+                                return (
+                                    <div
+                                        key={itemRole}
+                                        className={`rounded-[24px] border px-5 py-4 transition-all ${
+                                            isActive
+                                                ? "border-[#c5ddd5] bg-[#dcebe6] text-[#1f5c50]"
+                                                : "border-white/10 bg-white/5 text-[#d0d9d6]"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isActive ? "bg-white text-[#1f5c50]" : "bg-white/10 text-[#f2e3c0]"}`}>
+                                                <Icon size={20} weight="bold" />
+                                            </div>
+                                            <div>
+                                                <div className={`text-[10px] font-black uppercase tracking-[0.18em] ${isActive ? "text-[#1f5c50]" : "text-[#d9e8e3]"}`}>
+                                                    {meta.title}
+                                                </div>
+                                                <div className={`mt-1 text-sm font-medium leading-relaxed ${isActive ? "text-[#1f5c50]" : "text-[#d0d9d6]"}`}>
+                                                    {meta.description}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
-                <div className="mt-8">
-                    <div className="relative mb-8">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
-                        <div className="relative flex justify-center text-[9px] uppercase tracking-[0.3em] font-bold text-slate-300"><span className="bg-white px-6">Third Party Auth</span></div>
+                <div className="order-1 rounded-[32px] border border-[#e6dccd] bg-[rgba(255,253,249,0.94)] p-5 shadow-[0_28px_60px_rgba(55,48,38,0.08)] backdrop-blur-md sm:p-8 lg:order-2 lg:rounded-[40px] lg:p-10">
+                    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#667370]">Role-based access</div>
+                            <h2 className="mt-3 font-outfit text-4xl font-black tracking-tight text-[#1f2b2f]">
+                                Welcome back
+                            </h2>
+                        </div>
+                        <Link href="/" className="text-sm font-bold text-[#1f5c50] transition-colors hover:text-[#18493f]">
+                            Back to homepage
+                        </Link>
                     </div>
-                    <button
-                        type="button"
-                        className="w-full py-4 border border-slate-100 rounded-[20px] bg-slate-50 flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-600 hover:bg-white hover:border-indigo-100 transition-all active:scale-95 group font-sans"
-                    >
-                        <GoogleLogo size={20} weight="bold" className="text-rose-500 group-hover:scale-110 transition-transform" />
-                        Continue with Google
-                    </button>
-                </div>
 
-                <p className="mt-10 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
-                    Don&apos;t have an account? <Link href="/auth/signup" className="text-indigo-600 hover:underline hover:text-indigo-700 transition-colors">Create for Free</Link>
-                </p>
+                    <div className="mb-6 rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] p-2 sm:mb-8 sm:rounded-[24px]">
+                        <div className="grid grid-cols-3 gap-2">
+                            {([
+                                { value: "student", label: "Student", icon: IdentificationBadge },
+                                { value: "teacher", label: "Teacher", icon: ChalkboardTeacher },
+                                { value: "admin", label: "Admin", icon: ShieldCheck }
+                            ] as const).map((item) => {
+                                const Icon = item.icon;
+                                const isActive = role === item.value;
+
+                                return (
+                                    <button
+                                        key={item.value}
+                                        type="button"
+                                        onClick={() => setRole(item.value)}
+                                        className={`flex items-center justify-center gap-1.5 rounded-[16px] px-2 py-3 text-[10px] font-black uppercase tracking-[0.12em] transition-all sm:gap-2 sm:rounded-[18px] sm:text-[11px] sm:tracking-[0.16em] ${
+                                            isActive
+                                                ? "border border-[#c5ddd5] bg-white text-[#1f5c50] shadow-[0_10px_20px_rgba(55,48,38,0.05)]"
+                                                : "text-[#667370] hover:text-[#1f5c50]"
+                                        }`}
+                                    >
+                                        <Icon size={18} weight={isActive ? "fill" : "bold"} />
+                                        {item.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="mb-6 rounded-[22px] border border-[#c5ddd5] bg-[#dcebe6] px-4 py-4 sm:rounded-[24px] sm:px-5">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#1f5c50] shadow-sm">
+                                <activeMeta.icon size={20} weight="bold" />
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1f5c50]">{activeMeta.title}</div>
+                                <p className="mt-1 text-sm font-medium leading-relaxed text-[#1f5c50]">
+                                    {activeMeta.description}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
+                        <div className="space-y-3">
+                            <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Credentials</label>
+                            <div className="relative group">
+                                <Envelope size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                <input
+                                    type="text"
+                                    value={identifier}
+                                    onChange={(event) => setIdentifier(event.target.value)}
+                                    placeholder={role === "admin" ? "ADMIN001 or admin@demo.local" : "TCHR001 / STUD001 or email"}
+                                    className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Security key</label>
+                                <Link href="#" className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1f5c50] hover:underline">
+                                    Forgot?
+                                </Link>
+                            </div>
+                            <div className="relative group">
+                                <Lock size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    placeholder="Enter password"
+                                    className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {errorMessage ? (
+                            <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                                {errorMessage}
+                            </div>
+                        ) : null}
+
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="flex w-full items-center justify-center gap-3 rounded-[20px] border border-[#1f5c50] bg-[#1f5c50] py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-[0_16px_34px_rgba(31,92,80,0.14)] transition-all duration-300 hover:bg-[#18493f] active:scale-95 disabled:opacity-70 sm:rounded-[22px]"
+                        >
+                            {isSubmitting ? "Authenticating..." : "Sign in securely"}
+                            <ArrowRight size={18} weight="bold" />
+                        </button>
+                    </form>
+
+                    <div className="mt-8 rounded-[24px] border border-[#e6dccd] bg-[#f4ede2] p-4 sm:rounded-[28px] sm:p-5">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Demo access</div>
+                                <div className="mt-1 text-sm font-medium text-[#4f5b58]">
+                                    Use password <span className="font-bold text-[#1f5c50]">demo123</span> for all demo accounts.
+                                </div>
+                            </div>
+                            <div className="rounded-full border border-[#d7c5a9] bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#b7791f]">
+                                {role}
+                            </div>
+                        </div>
+
+                        <div className="mt-4 grid gap-3">
+                            {activeCards.map((account) => (
+                                <button
+                                    key={account.label}
+                                    type="button"
+                                    onClick={() => {
+                                        setRole(account.role);
+                                        setIdentifier(account.registrationNumber);
+                                        setPassword("demo123");
+                                        setErrorMessage("");
+                                    }}
+                                    className="rounded-[22px] border border-[#e6dccd] bg-white px-4 py-3 text-left transition-all hover:border-[#c5ddd5] hover:bg-[#fcfaf6]"
+                                >
+                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <div className="text-sm font-bold text-[#1f2b2f]">{account.label}</div>
+                                            <div className="text-xs font-medium text-[#667370]">{account.registrationNumber}</div>
+                                        </div>
+                                        <div className="text-xs font-medium text-[#1f5c50]">{account.email}</div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-8">
+                        <div className="relative mb-7">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-[#e6dccd]" />
+                            </div>
+                            <div className="relative flex justify-center text-[9px] font-black uppercase tracking-[0.3em] text-[#8b9693]">
+                                <span className="bg-[rgba(255,253,249,0.94)] px-5">Third-party auth</span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="group flex w-full items-center justify-center gap-3 rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 text-[10px] font-black uppercase tracking-[0.16em] text-[#4f5b58] transition-all active:scale-95"
+                        >
+                            <GoogleLogo size={20} weight="bold" className="text-rose-500 transition-transform group-hover:scale-110" />
+                            Continue with Google
+                        </button>
+                    </div>
+
+                    <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.14em] text-[#8b9693] sm:tracking-[0.16em]">
+                        Do not have an account?{" "}
+                        <Link href="/auth/signup" className="text-[#1f5c50] transition-colors hover:text-[#18493f]">
+                            Create for free
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

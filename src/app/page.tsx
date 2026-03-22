@@ -3,215 +3,311 @@ import { Navbar } from "@/components/common/navbar";
 import { Testimonials } from "@/components/common/testimonials";
 import { getSessionPayload } from "@/lib/auth/session";
 import {
-  CaretRight,
-  ChalkboardTeacher,
-  ChartLineUp,
-  CheckCircle,
-  Exam,
-  GraduationCap,
-  Play,
-  ShieldCheck,
-  Sparkle,
-  Timer
+    CaretRight,
+    ChalkboardTeacher,
+    ChartLineUp,
+    CheckCircle,
+    Exam,
+    GraduationCap,
+    Play,
+    ShieldCheck,
+    Sparkle,
+    Timer
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+const FEATURE_CARDS = [
+    {
+        title: "Exam-grade simulation",
+        description: "Timed practice, answer discipline, and review cues designed around the pace students actually need.",
+        icon: Exam,
+        tone: "accent"
+    },
+    {
+        title: "Mentor-led clarity",
+        description: "Teachers can publish updates, materials, and focused interventions without a cluttered handoff between tools.",
+        icon: ChalkboardTeacher,
+        tone: "warm"
+    },
+    {
+        title: "Progress with context",
+        description: "Analytics stay useful because they are tied to chapters, attempts, and revision decisions instead of vanity charts.",
+        icon: ChartLineUp,
+        tone: "success"
+    }
+];
+
+const FEATURE_TONES = {
+    accent: {
+        panel: "bg-[#dcebe6] text-[#1f5c50] border-[#c5ddd5]",
+        link: "text-[#1f5c50]"
+    },
+    warm: {
+        panel: "bg-[#f2e3c0] text-[#b7791f] border-[#e5d2a3]",
+        link: "text-[#b7791f]"
+    },
+    success: {
+        panel: "bg-[#e5f0e9] text-[#2f7d55] border-[#cfe0d5]",
+        link: "text-[#2f7d55]"
+    }
+} as const;
+
 export default async function Home() {
-  const session = await getSessionPayload();
+    const session = await getSessionPayload();
 
-  if (session) {
-    if (session.role === "ADMIN") redirect("/admin/dashboard");
-    if (session.role === "TEACHER") redirect("/teacher/dashboard");
-    redirect("/student/dashboard");
-  }
+    if (session) {
+        if (session.role === "ADMIN") redirect("/admin/dashboard");
+        if (session.role === "TEACHER") redirect("/teacher/dashboard");
+        redirect("/student/dashboard");
+    }
 
-  return (
-    <div className="min-h-screen bg-white selection:bg-indigo-100 selection:text-indigo-900">
-      <Navbar user={session} />
+    return (
+        <div className="min-h-screen bg-[#f5efe5] text-[#1f2b2f] selection:bg-[#dcebe6] selection:text-[#1f5c50]">
+            <Navbar user={session} />
 
-      <div className="pt-24 sm:pt-32">
-        <div className="bg-indigo-600 py-4 relative overflow-hidden group shadow-lg shadow-indigo-600/20">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
-          <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-center gap-6 text-white relative z-10">
-            <div className="flex items-center gap-3">
-              <Sparkle size={20} weight="fill" className="text-amber-400 animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-100">Mega Holi Offer</span>
+            <div className="pt-24 sm:pt-28">
+                <div className="border-y border-[#314148] bg-[#223036] px-6 py-4 text-[#fff8f0] sm:px-12">
+                    <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/10">
+                                <Sparkle size={16} weight="fill" className="text-[#f2e3c0]" />
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d9e8e3]">Preparation window</div>
+                                <div className="text-sm font-semibold text-white">Mocks, PYQs, and revision material in one workspace for the May 2026 cycle.</div>
+                            </div>
+                        </div>
+                        <Link
+                            href="/pricing"
+                            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-all hover:bg-white/15"
+                        >
+                            View Plans
+                            <CaretRight size={14} weight="bold" />
+                        </Link>
+                    </div>
+                </div>
             </div>
-            <p className="text-sm font-bold text-indigo-50 leading-none font-sans">
-              Get <span className="text-white decoration-amber-400 underline decoration-2 underline-offset-4">CA Pass PRO</span> for just <span className="text-2xl font-bold font-outfit text-white">₹399</span>/year!
-            </p>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-bold uppercase tracking-widest bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">Ends in 08:44:21</span>
-              <Link href="/pricing" className="bg-white text-indigo-600 px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-amber-400 hover:text-white transition-all shadow-lg active:scale-95 border-b-2 border-indigo-200">
-                Claim Now
-              </Link>
-            </div>
-          </div>
+
+            <main>
+                <section className="relative overflow-hidden px-6 pb-24 pt-16 sm:px-12 sm:pb-28 sm:pt-20">
+                    <div className="absolute left-[-12rem] top-[-8rem] h-80 w-80 rounded-full bg-[#f2e3c0] blur-3xl opacity-70" />
+                    <div className="absolute right-[-10rem] top-10 h-96 w-96 rounded-full bg-[#dcebe6] blur-3xl opacity-70" />
+
+                    <div className="relative mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+                        <div className="space-y-8">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-[#d7c5a9] bg-[rgba(255,253,249,0.82)] px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#4f5b58] shadow-[0_10px_20px_rgba(55,48,38,0.05)]">
+                                <ShieldCheck size={14} weight="bold" className="text-[#1f5c50]" />
+                                Built for disciplined CA prep
+                            </div>
+
+                            <div className="space-y-5">
+                                <h1 className="max-w-3xl font-outfit text-5xl font-black leading-[0.95] tracking-[-0.05em] text-[#1f2b2f] md:text-7xl">
+                                    A calmer workspace for
+                                    <span className="text-[#1f5c50]"> serious CA preparation</span>
+                                </h1>
+                                <p className="max-w-2xl text-lg font-medium leading-relaxed text-[#667370] sm:text-xl">
+                                    Run mocks, revisit weak chapters, sort past papers, and stay aligned with your next attempt without bouncing between disconnected tools.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-4 sm:flex-row">
+                                <Link
+                                    href="/student/exams"
+                                    className="inline-flex items-center justify-center gap-3 rounded-2xl border border-[#1f5c50] bg-[#1f5c50] px-7 py-4 text-base font-bold text-white shadow-[0_16px_34px_rgba(31,92,80,0.16)] transition-all hover:bg-[#18493f] active:scale-95"
+                                >
+                                    Enter Mock Exams
+                                    <Play size={18} weight="fill" />
+                                </Link>
+                                <Link
+                                    href="/pricing"
+                                    className="inline-flex items-center justify-center gap-3 rounded-2xl border border-[#d7c5a9] bg-[rgba(255,253,249,0.86)] px-7 py-4 text-base font-bold text-[#1f2b2f] shadow-[0_10px_22px_rgba(55,48,38,0.05)] transition-all hover:bg-white active:scale-95"
+                                >
+                                    Explore Pass Pro
+                                </Link>
+                            </div>
+
+                            <div className="grid gap-4 sm:grid-cols-3">
+                                {[
+                                    { value: "18,000+", label: "Practice papers" },
+                                    { value: "Topic-wise", label: "Review depth" },
+                                    { value: "3 roles", label: "Student, teacher, admin" }
+                                ].map((item) => (
+                                    <div
+                                        key={item.label}
+                                        className="rounded-[26px] border border-[#e6dccd] bg-[rgba(255,253,249,0.84)] px-5 py-6 shadow-[0_14px_32px_rgba(55,48,38,0.05)]"
+                                    >
+                                        <div className="font-outfit text-3xl font-black tracking-tight text-[#1f2b2f]">{item.value}</div>
+                                        <div className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#667370]">{item.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="relative">
+                            <div className="rounded-[40px] border border-[#e6dccd] bg-[rgba(255,253,249,0.88)] p-5 shadow-[0_28px_60px_rgba(55,48,38,0.08)] backdrop-blur-md sm:p-6">
+                                <div className="rounded-[34px] border border-[#314148] bg-[#223036] p-6 text-[#fff8f0] shadow-[0_24px_56px_rgba(24,31,34,0.16)]">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d9e8e3]">Control deck</div>
+                                            <h2 className="mt-3 font-outfit text-3xl font-black tracking-tight text-white">
+                                                One place to keep pace with the next paper
+                                            </h2>
+                                        </div>
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10">
+                                            <GraduationCap size={24} weight="bold" className="text-[#f2e3c0]" />
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                                        <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#e5d2a3] bg-[#f2e3c0] text-[#b7791f]">
+                                                    <Timer size={20} weight="bold" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d9e8e3]">Today's focus</div>
+                                                    <div className="text-lg font-bold text-white">3-hour mock window</div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+                                                <div className="h-full w-[72%] rounded-full bg-[#f2e3c0]" />
+                                            </div>
+                                            <div className="mt-3 text-sm font-medium text-[#d0d9d6]">
+                                                Revision stack prepared for Accounts, Law, and Taxation.
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#c5ddd5] bg-[#dcebe6] text-[#1f5c50]">
+                                                    <ChartLineUp size={20} weight="bold" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d9e8e3]">Cohort pulse</div>
+                                                    <div className="text-lg font-bold text-white">Capital gains still weak</div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-5 space-y-3">
+                                                <div className="flex items-center justify-between text-sm font-medium text-[#d0d9d6]">
+                                                    <span>Engagement</span>
+                                                    <span className="font-bold text-white">84%</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-sm font-medium text-[#d0d9d6]">
+                                                    <span>Mastery</span>
+                                                    <span className="font-bold text-white">62%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 rounded-[28px] border border-white/10 bg-white/5 p-5">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d9e8e3]">What the workflow looks like</div>
+                                                <div className="mt-2 text-base font-medium leading-relaxed text-[#d0d9d6]">
+                                                    Start with a timed paper, review mistakes chapter by chapter, then move straight into revision material without leaving the workspace.
+                                                </div>
+                                            </div>
+                                            <Link
+                                                href="/student/analytics"
+                                                className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-all hover:bg-white/15"
+                                            >
+                                                See analytics
+                                                <CaretRight size={14} weight="bold" />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="px-6 pb-24 sm:px-12">
+                    <div className="mx-auto max-w-7xl">
+                        <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                            <div className="space-y-3">
+                                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#667370]">What makes it usable</div>
+                                <h2 className="max-w-3xl font-outfit text-4xl font-black tracking-tight text-[#1f2b2f]">
+                                    Designed to reduce noise, not just add features
+                                </h2>
+                            </div>
+                            <p className="max-w-xl text-sm font-medium leading-relaxed text-[#667370]">
+                                The visual direction is quieter on purpose. The value comes from repeatability, clarity, and cleaner transitions between study tasks.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-8 lg:grid-cols-3">
+                            {FEATURE_CARDS.map((feature) => {
+                                const tone = FEATURE_TONES[feature.tone as keyof typeof FEATURE_TONES];
+
+                                return (
+                                    <div
+                                        key={feature.title}
+                                        className="flex h-full flex-col rounded-[32px] border border-[#e6dccd] bg-[rgba(255,253,249,0.88)] p-8 shadow-[0_18px_40px_rgba(55,48,38,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(55,48,38,0.08)]"
+                                    >
+                                        <div className={`mb-8 flex h-16 w-16 items-center justify-center rounded-[24px] border ${tone.panel}`}>
+                                            <feature.icon size={30} weight="bold" />
+                                        </div>
+                                        <h3 className="font-outfit text-2xl font-black tracking-tight text-[#1f2b2f]">
+                                            {feature.title}
+                                        </h3>
+                                        <p className="mt-4 text-sm font-medium leading-relaxed text-[#667370]">
+                                            {feature.description}
+                                        </p>
+                                        <Link
+                                            href="/pricing"
+                                            className={`mt-8 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] ${tone.link}`}
+                                        >
+                                            Learn more
+                                            <CaretRight size={14} weight="bold" />
+                                        </Link>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+
+                <Testimonials />
+
+                <section className="px-6 py-24 sm:px-12">
+                    <div className="mx-auto max-w-7xl rounded-[40px] border border-[#314148] bg-[#223036] p-10 text-white shadow-[0_30px_70px_rgba(24,31,34,0.16)] sm:p-14">
+                        <div className="grid gap-10 lg:grid-cols-[1fr_280px] lg:items-end">
+                            <div className="space-y-5">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#d9e8e3]">
+                                    <CheckCircle size={14} weight="bold" className="text-[#f2e3c0]" />
+                                    Start with the basics, scale when needed
+                                </div>
+                                <h2 className="max-w-3xl font-outfit text-4xl font-black tracking-tight text-white md:text-5xl">
+                                    Build momentum first. Upgrade only when the extra depth becomes useful.
+                                </h2>
+                                <p className="max-w-2xl text-lg font-medium leading-relaxed text-[#d0d9d6]">
+                                    Use the core workspace for mock practice and revision, then move into premium analytics and expanded libraries when your preparation actually needs it.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-4">
+                                <Link
+                                    href="/auth/signup"
+                                    className="inline-flex items-center justify-center gap-3 rounded-2xl border border-[#1f5c50] bg-[#1f5c50] px-6 py-4 text-base font-bold text-white shadow-[0_14px_28px_rgba(31,92,80,0.2)] transition-all hover:bg-[#18493f] active:scale-95"
+                                >
+                                    Create free account
+                                </Link>
+                                <Link
+                                    href="/pricing"
+                                    className="inline-flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-6 py-4 text-base font-bold text-white transition-all hover:bg-white/15 active:scale-95"
+                                >
+                                    Compare plans
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <Footer />
         </div>
-      </div>
-
-      <main>
-        {/* Hero Section */}
-        <section className="relative pt-20 pb-24 overflow-hidden">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-50/30 to-transparent -z-10 blur-3xl opacity-50" />
-          <div className="max-w-7xl mx-auto px-6 sm:px-12 grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100 shadow-sm shadow-emerald-500/5">
-                <ShieldCheck size={16} weight="bold" className="text-emerald-500" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">ICAI Approved Standards</span>
-              </div>
-              <h1 className="text-5xl md:text-7xl font-bold text-slate-900 font-outfit leading-[1.05] tracking-tight">
-                Prepare for <span className="text-indigo-600">Success</span> with India&apos;s Best CA Portal
-              </h1>
-              <p className="text-xl text-gray-500 leading-relaxed max-w-lg font-medium">
-                The ultimate tool for CA Foundation, Inter, and Final aspirants. Experience ACCA-level simulation and NISM standards.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6">
-                <Link
-                  href="/student/exams"
-                  className="px-10 py-6 rounded-2xl bg-indigo-600 text-white font-bold text-lg shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:scale-95 flex items-center justify-center gap-3 group"
-                >
-                  Start Mock Test <Play size={22} weight="fill" className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="px-10 py-6 rounded-2xl bg-white border border-slate-200 text-slate-900 font-bold text-lg hover:border-indigo-200 hover:bg-slate-50 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-3 shadow-sm"
-                >
-                  Explore Pass Pro
-                </Link>
-              </div>
-              <div className="flex items-center gap-10 pt-6">
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-slate-900 font-outfit">500k+</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Active Learners</span>
-                </div>
-                <div className="w-px h-12 bg-slate-100" />
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-slate-900 font-outfit">18,000+</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Mock Tests</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative animate-in zoom-in-95 duration-1000 delay-200">
-              {/* Visual Abstract Elements */}
-              <div className="aspect-square rounded-3xl bg-gray-50 border border-gray-100 relative overflow-hidden flex items-center justify-center shadow-inner">
-                <div className="absolute top-8 left-8 p-6 rounded-2xl bg-white border border-gray-100 shadow-xl animate-bounce-slow">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                      <Timer size={20} weight="bold" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Accuracy</p>
-                      <p className="text-lg font-bold text-gray-900 font-outfit">92.4%</p>
-                    </div>
-                  </div>
-                  <div className="h-1.5 w-32 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-orange-500" style={{ width: '92.4%' }} />
-                  </div>
-                </div>
-
-                <div className="absolute bottom-12 right-12 p-8 rounded-3xl bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 animate-float">
-                  <ChartLineUp size={48} weight="bold" className="opacity-20 absolute -top-4 -right-4" />
-                  <p className="text-xs font-bold uppercase tracking-widest mb-2 text-indigo-100">Daily Progress</p>
-                  <p className="text-4xl font-bold font-outfit">+12%</p>
-                  <p className="text-[10px] text-indigo-100 mt-4 leading-tight opacity-80">Rank: Top 1% in CA Inter</p>
-                </div>
-
-                <GraduationCap size={240} weight="thin" className="text-gray-200 opacity-20 rotate-12" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Grid */}
-        <section className="py-24 px-6 sm:px-12 bg-white">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  title: "Expert Instruction",
-                  desc: "Learn from top CA educators with real-world case studies.",
-                  icon: ChalkboardTeacher,
-                  color: "bg-indigo-50",
-                  iconColor: "text-indigo-600"
-                },
-                {
-                  title: "Adaptive Exams",
-                  desc: "Tests that adapt to your performance levels to maximize learning.",
-                  icon: Exam,
-                  color: "bg-emerald-50",
-                  iconColor: "text-emerald-600"
-                },
-                {
-                  title: "Live Analytics",
-                  desc: "Instant feedback on your performance with detailed subject analysis.",
-                  icon: ChartLineUp,
-                  color: "bg-amber-50",
-                  iconColor: "text-amber-600"
-                },
-              ].map((feature, i) => (
-                <div key={i} className="p-10 rounded-3xl border border-slate-100 bg-white hover:border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col items-start translate-y-0 hover:-translate-y-1">
-                  <div className={`w-16 h-16 rounded-2xl ${feature.color} ${feature.iconColor} flex items-center justify-center mb-10 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110 shadow-lg shadow-current/5`}>
-                    <feature.icon size={32} weight="bold" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4 font-outfit tracking-tight">{feature.title}</h3>
-                  <p className="text-slate-500 leading-relaxed font-medium mb-10 font-sans">
-                    {feature.desc}
-                  </p>
-                  <Link href="/pricing" className="mt-auto text-[10px] font-bold text-slate-400 group-hover:text-indigo-600 uppercase tracking-[0.2em] flex items-center gap-2 transition-all group-hover:translate-x-2">
-                    Learn More <CaretRight size={14} weight="bold" />
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <Testimonials />
-
-        {/* CTA Overlay */}
-        <section className="py-24 px-6 sm:px-12">
-          <div className="max-w-7xl mx-auto bg-indigo-900 rounded-3xl p-12 md:p-24 relative overflow-hidden text-center text-white">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent pointer-events-none" />
-            <Sparkle size={120} weight="fill" className="absolute -top-10 -right-10 opacity-10" />
-            <GraduationCap size={160} weight="fill" className="absolute -bottom-20 -left-10 opacity-5" />
-
-            <div className="relative z-10 space-y-8">
-              <h2 className="text-4xl md:text-6xl font-bold font-outfit leading-tight tracking-tight max-w-4xl mx-auto">
-                Ready to transform your preparation journey?
-              </h2>
-              <p className="text-indigo-100/70 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
-                Join the ranks of toppers. Get unlimited access to 18,000+ mock tests and live mentor support today.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-6">
-                <Link
-                  href="/auth/signup"
-                  className="px-10 py-5 rounded-2xl bg-white text-indigo-900 font-bold text-lg hover:bg-gray-50 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3"
-                >
-                  Start Premium Journey
-                </Link>
-                <Link
-                  href="/contact"
-                  className="px-10 py-5 rounded-2xl bg-indigo-800 text-white font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-3"
-                >
-                  Talk to Expert Counselor
-                </Link>
-              </div>
-              <div className="flex items-center justify-center gap-12 pt-8 opacity-60">
-                <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"><CheckCircle size={18} /> Instant Activation</span>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
-                  <ShieldCheck size={16} weight="bold" /> ICAI Pattern 2026
-                </div>
-                <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"><CheckCircle size={18} /> Secure ₹ Gateway</span>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
-  );
+    );
 }

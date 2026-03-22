@@ -7,6 +7,7 @@ import { ProfileHeader } from "./avatar-section";
 import { InfoCards } from "./info-cards";
 import { JourneySection } from "./journey-section";
 import { StudentProfileEditor } from "./student-profile-editor";
+import { StudentPageHeader } from "../shared/page-header";
 
 export function StudentProfile() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -35,14 +36,14 @@ export function StudentProfile() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                <div className="h-12 w-12 rounded-full border-4 border-[var(--student-accent-soft)] border-t-[var(--student-accent-strong)] animate-spin" />
             </div>
         );
     }
 
     if (!profile) {
         return (
-            <div className="p-10 text-center bg-white rounded-3xl border border-slate-100 text-slate-500">
+            <div className="student-surface rounded-3xl p-10 text-center text-[var(--student-muted)]">
                 Failed to load profile. Please try again.
             </div>
         );
@@ -63,6 +64,14 @@ export function StudentProfile() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <StudentPageHeader
+                eyebrow="Profile Center"
+                title="Your learning"
+                accent="identity"
+                description="Keep your academic, professional, and account details current so the student experience stays tailored to your journey."
+                aside={null}
+            />
+
             <ProfileHeader 
                 fullName={profile.fullName || "User"}
                 registrationNumber={profile.registrationNumber}

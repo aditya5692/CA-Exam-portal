@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { DotsThreeVertical,MagnifyingGlass } from "@phosphor-icons/react";
-import { User } from "@prisma/client";
+import { DotsThreeVertical, MagnifyingGlass } from "@phosphor-icons/react";
+import type { User } from "@prisma/client";
 import { useState } from "react";
 
 interface AdminDirectoryProps {
@@ -16,24 +16,24 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
         if (!searchTerm) return true;
         const term = searchTerm.toLowerCase();
         return (
-            (user.fullName?.toLowerCase().includes(term)) ||
-            (user.email?.toLowerCase().includes(term)) ||
-            (user.registrationNumber?.toLowerCase().includes(term))
+            user.fullName?.toLowerCase().includes(term) ||
+            user.email?.toLowerCase().includes(term) ||
+            user.registrationNumber?.toLowerCase().includes(term)
         );
     });
 
     return (
-        <div className="bg-white rounded-[32px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-            <div className="p-10 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <h3 className="text-2xl font-black text-slate-900 tracking-tighter font-outfit">System Directory</h3>
+        <div className="student-surface overflow-hidden rounded-[32px]">
+            <div className="flex flex-col justify-between gap-6 border-b border-[var(--student-border)] p-10 sm:flex-row sm:items-center">
+                <h3 className="font-outfit text-2xl font-black tracking-tighter text-[var(--student-text)]">System Directory</h3>
                 <div className="relative">
-                    <MagnifyingGlass size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" weight="bold" />
+                    <MagnifyingGlass size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--student-muted)]" weight="bold" />
                     <input
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search users..."
-                        className="pl-14 pr-8 py-4 rounded-[20px] bg-slate-50 border border-slate-100 text-[10px] uppercase tracking-[0.2em] font-black focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-100 transition-all w-full sm:w-96 font-sans text-slate-900 placeholder:text-slate-300"
+                        className="w-full rounded-[20px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)]/55 focus:border-[var(--student-accent-soft-strong)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 focus:ring-[var(--student-accent-soft)]/70 sm:w-96"
                     />
                 </div>
             </div>
@@ -41,7 +41,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-50">
+                        <tr className="border-b border-[var(--student-border)] bg-[var(--student-panel-muted)]/80 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                             <th className="px-8 py-4">User Details</th>
                             <th className="px-8 py-4">Role</th>
                             <th className="px-8 py-4">Registration</th>
@@ -50,52 +50,60 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                             <th className="px-8 py-4"></th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-[var(--student-border)]/70">
                         {filteredUsers.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-8 py-12 text-center text-slate-400 font-medium text-sm">
+                                <td colSpan={6} className="px-8 py-12 text-center text-sm font-medium text-[var(--student-muted)]">
                                     No users found matching &quot;{searchTerm}&quot;
                                 </td>
                             </tr>
                         ) : (
                             filteredUsers.map((user) => (
-                                <tr key={user.id} className="group hover:bg-indigo-50/20 transition-all duration-300">
+                                <tr key={user.id} className="group transition-all duration-300 hover:bg-[var(--student-panel-muted)]/70">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-5">
-                                            <div className="w-12 h-12 rounded-[16px] bg-white border border-slate-100 flex items-center justify-center text-slate-400 font-black text-sm shadow-sm group-hover:border-indigo-100 transition-all">
-                                                {user.fullName?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] border border-[var(--student-border)] bg-[var(--student-panel-solid)] text-sm font-black text-[var(--student-muted)] shadow-sm transition-all">
+                                                {user.fullName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
                                             </div>
                                             <div>
-                                                <div className="font-black text-slate-900 font-outfit text-base">{user.fullName || 'Unnamed User'}</div>
-                                                <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1 opacity-70">{user.email}</div>
+                                                <div className="font-outfit text-base font-black text-[var(--student-text)]">{user.fullName || "Unnamed User"}</div>
+                                                <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] opacity-80">{user.email}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className={cn(
-                                            "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm",
-                                            user.role === 'ADMIN' ? "bg-purple-50 text-purple-600 border-purple-100" :
-                                                user.role === 'TEACHER' ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
-                                                    "bg-blue-50 text-blue-600 border-blue-100"
-                                        )}>
+                                        <span
+                                            className={cn(
+                                                "rounded-full border px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] shadow-sm",
+                                                user.role === "ADMIN"
+                                                    ? "bg-[var(--student-support-soft)] text-[var(--student-support)] border-[var(--student-support-soft-strong)]"
+                                                    : user.role === "TEACHER"
+                                                        ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] border-[var(--student-accent-soft-strong)]"
+                                                        : "bg-[#e5f0e9] text-[var(--student-success)] border-[#cfe0d5]"
+                                            )}
+                                        >
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-6 text-sm font-black text-slate-600 font-outfit">{user.registrationNumber || '—'}</td>
+                                    <td className="px-8 py-6 font-outfit text-sm font-black text-[var(--student-muted-strong)]">{user.registrationNumber || "-"}</td>
                                     <td className="px-8 py-6">
-                                        <div className={cn(
-                                            "inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-[0.15em] shadow-sm",
-                                            user.isBlocked ? "bg-rose-50 text-rose-500 border-rose-100" : "bg-emerald-50 text-emerald-500 border-emerald-100"
-                                        )}>
-                                            <div className={cn("w-1.5 h-1.5 rounded-full", user.isBlocked ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
-                                            {user.isBlocked ? 'Suspended' : 'Active'}
+                                        <div
+                                            className={cn(
+                                                "inline-flex items-center gap-2.5 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] shadow-sm",
+                                                user.isBlocked
+                                                    ? "bg-rose-50 text-rose-500 border-rose-100"
+                                                    : "bg-[#e5f0e9] text-[var(--student-success)] border-[#cfe0d5]"
+                                            )}
+                                        >
+                                            <div className={cn("h-1.5 w-1.5 rounded-full", user.isBlocked ? "bg-rose-500 animate-pulse" : "bg-[var(--student-success)]")} />
+                                            {user.isBlocked ? "Suspended" : "Active"}
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest">
-                                        {new Date(user.createdAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    <td className="px-8 py-6 text-xs font-black uppercase tracking-widest text-[var(--student-muted)]">
+                                        {new Date(user.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                                     </td>
                                     <td className="px-8 py-6 text-right">
-                                        <button className="p-3 rounded-[14px] text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-lg transition-all opacity-0 group-hover:opacity-100 border border-transparent hover:border-indigo-50">
+                                        <button className="rounded-[14px] border border-transparent p-3 text-[var(--student-muted)] opacity-0 transition-all hover:border-[var(--student-border)] hover:bg-[var(--student-panel-solid)] hover:text-[var(--student-accent-strong)] group-hover:opacity-100">
                                             <DotsThreeVertical size={24} weight="bold" />
                                         </button>
                                     </td>

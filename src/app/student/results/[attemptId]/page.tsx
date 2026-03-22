@@ -1,7 +1,8 @@
 import { getExamResults } from "@/actions/exam-actions";
+import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
-import { ArrowLeft,Calendar,ChartLineUp,CheckCircle,Clock,Star,Target,Trophy,XCircle } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft,ChartLineUp,CheckCircle,Clock,Star,Target,Trophy,XCircle } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { SolutionReview,type SolutionAnswer } from "./solution-review";
 
@@ -99,31 +100,33 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
                     <div className="space-y-4">
                         <Link href="/student/analytics"
-                            className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-500 transition-all group/back mb-1">
-                            <ArrowLeft size={16} weight="bold" className="group-hover/back:-translate-x-1 transition-transform" /> Back to Performance
+                            className="group/back mb-1 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] transition-all hover:text-[var(--student-accent-strong)]">
+                            <ArrowLeft size={16} weight="bold" className="transition-transform group-hover/back:-translate-x-1" /> Back to Performance
                         </Link>
-                        <div className="flex items-center gap-2.5 mb-2">
-                            <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Assessment Report</span>
-                        </div>
-                        <h1 className="font-outfit tracking-tighter leading-tight text-3xl md:text-4xl font-black text-slate-900">
-                            {mainTitle} <span className="text-indigo-600">{lastWord}</span>
-                        </h1>
-                        <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
-                            Comprehensive diagnostic report for the assessment completed on <span className="text-slate-900">{completedDate}</span>.
-                        </p>
-                    </div>
-                    <div className="flex flex-col md:flex-row items-center gap-4 shrink-0 mb-1">
-                        {daysToExam > 0 && (
-                            <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-100 text-slate-900 font-bold text-[10px] uppercase tracking-widest border border-slate-200 shadow-sm pointer-events-none">
-                                <Calendar size={18} weight="bold" className="text-indigo-500" />
-                                Next Goal: {daysToExam} Days
-                            </div>
-                        )}
-                        <Link href={`/exam/war-room?examId=${attempt.examId}`}
-                            className="px-8 py-4 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-indigo-900/5 active:scale-95">
-                            Retake Exam
-                        </Link>
+                        <StudentPageHeader
+                            eyebrow="Assessment report"
+                            title={mainTitle}
+                            accent={lastWord}
+                            description={
+                                <>
+                                    Comprehensive diagnostic report for the assessment completed on{" "}
+                                    <span className="font-semibold text-[var(--student-text)]">{completedDate}</span>.
+                                </>
+                            }
+                            aside={
+                                <div className="mb-1 flex flex-col items-center gap-4 md:flex-row">
+                                    {daysToExam > 0 && (
+                                        <div className="student-chip inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[11px] font-semibold">
+                                            <span className="h-2 w-2 rounded-full bg-[var(--student-support)]" />
+                                            Next milestone in {daysToExam} days
+                                        </div>
+                                    )}
+                                    <Link href={`/exam/war-room?examId=${attempt.examId}`} className="student-button-primary rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                                        Retake Exam
+                                    </Link>
+                                </div>
+                            }
+                        />
                     </div>
                 </div>
 

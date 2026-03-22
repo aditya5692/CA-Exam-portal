@@ -46,7 +46,7 @@ export default async function StudentFreeResourcesPage() {
                     </div>
                 </div>
             </div>
-            <FreeResourcesDashboard daysToExam={daysToExam} />
+            <FreeResourcesDashboard daysToExam={daysToExam} saveState="enabled" />
         </div>
     );
 }

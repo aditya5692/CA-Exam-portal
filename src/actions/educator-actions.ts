@@ -49,7 +49,10 @@ export async function publishMaterial(
             throw new Error("No file provided or invalid file format.");
         }
         const title = String(formData.get("title") ?? file.name ?? "").trim();
+        const category = String(formData.get("category") ?? "GENERAL").trim();
+        const subType = String(formData.get("subType") ?? "PDF").trim();
         const isProtected = formData.get("isProtected") === "true";
+        const isPublic = formData.get("isPublic") === "true";
         const teacher = await getOrCreateMockTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "share");
         const ownerId = await resolveManagedEducatorId(
@@ -65,7 +68,10 @@ export async function publishMaterial(
             fileUrl: savedFile.fileUrl,
             fileType: file.type || "application/octet-stream",
             fileSize: file.size,
+            category,
+            subType,
             isProtected,
+            isPublic,
             batchIds: splitCsvValues(batchIdsStr),
             studentEmails: splitCsvValues(studentEmailsStr),
         });

@@ -18,10 +18,10 @@ type Answer = { optionId: string | null; status: AnswerStatus; startedAt: number
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function formatTime(s: number) { return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; }
 function paletteColor(status: AnswerStatus) {
-    if (status === "answered") return "bg-[#00cc00] text-white";
-    if (status === "not-answered") return "bg-[#e05050] text-white";
-    if (status === "marked" || status === "answered-marked") return "bg-[#9b59b6] text-white";
-    return "bg-white border border-gray-300 text-gray-600";
+    if (status === "answered") return "border border-[var(--student-accent-strong)] bg-[var(--student-accent-strong)] text-white";
+    if (status === "not-answered") return "border border-rose-500 bg-rose-500 text-white";
+    if (status === "marked" || status === "answered-marked") return "border border-[var(--student-support)] bg-[var(--student-support)] text-white";
+    return "border border-[var(--student-border)] bg-[var(--student-panel-solid)] text-[var(--student-muted)]";
 }
 
 // ── Demo questions ───────────────────────────────────────────────────────────
@@ -35,10 +35,10 @@ const DEMO_QUESTIONS: QuestionShape[] = [
 // ── Loading screen ────────────────────────────────────────────────────────────
 function LoadingScreen({ msg = "Loading exam…" }: { msg?: string }) {
     return (
-        <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
-            <div className="text-center space-y-4">
-                <div className="w-12 h-12 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin mx-auto" />
-                <p className="text-gray-600 font-semibold">{msg}</p>
+        <div className="student-theme student-shell flex min-h-screen items-center justify-center">
+            <div className="student-surface rounded-[28px] px-10 py-9 text-center space-y-4">
+                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[var(--student-accent-soft)] border-t-[var(--student-accent-strong)]" />
+                <p className="font-semibold text-[var(--student-muted-strong)]">{msg}</p>
             </div>
         </div>
     );
@@ -273,10 +273,10 @@ export default function MCQExamPage() {
             : reviewItems.filter(item => item.answer?.optionId && item.options.find(o => o.id === item.answer?.optionId)?.isCorrect);
 
         return (
-            <div className="min-h-screen bg-[#f5f7fa] pb-20">
+            <div className="student-theme student-shell min-h-screen pb-20 text-[var(--student-text)]">
                 {/* Hero */}
-                <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white px-8 py-12 shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
-                    <div className="max-w-5xl mx-auto grid md:grid-cols-[auto_1fr] gap-10 items-center">
+                <div className="px-8 py-12">
+                    <div className="student-surface-dark mx-auto grid max-w-5xl gap-10 rounded-[36px] px-8 py-10 text-white md:grid-cols-[auto_1fr] md:items-center">
                         <div className="relative w-36 h-36 shrink-0">
                             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                                 <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
@@ -293,10 +293,10 @@ export default function MCQExamPage() {
                         <div className="space-y-4">
                             <div className="flex gap-2 flex-wrap">
                                 <span className="px-3 py-1 rounded-full bg-white/10 text-white/60 text-[10px] font-bold uppercase">{examTitle}</span>
-                                {mode === "practice" && <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold">📖 Practice Mode</span>}
-                                {mode === "mock" && attemptId && <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold">✅ Saved to profile</span>}
+                                {mode === "practice" && <span className="px-3 py-1 rounded-full bg-[#8dbdaf]/20 text-[#bfe1d6] text-[10px] font-bold uppercase tracking-widest">Practice Mode</span>}
+                                {mode === "mock" && attemptId && <span className="px-3 py-1 rounded-full bg-[#f2d295]/16 text-[#f2d295] text-[10px] font-bold uppercase tracking-widest">Saved to profile</span>}
                             </div>
-                            <h1 className="text-3xl font-black">{accuracy >= 80 ? "Excellent! 🎉" : accuracy >= 55 ? "Good Work 👍" : "Keep Practising 📚"}</h1>
+                            <h1 className="text-3xl font-black">{accuracy >= 80 ? "Excellent result" : accuracy >= 55 ? "Solid attempt" : "Keep practicing"}</h1>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {[
                                     { v: `${correct}/${total}`, l: "Correct" },
@@ -312,9 +312,9 @@ export default function MCQExamPage() {
                             </div>
                             {mode === "mock" && (
                                 <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <span className="text-amber-400 font-black">⚡ +{xpGained} XP</span>
-                                    {correct === total && <span className="px-2 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold">🏆 Perfect Score</span>}
-                                    {accuracy >= 80 && correct < total && <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-300 text-xs font-bold">🎯 High Accuracy</span>}
+                                    <span className="text-[#f2d295] font-black">+{xpGained} XP</span>
+                                    {correct === total && <span className="px-2 py-1 rounded-full bg-[#f2d295]/16 text-[#f2d295] text-xs font-bold">Perfect score</span>}
+                                    {accuracy >= 80 && correct < total && <span className="px-2 py-1 rounded-full bg-[#8dbdaf]/16 text-[#bfe1d6] text-xs font-bold">High accuracy</span>}
                                 </div>
                             )}
                         </div>
@@ -324,19 +324,19 @@ export default function MCQExamPage() {
                 <div className="max-w-5xl mx-auto px-8 mt-10 space-y-8">
                     {/* Topic breakdown */}
                     {topicList.length > 0 && (
-                        <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
-                            <h2 className="font-bold font-outfit text-slate-900 mb-5">📊 Topic-wise Performance</h2>
+                        <div className="student-surface rounded-[24px] p-6">
+                            <h2 className="font-bold font-outfit text-[var(--student-text)] mb-5">Topic-wise Performance</h2>
                             <div className="space-y-3">
                                 {topicList.map(t => {
-                                    const c = t.accuracy >= 80 ? "#22c55e" : t.accuracy >= 55 ? "#f59e0b" : "#ef4444";
+                                    const c = t.accuracy >= 80 ? "#2f7d55" : t.accuracy >= 55 ? "#b7791f" : "#ef4444";
                                     return (
                                         <div key={t.topic} className="flex items-center gap-4">
-                                            <span className="w-40 text-xs font-bold text-slate-700 truncate shrink-0">{t.topic}</span>
-                                            <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                            <span className="w-40 text-xs font-bold text-[var(--student-text)] truncate shrink-0">{t.topic}</span>
+                                            <div className="flex-1 h-2.5 bg-[var(--student-panel-muted)] rounded-full overflow-hidden">
                                                 <div className="h-full rounded-full" style={{ width: `${t.accuracy}%`, backgroundColor: c }} />
                                             </div>
                                             <span className="text-sm font-bold w-10 text-right" style={{ color: c }}>{t.accuracy}%</span>
-                                            <span className="text-xs text-slate-400 w-16 text-right">{t.correct}/{t.total}</span>
+                                            <span className="text-xs text-[var(--student-muted)] w-16 text-right">{t.correct}/{t.total}</span>
                                         </div>
                                     );
                                 })}
@@ -346,13 +346,13 @@ export default function MCQExamPage() {
 
                     {/* Weak topic focus */}
                     {weakTopics.length > 0 && (
-                        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6">
-                            <h2 className="font-black text-rose-700 mb-4">🎯 Focus On These Topics</h2>
+                        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6">
+                            <h2 className="font-black text-rose-700 mb-4">Focus Topics</h2>
                             <div className="grid sm:grid-cols-2 gap-3">
                                 {weakTopics.map((t, i) => (
-                                    <div key={t.topic} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-rose-100">
+                                    <div key={t.topic} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-rose-200">
                                         <span className="w-6 h-6 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
-                                        <div><div className="text-sm font-bold text-gray-900">{t.topic}</div><div className="text-[10px] text-rose-500">{t.accuracy}% · review in {t.accuracy < 40 ? "1 day" : "3 days"}</div></div>
+                                        <div><div className="text-sm font-bold text-gray-900">{t.topic}</div><div className="text-[10px] text-rose-500">{t.accuracy}% accuracy. Review in {t.accuracy < 40 ? "1 day" : "3 days"}.</div></div>
                                     </div>
                                 ))}
                             </div>
@@ -360,13 +360,13 @@ export default function MCQExamPage() {
                     )}
 
                     {/* Solution Review */}
-                    <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
-                        <h2 className="font-bold font-outfit text-slate-900 mb-4">📋 Solution Review</h2>
+                    <div className="student-surface rounded-[24px] p-6">
+                        <h2 className="font-bold font-outfit text-[var(--student-text)] mb-4">Solution Review</h2>
                         <div className="flex gap-2 mb-5 flex-wrap">
-                            {([["all", `All (${questions.length})`], ["wrong", `❌ Wrong (${questions.length - correct})`], ["correct", `✅ Correct (${correct})`]] as const).map(([key, label]) => (
+                            {([["all", `All (${questions.length})`], ["wrong", `Wrong (${questions.length - correct})`], ["correct", `Correct (${correct})`]] as const).map(([key, label]) => (
                                 <button key={key} onClick={() => setSolFilter(key as "all" | "wrong" | "correct")}
-                                    className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all",
-                                        solFilter === key ? (key === "wrong" ? "bg-rose-500 text-white" : key === "correct" ? "bg-emerald-500 text-white" : "bg-indigo-600 text-white") : "bg-gray-100 text-gray-500 hover:bg-gray-200")}>
+                                    className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all border",
+                                        solFilter === key ? (key === "wrong" ? "border-rose-500 bg-rose-500 text-white" : key === "correct" ? "border-[var(--student-accent-strong)] bg-[var(--student-accent-strong)] text-white" : "student-tab-active") : "border-[var(--student-border)] bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-panel-solid)]")}>
                                     {label}
                                 </button>
                             ))}
@@ -377,16 +377,16 @@ export default function MCQExamPage() {
                                 const isCorrect = chosen ? (item.options.find(o => o.id === chosen)?.isCorrect ?? false) : false;
                                 const conf = item.answer?.confidence;
                                 return (
-                                    <div key={item.id} className={cn("p-5 rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.03)]", isCorrect ? "border-emerald-100 bg-emerald-50/50" : "border-rose-100 bg-rose-50/50")}>
+                                    <div key={item.id} className={cn("p-5 rounded-[24px] border shadow-[0_8px_30px_rgb(0,0,0,0.03)]", isCorrect ? "border-[#cfe0d5] bg-[#e5f0e9]/70" : "border-rose-100 bg-rose-50/50")}>
                                         <div className="flex items-start gap-3 mb-3">
-                                            <span className={cn("w-8 h-8 rounded-[12px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm", isCorrect ? "bg-emerald-100 text-emerald-700 shadow-emerald-500/10" : "bg-rose-100 text-rose-700 shadow-rose-500/10")}>{idx + 1}</span>
+                                            <span className={cn("w-8 h-8 rounded-[12px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm", isCorrect ? "bg-[#d8e8dd] text-[var(--student-success)]" : "bg-rose-100 text-rose-700 shadow-rose-500/10")}>{idx + 1}</span>
                                             <div className="flex-1">
                                                 <div className="flex gap-2 flex-wrap mb-2">
-                                                    {item.topic && <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold">{item.topic}</span>}
+                                                    {item.topic && <span className="px-2 py-0.5 rounded-full bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] text-[10px] font-bold border border-[var(--student-accent-soft-strong)]">{item.topic}</span>}
                                                     {conf && <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold", conf === "sure" ? "bg-green-50 text-green-600" : conf === "unsure" ? "bg-amber-50 text-amber-600" : "bg-rose-50 text-rose-600")}>You were {conf}</span>}
                                                     {!chosen && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 text-[10px] font-bold">⏭ Skipped</span>}
                                                 </div>
-                                                <p className="font-semibold text-gray-900 text-sm leading-relaxed">{item.text}</p>
+                                                <p className="font-semibold text-[var(--student-text)] text-sm leading-relaxed">{item.text}</p>
                                             </div>
                                         </div>
                                         <div className="grid sm:grid-cols-2 gap-2 ml-11">
@@ -394,23 +394,23 @@ export default function MCQExamPage() {
                                                 const isChosen = opt.id === chosen;
                                                 return (
                                                     <div key={opt.id} className={cn("p-3 rounded-[16px] border text-sm font-medium flex items-center justify-between gap-2 transition-all",
-                                                        opt.isCorrect ? "bg-emerald-50 border-emerald-200 text-emerald-800" : isChosen ? "bg-rose-50 border-rose-200 text-rose-800" : "bg-white border-slate-100 text-slate-500")}>
+                                                        opt.isCorrect ? "bg-[#e5f0e9] border-[#cfe0d5] text-[var(--student-success)]" : isChosen ? "bg-rose-50 border-rose-200 text-rose-800" : "bg-[var(--student-panel-solid)] border-[var(--student-border)] text-[var(--student-muted-strong)]")}>
                                                         <span className="flex items-center gap-2">
                                                             <span className={cn("w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0",
-                                                                opt.isCorrect ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : isChosen ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-slate-100 text-slate-500")}>
+                                                                opt.isCorrect ? "bg-[var(--student-success)] text-white shadow-md shadow-[rgba(47,125,85,0.2)]" : isChosen ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-slate-100 text-slate-500")}>
                                                                 {["A", "B", "C", "D"][oi]}
                                                             </span>{opt.text}
                                                         </span>
-                                                        {opt.isCorrect && <span className="text-emerald-500 shrink-0">✓</span>}
+                                                        {opt.isCorrect && <span className="text-[var(--student-success)] shrink-0">OK</span>}
                                                         {isChosen && !opt.isCorrect && <span className="text-rose-500 shrink-0">✗</span>}
                                                     </div>
                                                 );
                                             })}
                                         </div>
                                         {item.explanation && (
-                                            <div className="ml-11 mt-3 flex gap-2 p-3 rounded-xl bg-indigo-50 border border-indigo-100">
-                                                <span className="text-indigo-400 shrink-0">💡</span>
-                                                <p className="text-xs text-gray-700 leading-relaxed">{item.explanation}</p>
+                                            <div className="ml-11 mt-3 flex gap-2 p-3 rounded-xl bg-[var(--student-accent-soft)] border border-[var(--student-accent-soft-strong)]">
+                                                <span className="text-[var(--student-accent-strong)] shrink-0">i</span>
+                                                <p className="text-xs text-[var(--student-text)] leading-relaxed">{item.explanation}</p>
                                             </div>
                                         )}
                                     </div>
@@ -421,9 +421,9 @@ export default function MCQExamPage() {
 
                     {/* Actions */}
                     <div className="flex gap-4 flex-wrap">
-                        <button onClick={handleExitExam} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">Back to Exams</button>
-                        <button onClick={() => { window.location.href = "/student/history"; }} className="flex-1 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">📜 History</button>
-                        {attemptId && <button onClick={() => { window.location.href = `/student/results/${attemptId}`; }} className="flex-1 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">🔗 Full Results Page</button>}
+                        <button onClick={handleExitExam} className="student-button-primary flex-1 py-4 rounded-2xl font-bold text-sm transition-all">Back to Exams</button>
+                        <button onClick={() => { window.location.href = "/student/history"; }} className="student-button-secondary flex-1 py-4 rounded-2xl font-bold text-sm transition-all">History</button>
+                        {attemptId && <button onClick={() => { window.location.href = `/student/results/${attemptId}`; }} className="student-button-secondary flex-1 py-4 rounded-2xl font-bold text-sm transition-all">Full Results Page</button>}
                     </div>
                 </div>
             </div>
@@ -435,28 +435,28 @@ export default function MCQExamPage() {
     const ans = answers[q.id] ?? { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null };
 
     return (
-        <div className={cn("min-h-screen flex flex-col", highContrast ? "bg-black text-white" : "bg-[#f5f7fa]")}>
+        <div className={cn("student-theme min-h-screen flex flex-col", highContrast ? "bg-black text-white" : "student-shell text-[var(--student-text)]")}>
             {/* Pause overlay */}
             {paused && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
-                    <div className="bg-white rounded-3xl p-10 text-center shadow-2xl space-y-4 max-w-sm mx-4">
+                    <div className={cn("mx-4 max-w-sm rounded-3xl p-10 text-center shadow-2xl space-y-4", highContrast ? "bg-gray-900" : "student-surface-strong")}>
                         <div className="text-5xl">⏸</div>
-                        <h2 className="text-2xl font-black text-gray-900">Exam Paused</h2>
-                        <p className="text-gray-400 text-sm">Timer is stopped. Take a breath.</p>
-                        <button onClick={togglePause} className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black text-lg hover:bg-indigo-700 transition-all">▶ Resume</button>
+                        <h2 className={cn("text-2xl font-black", highContrast ? "text-white" : "text-[var(--student-text)]")}>Exam Paused</h2>
+                        <p className={cn("text-sm", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>Timer is stopped. Resume when you are ready.</p>
+                        <button onClick={togglePause} className={cn("w-full py-4 rounded-2xl font-black text-lg transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "student-button-primary")}>Resume</button>
                     </div>
                 </div>
             )}
 
             {/* Top Bar */}
-            <header className={cn("flex items-center justify-between px-6 py-3 shadow-sm border-b", highContrast ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200")}>
+            <header className={cn("flex items-center justify-between px-6 py-3 shadow-sm border-b", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded flex items-center justify-center font-black text-white text-xs bg-indigo-700">NTA</div>
+                    <div className={cn("w-8 h-8 rounded flex items-center justify-center font-black text-white text-xs", highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)]")}>CA</div>
                     <div>
-                        <div className={cn("font-bold text-sm", highContrast ? "text-white" : "text-gray-900")}>{examTitle}</div>
-                        <div className="text-[10px] text-gray-400">{examCategory} · {questions.length} Questions</div>
+                        <div className={cn("font-bold text-sm", highContrast ? "text-white" : "text-[var(--student-text)]")}>{examTitle}</div>
+                        <div className={cn("text-[10px]", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>{examCategory} · {questions.length} Questions</div>
                     </div>
-                    {mode === "practice" && <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold border border-blue-100">📖 Practice Mode</span>}
+                    {mode === "practice" && <span className={cn("px-2 py-1 rounded-full text-[10px] font-bold border uppercase tracking-widest", highContrast ? "border-gray-600 text-gray-200" : "border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]")}>Practice Mode</span>}
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -465,7 +465,7 @@ export default function MCQExamPage() {
                             "rounded-lg border px-3 py-1.5 text-xs font-bold transition-all",
                             highContrast
                                 ? "border-gray-600 text-gray-200 hover:bg-gray-800"
-                                : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                                : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]"
                         )}
                     >
                         Exit Test
@@ -474,66 +474,66 @@ export default function MCQExamPage() {
                     <div className="hidden sm:flex items-center gap-1">
                         {(["sm", "md", "lg"] as const).map(s => (
                             <button key={s} onClick={() => setFontSize(s)}
-                                className={cn("w-8 h-8 rounded font-bold text-xs", fontSize === s ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+                                className={cn("w-8 h-8 rounded font-bold text-xs", fontSize === s ? (highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white") : (highContrast ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-solid)]"))}>
                                 {s === "sm" ? "A-" : s === "md" ? "A" : "A+"}
                             </button>
                         ))}
                     </div>
                     {/* High contrast */}
                     <button onClick={() => setHighContrast(h => !h)}
-                        className={cn("w-10 h-6 rounded-full transition-all relative", highContrast ? "bg-indigo-600" : "bg-gray-200")}>
-                        <span className={cn("absolute top-0.5 w-5 h-5 rounded-full transition-all bg-white shadow", highContrast ? "left-4" : "left-0.5")} />
+                        className={cn("w-10 h-6 rounded-full transition-all relative", highContrast ? "bg-white" : "bg-[var(--student-accent-strong)]/30")}>
+                        <span className={cn("absolute top-0.5 w-5 h-5 rounded-full transition-all bg-white shadow", highContrast ? "left-4 bg-black" : "left-0.5")} />
                     </button>
                     {/* Pause (mock mode only) */}
                     {mode === "mock" && (
                         <button onClick={togglePause} disabled={pauseUsed && !paused}
                             className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
-                                pauseUsed && !paused ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100")}>
-                            {paused ? "▶ Resume" : "⏸ Pause"}
-                            {!pauseUsed && <span className="text-[9px] text-amber-400">(1×)</span>}
+                                pauseUsed && !paused ? "bg-gray-100 text-gray-300 cursor-not-allowed" : highContrast ? "border border-gray-600 text-gray-200 hover:bg-gray-800" : "bg-[var(--student-support-soft)] text-[var(--student-support)] border border-[var(--student-support-soft-strong)] hover:bg-[#ecd9b5]")}>
+                            {paused ? "Resume" : "Pause"}
+                            {!pauseUsed && <span className={cn("text-[9px]", highContrast ? "text-gray-400" : "text-[var(--student-support)]/70")}>(1x)</span>}
                         </button>
                     )}
                 </div>
             </header>
 
             {/* Progress + status bar */}
-            <div className={cn("border-b", highContrast ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100")}>
+            <div className={cn("border-b", highContrast ? "bg-gray-800 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
                 {/* Progress bar */}
-                <div className="h-1 bg-gray-100">
-                    <div className="h-full bg-indigo-500 transition-all" style={{ width: `${(answered / questions.length) * 100}%` }} />
+                <div className={cn("h-1", highContrast ? "bg-gray-700" : "bg-[var(--student-panel-muted)]")}>
+                    <div className={cn("h-full transition-all", highContrast ? "bg-white" : "bg-[var(--student-accent-strong)]")} style={{ width: `${(answered / questions.length) * 100}%` }} />
                 </div>
-                <div className={cn("flex items-center gap-6 px-6 py-2 text-xs font-bold", highContrast ? "text-white" : "text-gray-600")}>
+                <div className={cn("flex items-center gap-6 px-6 py-2 text-xs font-bold", highContrast ? "text-white" : "text-[var(--student-muted-strong)]")}>
                     <span>✅ <span className="text-[#00cc00]">{answered}</span> answered</span>
                     <span>🟣 <span className="text-[#9b59b6]">{marked}</span> marked</span>
                     <span>⬜ {notVisited} unvisited</span>
                     {mode === "mock" && (
                         <div className="ml-auto flex items-center gap-2">
-                            <span className="text-gray-400 text-[10px] uppercase tracking-widest">Time Left</span>
-                            <span className={cn("font-mono font-black text-base", timeLeft < 300 ? "text-red-500" : highContrast ? "text-white" : "text-gray-900")}>{formatTime(timeLeft)}</span>
+                            <span className={cn("text-[10px] uppercase tracking-widest", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>Time Left</span>
+                            <span className={cn("font-mono font-black text-base", timeLeft < 300 ? "text-red-500" : highContrast ? "text-white" : "text-[var(--student-text)]")}>{formatTime(timeLeft)}</span>
                         </div>
                     )}
-                    {mode === "practice" && <span className="ml-auto text-blue-500 font-medium">📖 No Timer · {answered}/{questions.length} done</span>}
+                    {mode === "practice" && <span className={cn("ml-auto font-medium", highContrast ? "text-gray-300" : "text-[var(--student-accent-strong)]")}>No timer · {answered}/{questions.length} done</span>}
                 </div>
             </div>
 
             {/* Main layout */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Palette sidebar */}
-                <aside className={cn("w-52 shrink-0 flex flex-col border-r overflow-y-auto", highContrast ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200")}>
-                    <div className={cn("px-4 py-3 font-bold text-sm border-b", highContrast ? "border-gray-700 text-white" : "border-gray-100 text-gray-800")}>Question Palette</div>
+                <aside className={cn("w-52 shrink-0 flex flex-col border-r overflow-y-auto", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
+                    <div className={cn("px-4 py-3 font-bold text-sm border-b", highContrast ? "border-gray-700 text-white" : "border-[var(--student-border)] text-[var(--student-text)]")}>Question Palette</div>
                     <div className="px-3 py-3 grid grid-cols-4 gap-1.5">
                         {questions.map((qItem, i) => (
                             <button key={qItem.id} onClick={() => setCurrent(i)}
                                 className={cn("w-10 h-10 rounded-lg font-bold text-xs transition-all hover:opacity-90 active:scale-95",
-                                    paletteColor(answers[qItem.id]?.status ?? "not-visited"),
-                                    current === i && "ring-2 ring-indigo-400 ring-offset-1")}>
+                                    highContrast ? "border border-gray-700 bg-gray-800 text-gray-200" : paletteColor(answers[qItem.id]?.status ?? "not-visited"),
+                                    current === i && (highContrast ? "ring-2 ring-white ring-offset-1 ring-offset-black" : "ring-2 ring-[var(--student-accent)] ring-offset-1 ring-offset-[var(--student-bg)]"))}>
                                 {i + 1}
                             </button>
                         ))}
                     </div>
                     <div className="px-4 py-2 space-y-1 text-[10px]">
-                        {[["bg-[#00cc00]", `Answered: ${answered}`], ["bg-[#e05050]", `Not Answered: ${notAnswered}`], ["bg-[#9b59b6]", `Marked: ${marked}`], ["bg-white border border-gray-300", `Not Visited: ${notVisited}`]].map(([cls, lbl]) => (
-                            <div key={lbl} className="flex items-center gap-2"><span className={cn("w-4 h-4 rounded-full shrink-0", cls)} /><span className={highContrast ? "text-gray-300" : "text-gray-500"}>{lbl}</span></div>
+                        {[["bg-[var(--student-accent-strong)] border border-[var(--student-accent-strong)]", `Answered: ${answered}`], ["bg-rose-500 border border-rose-500", `Not Answered: ${notAnswered}`], ["bg-[var(--student-support)] border border-[var(--student-support)]", `Marked: ${marked}`], ["bg-[var(--student-panel-solid)] border border-[var(--student-border)]", `Not Visited: ${notVisited}`]].map(([cls, lbl]) => (
+                            <div key={lbl} className="flex items-center gap-2"><span className={cn("w-4 h-4 rounded-full shrink-0", highContrast ? "border border-gray-600 bg-gray-800" : cls)} /><span className={highContrast ? "text-gray-300" : "text-[var(--student-muted)]"}>{lbl}</span></div>
                         ))}
                     </div>
                 </aside>
@@ -541,20 +541,20 @@ export default function MCQExamPage() {
                 {/* Question area */}
                 <main className="flex-1 flex flex-col overflow-y-auto">
                     {/* Question header */}
-                    <div className={cn("flex items-center gap-3 px-8 py-4 border-b flex-wrap", highContrast ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100")}>
-                        <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]", highContrast ? "bg-indigo-900 text-indigo-300" : "bg-indigo-50 text-indigo-600")}>Q {q.no}/{questions.length}</span>
-                        <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]", highContrast ? "bg-amber-900 text-amber-300" : "bg-amber-50 text-amber-600")}>{q.marks} Mark</span>
+                    <div className={cn("flex items-center gap-3 px-8 py-4 border-b flex-wrap", highContrast ? "bg-gray-800 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
+                        <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]", highContrast ? "bg-gray-700 text-white" : "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]")}>Q {q.no}/{questions.length}</span>
+                        <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]", highContrast ? "bg-gray-700 text-white" : "bg-[var(--student-support-soft)] text-[var(--student-support)]")}>{q.marks} Mark</span>
                         <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]",
-                            q.difficulty === "EASY" ? "bg-green-50 text-green-600" : q.difficulty === "HARD" ? "bg-rose-50 text-rose-500" : "bg-orange-50 text-orange-600")}>
+                            q.difficulty === "EASY" ? "bg-[#e5f0e9] text-[var(--student-success)]" : q.difficulty === "HARD" ? "bg-rose-50 text-rose-500" : "bg-[var(--student-support-soft)] text-[var(--student-support)]")}>
                             {q.difficulty}
                         </span>
-                        {q.topic && <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-bold text-[11px]">{q.topic}</span>}
+                        {q.topic && <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]", highContrast ? "bg-gray-700 text-gray-200" : "bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)]")}>{q.topic}</span>}
                     </div>
 
                     {/* Question text + options */}
                     <div className="px-8 py-8 flex-1">
-                        <div className={cn("mb-2 text-[10px] font-black uppercase tracking-widest", highContrast ? "text-gray-500" : "text-gray-400")}>QUESTION</div>
-                        <p className={cn("font-semibold leading-relaxed mb-8", fontClass, highContrast ? "text-white" : "text-gray-900")}>{q.text}</p>
+                        <div className={cn("mb-2 text-[10px] font-black uppercase tracking-widest", highContrast ? "text-gray-500" : "text-[var(--student-muted)]")}>QUESTION</div>
+                        <p className={cn("font-semibold leading-relaxed mb-8", fontClass, highContrast ? "text-white" : "text-[var(--student-text)]")}>{q.text}</p>
 
                         <div className="space-y-3 mb-8">
                             {q.options.map((opt, oi) => {
@@ -564,20 +564,20 @@ export default function MCQExamPage() {
                                 return (
                                     <button key={opt.id} onClick={() => !showPracticeAnswer && selectOption(opt.id)}
                                         className={cn("w-full flex items-center gap-4 p-4 rounded-[20px] border text-left transition-all duration-300", fontClass,
-                                            showCorrect && isCorrectOpt ? "border-emerald-500 bg-emerald-50 hover:shadow-md hover:-translate-y-0.5" :
+                                            showCorrect && isCorrectOpt ? "border-[#2f7d55] bg-[#e5f0e9] hover:shadow-md hover:-translate-y-0.5" :
                                                 showCorrect && selected && !isCorrectOpt ? "border-rose-400 bg-rose-50 hover:shadow-md hover:-translate-y-0.5" :
-                                                    selected ? "border-indigo-600 bg-indigo-50/80 text-indigo-950 shadow-md shadow-indigo-600/10 hover:-translate-y-0.5" :
+                                                    selected ? highContrast ? "border-white bg-slate-800 text-white" : "border-[var(--student-accent-strong)] bg-[var(--student-accent-soft)] text-[var(--student-text)] shadow-md shadow-[rgba(31,92,80,0.10)] hover:-translate-y-0.5" :
                                                         highContrast ? "border-slate-700 bg-slate-800 hover:border-slate-500 hover:-translate-y-0.5" :
-                                                            "border-slate-100 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-[0_8px_30px_rgb(79,70,229,0.06)] hover:-translate-y-0.5")}>
+                                                            "border-[var(--student-border)] bg-[var(--student-panel-solid)] hover:border-[var(--student-accent-soft-strong)] hover:bg-[var(--student-panel-muted)] hover:-translate-y-0.5")}>
                                         <span className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
-                                            showCorrect && isCorrectOpt ? "bg-emerald-500 text-white shadow-emerald-500/20" :
+                                            showCorrect && isCorrectOpt ? "bg-[#2f7d55] text-white shadow-[rgba(47,125,85,0.2)]" :
                                                 showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white shadow-rose-500/20" :
-                                                    selected ? "bg-indigo-600 text-white shadow-indigo-600/20" : highContrast ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500")}>
+                                                    selected ? highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white shadow-[rgba(31,92,80,0.2)]" : highContrast ? "bg-slate-700 text-slate-300" : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]")}>
                                             {["A", "B", "C", "D", "E"][oi]}
                                         </span>
-                                        <span className={highContrast ? "text-gray-200" : "text-gray-800"}>{opt.text}</span>
-                                        {showCorrect && isCorrectOpt && <span className="ml-auto text-emerald-500 font-black shrink-0">✓ Correct</span>}
-                                        {showCorrect && selected && !isCorrectOpt && <span className="ml-auto text-rose-500 font-black shrink-0">✗ Wrong</span>}
+                                        <span className={highContrast ? "text-gray-200" : "text-[var(--student-text)]"}>{opt.text}</span>
+                                        {showCorrect && isCorrectOpt && <span className="ml-auto text-[#2f7d55] font-black shrink-0">Correct</span>}
+                                        {showCorrect && selected && !isCorrectOpt && <span className="ml-auto text-rose-500 font-black shrink-0">Wrong</span>}
                                     </button>
                                 );
                             })}
@@ -585,11 +585,11 @@ export default function MCQExamPage() {
 
                         {/* Practice mode explanation */}
                         {mode === "practice" && showPracticeAnswer && q.explanation && (
-                            <div className="flex gap-3 p-4 rounded-2xl bg-indigo-50 border border-indigo-100 mb-6">
-                                <span className="text-indigo-500 shrink-0">💡</span>
+                            <div className={cn("flex gap-3 p-4 rounded-2xl border mb-6", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-accent-soft)] border-[var(--student-accent-soft-strong)]")}>
+                                <span className={cn("shrink-0", highContrast ? "text-gray-300" : "text-[var(--student-accent-strong)]")}>i</span>
                                 <div>
-                                    <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Explanation</div>
-                                    <p className="text-sm text-gray-700 leading-relaxed">{q.explanation}</p>
+                                    <div className={cn("text-[10px] font-black uppercase tracking-widest mb-1", highContrast ? "text-gray-400" : "text-[var(--student-accent-strong)]")}>Explanation</div>
+                                    <p className={cn("text-sm leading-relaxed", highContrast ? "text-gray-200" : "text-[var(--student-text)]")}>{q.explanation}</p>
                                 </div>
                             </div>
                         )}
@@ -611,27 +611,27 @@ export default function MCQExamPage() {
                     </div>
 
                     {/* Bottom action bar */}
-                    <div className={cn("sticky bottom-0 flex items-center justify-between px-8 py-4 border-t gap-3 flex-wrap", highContrast ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200")}>
+                    <div className={cn("sticky bottom-0 flex items-center justify-between px-8 py-4 border-t gap-3 flex-wrap", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
                         <div className="flex items-center gap-2">
-                            <button onClick={markForReview} className="flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 border-purple-400 text-purple-600 font-bold text-sm hover:bg-purple-50">
-                                🔖 Mark & Next
+                            <button onClick={markForReview} className={cn("flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 font-bold text-sm", highContrast ? "border-gray-500 text-gray-100 hover:bg-gray-800" : "border-[var(--student-support)] text-[var(--student-support)] hover:bg-[var(--student-support-soft)]")}>
+                                Mark and Next
                             </button>
-                            <button onClick={clearAnswer} className={cn("px-5 py-2.5 rounded-lg border-2 font-bold text-sm", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-600 hover:bg-gray-50")}>
+                            <button onClick={clearAnswer} className={cn("px-5 py-2.5 rounded-lg border-2 font-bold text-sm", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
                                 Clear
                             </button>
                             <button onClick={() => void handleFinalSubmit()}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#00cc00] text-white font-bold text-sm hover:bg-green-500 shadow-lg shadow-green-500/20">
-                                ✓ Submit
+                                className={cn("flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "bg-[var(--student-accent-strong)] text-white hover:bg-[#18493f] shadow-lg shadow-[rgba(31,92,80,0.18)]")}>
+                                Submit
                             </button>
                         </div>
                         <div className="flex items-center gap-2">
                             <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}
-                                className={cn("px-5 py-2.5 rounded-lg border-2 font-bold text-sm disabled:opacity-30", highContrast ? "border-gray-600 text-gray-300" : "border-gray-300 text-gray-600 hover:bg-gray-50")}>
-                                ← Previous
+                                className={cn("px-5 py-2.5 rounded-lg border-2 font-bold text-sm disabled:opacity-30", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
+                                Previous
                             </button>
                             <button onClick={() => { if (current < questions.length - 1) setCurrent(c => c + 1); }} disabled={current === questions.length - 1}
-                                className="px-6 py-2.5 rounded-lg bg-indigo-700 text-white font-bold text-sm hover:bg-indigo-600 disabled:opacity-30 shadow-lg shadow-indigo-500/20">
-                                Next →
+                                className={cn("px-6 py-2.5 rounded-lg font-bold text-sm disabled:opacity-30 transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "bg-[var(--student-accent-strong)] text-white hover:bg-[#18493f] shadow-lg shadow-[rgba(31,92,80,0.18)]")}>
+                                Next
                             </button>
                         </div>
                     </div>

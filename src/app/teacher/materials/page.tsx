@@ -36,6 +36,9 @@ type MaterialItem = {
     id: string;
     title: string;
     createdAt: string | Date;
+    category?: string;
+    subType?: string;
+    isPublic: boolean;
     isProtected: boolean;
     uploadedBy?: { id: string; fullName: string | null; email: string | null; role: string };
     accessedBy?: MaterialAccess[];
@@ -57,6 +60,9 @@ export default function EducatorHubPage() {
     const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
     const [studentEmails, setStudentEmails] = useState("");
     const [isProtected, setIsProtected] = useState(true);
+    const [isPublic, setIsPublic] = useState(false);
+    const [category, setCategory] = useState("CA Final");
+    const [subType, setSubType] = useState("PDF");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const loadData = async () => {
@@ -97,8 +103,11 @@ export default function EducatorHubPage() {
     const handlePublish = async (event: React.FormEvent) => {
         event.preventDefault();
         if (!selectedFile) { alert("Please select a file to distribute."); return; }
-        if (targetMode === "batch" && selectedBatchIds.length === 0 && batches.length > 0) {
+        if (!isPublic && targetMode === "batch" && selectedBatchIds.length === 0 && batches.length > 0) {
             alert("Select at least one batch to distribute to, or switch to email mode."); return;
+        }
+        if (!isPublic && targetMode === "email" && !studentEmails.trim()) {
+            alert("Enter at least one student email or switch to batch mode."); return;
         }
         if (isAdminView && !selectedOwnerId) { alert("Select the educator who should own this material."); return; }
 
@@ -106,7 +115,10 @@ export default function EducatorHubPage() {
         const formData = new FormData();
         formData.append("file", selectedFile);
         formData.append("title", title || selectedFile.name);
+        formData.append("category", category);
+        formData.append("subType", subType);
         formData.append("isProtected", String(isProtected));
+        formData.append("isPublic", String(isPublic));
         if (isAdminView) formData.append("ownerId", selectedOwnerId);
 
         if (targetMode === "batch" && selectedBatchIds.length > 0) {
@@ -123,6 +135,9 @@ export default function EducatorHubPage() {
             setStudentEmails("");
             setSelectedFile(null);
             setSelectedBatchIds([]);
+            setIsPublic(false);
+            setCategory("CA Final");
+            setSubType("PDF");
             void loadData();
         } else {
             alert(res.message || "Failed to publish.");
@@ -132,7 +147,7 @@ export default function EducatorHubPage() {
     const heading = isAdminView ? "Academy Materials Hub" : "Teacher Resource Library";
     const subheading = isAdminView
         ? "Review every teacher-owned resource and manage content visibility for the entire academy."
-        : "Securely share premium study materials and track student engagement across your batches.";
+        : "Share educator resources privately with enrolled students or publish them into the public catalog.";
 
     return (
         <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -212,6 +227,35 @@ export default function EducatorHubPage() {
                                 placeholder="e.g. CA Final Audit Revision Notes" />
                         </div>
 
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Track</label>
+                                <select
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                >
+                                    <option value="CA Final">CA Final</option>
+                                    <option value="CA Inter">CA Inter</option>
+                                    <option value="CA Foundation">CA Foundation</option>
+                                    <option value="GENERAL">General</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Resource Type</label>
+                                <select
+                                    value={subType}
+                                    onChange={(e) => setSubType(e.target.value)}
+                                    className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                >
+                                    <option value="PDF">PDF</option>
+                                    <option value="RTP">RTP</option>
+                                    <option value="MTP">MTP</option>
+                                    <option value="VIDEO">VIDEO</option>
+                                </select>
+                            </div>
+                        </div>
+
                         {/* Distribution Toggles */}
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Target Audience</label>
@@ -225,6 +269,27 @@ export default function EducatorHubPage() {
                                     By Email
                                 </button>
                             </div>
+                        </div>
+
+                        <div className={cn("p-5 rounded-2xl border transition-all cursor-pointer group/visibility", isPublic ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "bg-slate-50 border-slate-100 text-slate-600 hover:bg-white")}>
+                            <label className="flex items-start gap-4 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={isPublic}
+                                    onChange={(e) => setIsPublic(e.target.checked)}
+                                    className="hidden"
+                                />
+                                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", isPublic ? "bg-white/10" : "bg-white border border-slate-100")}>
+                                    <Globe size={20} weight={isPublic ? "fill" : "bold"} />
+                                </div>
+                                <div className="flex-1">
+                                    <span className="block text-sm font-bold tracking-tight">Public Catalog Visibility</span>
+                                    <span className={cn("block text-[10px] font-medium mt-0.5", isPublic ? "text-emerald-100" : "text-slate-400")}>
+                                        Show this material on the public study-material page while keeping save and personal student features behind login.
+                                    </span>
+                                </div>
+                                {isPublic && <CheckCircle size={20} weight="fill" className="text-white" />}
+                            </label>
                         </div>
 
                         {/* Resource Protections */}
@@ -251,7 +316,10 @@ export default function EducatorHubPage() {
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between px-1">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Batches</label>
-                                        <span className="text-[10px] font-bold text-indigo-500">{selectedBatchIds.length} Selected</span>
+                                        <span className="text-[10px] font-bold text-indigo-500">
+                                            {selectedBatchIds.length} Selected
+                                            {isPublic ? " - Optional when public" : ""}
+                                        </span>
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto px-1 pt-1 pb-4 scrollbar-thin scrollbar-thumb-slate-200">
                                         {batches.map((b) => {
@@ -277,7 +345,7 @@ export default function EducatorHubPage() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Student Emails</label>
                                     <textarea value={studentEmails} onChange={(e) => setStudentEmails(e.target.value)}
                                         className="w-full rounded-[24px] bg-slate-50/50 border border-slate-100 px-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/20 transition-all font-sans font-medium leading-relaxed resize-none shadow-inner"
-                                        placeholder="Enter emails separated by commas..." rows={4} />
+                                        placeholder={isPublic ? "Optional if this is already public. Otherwise enter emails separated by commas..." : "Enter emails separated by commas..."} rows={4} />
                                 </div>
                             )}
                         </div>
@@ -310,7 +378,7 @@ export default function EducatorHubPage() {
                             ) : (
                                 <LinkIcon size={18} weight="bold" />
                             )}
-                            {isUploading ? "Encrypting Distribution..." : "Distribute to Students"}
+                            {isUploading ? "Publishing Resource..." : isPublic ? "Publish To Public Catalog" : "Distribute To Students"}
                         </button>
                     </form>
                 </div>
@@ -377,7 +445,9 @@ export default function EducatorHubPage() {
                                                     <Users size={16} weight="bold" className="text-indigo-500" />
                                                     <span className="text-2xl font-bold tracking-tight">{material.accessedBy?.length ?? 0}</span>
                                                 </div>
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Student Access</span>
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                    {material.isPublic ? "Public + Student Access" : "Student Access"}
+                                                </span>
                                             </div>
                                             <button className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-indigo-600 transition-all active:scale-95 shadow-md shadow-slate-900/10">
                                                 <CaretRight size={18} weight="bold" />
@@ -392,9 +462,9 @@ export default function EducatorHubPage() {
                             <div className="flex items-start gap-4 p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100/50">
                                 <Info size={20} weight="fill" className="text-indigo-600 shrink-0" />
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-indigo-900 uppercase tracking-[0.2em] leading-none mb-1">Encrypted Content Registry</p>
+                                    <p className="text-[10px] font-black text-indigo-900 uppercase tracking-[0.2em] leading-none mb-1">Distribution And Visibility</p>
                                     <p className="text-[11px] text-indigo-600/80 font-semibold leading-relaxed">
-                                        All premium assets are encrypted at rest. Distribution access can be revoked at any time from the Manage library section.
+                                        Keep a resource student-only for targeted distribution, or mark it public so it also appears in the public catalog and logged-in student discovery views.
                                     </p>
                                 </div>
                             </div>

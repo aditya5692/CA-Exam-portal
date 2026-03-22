@@ -6,62 +6,208 @@ import {
   CaretDown,
   CaretLeft,
   CaretRight,
-  IdentificationBadge,
-  ShieldCheck,
+  House,
+  Notebook,
+  Books,
+  Sparkle,
+  SuitcaseSimple,
+  Megaphone,
+  ChartPolar,
+  Bookmarks,
+  Gear,
   SignOut,
-  Target,
   User,
-  Gear
+  ShieldCheck,
+  X
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { ComponentType, useState, useSyncExternalStore } from "react";
 
-const NAV_SECTIONS = [
-    {
-        title: "MAIN MENU",
-        items: [
-            { label: "Dashboard", href: "/student/dashboard", icon: "dashboard" },
-            { label: "Study Notes", href: "/student/materials", icon: "description" },
-            { label: "Question Banks", href: "/student/past-year-questions", icon: "quiz" },
-            { label: "Free Resources", href: "/student/free-resources", icon: "auto_stories" },
-            { label: "Mock Tests", href: "/student/exams", icon: "assignment_turned_in" },
-            { label: "Academy Updates", href: "/student/updates", icon: "campaign" },
-        ]
-    },
-    {
-        title: "PERSONAL",
-        items: [
-            { label: "My Progress", href: "/student/analytics", icon: "trending_up" },
-            { label: "Saved Items", href: "/student/saved-items", icon: "bookmark" },
-        ]
-    }
+// --- Types & Data ---
+
+type SidebarIcon = ComponentType<{
+    size?: string | number;
+    weight?: "fill" | "bold";
+    className?: string;
+}>;
+
+interface NavItem {
+    label: string;
+    href: string;
+    icon: SidebarIcon;
+}
+
+const MAIN_NAV: NavItem[] = [
+    { label: "Dashboard", href: "/student/dashboard", icon: House },
+    { label: "Study Notes", href: "/student/materials", icon: Notebook },
+    { label: "Question Banks", href: "/student/past-year-questions", icon: Books },
+    { label: "Free Resources", href: "/student/free-resources", icon: Sparkle },
+    { label: "Mock Tests", href: "/student/exams", icon: SuitcaseSimple },
+    { label: "Academy Updates", href: "/student/updates", icon: Megaphone },
 ];
 
-export function StudentSidebar({ showAdminLink = false }: { showAdminLink?: boolean }) {
+const PERSONAL_NAV: NavItem[] = [
+    { label: "My Progress", href: "/student/analytics", icon: ChartPolar },
+    { label: "Saved Items", href: "/student/saved-items", icon: Bookmarks },
+];
+
+// --- Sub-components ---
+
+function SidebarNavItem({ 
+    item, 
+    isActive, 
+    isCollapsed 
+}: { 
+    item: NavItem; 
+    isActive: boolean; 
+    isCollapsed: boolean;
+}) {
+    return (
+        <Link
+            href={item.href}
+            title={isCollapsed ? item.label : ""}
+            className={cn(
+                "group/item relative flex items-center gap-3 rounded-xl px-4 py-2.5 transition-all duration-200",
+                isActive
+                    ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] shadow-sm"
+                    : "text-[var(--student-muted)] hover:bg-white/80 hover:text-[var(--student-text)]"
+            )}
+        >
+            {isActive && (
+                <div className="absolute bottom-2 left-0 top-2 w-1 rounded-r-full bg-[var(--student-accent-strong)]" />
+            )}
+            <div className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center transition-colors",
+                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] group-hover/item:text-[var(--student-text)]"
+            )}>
+                <item.icon 
+                    size={20} 
+                    weight={isActive ? "fill" : "bold"} 
+                />
+            </div>
+            {!isCollapsed && <span className="text-sm font-semibold">{item.label}</span>}
+        </Link>
+    );
+}
+
+function UserProfile({ 
+    isCollapsed, 
+    isProfileOpen, 
+    setIsProfileOpen, 
+    handleLogout, 
+    showAdminLink 
+}: { 
+    isCollapsed: boolean; 
+    isProfileOpen: boolean; 
+    setIsProfileOpen: (open: boolean) => void;
+    handleLogout: () => void;
+    showAdminLink: boolean;
+}) {
+    return (
+        <div className="mt-auto border-t border-[var(--student-border)] p-3">
+            <div className="relative">
+                <button
+                    type="button"
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className={cn(
+                        "w-full rounded-xl p-2 transition-all duration-200",
+                        isCollapsed ? "flex justify-center" : "flex items-center gap-3 hover:bg-white/80",
+                        isProfileOpen && "bg-white/90 shadow-sm"
+                    )}
+                >
+                    <div className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-xl transition-colors",
+                        isProfileOpen
+                            ? "bg-[var(--student-accent-strong)] text-white"
+                            : "border border-[var(--student-border)] bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)]"
+                    )}>
+                        <User size={20} weight={isProfileOpen ? "fill" : "bold"} />
+                    </div>
+                    
+                    {!isCollapsed && (
+                        <div className="flex-1 flex items-center justify-between overflow-hidden text-left">
+                            <div>
+                                <div className="truncate text-xs font-bold text-[var(--student-text)]">My Account</div>
+                                <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--student-muted)]">Student</div>
+                            </div>
+                            <CaretDown 
+                                size={12} 
+                                weight="bold" 
+                                className={cn("text-[var(--student-muted)] transition-transform", isProfileOpen && "rotate-180")}
+                            />
+                        </div>
+                    )}
+                </button>
+
+                {!isCollapsed && isProfileOpen && (
+                    <div className="absolute bottom-full left-0 right-0 mb-2 animate-in rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-1 shadow-[0_18px_32px_rgba(55,48,38,0.08)] fade-in slide-in-from-bottom-2 duration-200">
+                        <Link
+                            href="/student/profile"
+                            className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-bold text-[var(--student-muted-strong)] transition-all hover:bg-[var(--student-accent-soft)] hover:text-[var(--student-accent-strong)]"
+                        >
+                            <Gear size={16} weight="bold" />
+                            Settings
+                        </Link>
+                        {showAdminLink && (
+                            <Link
+                                href="/admin/control-center"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-bold text-[var(--student-muted-strong)] transition-all hover:bg-[var(--student-accent-soft)] hover:text-[var(--student-accent-strong)]"
+                            >
+                                <ShieldCheck size={16} weight="bold" />
+                                Admin
+                            </Link>
+                        )}
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-all text-xs font-bold"
+                        >
+                            <SignOut size={16} weight="bold" />
+                            Logout
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// --- Main Component ---
+
+export function StudentSidebar({ 
+    showAdminLink = false,
+    onClose
+}: { 
+    showAdminLink?: boolean;
+    onClose?: () => void;
+}) {
     const pathname = usePathname();
     const router = useRouter();
-    const [isCollapsed, setIsCollapsed] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        const timer = window.setTimeout(() => {
-            setMounted(true);
-            const saved = localStorage.getItem("sidebar-collapsed");
-            if (saved !== null) setIsCollapsed(saved === "true");
-        }, 0);
-
-        return () => {
-            window.clearTimeout(timer);
-        };
-    }, []);
+    const mounted = useSyncExternalStore(
+        () => () => undefined,
+        () => true,
+        () => false
+    );
+    const isCollapsed = useSyncExternalStore(
+        (callback) => {
+            const notify = () => callback();
+            window.addEventListener("storage", notify);
+            window.addEventListener("sidebar-collapsed-change", notify);
+            return () => {
+                window.removeEventListener("storage", notify);
+                window.removeEventListener("sidebar-collapsed-change", notify);
+            };
+        },
+        () => localStorage.getItem("sidebar-collapsed") === "true",
+        () => false
+    );
 
     const toggleCollapse = () => {
         const newState = !isCollapsed;
-        setIsCollapsed(newState);
         localStorage.setItem("sidebar-collapsed", String(newState));
-        if (newState) setIsProfileOpen(false); // Close profile on collapse
+        window.dispatchEvent(new Event("sidebar-collapsed-change"));
+        if (newState) setIsProfileOpen(false);
     };
 
     const handleLogout = async () => {
@@ -70,224 +216,94 @@ export function StudentSidebar({ showAdminLink = false }: { showAdminLink?: bool
         router.refresh();
     };
 
-    if (!mounted) return <aside className="w-64 bg-white border-r h-screen" />;
+    if (!mounted) return <aside className="h-screen w-64 border-r border-[var(--student-border)] bg-[rgba(255,253,249,0.9)]" />;
 
     return (
         <aside
             className={cn(
-                "bg-slate-50/20 backdrop-blur-xl border-r border-slate-200 flex flex-col h-screen sticky top-0 z-50 transition-all duration-500 ease-in-out group/sidebar overflow-hidden",
+                "group/sidebar sticky top-0 z-50 flex h-screen flex-col overflow-hidden border-r border-[var(--student-border)] bg-[rgba(255,250,244,0.88)] shadow-[16px_0_40px_rgba(55,48,38,0.04)] backdrop-blur-xl transition-all duration-300 ease-in-out",
                 isCollapsed ? "w-20" : "w-64"
             )}
+            role="navigation"
+            aria-label="Student Sidebar"
         >
-            {/* Collapse Toggle Button */}
+            {/* Collapse Toggle */}
             <button
                 onClick={toggleCollapse}
-                className="absolute -right-3 top-20 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:scale-110 hover:bg-slate-50 transition-all z-[60] opacity-0 group-hover/sidebar:opacity-100"
+                className="absolute -right-3 top-20 z-[60] hidden h-6 w-6 items-center justify-center rounded-full border border-[var(--student-border)] bg-[var(--student-panel-solid)] text-[var(--student-muted-strong)] opacity-0 shadow-[0_8px_18px_rgba(55,48,38,0.08)] transition-all hover:bg-white group-hover/sidebar:opacity-100 md:flex"
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-                {isCollapsed ? <CaretRight size={14} weight="bold" /> : <CaretLeft size={14} weight="bold" />}
+                {isCollapsed ? <CaretRight size={12} weight="bold" /> : <CaretLeft size={12} weight="bold" />}
             </button>
 
-            {/* Sidebar Branding */}
-            <div className={cn("px-8 py-10 transition-all duration-500", isCollapsed && "px-7")}>
-                <Link href="/student/dashboard" className="flex items-center gap-4 group/logo cursor-pointer no-underline outline-none">
-                    <div className="shrink-0 flex items-center justify-center relative">
-                        <div className="absolute inset-0 bg-indigo-500/15 blur-xl rounded-full scale-0 group-hover/logo:scale-[2] transition-transform duration-700 opacity-0 group-hover/logo:opacity-100" />
-                        <div className={cn(
-                            "relative flex items-center justify-center bg-indigo-600 rounded-[14px] shadow-lg shadow-indigo-500/20 transform-gpu transition-all duration-500",
-                            "group-hover/logo:shadow-indigo-500/40 group-hover/logo:-translate-y-0.5 active:scale-95",
-                            isCollapsed ? "w-10 h-10" : "w-11 h-11"
-                        )}>
-                            <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="white" strokeWidth="1.5" className="animate-pulse" />
-                            </svg>
-                        </div>
+            {/* Close Button (Mobile) */}
+            {onClose && (
+                <button 
+                    onClick={onClose}
+                    className="absolute -right-12 top-4 rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-2 text-[var(--student-muted-strong)] shadow-md md:hidden"
+                >
+                    <X size={20} weight="bold" />
+                </button>
+            )}
+
+            {/* Branding */}
+            <div className="p-6 transition-all duration-300">
+                <Link href="/student/dashboard" className="flex items-center gap-3 outline-none">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--student-accent-strong)] shadow-[0_12px_28px_rgba(31,92,80,0.18)]">
+                        <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                     </div>
 
                     {!isCollapsed && (
-                        <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-700 delay-75">
-                            <h1 className="text-2xl font-black text-slate-900 font-outfit tracking-[-0.04em] leading-none translate-y-0.5">
+                        <div className="flex flex-col">
+                            <h1 className="text-xl font-bold tracking-tight leading-none text-[var(--student-text)]">
                                 Financly
                             </h1>
-                            <div className="flex items-center gap-1.5 mt-2">
-                                <div className="h-[2px] w-3 bg-indigo-500/40 rounded-full" />
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.25em] mb-[1px]">
-                                    Student Portal
-                                </p>
-                            </div>
+                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">
+                                Student Portal
+                            </p>
                         </div>
                     )}
                 </Link>
             </div>
 
-            <nav className={cn("flex-1 px-4 space-y-1 transition-all duration-500 overflow-y-auto custom-scrollbar", isCollapsed && "px-2")}>
-                {NAV_SECTIONS[0].items.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            title={isCollapsed ? item.label : ""}
-                            className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out font-inter text-sm font-medium active:scale-95",
-                                isActive
-                                    ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm shadow-indigo-500/5"
-                                    : "text-slate-600 hover:bg-slate-100"
-                            )}
-                        >
-                            <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>{item.icon}</span>
-                            {!isCollapsed && <span>{item.label}</span>}
-                        </Link>
-                    );
-                })}
+            <nav className={cn("flex-1 px-3 space-y-0.5 mt-2 overflow-y-auto custom-scrollbar", isCollapsed && "px-2")}>
+                {MAIN_NAV.map((item) => (
+                    <SidebarNavItem 
+                        key={item.href} 
+                        item={item} 
+                        isActive={pathname === item.href} 
+                        isCollapsed={isCollapsed} 
+                    />
+                ))}
 
                 {!isCollapsed && (
-                    <div className="pt-8 pb-4">
-                        <h3 className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 opacity-80">
-                            Personal Hub
+                    <div className="pt-6 pb-2">
+                        <h3 className="mb-2 px-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">
+                            Personal
                         </h3>
-                        <div className="space-y-1">
-                            {NAV_SECTIONS[1].items.map((item) => {
-                                const isActive = pathname === item.href;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        className={cn(
-                                            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-inter text-sm font-medium active:scale-95",
-                                            isActive
-                                                ? "bg-indigo-50 text-indigo-700 font-semibold"
-                                                : "text-slate-600 hover:bg-slate-100"
-                                        )}
-                                    >
-                                        <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>{item.icon}</span>
-                                        <span>{item.label}</span>
-                                    </Link>
-                                );
-                            })}
+                        <div className="space-y-0.5">
+                            {PERSONAL_NAV.map((item) => (
+                                <SidebarNavItem 
+                                    key={item.href} 
+                                    item={item} 
+                                    isActive={pathname === item.href} 
+                                    isCollapsed={isCollapsed} 
+                                />
+                            ))}
                         </div>
                     </div>
                 )}
             </nav>
 
-            {!isCollapsed && (
-                <div className="px-6 mb-8">
-                    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group/goal transition-all duration-500 hover:shadow-md">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-indigo-500/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover/goal:bg-indigo-500/10 transition-colors" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Target size={14} weight="bold" className="text-indigo-500" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Goal Progress</span>
-                            </div>
-                            <div className="space-y-2.5">
-                                <div className="flex items-end justify-between">
-                                    <div className="text-sm font-black text-slate-900">13/20</div>
-                                    <div className="text-[10px] font-bold text-slate-400">Exams</div>
-                                </div>
-                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                                        style={{ width: "65%" }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Sidebar Footer: Redesigned Profile Dropdown */}
-            <div className={cn("p-4 mt-auto border-t border-slate-100 transition-all duration-500", isCollapsed && "px-2")}>
-                <div className={cn(
-                    "bg-white rounded-[24px] shadow-2xl shadow-slate-200/50 border border-slate-100 transition-all duration-500 overflow-hidden",
-                    isCollapsed ? "p-1" : "p-2",
-                    isProfileOpen && !isCollapsed && "pb-4"
-                )}>
-                    {/* Profile Trigger */}
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsProfileOpen(!isProfileOpen);
-                        }}
-                        className={cn(
-                            "w-full flex items-center transition-all duration-300 rounded-2xl group relative z-[70]",
-                            isCollapsed 
-                                ? "justify-center py-2" 
-                                : "gap-3 px-3 py-2.5 hover:bg-slate-50",
-                            isProfileOpen && !isCollapsed && "bg-slate-50"
-                        )}
-                    >
-                        <div className={cn(
-                            "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-500",
-                            isProfileOpen && !isCollapsed ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" : "bg-slate-100 text-slate-600"
-                        )}>
-                            <User size={20} weight={isProfileOpen ? "fill" : "bold"} />
-                        </div>
-                        
-                        {!isCollapsed && (
-                            <div className="flex-1 flex items-center justify-between overflow-hidden">
-                                <div className="text-left">
-                                    <div className="text-xs font-black text-slate-900 truncate">My Account</div>
-                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Student Profile</div>
-                                </div>
-                                <CaretDown 
-                                    size={14} 
-                                    weight="bold" 
-                                    className={cn("text-slate-400 transition-transform duration-300", isProfileOpen && "rotate-180")}
-                                />
-                            </div>
-                        )}
-                    </button>
-
-                    {/* Submenu: Accordion Style */}
-                    {!isCollapsed && isProfileOpen && (
-                        <div className="mt-2 space-y-1 px-1 animate-in slide-in-from-top-2 duration-300">
-                            <Link
-                                href="/student/profile"
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all text-[13px] font-bold group"
-                            >
-                                <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-indigo-50 flex items-center justify-center transition-colors">
-                                    <Gear size={16} weight="bold" />
-                                </div>
-                                Settings
-                            </Link>
-
-                            {showAdminLink && (
-                                <Link
-                                    href="/admin/control-center"
-                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all text-[13px] font-bold group"
-                                >
-                                    <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-indigo-50 flex items-center justify-center transition-colors">
-                                        <ShieldCheck size={16} weight="bold" />
-                                    </div>
-                                    Admin
-                                </Link>
-                            )}
-
-                            <button
-                                onClick={handleLogout}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-500 hover:bg-rose-50 transition-all text-[13px] font-bold group"
-                            >
-                                <div className="w-8 h-8 rounded-lg bg-rose-50/50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
-                                    <SignOut size={16} weight="bold" className="group-hover:text-rose-600" />
-                                </div>
-                                Logout
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Collapsed State Icon */}
-                    {isCollapsed && (
-                        <Link 
-                            href="/student/profile" 
-                            className="mt-1 w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                        >
-                            <Gear size={20} weight="bold" />
-                        </Link>
-                    )}
-                </div>
-            </div>
+            <UserProfile 
+                isCollapsed={isCollapsed}
+                isProfileOpen={isProfileOpen}
+                setIsProfileOpen={setIsProfileOpen}
+                handleLogout={handleLogout}
+                showAdminLink={showAdminLink}
+            />
         </aside>
     );
 }

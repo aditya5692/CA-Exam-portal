@@ -16,12 +16,29 @@ import {
   Video
 } from "@phosphor-icons/react";
 import Link from "next/link";
+import { usePathname,useRouter } from "next/navigation";
 import { useCallback,useEffect,useState } from "react";
 
 const CATEGORIES = ["All", "CA Final", "CA Inter", "CA Foundation", "Case Studies", "Amendments"];
 const CONTENT_TYPES = ["All", "PDF", "VIDEO", "RTP", "MTP", "PYQ"];
 
-export function FreeResourcesDashboard({ daysToExam = 0 }: { daysToExam?: number }) {
+type SaveState = "enabled" | "login" | "hidden";
+
+type Props = {
+    daysToExam?: number;
+    saveState?: SaveState;
+    loginHref?: string;
+    showFeaturePrompt?: boolean;
+};
+
+export function FreeResourcesDashboard({
+    daysToExam = 0,
+    saveState = "hidden",
+    loginHref = "/auth/login",
+    showFeaturePrompt = false,
+}: Props) {
+    const router = useRouter();
+    const pathname = usePathname();
     const [activeCategory, setActiveCategory] = useState("All");
     const [activeSecondary, setActiveSecondary] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +46,7 @@ export function FreeResourcesDashboard({ daysToExam = 0 }: { daysToExam?: number
     const [resources, setResources] = useState<PublicResource[]>([]);
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
+    const canSave = saveState === "enabled";
 
     // Debounce search to avoid too many requests
     useEffect(() => {
@@ -62,6 +80,11 @@ export function FreeResourcesDashboard({ daysToExam = 0 }: { daysToExam?: number
     }, [fetchResources]);
 
     useEffect(() => {
+        if (!canSave) {
+            setSavedIds(new Set());
+            return;
+        }
+
         const fetchSaves = async () => {
             const res = await getSavedItems();
             if (res.success && res.data) {
@@ -72,12 +95,22 @@ export function FreeResourcesDashboard({ daysToExam = 0 }: { daysToExam?: number
                 setSavedIds(ids);
             }
         };
-        fetchSaves();
-    }, []);
+        void fetchSaves();
+    }, [canSave]);
 
     const handleToggleSave = async (id: string, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (saveState === "login") {
+            router.push(`${loginHref}?next=${encodeURIComponent(pathname)}`);
+            return;
+        }
+
+        if (!canSave) {
+            return;
+        }
+
         const res = await toggleSavedItem(id, "MATERIAL");
         if (res.success && res.data) {
             setSavedIds(prev => {
@@ -145,6 +178,25 @@ export function FreeResourcesDashboard({ daysToExam = 0 }: { daysToExam?: number
                 </div>
             </div>
 
+            {showFeaturePrompt && (
+                <div className="rounded-[24px] border border-[#d7c5a9] bg-[#f4ede2] px-5 py-4 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#667370]">Public catalog access</p>
+                            <p className="mt-1 text-sm font-medium leading-relaxed text-[#4f5b58]">
+                                Browse every public resource here. Sign in to save materials and unlock student-only organization features.
+                            </p>
+                        </div>
+                        <Link
+                            href={loginHref}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#1f5c50] bg-[#1f5c50] px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-white transition-all hover:bg-[#18493f]"
+                        >
+                            Login for features
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             {/* Smart Filters Area */}
             <div className="space-y-4 px-1">
                 <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
@@ -202,17 +254,22 @@ export function FreeResourcesDashboard({ daysToExam = 0 }: { daysToExam?: number
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-slate-100 px-3 py-1 rounded-lg bg-slate-50 shadow-sm">
                                         {res.category}
                                     </div>
-                                    <button
-                                        onClick={(e) => handleToggleSave(res.id, e)}
-                                        className={cn(
-                                            "p-2 rounded-lg transition-all duration-200 active:scale-95 border shadow-sm",
-                                            savedIds.has(res.id) 
-                                                ? "bg-indigo-500 border-indigo-500 text-white shadow-md shadow-indigo-600/10" 
-                                                : "bg-white border-slate-100 text-slate-300 hover:text-indigo-500 hover:border-indigo-100 hover:bg-indigo-50/50"
-                                        )}
-                                    >
-                                        <BookmarkSimple size={18} weight={savedIds.has(res.id) ? "fill" : "bold"} />
-                                    </button>
+                                    {saveState !== "hidden" && (
+                                        <button
+                                            onClick={(e) => handleToggleSave(res.id, e)}
+                                            title={saveState === "login" ? "Login to save" : "Save resource"}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-all duration-200 active:scale-95 border shadow-sm",
+                                                canSave && savedIds.has(res.id)
+                                                    ? "bg-indigo-500 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
+                                                    : saveState === "login"
+                                                        ? "bg-[#f2e3c0] border-[#e5d2a3] text-[#b7791f] hover:bg-[#ecd8ad]"
+                                                        : "bg-white border-slate-100 text-slate-300 hover:text-indigo-500 hover:border-indigo-100 hover:bg-indigo-50/50"
+                                            )}
+                                        >
+                                            <BookmarkSimple size={18} weight={canSave && savedIds.has(res.id) ? "fill" : "bold"} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

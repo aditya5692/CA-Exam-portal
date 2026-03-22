@@ -15,12 +15,12 @@ export function ChapterMCQSection({ hubData, selectedSubject, setSelectedSubject
         <section className="mb-12">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--student-accent-strong)] text-white">
                         <span className="material-symbols-outlined text-[20px]">menu_book</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Chapter-wise MCQs</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--student-text)]">Chapter-wise MCQs</h3>
                 </div>
-                <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full border border-slate-200">BASED ON ICAI PATTERN</span>
+                <span className="student-chip rounded-full px-3 py-1 text-[10px] font-bold">BASED ON ICAI PATTERN</span>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
@@ -31,10 +31,10 @@ export function ChapterMCQSection({ hubData, selectedSubject, setSelectedSubject
                     const icon = subject.color === "emerald" ? "account_balance" : subject.color === "amber" ? "gavel" : "payments";
 
                     return (
-                        <div key={subject.id} className="bg-white/70 backdrop-blur-md border border-slate-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                        <div key={subject.id} className="student-surface overflow-hidden rounded-xl transition-all hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                             {/* Main Subject Header */}
                             <div
-                                className={cn("p-4 flex items-center justify-between cursor-pointer group transition-colors", isExpanded ? "bg-slate-50/50 border-b border-slate-100" : "hover:bg-slate-50/30")}
+                                className={cn("group flex cursor-pointer items-center justify-between p-4 transition-colors", isExpanded ? "border-b border-[var(--student-border)] bg-[rgba(255,253,249,0.88)]" : "hover:bg-white/80")}
                                 onClick={() => setSelectedSubject(isExpanded ? "All Subjects" : subject.title)}
                             >
                                 <div className="flex items-center gap-4">
@@ -42,21 +42,21 @@ export function ChapterMCQSection({ hubData, selectedSubject, setSelectedSubject
                                         <span className="material-symbols-outlined">{icon}</span>
                                     </div>
                                     <div>
-                                        <h4 className="text-base font-semibold text-slate-900">{subject.title}</h4>
+                                        <h4 className="text-base font-semibold text-[var(--student-text)]">{subject.title}</h4>
                                         <p className="text-xs text-slate-500">{subject.chapters || 0} Chapters • {subject.questions || 0}+ Practice Questions</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="hidden sm:block text-right">
-                                        <p className="text-xs font-bold text-slate-700">{subject.progress}% Progress</p>
-                                        <div className="w-32 bg-slate-100 h-1.5 rounded-full mt-1 overflow-hidden">
+                                        <p className="text-xs font-bold text-[var(--student-muted-strong)]">{subject.progress}% Progress</p>
+                                        <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-[var(--student-panel-muted)]">
                                             <div
                                                 className={cn("h-full rounded-full transition-all duration-1000", progressColor)}
                                                 style={{ width: `${subject.progress}%` }}
                                             />
                                         </div>
                                     </div>
-                                    <span className={cn("material-symbols-outlined text-indigo-600 transition-transform duration-300", isExpanded && "rotate-180")}>expand_more</span>
+                                    <span className={cn("material-symbols-outlined text-[var(--student-accent-strong)] transition-transform duration-300", isExpanded && "rotate-180")}>expand_more</span>
                                 </div>
                             </div>
 
@@ -67,20 +67,20 @@ export function ChapterMCQSection({ hubData, selectedSubject, setSelectedSubject
                                         {subject.chapterDetails?.map((chapter, idx) => (
                                             <div key={idx} className="flex items-center justify-between group/chapter py-1">
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-medium text-slate-700 group-hover/chapter:text-indigo-600 transition-colors">
+                                                    <p className="text-sm font-medium text-[var(--student-muted-strong)] transition-colors group-hover/chapter:text-[var(--student-accent-strong)]">
                                                         Chapter {idx + 1}: {chapter.name}
                                                     </p>
                                                     <div className="flex items-center gap-3 mt-1">
-                                                        <div className="w-24 bg-slate-100 h-1 rounded-full overflow-hidden">
+                                                        <div className="h-1 w-24 overflow-hidden rounded-full bg-[var(--student-panel-muted)]">
                                                             <div className={cn("h-full", progressColor)} style={{ width: `${chapter.progress}%` }}></div>
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-slate-500">{chapter.progress}%</span>
+                                                        <span className="text-[10px] font-bold text-[var(--student-muted)]">{chapter.progress}%</span>
                                                     </div>
                                                 </div>
                                                 {chapter.examId ? (
                                                     <Link
                                                         href={`/exam/war-room?examId=${chapter.examId}&mode=practice`}
-                                                        className="text-indigo-600 text-[10px] font-bold uppercase tracking-wider hover:underline"
+                                                        className="text-[10px] font-bold uppercase tracking-wider text-[var(--student-accent-strong)] hover:underline"
                                                     >
                                                         Practice
                                                     </Link>
@@ -93,7 +93,7 @@ export function ChapterMCQSection({ hubData, selectedSubject, setSelectedSubject
                                     {/* View More Button */}
                                     {subject.chapters > (subject.chapterDetails?.length || 0) && (
                                         <div className="mt-4 pl-14 pt-3 border-t border-slate-50">
-                                            <button className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors group">
+                                            <button className="group flex items-center gap-2 text-[11px] font-bold text-[var(--student-accent-strong)] transition-colors hover:text-[var(--student-accent)]">
                                                 <span>VIEW {subject.chapters - (subject.chapterDetails?.length || 0)} MORE CHAPTERS</span>
                                                 <span className="material-symbols-outlined text-sm group-hover:translate-y-0.5 transition-transform">keyboard_arrow_down</span>
                                             </button>

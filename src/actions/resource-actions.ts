@@ -66,8 +66,8 @@ export async function incrementDownloadCount(id: string): Promise<ActionResponse
     try {
         await incrementPublicResourceMetric(id, "downloads");
         revalidatePath("/study-material");
-        revalidatePath("/student/past-year-questions");
-        revalidatePath("/past-year-questions");
+        revalidatePath("/student/free-resources");
+        revalidatePath("/teacher/free-resources");
         return { success: true, data: undefined };
     } catch (error) {
         console.error("incrementDownloadCount error:", error);
@@ -87,6 +87,8 @@ export async function trackPYQAction(id: string, action: "DOWNLOAD" | "SHARE"): 
         }
         revalidatePath("/student/past-year-questions");
         revalidatePath("/past-year-questions");
+        revalidatePath("/teacher/past-year-questions");
+        revalidatePath("/admin/past-year-questions");
         return { success: true, data: undefined };
     } catch (error) {
         console.error("trackPYQAction error:", error);

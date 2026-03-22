@@ -38,7 +38,10 @@ type SharedTeacherMaterialInput = {
     fileUrl: string;
     fileType: string;
     fileSize: number;
+    category?: string;
+    subType?: string;
     isProtected: boolean;
+    isPublic: boolean;
     batchIds: string[];
     studentEmails: string[];
     accessType?: string;
@@ -92,8 +95,10 @@ export async function createSharedTeacherMaterial(input: SharedTeacherMaterialIn
                 fileUrl: input.fileUrl,
                 fileType: input.fileType,
                 sizeInBytes: input.fileSize,
+                category: input.category?.trim() || "GENERAL",
+                subType: input.subType?.trim() || "PDF",
                 isProtected: input.isProtected,
-                isPublic: false,
+                isPublic: input.isPublic,
                 providerType: "TEACHER",
                 uploadedById: input.ownerId,
             },

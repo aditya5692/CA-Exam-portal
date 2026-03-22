@@ -14,14 +14,14 @@ export function StudentAnalyticsOverview({ data }: Props) {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Score Trend Card */}
-                <div className="lg:col-span-2 p-10 rounded-2xl bg-white border border-slate-100 shadow-sm h-[400px] flex flex-col font-outfit relative overflow-hidden group">
+                <div className="student-surface lg:col-span-2 relative flex h-[400px] flex-col overflow-hidden rounded-2xl p-10 font-outfit">
                     <div className="flex items-center justify-between mb-8">
                         <div className="space-y-1">
                             <h3 className="font-outfit">Performance Trend</h3>
                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">Progress over time</p>
                         </div>
-                        <div className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-slate-50 text-slate-500 border border-slate-100 shadow-sm transition-all hover:bg-white active:scale-95">
-                            <TrendUp size={18} weight="bold" className="text-indigo-500" />
+                        <div className="student-chip flex items-center gap-2.5 rounded-xl px-5 py-2.5 transition-all active:scale-95">
+                            <TrendUp size={18} weight="bold" className="text-[var(--student-accent-strong)]" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">Improving</span>
                         </div>
                     </div>
@@ -30,8 +30,8 @@ export function StudentAnalyticsOverview({ data }: Props) {
                             <AreaChart data={performanceTrend}>
                                 <defs>
                                     <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#2b7a69" stopOpacity={0.16} />
+                                        <stop offset="95%" stopColor="#2b7a69" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -62,7 +62,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                 <Area
                                     type="monotone"
                                     dataKey="score"
-                                    stroke="#4f46e5"
+                                    stroke="#2b7a69"
                                     strokeWidth={4}
                                     fillOpacity={1}
                                     fill="url(#scoreGradient)"
@@ -74,7 +74,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                 </div>
 
                 {/* Comparative Analysis */}
-                <div className="p-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col h-[400px] transition-all duration-300 hover:shadow-md">
+                <div className="student-surface flex h-[400px] flex-col rounded-2xl p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                     <div className="mb-8">
                         <h3 className="font-outfit">Global Ranking</h3>
                         <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">Benchmark against peers</p>
@@ -114,18 +114,18 @@ export function StudentAnalyticsOverview({ data }: Props) {
 
             {/* Personalized AI Insights */}
             <div className="grid lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 p-10 rounded-2xl bg-slate-900 text-white shadow-xl relative overflow-hidden group">
+                <div className="student-surface-dark lg:col-span-2 relative overflow-hidden rounded-2xl p-10 text-white">
                     <div className="relative z-10 w-full space-y-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 shadow-inner">
-                                <Sparkle size={24} weight="fill" className="text-indigo-400" />
+                            <div className="student-icon-tile-warm flex h-12 w-12 items-center justify-center rounded-xl">
+                                <Sparkle size={24} weight="fill" className="text-[var(--student-support)]" />
                             </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/80">AI Performance Insights</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/65">Performance Notes</span>
                         </div>
                         <div>
                             <h2 className="text-white font-outfit mb-6">
                                 {profile.avgAccuracy >= 75 ? "Excellent Progress" : "Keep Improving"}, <br/>
-                                <span className="text-indigo-400">{profile.name.split(' ')[0]}</span>
+                                <span className="text-[var(--student-support-soft)]">{profile.name.split(' ')[0]}</span>
                             </h2>
                             <p className="text-slate-400 font-medium text-base leading-relaxed max-w-2xl font-sans opacity-90">
                                 {weakTopics.length > 0 
@@ -133,33 +133,33 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                     : `Your current accuracy is ${profile.avgAccuracy}%. You are performing consistently across all modules. Keep up the good work to maintain your strong position.`}
                             </p>
                         </div>
-                        <button className="flex items-center gap-3 px-8 py-4 rounded-xl bg-white text-slate-950 font-bold text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-50 transition-all active:scale-95 group/btn">
+                        <button className="student-button-secondary group/btn flex items-center gap-3 rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                             Detailed Breakdown <ArrowRight size={18} weight="bold" className="group-hover/btn:translate-x-1.5 transition-transform" />
                         </button>
                     </div>
                 </div>
 
-                <div className="p-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col justify-between group relative overflow-hidden">
+                <div className="student-surface relative flex flex-col justify-between overflow-hidden rounded-2xl p-10">
                     <div className="relative z-10">
                         <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-300 shadow-sm">
+                            <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300">
                                 <Target size={24} weight="bold" />
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Exam Deadline</span>
                         </div>
                         <h4 className="font-bold text-slate-900 font-outfit mb-4">{examTargetLabel}</h4>
                         <div className="flex items-baseline gap-2 mb-8">
-                            <span className="text-6xl font-bold text-indigo-600 font-outfit tracking-tight leading-none">{examTargetDays}</span>
+                            <span className="font-outfit text-6xl font-bold leading-none tracking-tight text-[var(--student-accent-strong)]">{examTargetDays}</span>
                             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Days Left</span>
                         </div>
                     </div>
                     <div className="relative z-10 space-y-4">
                         <div className="flex justify-between items-end">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Prep Readiness</span>
-                            <span className="text-xl font-bold text-indigo-600 font-outfit leading-none">{profile.avgAccuracy}%</span>
+                            <span className="font-outfit text-xl font-bold leading-none text-[var(--student-accent-strong)]">{profile.avgAccuracy}%</span>
                         </div>
-                        <div className="h-4 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-1 shadow-inner">
-                            <div className="h-full bg-indigo-500 rounded-full transition-all duration-1000" style={{ width: `${profile.avgAccuracy}%` }} />
+                        <div className="h-4 w-full overflow-hidden rounded-full border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1 shadow-inner">
+                            <div className="h-full rounded-full bg-[var(--student-accent)] transition-all duration-1000" style={{ width: `${profile.avgAccuracy}%` }} />
                         </div>
                     </div>
                 </div>
