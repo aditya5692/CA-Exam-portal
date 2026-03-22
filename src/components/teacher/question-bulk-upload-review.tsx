@@ -24,7 +24,10 @@ import {
   SpinnerGap,
   TerminalWindow,
   Users,
-  WarningCircle
+  WarningCircle,
+  Selection,
+  ListNumbers,
+  Shuffle
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -56,7 +59,13 @@ export function QuestionBulkUploadReview() {
     const [selectedBatchId, setSelectedBatchId] = useState("");
     const [batches, setBatches] = useState<BatchOption[]>([]);
     const [batchesLoaded, setBatchesLoaded] = useState(false);
-    const [publishResult, setPublishResult] = useState<{ success: boolean; examTitle?: string; targetLabel?: string } | null>(null);
+    
+    // Breakdown state
+    const [breakIntoTests, setBreakIntoTests] = useState(false);
+    const [breakdownMode, setBreakdownMode] = useState<"RANDOM" | "FIFO">("FIFO");
+    const [questionsPerTest, setQuestionsPerTest] = useState(15);
+    
+    const [publishResult, setPublishResult] = useState<{ success: boolean; examTitles?: string[]; targetLabel?: string } | null>(null);
 
     useEffect(() => {
         if (!report) {
@@ -109,11 +118,19 @@ export function QuestionBulkUploadReview() {
                     prompt: q.prompt,
                     options: q.options,
                     correct: q.correct,
+                    subject: q.subject,
+                    topic: q.topic,
+                    difficulty: q.difficulty,
                 })),
+                breakdown: {
+                    enabled: breakIntoTests,
+                    mode: breakdownMode,
+                    questionsPerTest: questionsPerTest,
+                }
             });
 
             if (res.success) {
-                setPublishResult({ success: true, examTitle: res.data.examTitle, targetLabel: res.data.targetLabel });
+                setPublishResult({ success: true, examTitles: res.data.examTitles, targetLabel: res.data.targetLabel });
                 clearBulkUploadSession();
             } else {
                 setPublishResult({ success: false });
@@ -124,7 +141,22 @@ export function QuestionBulkUploadReview() {
         }
     };
 
-    if (!report) return null;
+    if (!report) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-6 animate-in fade-in duration-700">
+                <div className="w-20 h-20 rounded-[28px] bg-slate-50 flex items-center justify-center text-slate-300">
+                    <Info size={40} weight="light" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-bold text-slate-900 leading-tight">Session Expired or Missing</h2>
+                    <p className="text-slate-500 font-medium text-sm max-w-xs mx-auto">We couldn&apos;t find your uploaded data modules. Please return to the vault and re-initialize the ingestion pipeline.</p>
+                </div>
+                <Link href="/teacher/questions" className="inline-flex items-center justify-center px-8 py-4 rounded-[20px] bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95">
+                    Return to MCQ Vault
+                </Link>
+            </div>
+        );
+    }
 
     if (publishResult?.success) {
         return (
@@ -140,12 +172,29 @@ export function QuestionBulkUploadReview() {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] border border-emerald-100 mb-2">
                         <CheckCircle size={14} weight="bold" /> Deployment Successful
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tighter text-slate-900 leading-tight">MCQ Series Published!</h2>
-                    <p className="text-slate-500 font-medium text-lg leading-relaxed max-w-md mx-auto">
-                        <span className="text-indigo-600 font-bold">&quot;{publishResult.examTitle}&quot;</span>
-                         {" "}is now live and accessible by{" "}
-                        <span className="text-slate-900 font-bold">{publishResult.targetLabel}</span>.
-                    </p>
+                    <h2 className="text-3xl font-bold tracking-tighter text-slate-900 leading-tight">
+                        {publishResult.examTitles && publishResult.examTitles.length > 1 
+                            ? `${publishResult.examTitles.length} MCQ Series Published!`
+                            : "MCQ Series Published!"}
+                    </h2>
+                    <div className="text-slate-500 font-medium text-lg leading-relaxed max-w-md mx-auto space-y-2">
+                        {publishResult.examTitles && publishResult.examTitles.length > 1 ? (
+                            <div className="max-h-32 overflow-y-auto scrollbar-thin px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                                {publishResult.examTitles.map((t, idx) => (
+                                    <p key={idx} className="text-indigo-600 font-bold text-sm text-left">
+                                        • {t}
+                                    </p>
+                                ))}
+                            </div>
+                        ) : (
+                            <p>
+                                <span className="text-indigo-600 font-bold">&quot;{publishResult.examTitles?.[0]}&quot;</span>
+                            </p>
+                        )}
+                        <p className="text-base text-slate-400">
+                            Now live and accessible by <span className="text-slate-900 font-bold">{publishResult.targetLabel}</span>.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 w-full pt-4">
@@ -342,7 +391,7 @@ export function QuestionBulkUploadReview() {
                                 {/* Duration */}
                                 <div className="space-y-4">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 flex justify-between">
-                                        Time Allocated <span>{duration} Mins</span>
+                                        Time (Per Series) <span>{duration} Mins</span>
                                     </label>
                                     <div className="px-1">
                                         <input
@@ -358,6 +407,73 @@ export function QuestionBulkUploadReview() {
                                             <span>10m</span><span>90m</span><span>180m</span>
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Series Breakdown */}
+                                <div className="md:col-span-2 space-y-6 pt-4 border-t border-slate-50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Series Breakdown</label>
+                                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest px-1">Fragment large datasets into multiple tests</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBreakIntoTests(!breakIntoTests)}
+                                            className={cn(
+                                                "w-12 h-6 rounded-full transition-all relative flex items-center px-1",
+                                                breakIntoTests ? "bg-indigo-600" : "bg-slate-200"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "w-4 h-4 rounded-full bg-white transition-all shadow-sm",
+                                                breakIntoTests ? "translate-x-6" : "translate-x-0"
+                                            )} />
+                                        </button>
+                                    </div>
+
+                                    {breakIntoTests && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 flex justify-between">
+                                                    Module Capacity <span>{questionsPerTest} MCQs</span>
+                                                </label>
+                                                <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-2xl px-4 h-14">
+                                                    <ListNumbers size={20} className="text-slate-400" />
+                                                    <input
+                                                        type="number"
+                                                        value={questionsPerTest}
+                                                        onChange={(e) => setQuestionsPerTest(Math.max(1, Number(e.target.value)))}
+                                                        className="bg-transparent border-none outline-none text-sm font-bold w-full"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Distribution Logic</label>
+                                                <div className="flex p-1 bg-slate-50 border border-slate-100 rounded-2xl h-14">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setBreakdownMode("FIFO")}
+                                                        className={cn(
+                                                            "flex-1 flex items-center justify-center gap-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                            breakdownMode === "FIFO" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                                        )}
+                                                    >
+                                                        <Selection size={14} weight="bold" /> FIFO
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setBreakdownMode("RANDOM")}
+                                                        className={cn(
+                                                            "flex-1 flex items-center justify-center gap-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                            breakdownMode === "RANDOM" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                                        )}
+                                                    >
+                                                        <Shuffle size={14} weight="bold" /> Random
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Audience Mode */}

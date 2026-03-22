@@ -21,11 +21,16 @@ export type PublishExamInput = {
     examType?: string;
     target: PublishTarget;
     questions: ParsedQuestion[];
+    breakdown?: {
+        enabled: boolean;
+        mode: "RANDOM" | "FIFO";
+        questionsPerTest: number;
+    };
 };
 
 export type PublishExamResultData = {
-    examId: string;
-    examTitle: string;
+    examIds: string[];
+    examTitles: string[];
     targetLabel: string;
     questionCount: number;
 };

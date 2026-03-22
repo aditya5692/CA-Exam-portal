@@ -37,7 +37,21 @@ type NormalizedPublishInput = {
     category: string;
     questions: NormalizedQuestion[];
     target: PublishTarget;
+    breakdown: {
+        enabled: boolean;
+        mode: "RANDOM" | "FIFO";
+        questionsPerTest: number;
+    } | null;
 };
+
+function shuffleArray<T>(array: T[]): T[] {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+}
 
 export function normalizePublishExamInput(input: PublishExamInput): NormalizedPublishInput {
     const normalizedTitle = input.title.trim();
@@ -102,6 +116,11 @@ export function normalizePublishExamInput(input: PublishExamInput): NormalizedPu
         category: CA_LEVEL_CATEGORY[input.caLevel] ?? "CA Final",
         questions: normalizedQuestions,
         target: input.target,
+        breakdown: input.breakdown?.enabled ? {
+            enabled: true,
+            mode: input.breakdown.mode || "FIFO",
+            questionsPerTest: clampNumber(Math.round(Number(input.breakdown.questionsPerTest) || 15), 1, 100),
+        } : null,
     };
 }
 
@@ -110,7 +129,23 @@ export async function publishExamQuestions(
     input: PublishExamInput,
 ): Promise<PublishExamResultData> {
     const normalized = normalizePublishExamInput(input);
-    const totalMarks = normalized.questions.length;
+    
+    // Sort or Shuffle
+    let questionsToProcess = [...normalized.questions];
+    if (normalized.breakdown?.enabled && normalized.breakdown.mode === "RANDOM") {
+        questionsToProcess = shuffleArray(questionsToProcess);
+    }
+
+    // Chunking
+    const chunks: NormalizedQuestion[][] = [];
+    if (normalized.breakdown?.enabled) {
+        const size = normalized.breakdown.questionsPerTest;
+        for (let i = 0; i < questionsToProcess.length; i += size) {
+            chunks.push(questionsToProcess.slice(i, i + size));
+        }
+    } else {
+        chunks.push(questionsToProcess);
+    }
 
     return withSerializableTransaction(async (tx) => {
         let resolvedBatchId: string | null = null;
@@ -133,54 +168,66 @@ export async function publishExamQuestions(
             targetLabel = `Batch: ${batch.name}`;
         }
 
-        const exam = await tx.exam.create({
-            data: {
-                title: normalized.title,
-                description: `${normalized.subject} - ${normalized.category} - Bulk uploaded MCQ series`,
-                duration: normalized.durationMinutes,
-                totalMarks,
-                passingMarks: Math.ceil(totalMarks * 0.4),
-                category: normalized.category,
-                subject: normalized.subject,
-                chapter: normalized.chapter,
-                status: "PUBLISHED",
-                examType: normalized.examType,
-                teacherId: actor.id,
-                batchId: resolvedBatchId,
-            },
-        });
+        const createdExams: { id: string; title: string }[] = [];
 
-        for (let index = 0; index < normalized.questions.length; index += 1) {
-            const question = normalized.questions[index];
-            const createdQuestion = await tx.question.create({
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            const totalMarks = chunk.length;
+            const chunkTitle = chunks.length > 1 
+                ? `${normalized.title} - Part ${String(i + 1).padStart(2, "0")}`
+                : normalized.title;
+
+            const exam = await tx.exam.create({
                 data: {
-                    text: question.prompt,
-                    subject: question.subject,
-                    topic: question.topic,
-                    difficulty: question.difficulty,
-                    explanation: question.explanation,
-                    options: {
-                        create: question.options.map((option, optionIndex) => ({
-                            text: option,
-                            isCorrect: question.correct.includes(optionIndex),
-                        })),
+                    title: chunkTitle,
+                    description: `${normalized.subject} - ${normalized.category} - Bulk uploaded MCQ series${chunks.length > 1 ? ` (Part ${i + 1})` : ""}`,
+                    duration: normalized.durationMinutes,
+                    totalMarks,
+                    passingMarks: Math.ceil(totalMarks * 0.4),
+                    category: normalized.category,
+                    subject: normalized.subject,
+                    chapter: normalized.chapter,
+                    status: "PUBLISHED",
+                    examType: normalized.examType,
+                    teacherId: actor.id,
+                    batchId: resolvedBatchId,
+                },
+            });
+
+            for (let qIndex = 0; qIndex < chunk.length; qIndex += 1) {
+                const question = chunk[qIndex];
+                const createdQuestion = await tx.question.create({
+                    data: {
+                        text: question.prompt,
+                        subject: question.subject,
+                        topic: question.topic,
+                        difficulty: question.difficulty,
+                        explanation: question.explanation,
+                        options: {
+                            create: question.options.map((option, optionIndex) => ({
+                                text: option,
+                                isCorrect: question.correct.includes(optionIndex),
+                            })),
+                        },
                     },
-                },
-            });
+                });
 
-            await tx.examQuestion.create({
-                data: {
-                    examId: exam.id,
-                    questionId: createdQuestion.id,
-                    order: index + 1,
-                    marks: 1,
-                },
-            });
+                await tx.examQuestion.create({
+                    data: {
+                        examId: exam.id,
+                        questionId: createdQuestion.id,
+                        order: qIndex + 1,
+                        marks: 1,
+                    },
+                });
+            }
+
+            createdExams.push({ id: exam.id, title: exam.title });
         }
 
         return {
-            examId: exam.id,
-            examTitle: exam.title,
+            examIds: createdExams.map(e => e.id),
+            examTitles: createdExams.map(e => e.title),
             targetLabel,
             questionCount: normalized.questions.length,
         };

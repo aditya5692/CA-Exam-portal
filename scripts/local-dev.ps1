@@ -23,11 +23,15 @@ npx prisma db push --accept-data-loss
 Write-Host "🌱 Seeding local database..." -ForegroundColor Green
 npx tsx ./prisma/seed.ts
 
-# 5. Restore PostgreSQL for Git/Production
-Write-Host "✅ Restoring PostgreSQL schema for production safety..." -ForegroundColor Cyan
-Copy-Item $backupPath $schemaPath -Force
-Remove-Item $backupPath
-
-# 6. Start Dev Server
-Write-Host "🚀 Starting Next.js Dev Server (Local Mode)..." -ForegroundColor Green
-npm run dev
+try {
+    # 6. Start Dev Server
+    Write-Host "🚀 Starting Next.js Dev Server (Local Mode)..." -ForegroundColor Green
+    npm run dev
+} finally {
+    # 7. Restore PostgreSQL for Git/Production
+    Write-Host "✅ Restoring PostgreSQL schema for production safety..." -ForegroundColor Cyan
+    if (Test-Path $backupPath) {
+        Copy-Item $backupPath $schemaPath -Force
+        Remove-Item $backupPath
+    }
+}

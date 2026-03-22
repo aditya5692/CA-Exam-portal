@@ -33,7 +33,7 @@ const getCellValue = (row: Record<string, unknown>, aliases: string[]) => {
 
     for (const alias of aliases) {
         const match = normalizedRow.get(alias);
-        if (match) {
+        if (match !== undefined && match !== null) {
             return match;
         }
     }
@@ -74,15 +74,20 @@ export const parseQuestionRows = (rows: Record<string, unknown>[], fileName: str
     const errors: string[] = [];
 
     rows.forEach((row, index) => {
-        const prompt = getCellValue(row, ["prompt", "question"]);
+        const prompt = getCellValue(row, ["prompt", "question", "questiontext", "mcqprompt"]);
         const options = [
-            getCellValue(row, ["optiona", "option1", "a"]),
-            getCellValue(row, ["optionb", "option2", "b"]),
-            getCellValue(row, ["optionc", "option3", "c"]),
-            getCellValue(row, ["optiond", "option4", "d"]),
+            getCellValue(row, ["optiona", "option1", "a", "choicea", "variant1"]),
+            getCellValue(row, ["optionb", "option2", "b", "choiceb", "variant2"]),
+            getCellValue(row, ["optionc", "option3", "c", "choicec", "variant3"]),
+            getCellValue(row, ["optiond", "option4", "d", "choiced", "variant4"]),
         ];
-        const correctAnswersRaw = getCellValue(row, ["correctanswers", "correctanswer", "answer", "answers", "correct"]);
+        const correctAnswersRaw = getCellValue(row, ["correctanswers", "correctanswer", "answer", "answers", "correct", "rightanswer", "correctoption"]);
         const rowNumber = index + 2;
+
+        // Skip completely empty rows
+        if (!prompt && options.every(opt => !opt) && !correctAnswersRaw) {
+            return;
+        }
 
         if (!prompt) {
             errors.push(`Row ${rowNumber}: prompt is missing.`);

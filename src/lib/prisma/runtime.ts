@@ -6,7 +6,7 @@ const DEFAULT_POOL_MAX = 10;
 const DEFAULT_DEVELOPMENT_CONNECT_TIMEOUT_MS = 10_000;
 const DEFAULT_PRODUCTION_CONNECT_TIMEOUT_MS = 30_000;
 const DEFAULT_IDLE_TIMEOUT_MS = 30_000;
-const SUPPORTED_DATABASE_PROTOCOLS = new Set(["postgresql:", "postgres:"]);
+const SUPPORTED_DATABASE_PROTOCOLS = new Set(["postgresql:", "postgres:", "file:"]);
 
 export type DatabaseRuntimeConfig = {
     databaseUrl: string;
@@ -179,6 +179,13 @@ export function createPostgresPool(config: DatabaseRuntimeConfig) {
 
 export function createRuntimePrismaClient(env: EnvLike = process.env) {
     const config = readDatabaseRuntimeConfig(env);
+
+    if (config.protocol === "file:") {
+        // For SQLite, the native Prisma engine is usually sufficient and more stable for local dev.
+        // The local-dev.ps1 script handles the provider swap in schema.prisma.
+        const prisma = new PrismaClient();
+        return { prisma, config };
+    }
 
     const pool = createPostgresPool(config);
     const adapter = new PrismaPg(pool);
