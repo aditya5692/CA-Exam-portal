@@ -128,18 +128,18 @@ export default async function StudentDashboardPage() {
     let freeResources: DashboardResource[] = [];
     let latestProgress: ResumeCardProgress = null;
 
+    const user = await getCurrentUser();
+    if (!user) {
+        redirect("/auth/login");
+    }
+    
+    if (user.role !== "STUDENT" && user.role !== "ADMIN") {
+        redirect(getRoleRedirectPath(user.role as AppRole));
+    }
+
+    const validUser = user; // Type guard helper for TS
+
     try {
-        const user = await getCurrentUser();
-        if (!user) {
-            redirect("/auth/login");
-        }
-        
-        if (user.role !== "STUDENT" && user.role !== "ADMIN") {
-            redirect(getRoleRedirectPath(user.role as AppRole));
-        }
-
-        const validUser = user; // Type guard helper for TS
-
         const examTarget = resolveStudentExamTarget(user);
         const caLevelKey = examTarget.caLevelKey;
         const resourceCategories = getStudentResourceCategories(caLevelKey);
