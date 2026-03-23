@@ -1,13 +1,25 @@
+import { getGlobalLeaderboard,getUserRank } from "@/actions/leaderboard-actions";
+import { getStudentFeed } from "@/actions/batch-actions";
+import { resumeProgress } from "@/actions/progress-actions";
+import { getStudentHistory,getExamHubData } from "@/actions/student-actions";
+import { ResumeCard } from "@/components/student/dashboard/resume-card";
+import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { resolveStudentCALevel } from "@/lib/student-level";
-import { buildStudentVisibleExamWhere } from "@/lib/server/exam-publishing";
+import { getStudentCACategory,resolveStudentExamTarget,type CaLevelKey } from "@/lib/student-level";
+import { listStudentVisibleExams } from "@/lib/server/exam-publishing";
+import { getRoleRedirectPath } from "@/lib/server/auth-management";
+import type { AppRole } from "@/lib/auth/demo-accounts";
 import { cn } from "@/lib/utils";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { redirect } from "next/navigation";
+import type { StudentVisibleExam } from "@/types/publish-exam";
 import { BookOpen,ChartLineUp,Clock,FilePdf,FileText,List,Medal,Play,Sparkle,Target,Trophy } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import type { ComponentProps } from "react";
 
 export const dynamic = "force-dynamic";
+
+type ResumeCardProgress = ComponentProps<typeof ResumeCard>["progress"];
 
 type DashboardAnnouncement = {
     id: string;
@@ -15,7 +27,6 @@ type DashboardAnnouncement = {
     description: string;
     date: string;
     tag: string;
-    type: string;
 };
 
 type DashboardLeaderboardEntry = {
@@ -39,208 +50,265 @@ type DashboardResource = {
     type: string;
 };
 
+type SubmittedAttemptWindow = {
+    startTime: Date;
+    endTime: Date | null;
+};
+
+type DashboardResourceRecord = {
+    id: string;
+    title: string;
+    category: string;
+    subType: string;
+    downloads: number;
+    isTrending: boolean;
+    createdAt: Date;
+};
+
+function truncateLabel(value: string, maxLength: number) {
+    const normalized = value.replace(/\s+/g, " ").trim();
+    if (normalized.length <= maxLength) {
+        return normalized;
+    }
+
+    return `${normalized.slice(0, maxLength - 3)}...`;
+}
+
+function formatAnnouncementDate(value: Date) {
+    const timestamp = new Date(value).getTime();
+    if (Number.isNaN(timestamp)) {
+        return "Recently";
+    }
+
+    const ageInDays = Math.floor((Date.now() - timestamp) / 86_400_000);
+    if (ageInDays <= 0) {
+        return "Today";
+    }
+
+    if (ageInDays === 1) {
+        return "Yesterday";
+    }
+
+    if (ageInDays < 7) {
+        return `${ageInDays} days ago`;
+    }
+
+    return new Date(value).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+    });
+}
+
+function getStudentResourceCategories(level: CaLevelKey) {
+    const categories = new Set<string>(["GENERAL", getStudentCACategory(level)]);
+
+    if (level === "ipc") {
+        categories.add("CA Inter");
+    }
+
+    return Array.from(categories);
+}
+
 export default async function StudentDashboardPage() {
     // ── Fetch real data ────────────────────────────────────────────────────────
     let userName = "Student";
-    let userTarget = "Not Set";
-
-    // Four cards stats
     let totalQuestionsAttempted = 0;
     let totalQuestionsAvailable = 0;
     let mcqProgressPct = 0;
-
     let totalStudyMinutes = 0;
-
     let totalMCQScore = 0;
     let avgAccuracy = 0;
-
     let currentRank = 0;
-    let percentile = 90;
-
-    // Header level progress
+    let percentile = 0;
     let levelProgressPct = 0;
-
-    // Exam date
     let daysToExam = 0;
-
-    // Updates
     let announcements: DashboardAnnouncement[] = [];
-
-    // Rankings
     let leaderboard: DashboardLeaderboardEntry[] = [];
-
-    // Practice questions
     let topPracticeExams: DashboardPracticeExam[] = [];
-
-    // Free Resources
     let freeResources: DashboardResource[] = [];
+    let latestProgress: ResumeCardProgress = null;
 
     try {
-        const user = await getCurrentUser(["STUDENT", "ADMIN"]);
-        if (!user) throw new Error("Unauthorized");
-        userName = user.fullName?.split(" ")[0] ?? user.email?.split("@")[0] ?? "Student";
-        userTarget = user.examTarget || "";
-        const visibleExamWhere = await buildStudentVisibleExamWhere(
-            user.id,
-            resolveStudentCALevel(user.examTarget, user.department),
-        );
+        const user = await getCurrentUser();
+        if (!user) {
+            redirect("/auth/login");
+        }
+        
+        if (user.role !== "STUDENT" && user.role !== "ADMIN") {
+            redirect(getRoleRedirectPath(user.role as AppRole));
+        }
 
-        // Logic for days remaining using examTarget (like "May 2026" or "CA Foundation May 2026")
-        if (userTarget) {
-            const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
-            const parts = userTarget.split(" ");
-            // Look for the last two parts as Month and Year
-            if (parts.length >= 2) {
-                const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
-                const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
-                const yrPart = parseInt(parts[parts.length - 1]);
-                if (moKey && !isNaN(yrPart)) {
-                    const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
-                    const now = new Date();
-                    const diffTime = targetDate.getTime() - now.getTime();
-                    daysToExam = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-                }
+        const validUser = user; // Type guard helper for TS
+
+        const examTarget = resolveStudentExamTarget(user);
+        const caLevelKey = examTarget.caLevelKey;
+        const resourceCategories = getStudentResourceCategories(caLevelKey);
+
+        const [
+            progressResult,
+            historyResult,
+            examHubResult,
+            feedResult,
+            leaderboardResult,
+            userRankResult,
+            visibleExams,
+            topicProgressTotals,
+            submittedAttempts,
+            resourceLibrary,
+        ] = await Promise.all([
+            resumeProgress(),
+            getStudentHistory(),
+            getExamHubData(),
+            getStudentFeed(),
+            getGlobalLeaderboard(5),
+            getUserRank(validUser.id),
+            listStudentVisibleExams(validUser.id, caLevelKey).catch(() => [] as StudentVisibleExam[]),
+            prisma.topicProgress.aggregate({
+                where: { studentId: validUser.id },
+                _sum: { totalAttempted: true },
+            }).catch(() => ({ _sum: { totalAttempted: 0 } })),
+            prisma.examAttempt.findMany({
+                where: {
+                    studentId: validUser.id,
+                    status: "SUBMITTED",
+                },
+                select: {
+                    startTime: true,
+                    endTime: true,
+                },
+            }).catch(() => [] as SubmittedAttemptWindow[]),
+            prisma.studyMaterial.findMany({
+                where: {
+                    isPublic: true,
+                    category: { in: resourceCategories },
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    category: true,
+                    subType: true,
+                    downloads: true,
+                    isTrending: true,
+                    createdAt: true,
+                },
+                orderBy: [
+                    { isTrending: "desc" },
+                    { downloads: "desc" },
+                    { createdAt: "desc" },
+                ],
+                take: 4,
+            }).catch(() => [] as DashboardResourceRecord[]),
+        ]);
+
+        userName = user.fullName?.trim() || user.email?.trim() || "Student";
+
+        if (progressResult.success) {
+            latestProgress = progressResult.data as ResumeCardProgress;
+        }
+
+        if (historyResult.success && historyResult.data) {
+            totalMCQScore = historyResult.data.profile.totalXP;
+            avgAccuracy = historyResult.data.profile.avgAccuracy;
+            daysToExam = historyResult.data.examTargetDays;
+        }
+
+        if (examHubResult.success && examHubResult.data) {
+            const practiceGoal = examHubResult.data.practiceGoal;
+            if (practiceGoal.target > 0) {
+                levelProgressPct = Math.min(
+                    100,
+                    Math.round((practiceGoal.current / practiceGoal.target) * 100),
+                );
             }
         }
 
-        // Profile / Streaks / Ranks
-        const profile = await prisma.studentLearningProfile.findUnique({
-            where: { studentId: user.id }
-        });
-
-        if (profile) {
-            totalMCQScore = profile.totalXP;
-            avgAccuracy = profile.avgAccuracy;
-
-            // Calculate level progress (each level uses formula: 50 * (level - 1)^2)
-            const currentLevelBaseline = 50 * Math.pow(profile.level - 1, 2);
-            const nextLevelBaseline = 50 * Math.pow(profile.level, 2);
-            const xpIntoLevel = profile.totalXP - currentLevelBaseline;
-            const xpRequiredForNext = nextLevelBaseline - currentLevelBaseline;
-            levelProgressPct = Math.min(100, Math.round((xpIntoLevel / xpRequiredForNext) * 100));
-        }
-
-        // Ranking (calculate global rank based on totalXP)
-        const allProfiles = await prisma.studentLearningProfile.findMany({
-            select: { id: true, studentId: true, totalXP: true, student: { select: { fullName: true } } },
-            orderBy: [
-                { totalXP: 'desc' },
-                { updatedAt: 'asc' } // Tie-breaker for stable ranking
-            ]
-        });
-
-        const myRankIndex = allProfiles.findIndex(p => p.studentId === user.id);
-        const totalProfiles = allProfiles.length;
-        currentRank = myRankIndex !== -1 ? myRankIndex + 1 : 0;
-
-        if (totalProfiles > 0 && currentRank > 0) {
-            percentile = Math.round(((totalProfiles - currentRank) / totalProfiles) * 100);
-            if (percentile === 0 && totalProfiles === 1) percentile = 100; // if only 1 user, they are top 100%
-        } else {
-            percentile = 0;
-        }
-
-        // Mini leaderboard: Top 3 plus User if User is not in top 3
-        leaderboard = allProfiles.slice(0, 3).map((p, idx) => ({
-            rank: idx + 1,
-            name: p.studentId === user.id ? (p.student.fullName || "Student") + " (You)" : p.student.fullName || "Student",
-            score: p.totalXP,
-            isMe: p.studentId === user.id
-        }));
-
-        // Ensure user is in leaderboard view if they are lower down (show top 2 + me to keep it max 3)
-        if (myRankIndex > 2) {
-            const myProfile = allProfiles[myRankIndex];
-            leaderboard = [
-                ...leaderboard.slice(0, 2),
-                {
-                    rank: myRankIndex + 1,
-                    name: (myProfile.student?.fullName || "Student") + " (You)",
-                    score: myProfile.totalXP,
-                    isMe: true
-                }
-            ];
-        }
-
-        // MCQ Progress
-        const answersCount = await prisma.studentAnswer.count({
-            where: { attempt: { studentId: user.id } }
-        });
-        totalQuestionsAttempted = answersCount;
-
-        totalQuestionsAvailable = await prisma.examQuestion.count({
-            where: { exam: visibleExamWhere },
-        });
-
+        totalQuestionsAttempted = topicProgressTotals._sum.totalAttempted ?? 0;
+        totalQuestionsAvailable = visibleExams.reduce((sum: number, exam: StudentVisibleExam) => sum + exam.questionCount, 0);
         if (totalQuestionsAvailable > 0) {
-            mcqProgressPct = Math.round((totalQuestionsAttempted / totalQuestionsAvailable) * 100);
+            mcqProgressPct = Math.min(
+                100,
+                Math.round((totalQuestionsAttempted / totalQuestionsAvailable) * 100),
+            );
         }
 
-        const allAttempts = await prisma.examAttempt.findMany({
-            where: { studentId: user.id, status: "SUBMITTED", endTime: { not: null } },
-            select: { startTime: true, endTime: true }
-        });
-        totalStudyMinutes = Math.round(allAttempts.reduce((s, a) => s + (a.endTime ? (new Date(a.endTime).getTime() - new Date(a.startTime).getTime()) / 60000 : 0), 0));
+        totalStudyMinutes = submittedAttempts.reduce((sum: number, attempt: SubmittedAttemptWindow) => {
+            if (!attempt.endTime) {
+                return sum;
+            }
 
-        // Announcements (Update Feeds) based on enrolled batches
-        const enrollments = await prisma.enrollment.findMany({ where: { studentId: user.id }, select: { batchId: true } });
-        const batchIds = enrollments.map(e => e.batchId);
+            const durationInMinutes = Math.round(
+                (attempt.endTime.getTime() - attempt.startTime.getTime()) / 60_000,
+            );
 
-        const rawAnnouncements = await prisma.announcement.findMany({
-            where: { batchId: { in: batchIds } },
-            include: { batch: { select: { name: true } } },
-            orderBy: { createdAt: "desc" },
-            take: 3
-        });
+            return durationInMinutes > 0 ? sum + durationInMinutes : sum;
+        }, 0);
 
-        announcements = rawAnnouncements.map(a => {
-            const words = a.content.split(' ');
-            const title = words.slice(0, 6).join(' ') + (words.length > 6 ? '...' : '');
+        if (feedResult.success && feedResult.data) {
+            announcements = feedResult.data.feedItems.slice(0, 3).map((item) => ({
+                id: item.id,
+                title: item.batchName,
+                description: truncateLabel(item.content, 110),
+                date: formatAnnouncementDate(item.createdAt),
+                tag: item.teacherName,
+            }));
+        }
 
-            return {
-                id: a.id,
-                title: title || "New Announcement",
-                description: a.content,
-                date: new Date(a.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                tag: a.batch.name,
-                type: "NORMAL"
-            };
-        });
+        if (leaderboardResult.success && leaderboardResult.data) {
+            leaderboard = leaderboardResult.data.map((entry) => ({
+                rank: entry.rank,
+                name: entry.fullName,
+                score: entry.totalXP,
+                isMe: entry.studentId === user.id,
+            }));
+        }
 
-        // Top Practice Questions (Exams)
-        const practiceExamsRaw = await prisma.exam.findMany({
-            where: visibleExamWhere,
-            orderBy: { createdAt: "desc" },
-            take: 4,
-            include: { _count: { select: { questions: true } }, attempts: { select: { id: true } } }
-        });
+        if (userRankResult.success && userRankResult.data) {
+            currentRank = userRankResult.data.rank;
+            percentile = userRankResult.data.percentile;
 
-        topPracticeExams = practiceExamsRaw.map(e => ({
-            id: e.id,
-            title: e.title,
-            questions: e._count.questions,
-            category: e.category || "General"
+            if (!leaderboard.some((entry) => entry.isMe)) {
+                const topPeers = leaderboard.filter((entry) => !entry.isMe).slice(0, 4);
+                leaderboard = [
+                    ...topPeers,
+                    {
+                        rank: userRankResult.data.rank,
+                        name: user.fullName?.trim() || user.email?.trim() || "You",
+                        score: userRankResult.data.totalXP,
+                        isMe: true,
+                    },
+                ].sort((left, right) => left.rank - right.rank);
+            }
+        }
+
+        topPracticeExams = visibleExams.slice(0, 4).map((exam: StudentVisibleExam) => ({
+            id: exam.id,
+            title: exam.title,
+            questions: exam.questionCount,
+            category: exam.subject || exam.category,
         }));
 
-        // Fetch some free resources
-        const freeResRaw = await prisma.studyMaterial.findMany({
-            where: { isPublic: true },
-            take: 4,
-            orderBy: { createdAt: "desc" }
-        });
-        freeResources = freeResRaw.map(r => ({
-            id: r.id,
-            title: r.title,
-            category: r.category,
-            type: r.subType || "PDF"
+        freeResources = resourceLibrary.map((resource: DashboardResourceRecord) => ({
+            id: resource.id,
+            title: resource.title,
+            category: resource.category,
+            type: resource.subType,
         }));
-    } catch (e) {
-        console.error("Dashboard error:", e);
+    } catch (error) {
+        console.error("Dashboard error:", error);
     }
 
     const studyHoursLabel = totalStudyMinutes >= 60
         ? `${Math.floor(totalStudyMinutes / 60)}h ${totalStudyMinutes % 60}m`
         : `${totalStudyMinutes}m`;
+    const practiceCoverageLabel = totalQuestionsAvailable > 0
+        ? `${mcqProgressPct}% Total Progress`
+        : "Waiting for published exams";
+    const scoreLabel = avgAccuracy > 0
+        ? `${Math.round(avgAccuracy)}% Avg. Accuracy`
+        : "Accuracy updates after submissions";
+    const rankLabel = currentRank > 0
+        ? `TOP ${Math.max(1, 100 - percentile)}% of Students`
+        : "Complete practice to unlock ranking";
 
     return (
         <div className="space-y-8 pb-10 w-full max-w-[1400px] mx-auto font-outfit">
@@ -251,11 +319,18 @@ export default async function StudentDashboardPage() {
                     <>
                         You have completed{" "}
                         <span className="font-bold text-[var(--student-accent-strong)]">{levelProgressPct}%</span>{" "}
-                        of your current learning level.
+                        of your current practice goal.
                     </>
                 }
                 daysToExam={daysToExam}
             />
+
+            {/* Resume Card Section */}
+            {latestProgress && (
+                <div className="px-1 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-150">
+                    <ResumeCard progress={latestProgress} />
+                </div>
+            )}
 
             {/* Top 4 Metrics Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1 relative">
@@ -276,7 +351,7 @@ export default async function StudentDashboardPage() {
                         <div className="font-outfit text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{totalQuestionsAttempted.toLocaleString()}</div>
                     </div>
                     <div className="mt-3 flex items-center justify-between px-8 pb-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                        <span className="text-[var(--student-accent-strong)]">{mcqProgressPct}% Total Progress</span>
+                        <span className="text-[var(--student-accent-strong)]">{practiceCoverageLabel}</span>
                     </div>
                     {/* Progress Bar */}
                     <div className="absolute bottom-0 left-0 right-0 h-1.5 overflow-hidden bg-[rgba(244,237,226,0.9)]">
@@ -312,7 +387,7 @@ export default async function StudentDashboardPage() {
                     </div>
                     <div className="relative z-10 mb-3 mt-2 font-outfit text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{totalMCQScore.toLocaleString()} <span className="text-sm font-bold tracking-tight text-[var(--student-success)]">XP</span></div>
                     <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                        {Math.round(avgAccuracy)}% Avg. Accuracy
+                        {scoreLabel}
                     </div>
                 </div>
 
@@ -328,7 +403,7 @@ export default async function StudentDashboardPage() {
                     </div>
                     <div className="relative z-10 mb-3 mt-2 font-outfit text-4xl font-bold leading-none tracking-tight text-white">#{currentRank > 0 ? currentRank : '-'} <span className="pl-1 text-xs font-bold uppercase tracking-widest text-white/40">RANK</span></div>
                     <div className="relative z-10 text-[10px] font-bold uppercase tracking-widest text-[var(--student-support)]">
-                        TOP {Math.max(1, 100 - percentile)}% of Students
+                        {rankLabel}
                     </div>
                 </div>
             </div>
@@ -373,10 +448,10 @@ export default async function StudentDashboardPage() {
                                             {feed.description}
                                         </p>
                                         <div className="flex items-center gap-4">
-                                            <button className="student-button-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 active:scale-95">
+                                            <Link href="/student/updates" className="student-button-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 active:scale-95">
                                                 <Play size={14} weight="fill" />
                                                 Read More
-                                            </button>
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>

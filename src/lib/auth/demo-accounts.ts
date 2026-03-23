@@ -110,6 +110,29 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         bio: "Focused on audit, law, and revision workflows.",
         phone: "+91 90000 10002",
     },
+    {
+        key: "student1" as any,
+        fullName: "Sample Student",
+        email: "sample-student@demo.local",
+        registrationNumber: "SAMP-STU-001",
+        role: "STUDENT",
+        plan: "PRO",
+        storageLimit: 1073741824,
+        phone: "911123456789",
+        department: "General",
+    },
+    {
+        key: "teacher1" as any,
+        fullName: "Sample Teacher (Admin)",
+        email: "sample-admin@demo.local",
+        registrationNumber: "SAMP-ADM-001",
+        role: "TEACHER",
+        isSuperAdmin: true,
+        plan: "ENTERPRISE",
+        storageLimit: 2147483647,
+        phone: "919987654321",
+        department: "Administration",
+    },
 ];
 
 const DEFAULT_REGISTRATION_BY_ROLE: Record<AppRole, string> = {

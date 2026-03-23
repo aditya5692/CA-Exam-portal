@@ -10,9 +10,14 @@ import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
   authenticateUserRecord,
   registerUserRecord,
+  getRoleRedirectPath,
   type AuthLoginInput,
 } from "@/lib/server/auth-management";
+import type { AppRole } from "@/lib/auth/demo-accounts";
 import { ActionResponse } from "@/types/shared";
+import prisma from "@/lib/prisma/client";
+
+import { sendMsg91Otp, verifyMsg91Otp } from "@/lib/server/msg91";
 
 type LoginResult = {
     redirectTo: string;
@@ -20,8 +25,70 @@ type LoginResult = {
         fullName: string | null;
         role: string;
         registrationNumber: string | null;
+        phone: string | null;
     };
 };
+
+/**
+ * Requests an OTP for a given phone number.
+ */
+export async function requestOtp(phone: string): Promise<ActionResponse<void>> {
+    try {
+        const result = await sendMsg91Otp(phone);
+        if (result.success) {
+            return { success: true, data: undefined, message: result.message };
+        }
+        return { success: false, message: result.message };
+    } catch (error) {
+        console.error("requestOtp error:", error);
+        return { success: false, message: "Failed to send OTP." };
+    }
+}
+
+/**
+ * Verifies OTP and logs in or redirects to registration.
+ */
+export async function verifyOtpAndLogin(phone: string, otp: string): Promise<ActionResponse<LoginResult | { needsRegistration: boolean }>> {
+    try {
+        const verification = await verifyMsg91Otp(phone, otp);
+        if (!verification.success) {
+            return { success: false, message: verification.message };
+        }
+
+        await ensureDemoAccounts();
+        
+        const normalizedPhone = (await import("@/lib/server/msg91")).normalizePhone(phone);
+
+        // Logic to find user by phone and log them in
+        // If not found, tell frontend we need registration details
+        const user = await prisma.user.findUnique({
+            where: { phone: normalizedPhone },
+        });
+
+        if (!user) {
+            return { success: true, data: { needsRegistration: true }, message: "OTP verified. Please complete your registration." };
+        }
+
+        await setAuthSession(user);
+
+        return {
+            success: true,
+            message: "Logged in successfully.",
+            data: {
+                redirectTo: getRoleRedirectPath(user.role as AppRole), 
+                user: {
+                    fullName: user.fullName,
+                    role: user.role,
+                    registrationNumber: user.registrationNumber,
+                    phone: user.phone,
+                },
+            }
+        };
+    } catch (error) {
+        console.error("verifyOtpAndLogin error:", error);
+        return { success: false, message: "Verification failed." };
+    }
+}
 
 /**
  * Authenticates a user and establishes a session.
@@ -40,6 +107,7 @@ export async function login(input: AuthLoginInput): Promise<ActionResponse<Login
                     fullName: authenticated.user.fullName,
                     role: authenticated.user.role,
                     registrationNumber: authenticated.user.registrationNumber,
+                    phone: authenticated.user.phone,
                 },
             }
         };
@@ -50,8 +118,42 @@ export async function login(input: AuthLoginInput): Promise<ActionResponse<Login
 }
 
 /**
- * Registers a new user and automatically logs them in.
+ * Verifies OTP and completes registration.
  */
+export async function verifyOtpAndRegister(formData: {
+    phone: string;
+    otp: string;
+    fullName: string;
+    password?: string;
+    role: "STUDENT" | "TEACHER";
+}): Promise<ActionResponse<{ redirectTo: string }>> {
+    try {
+        const verification = await verifyMsg91Otp(formData.phone, formData.otp);
+        if (!verification.success) {
+            return { success: false, message: verification.message };
+        }
+
+        const registered = await registerUserRecord({
+            fullName: formData.fullName,
+            phone: formData.phone,
+            password: formData.password,
+            role: formData.role,
+            registrationNumber: `STU-${Date.now().toString().slice(-6)}`,
+        });
+
+        await setAuthSession(registered.user);
+        return {
+            success: true,
+            message: "Account created successfully",
+            data: {
+                redirectTo: registered.redirectTo,
+            }
+        };
+    } catch (error: unknown) {
+        console.error("verifyOtpAndRegister error:", error);
+        return { success: false, message: getActionErrorMessage(error, "Failed to create account") };
+    }
+}
 export async function register(formData: Record<string, string>): Promise<ActionResponse<{ redirectTo: string }>> {
     try {
         const registered = await registerUserRecord({
