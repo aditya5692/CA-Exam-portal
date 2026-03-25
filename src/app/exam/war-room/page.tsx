@@ -5,7 +5,7 @@ import { saveExamResultsAndUpdateLearning } from "@/actions/learning-actions";
 import { cn } from "@/lib/utils";
 import type { ExamWithQuestions } from "@/types/exam";
 import { useRouter,useSearchParams } from "next/navigation";
-import { useCallback,useEffect,useRef,useState } from "react";
+import { useCallback,useEffect,useRef,useState, Suspense } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type OptionShape = { id: string; text: string; isCorrect?: boolean };
@@ -46,7 +46,7 @@ function LoadingScreen({ msg = "Loading exam…" }: { msg?: string }) {
 
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function MCQExamPage() {
+function ExamWarRoomContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const examId = searchParams.get("examId");
@@ -685,5 +685,13 @@ export default function MCQExamPage() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function MCQExamPage() {
+    return (
+        <Suspense fallback={<LoadingScreen msg="Initializing exam environment..." />}>
+            <ExamWarRoomContent />
+        </Suspense>
     );
 }

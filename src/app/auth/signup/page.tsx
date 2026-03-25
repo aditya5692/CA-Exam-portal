@@ -4,7 +4,7 @@ import { requestOtp, verifyOtpAndRegister } from "@/actions/auth-actions";
 import { ArrowLeft, ArrowRight, CheckCircle, DeviceMobile, Envelope, GraduationCap, Lock, ShieldCheck, Sparkle, User } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 const SIGNUP_POINTS = [
     "Start with full-length mock access and a cleaner exam rhythm.",
@@ -12,7 +12,7 @@ const SIGNUP_POINTS = [
     "Upgrade only when you need deeper analytics or more libraries."
 ];
 
-export default function SignupPage() {
+function SignupFormContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     
@@ -52,7 +52,7 @@ export default function SignupPage() {
 
     async function handleVerifyOtp(event: React.FormEvent) {
         event.preventDefault();
-        setStep("details"); // In a real scenario, we might want to actually verify here too or just pass the OTP to the final register
+        setStep("details"); 
     }
 
     async function handleRegister(event: React.FormEvent) {
@@ -62,7 +62,7 @@ export default function SignupPage() {
 
         const result = await verifyOtpAndRegister({
             phone,
-            otp, // We need to ensure we have the OTP from the previous step if not already verified
+            otp,
             fullName,
             password,
             role: "STUDENT"
@@ -274,5 +274,17 @@ export default function SignupPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SignupPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[#f5efe5]">
+                <div className="animate-pulse text-[#1f5c50] font-black uppercase tracking-widest">Loading...</div>
+            </div>
+        }>
+            <SignupFormContent />
+        </Suspense>
     );
 }
