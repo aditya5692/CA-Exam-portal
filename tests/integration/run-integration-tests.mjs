@@ -132,7 +132,16 @@ try {
 
   exitCode = runCommand(
     process.execPath,
-    ["--conditions=react-server", "--import", "tsx", "--test", "--test-concurrency=1", ...testFiles],
+    [
+      "--conditions=react-server",
+      "--require",
+      resolve("tests/support/register-test-runtime.cjs"),
+      "--import",
+      "tsx",
+      "--test",
+      "--test-concurrency=1",
+      ...testFiles,
+    ],
     env,
   );
 } finally {

@@ -52,6 +52,7 @@ export async function createSharedTeacherMaterial(input: SharedTeacherMaterialIn
         await assertStorageCapacity(tx, input.ownerId, input.fileSize);
 
         let targetStudentIds: string[] = [];
+        let validatedBatchIds: string[] = [];
 
         if (input.batchIds.length > 0) {
             const validBatches = await tx.batch.findMany({
@@ -62,17 +63,13 @@ export async function createSharedTeacherMaterial(input: SharedTeacherMaterialIn
                 select: { id: true },
             });
 
-            if (validBatches.length !== input.batchIds.length) {
-                throw new Error("One or more selected batches are invalid.");
+            if (validBatches.length === 0 && input.batchIds.length > 0) {
+                 throw new Error("No valid batches found or you do not have permission.");
             }
+            validatedBatchIds = validBatches.map(b => b.id);
+        }
 
-            const enrollments = await tx.enrollment.findMany({
-                where: { batchId: { in: input.batchIds } },
-                select: { studentId: true },
-            });
-
-            targetStudentIds = Array.from(new Set(enrollments.map((enrollment) => enrollment.studentId)));
-        } else if (input.studentEmails.length > 0) {
+        if (input.studentEmails.length > 0) {
             const normalizedEmails = input.studentEmails.map((email) => email.toLowerCase());
             const students = await tx.user.findMany({
                 where: {
@@ -106,8 +103,21 @@ export async function createSharedTeacherMaterial(input: SharedTeacherMaterialIn
 
         await incrementStorageUsed(tx, input.ownerId, input.fileSize);
 
+        // 1. Link to Batches (Dynamic Access)
+        if (validatedBatchIds.length > 0) {
+            for (const batchId of validatedBatchIds) {
+                await tx.batchMaterial.create({
+                    data: {
+                        batchId,
+                        materialId: material.id
+                    }
+                });
+            }
+        }
+
+        // 2. Link to Specific Students (Static Access)
         if (targetStudentIds.length > 0) {
-            const accessType = input.accessType ?? "FREE_BATCH_MATERIAL";
+            const accessType = input.accessType ?? "DIRECT_STUDENT_SHARE";
             await Promise.all(
                 targetStudentIds.map((studentId) =>
                     tx.materialAccess.upsert({

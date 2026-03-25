@@ -12,13 +12,18 @@ model User {
   fullName           String?
   registrationNumber String?             @unique
   department         String?
-  phone              String?
+  phone              String?             @unique
+  otp                String?
+  otpExpiresAt       DateTime?
   preferredLanguage  String?
   timezone           String?
   bio                String?
   designation        String?
   expertise          String?
   examTarget         String?
+  examTargetLevel    String?
+  examTargetMonth    Int?
+  examTargetYear     Int?
   role               String              @default("STUDENT") // STUDENT, TEACHER, ADMIN
   storageUsed        Int                 @default(0)
   storageLimit       Int                 @default(52428800) // 50MB default
@@ -73,6 +78,44 @@ model User {
 
   // Subscription
   subscriptions      Subscription[]
+
+  // Auth & Session
+  sessions           Session[]
+  userProgress       UserProgress[]
+}
+
+model Session {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken    String   @unique
+  userAgent       String?
+  ipAddress       String?
+  lastActiveAt    DateTime @default(now())
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+model UserProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // resourceType: e.g., "VIDEO", "CHAPTER", "EXAM", "PDF"
+  resourceType    String
+  resourceId      String
+  
+  // Minimal JSON to store progress state (e.g., { "time": 120, "completed": false })
+  data            Json
+  
+  lastAccessedAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, resourceType, resourceId])
+  @@index([userId, updatedAt(sort: Desc)]) // For fast "Resume last activity" lookup
 }
 
 model StudyMaterial {
@@ -101,8 +144,19 @@ model StudyMaterial {
   uploadedById  String
   uploadedBy    User             @relation("UploadedMaterials", fields: [uploadedById], references: [id])
   folderId      String?
-  folder        Folder?          @relation(fields: [folderId], references: [id])
+  folder        Folder?          @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  batches       BatchMaterial[]
   accessedBy    MaterialAccess[]
+}
+
+model BatchMaterial {
+  id         String        @id @default(cuid())
+  batchId    String
+  materialId String
+  batch      Batch         @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  material   StudyMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, materialId])
 }
 
 model Folder {
@@ -164,6 +218,7 @@ model Batch {
   enrollments     Enrollment[]
   announcements   Announcement[]
   exams           Exam[]         @relation("BatchExams")
+  batchMaterials  BatchMaterial[]
 }
 
 model Enrollment {

@@ -139,13 +139,21 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
     }
 
     if (!SUPPORTED_DATABASE_PROTOCOLS.has(protocol)) {
-        throw new Error(`Unsupported DATABASE_URL protocol "${protocol}". Use a PostgreSQL connection string.`);
+        throw new Error(`Unsupported DATABASE_URL protocol "${protocol}". Use a PostgreSQL or SQLite "file:" connection string.`);
+    }
+
+    const redacted = redactDatabaseUrl(databaseUrl);
+    
+    // Runtime logging for connection source
+    console.log(`[RuntimePrisma] Connecting via ${sourceEnvKey} (${protocol})`);
+    if (env.NODE_ENV !== "production") {
+        console.log(`[RuntimePrisma] Target: ${redacted}`);
     }
 
     return {
         databaseUrl,
         sourceEnvKey,
-        redactedDatabaseUrl: redactDatabaseUrl(databaseUrl),
+        redactedDatabaseUrl: redacted,
         protocol,
         poolConfig: {
             connectionString: databaseUrl,
@@ -165,6 +173,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
     };
 }
 
+
 export function createPostgresPool(config: DatabaseRuntimeConfig) {
     const pool = new Pool(config.poolConfig);
 
@@ -181,22 +190,36 @@ export function createPostgresPool(config: DatabaseRuntimeConfig) {
 export function createRuntimePrismaClient(env: EnvLike = process.env) {
     const config = readDatabaseRuntimeConfig(env);
 
-    if (config.protocol === "file:") {
-        // Use the better-sqlite3 adapter for Prisma 7 compatibility
-        const adapter = new PrismaBetterSqlite3({
-            url: config.databaseUrl.replace("file:", ""),
-        });
+    try {
+        if (config.protocol === "file:") {
+            // Use the better-sqlite3 adapter for Prisma 7 compatibility
+            const adapter = new PrismaBetterSqlite3({
+                url: config.databaseUrl.replace("file:", ""),
+            });
+            const prisma = new PrismaClient({ adapter });
+            return { prisma, config };
+        }
+
+        const pool = createPostgresPool(config);
+        const adapter = new PrismaPg(pool);
         const prisma = new PrismaClient({ adapter });
-        return { prisma, config };
+
+        return {
+            prisma,
+            pool,
+            config,
+        };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        
+        if (message.includes("is not compatible with the provider")) {
+            console.error("\n[PrismaRuntimeError] FATAL MISMATCH DETECTED:");
+            console.error(`- Environment selected: ${config.sourceEnvKey} (${config.protocol})`);
+            console.error(`- Error: ${message}`);
+            console.error("\nTIP: If you intended to use SQLite locally, ensure DO NOT have DOKPLOY_DATABASE_URL or POSTGRES_URL set to a Postgres connection string.\n");
+        }
+        
+        throw error;
     }
-
-    const pool = createPostgresPool(config);
-    const adapter = new PrismaPg(pool);
-    const prisma = new PrismaClient({ adapter });
-
-    return {
-        prisma,
-        pool,
-        config,
-    };
 }
+

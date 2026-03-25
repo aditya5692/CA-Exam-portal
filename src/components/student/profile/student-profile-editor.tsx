@@ -1,6 +1,7 @@
 "use client";
 
 import { updateStudentProfile } from "@/actions/profile-actions";
+import { type ProfileFieldErrors, type ProfileFieldName } from "@/lib/profile-validation";
 import type { UserProfile } from "@/types/profile";
 import {
   Briefcase,Calendar,
@@ -13,10 +14,11 @@ import {
   Target,
   User
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState,type ReactNode } from "react";
 import { StudentPageHeader } from "../shared/page-header";
 
-import { resolveStudentCALevel } from "@/lib/student-level";
+import { getStudentAttemptMonthOptions,resolveStudentExamTarget } from "@/lib/student-level";
 
 type ProfileFormState = {
     fullName: string;
@@ -27,7 +29,8 @@ type ProfileFormState = {
     preferredLanguage: string;
     timezone: string;
     bio: string;
-    examTarget: string;
+    examTargetMonth: string;
+    examTargetYear: string;
     caLevel: string;
     batch: string;
     dob: string;
@@ -51,10 +54,20 @@ interface StudentProfileEditorProps {
     onSaveSuccess: () => void;
 }
 
+const RELATED_FIELD_ERRORS: Partial<Record<ProfileFieldName, ProfileFieldName[]>> = {
+    examTargetMonth: ["examTargetMonth", "examTargetYear"],
+    examTargetYear: ["examTargetMonth", "examTargetYear"],
+    articleshipYear: ["articleshipYear", "articleshipTotal"],
+    articleshipTotal: ["articleshipYear", "articleshipTotal"],
+};
+
 export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: StudentProfileEditorProps) {
+    const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
+    const examTarget = resolveStudentExamTarget(profile);
 
     // Initial state from profile
     const [formData, setFormData] = useState<ProfileFormState>({
@@ -66,26 +79,52 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
         preferredLanguage: profile.preferredLanguage ?? "",
         timezone: profile.timezone ?? "",
         bio: profile.bio ?? "",
-        examTarget: profile.examTarget ?? "",
-        caLevel: resolveStudentCALevel(profile.examTarget, profile.department),
+        examTargetMonth: examTarget.attemptMonth ? String(examTarget.attemptMonth) : "",
+        examTargetYear: examTarget.attemptYear ? String(examTarget.attemptYear) : "",
+        caLevel: examTarget.caLevelKey,
         batch: profile.batch ?? "",
         dob: profile.dob ? String(profile.dob) : "",
         location: profile.location ?? "",
         firm: profile.firm ?? "",
         firmRole: profile.firmRole ?? "",
-        articleshipYear: String(profile.articleshipYear ?? 0),
-        articleshipTotal: String(profile.articleshipTotal ?? 3),
+        articleshipYear: profile.articleshipYear === null || profile.articleshipYear === undefined ? "" : String(profile.articleshipYear),
+        articleshipTotal: profile.articleshipTotal === null || profile.articleshipTotal === undefined ? "" : String(profile.articleshipTotal),
         foundationCleared: Boolean(profile.foundationCleared),
         intermediateCleared: Boolean(profile.intermediateCleared),
         finalCleared: Boolean(profile.finalCleared),
         resumeUrl: profile.resumeUrl ?? "",
     });
 
+    const clearFieldErrors = (fieldName: ProfileFieldName) => {
+        setError("");
+        setFieldErrors((prev) => {
+            const next = { ...prev };
+            let hasChanges = false;
+
+            for (const field of RELATED_FIELD_ERRORS[fieldName] ?? [fieldName]) {
+                if (!next[field]) {
+                    continue;
+                }
+
+                delete next[field];
+                hasChanges = true;
+            }
+
+            if (!hasChanges) {
+                return prev;
+            }
+
+            return next;
+        });
+    };
+
     const handleTextChange = (key: TextFieldName, value: string) => {
+        clearFieldErrors(key as ProfileFieldName);
         setFormData(prev => ({ ...prev, [key]: value }));
     };
 
     const handleCheckboxChange = (key: CheckboxFieldName, value: boolean) => {
+        setError("");
         setFormData(prev => ({ ...prev, [key]: value }));
     };
 
@@ -94,6 +133,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
         setIsSaving(true);
         setError("");
         setStatusMessage("");
+        setFieldErrors({});
 
         const data = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
@@ -106,10 +146,12 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
         if (response.success) {
             setStatusMessage("Profile updated successfully!");
             setTimeout(() => {
+                router.refresh();
                 onSaveSuccess();
             }, 1000);
         } else {
             setError(response.message || "Failed to update profile.");
+            setFieldErrors(response.fieldErrors || {});
         }
     };
 
@@ -143,6 +185,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             onChange={handleTextChange} 
                             placeholder="Aditya Vardhan"
                             icon={<User className="w-4 h-4" />}
+                            error={fieldErrors.fullName}
                         />
                         <InputField 
                             label="Email Address" 
@@ -152,6 +195,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             type="email"
                             placeholder="aditya@example.com"
                             icon={<Mail className="w-4 h-4" />}
+                            error={fieldErrors.email}
                         />
                         <InputField 
                             label="Registration Number (CRO)" 
@@ -160,6 +204,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             onChange={handleTextChange} 
                             placeholder="CRO-0742918"
                             icon={<ShieldCheck className="w-4 h-4" />}
+                            error={fieldErrors.registrationNumber}
                         />
                          <InputField 
                             label="Phone Number" 
@@ -168,6 +213,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             onChange={handleTextChange} 
                             placeholder="+91 98200 12345"
                             icon={<Mail className="w-4 h-4" />}
+                            error={fieldErrors.phone}
                         />
                     </div>
                 </Section>
@@ -178,28 +224,43 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             label="CA Level" 
                             name="caLevel" 
                             value={formData.caLevel} 
-                            onChange={(key, val) => setFormData(prev => ({ ...prev, [key]: val }))}
+                            onChange={handleTextChange}
                             options={[
                                 { value: "foundation", label: "CA Foundation" },
                                 { value: "ipc", label: "CA Intermediate (IPC)" },
                                 { value: "final", label: "CA Final" }
                             ]}
                             icon={<ShieldCheck className="w-4 h-4" />}
+                            error={fieldErrors.caLevel}
                         />
-                         <InputField 
+                        <InputField 
                             label="Batch" 
                             name="batch" 
                             value={formData.batch} 
                             onChange={handleTextChange} 
                             placeholder="Nov 2024"
+                            error={fieldErrors.batch}
+                        />
+                        <SelectField 
+                            label="Attempt Month" 
+                            name="examTargetMonth" 
+                            value={formData.examTargetMonth} 
+                            onChange={handleTextChange}
+                            options={[
+                                { value: "", label: "Select month" },
+                                ...getStudentAttemptMonthOptions(),
+                            ]}
+                            icon={<Target className="w-4 h-4" />}
+                            error={fieldErrors.examTargetMonth}
                         />
                         <InputField 
-                            label="Attempt Due" 
-                            name="examTarget" 
-                            value={formData.examTarget} 
+                            label="Attempt Year" 
+                            name="examTargetYear" 
+                            value={formData.examTargetYear} 
                             onChange={handleTextChange} 
-                            placeholder="May 2025"
-                            icon={<Target className="w-4 h-4" />}
+                            placeholder="2026"
+                            type="number"
+                            error={fieldErrors.examTargetYear}
                         />
                          <InputField 
                             label="Location" 
@@ -208,6 +269,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             onChange={handleTextChange} 
                             placeholder="Mumbai"
                             icon={<MapPin className="w-4 h-4" />}
+                            error={fieldErrors.location}
                         />
                         <InputField 
                             label="Date of Birth" 
@@ -215,6 +277,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             value={formData.dob} 
                             onChange={handleTextChange} 
                             placeholder="14 Aug 2002"
+                            error={fieldErrors.dob}
                         />
                     </div>
                 </Section>
@@ -228,6 +291,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             value={formData.firm} 
                             onChange={handleTextChange} 
                             placeholder="Deloitte & Touche"
+                            error={fieldErrors.firm}
                         />
                         <InputField 
                             label="Role" 
@@ -235,6 +299,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             value={formData.firmRole} 
                             onChange={handleTextChange} 
                             placeholder="Statutory Audit"
+                            error={fieldErrors.firmRole}
                         />
                          <div className="grid grid-cols-2 gap-4">
                             <InputField 
@@ -243,6 +308,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                                 type="number"
                                 value={formData.articleshipYear} 
                                 onChange={handleTextChange} 
+                                error={fieldErrors.articleshipYear}
                             />
                             <InputField 
                                 label="Total Duration" 
@@ -250,6 +316,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                                 type="number"
                                 value={formData.articleshipTotal} 
                                 onChange={handleTextChange} 
+                                error={fieldErrors.articleshipTotal}
                             />
                         </div>
                         <InputField 
@@ -259,6 +326,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             onChange={handleTextChange} 
                             placeholder="https://..."
                             icon={<FileText className="w-4 h-4" />}
+                            error={fieldErrors.resumeUrl}
                         />
                     </div>
                 </Section>
@@ -334,9 +402,10 @@ type InputFieldProps = {
     placeholder?: string;
     type?: string;
     icon?: ReactNode;
+    error?: string;
 };
 
-function InputField({ label, name, value, onChange, placeholder, type = "text", icon }: InputFieldProps) {
+function InputField({ label, name, value, onChange, placeholder, type = "text", icon, error }: InputFieldProps) {
     return (
         <label className="block space-y-2.5">
             <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">{label}</span>
@@ -347,9 +416,13 @@ function InputField({ label, name, value, onChange, placeholder, type = "text", 
                     value={value}
                     onChange={(e) => onChange(name, e.target.value)}
                     placeholder={placeholder}
-                    className={`w-full rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-6 text-sm font-bold text-[var(--student-text)] placeholder:text-[var(--student-muted)]/45 focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 focus:ring-[var(--student-accent-soft)]/70 transition-all shadow-inner`}
+                    aria-invalid={Boolean(error)}
+                    className={`w-full rounded-2xl border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-6 text-sm font-bold text-[var(--student-text)] placeholder:text-[var(--student-muted)]/45 focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
                 />
             </div>
+            {error && (
+                <p className="ml-1 text-xs font-bold text-rose-600">{error}</p>
+            )}
         </label>
     );
 }
@@ -361,9 +434,10 @@ type SelectFieldProps = {
     onChange: (key: TextFieldName, value: string) => void;
     options: { value: string; label: string }[];
     icon?: ReactNode;
+    error?: string;
 };
 
-function SelectField({ label, name, value, onChange, options, icon }: SelectFieldProps) {
+function SelectField({ label, name, value, onChange, options, icon, error }: SelectFieldProps) {
     return (
         <label className="block space-y-2.5">
             <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">{label}</span>
@@ -372,7 +446,8 @@ function SelectField({ label, name, value, onChange, options, icon }: SelectFiel
                 <select 
                     value={value}
                     onChange={(e) => onChange(name, e.target.value)}
-                    className={`w-full appearance-none rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-10 text-sm font-bold text-[var(--student-text)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 focus:ring-[var(--student-accent-soft)]/70 transition-all shadow-inner cursor-pointer`}
+                    aria-invalid={Boolean(error)}
+                    className={`w-full appearance-none rounded-2xl border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-10 text-sm font-bold text-[var(--student-text)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner cursor-pointer ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
                 >
                     {options.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -382,6 +457,9 @@ function SelectField({ label, name, value, onChange, options, icon }: SelectFiel
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
             </div>
+            {error && (
+                <p className="ml-1 text-xs font-bold text-rose-600">{error}</p>
+            )}
         </label>
     );
 }

@@ -8,6 +8,12 @@ export function revalidateBatchSurfaces() {
     revalidatePath("/teacher/students");
     revalidatePath("/teacher/updates");
     revalidatePath("/student/updates");
+    revalidatePath("/student/dashboard");
+    revalidatePath("/student/exams");
+    revalidatePath("/student/materials");
+    revalidatePath("/student/free-resources");
+    revalidatePath("/student/past-year-questions");
+    revalidatePath("/student/analytics");
 }
 
 export function revalidateMaterialSurfaces() {

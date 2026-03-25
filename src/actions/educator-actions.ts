@@ -226,7 +226,31 @@ export async function getStudentSharedMaterials(studentId?: string): Promise<Act
             orderBy: { grantedAt: "desc" },
         });
 
-        return { success: true, data: { materials: accesses.map((access) => access.material), isAdminView: false } };
+        // Pull Model: Fetch materials for all batches the student is enrolled in
+        const batchMaterials = await prisma.batchMaterial.findMany({
+            where: {
+                batch: {
+                    enrollments: { some: { studentId: viewer.id } }
+                }
+            },
+            include: {
+                material: {
+                    include: {
+                        uploadedBy: { select: { fullName: true, email: true } },
+                    },
+                },
+            }
+        });
+
+        const allMaterials = [
+            ...accesses.map((a) => a.material),
+            ...batchMaterials.map((bm: (typeof batchMaterials)[number]) => bm.material),
+        ];
+
+        // Deduplicate by ID
+        const uniqueMaterials = Array.from(new Map(allMaterials.map(m => [m.id, m])).values());
+
+        return { success: true, data: { materials: uniqueMaterials, isAdminView: false } };
     } catch (error: unknown) {
         console.error("getStudentSharedMaterials failed:", error);
         return { success: false, message: error instanceof Error ? error.message : "Failed to fetch shared materials." };

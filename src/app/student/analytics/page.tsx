@@ -3,6 +3,7 @@ import { StudentAttemptHistory } from "@/components/student/analytics/attempt-hi
 import { StudentAnalyticsOverview } from "@/components/student/analytics/performance-overview";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
+import { resolveStudentExamTarget } from "@/lib/student-level";
 import { getStudentStudyRecommendations } from "@/lib/server/study-intelligence";
 import { Info } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
@@ -18,24 +19,7 @@ export default async function StudentAnalyticsPage() {
     const recommendations = user
         ? await getStudentStudyRecommendations(user.id, 5)
         : null;
-
-    let daysToExam = 0;
-    const userTarget = user?.examTarget || "";
-    if (userTarget) {
-        const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
-        const parts = userTarget.split(" ");
-        if (parts.length >= 2) {
-            const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
-            const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
-            const yrPart = parseInt(parts[parts.length - 1]);
-            if (moKey && !isNaN(yrPart)) {
-                const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
-                const now = new Date();
-                const diffTime = targetDate.getTime() - now.getTime();
-                daysToExam = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-            }
-        }
-    }
+    const examTarget = resolveStudentExamTarget(user ?? {});
 
     return (
         <div className="space-y-12 pb-20 font-outfit">
@@ -44,7 +28,7 @@ export default async function StudentAnalyticsPage() {
                 title="Performance"
                 accent="Insights"
                 description="Track your progress, analyze your performance across subjects, and identify areas for improvement."
-                daysToExam={daysToExam}
+                daysToExam={examTarget.daysToExam}
             />
 
             <StudentAnalyticsOverview data={result.data} />

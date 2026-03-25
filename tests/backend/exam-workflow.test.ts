@@ -38,6 +38,7 @@ test("normalizeSubmittedAnswers trims ids, de-duplicates by question, and clamps
 
   assert.deepEqual(answers, [
     { questionId: "q1", selectedOptionId: "a2", timeSpent: 31 },
+    { questionId: "q2", selectedOptionId: null, timeSpent: 10 },
     { questionId: "q3", selectedOptionId: "a4", timeSpent: 0 },
   ]);
 });

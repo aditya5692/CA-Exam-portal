@@ -1,7 +1,24 @@
 "use client";
 
-import { List, MagnifyingGlass } from "@phosphor-icons/react";
+import { refreshTokenAction } from "@/actions/auth-token-actions";
+import { 
+    List, 
+    MagnifyingGlass,
+    BookOpen, 
+    Calendar, 
+    Cards, 
+    ChartBar, 
+    Gear, 
+    House, 
+    SignOut, 
+    Sparkle, 
+    Student, 
+    User,
+    Bell,
+    X
+} from "@phosphor-icons/react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { StudentSidebar } from "../sidebar";
 import { cn } from "@/lib/utils";
@@ -18,8 +35,32 @@ interface StudentLayoutClientProps {
 }
 
 export function StudentLayoutClient({ children, session, initials }: StudentLayoutClientProps) {
+    const pathname = usePathname();
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [whiteBackground, setWhiteBackground] = useState(false);
+
+    // Session Heartbeat: Silent refresh every 5 minutes
+    useEffect(() => {
+        // Don't heartbeat on auth pages
+        if (pathname?.startsWith("/auth")) return;
+
+        const heartbeat = async () => {
+            try {
+                const result = await refreshTokenAction();
+                if (!result.success) {
+                    console.warn("Session refresh failed:", result.message);
+                }
+            } catch (err) {
+                console.error("Heartbeat error:", err);
+            }
+        };
+
+        // Initial check and then interval
+        heartbeat();
+        const interval = setInterval(heartbeat, 1000 * 60 * 5); // 5 minutes
+
+        return () => clearInterval(interval);
+    }, [pathname]);
 
     // Persist preference
     useEffect(() => {

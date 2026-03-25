@@ -4,6 +4,7 @@ import {
     createPasswordHash,
     ensureDemoAccounts,
     verifyPassword,
+    generateTemporaryPassword,
     type AppRole,
 } from "@/lib/auth/demo-accounts";
 import prisma from "@/lib/prisma/client";
@@ -24,10 +25,11 @@ export type AuthLoginRecord = {
 export type AuthRegistrationInput = {
     fullName: string;
     email?: string | null;
+    phone?: string | null;
     registrationNumber: string;
     department?: string | null;
     role: string;
-    password: string;
+    password?: string | null;
 };
 
 const APP_ROLES = new Set<AppRole>(["ADMIN", "TEACHER", "STUDENT"]);
@@ -102,20 +104,23 @@ export async function registerUserRecord(
 
     const normalizedRegistrationNumber = input.registrationNumber.trim().toUpperCase();
     const normalizedEmail = input.email?.trim().toLowerCase() || null;
+    const normalizedPhone = input.phone?.trim() || null;
     const trimmedFullName = input.fullName.trim();
     const trimmedDepartment = input.department?.trim() || null;
-    const trimmedPassword = input.password.trim();
+    const trimmedPassword = input.password?.trim() || generateTemporaryPassword();
 
     const existingUser = await prisma.user.findFirst({
         where: {
             OR: [
                 { registrationNumber: normalizedRegistrationNumber },
                 ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+                ...(normalizedPhone ? [{ phone: normalizedPhone }] : []),
             ],
         },
         select: {
             email: true,
             registrationNumber: true,
+            phone: true,
         },
     });
 
@@ -127,11 +132,16 @@ export async function registerUserRecord(
         throw new Error("An account with that email already exists.");
     }
 
+    if (normalizedPhone && existingUser?.phone === normalizedPhone) {
+        throw new Error("An account with that phone number already exists.");
+    }
+
     try {
         const user = await prisma.user.create({
             data: {
                 fullName: trimmedFullName,
                 email: normalizedEmail,
+                phone: normalizedPhone,
                 registrationNumber: normalizedRegistrationNumber,
                 department: trimmedDepartment,
                 role: normalizedRole,

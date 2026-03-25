@@ -1,6 +1,8 @@
+import type { ProfileFieldErrors } from "@/lib/profile-validation";
+
 export type ActionResponse<T = unknown> = 
     | { success: true; data: T; message?: string }
-    | { success: false; message: string; data?: T };
+    | { success: false; message: string; data?: T; fieldErrors?: ProfileFieldErrors };
 
 export type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
 

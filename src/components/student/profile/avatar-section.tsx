@@ -8,6 +8,7 @@ interface ProfileHeaderProps {
     status: string;
     onEdit: () => void;
     onResumeDownload: () => void;
+    isResumeDownloadAvailable: boolean;
 }
 
 export function ProfileHeader({ 
@@ -15,7 +16,8 @@ export function ProfileHeader({
     registrationNumber, 
     status, 
     onEdit, 
-    onResumeDownload 
+    onResumeDownload,
+    isResumeDownloadAvailable,
 }: ProfileHeaderProps) {
     return (
         <div className="student-surface rounded-[32px] px-6 py-7 md:px-8 md:py-8 font-outfit">
@@ -57,10 +59,11 @@ export function ProfileHeader({
                 </button>
                 <button 
                     onClick={onResumeDownload}
-                    className="student-button-primary flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+                    disabled={!isResumeDownloadAvailable}
+                    className="student-button-primary flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs font-black uppercase tracking-widest transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <Download className="w-4 h-4" />
-                    Download Resume
+                    {isResumeDownloadAvailable ? "Download Resume" : "Resume Unavailable"}
                 </button>
             </div>
         </div>

@@ -37,14 +37,15 @@ test("readDatabaseRuntimeConfig respects pool overrides", () => {
   assert.equal(config.poolConfig.max, 25);
   assert.equal(config.poolConfig.connectionTimeoutMillis, 15_000);
   assert.equal(config.poolConfig.idleTimeoutMillis, 45_000);
-  assert.equal(config.poolConfig.allowExitOnIdle, false);
+  assert.equal(config.poolConfig.allowExitOnIdle, true);
 });
 
-test("readDatabaseRuntimeConfig rejects SQLite URLs with an explicit message", () => {
-  assert.throws(
-    () => readDatabaseRuntimeConfig({ DATABASE_URL: "file:./dev.db" }),
-    /PostgreSQL-only/,
-  );
+test("readDatabaseRuntimeConfig supports SQLite URLs for local development", () => {
+  const config = readDatabaseRuntimeConfig({ DATABASE_URL: "file:./dev.db" });
+
+  assert.equal(config.protocol, "file:");
+  assert.equal(config.databaseUrl, "file:./dev.db");
+  assert.equal(config.poolConfig.connectionString, "file:./dev.db");
 });
 
 test("readDatabaseRuntimeConfig rejects invalid integer overrides", () => {

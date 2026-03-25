@@ -1,6 +1,8 @@
 "use client";
 
 import { getStudentProfile } from "@/actions/profile-actions";
+import { isSafeExternalUrl } from "@/lib/profile-validation";
+import { getStudentStatusLabel,resolveStudentExamTarget } from "@/lib/student-level";
 import type { UserProfile } from "@/types/profile";
 import { useCallback,useEffect,useState } from "react";
 import { ProfileHeader } from "./avatar-section";
@@ -62,6 +64,9 @@ export function StudentProfile() {
         );
     }
 
+    const examTarget = resolveStudentExamTarget(profile);
+    const hasValidResumeUrl = isSafeExternalUrl(profile.resumeUrl);
+
     return (
         <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <StudentPageHeader
@@ -75,9 +80,23 @@ export function StudentProfile() {
             <ProfileHeader 
                 fullName={profile.fullName || "User"}
                 registrationNumber={profile.registrationNumber}
-                status="Final Year CA Student" // Dynamically set if possible
+                status={getStudentStatusLabel({
+                    examTarget: profile.examTarget,
+                    examTargetLevel: profile.examTargetLevel,
+                    examTargetMonth: profile.examTargetMonth,
+                    examTargetYear: profile.examTargetYear,
+                    department: profile.department,
+                    foundationCleared: profile.foundationCleared,
+                    intermediateCleared: profile.intermediateCleared,
+                    finalCleared: profile.finalCleared,
+                })}
                 onEdit={() => setIsEditing(true)}
-                onResumeDownload={() => window.open(profile.resumeUrl || "#", "_blank")}
+                onResumeDownload={() => {
+                    if (hasValidResumeUrl && profile.resumeUrl) {
+                        window.open(profile.resumeUrl, "_blank", "noopener,noreferrer");
+                    }
+                }}
+                isResumeDownloadAvailable={hasValidResumeUrl}
             />
 
             <JourneySection 
@@ -89,7 +108,7 @@ export function StudentProfile() {
 
             <InfoCards 
                 batch={profile.batch}
-                attemptDue={profile.examTarget}
+                attemptDue={examTarget.label}
                 location={profile.location}
                 dob={profile.dob}
                 plan={profile.plan}

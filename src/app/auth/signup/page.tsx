@@ -1,10 +1,10 @@
 "use client";
 
-import { register } from "@/actions/auth-actions";
-import { ArrowRight, CheckCircle, Envelope, GraduationCap, Lock, Sparkle, User } from "@phosphor-icons/react";
+import { requestOtp, verifyOtpAndRegister } from "@/actions/auth-actions";
+import { ArrowLeft, ArrowRight, CheckCircle, DeviceMobile, Envelope, GraduationCap, Lock, ShieldCheck, Sparkle, User } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const SIGNUP_POINTS = [
     "Start with full-length mock access and a cleaner exam rhythm.",
@@ -14,23 +14,58 @@ const SIGNUP_POINTS = [
 
 export default function SignupPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    
+    const [step, setStep] = useState<"phone" | "otp" | "details">("phone");
+    const [phone, setPhone] = useState("");
+    const [otp, setOtp] = useState("");
     const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
-    async function handleSubmit(event: React.FormEvent) {
+    useEffect(() => {
+        const p = searchParams.get("phone");
+        const v = searchParams.get("verified");
+        if (p) setPhone(p);
+        if (v === "true") {
+            setStep("details");
+            setOtp("VERIFIED");
+        }
+    }, [searchParams]);
+
+    async function handleRequestOtp(event: React.FormEvent) {
         event.preventDefault();
         setIsSubmitting(true);
         setErrorMessage("");
 
-        const result = await register({
+        const result = await requestOtp(phone);
+        setIsSubmitting(false);
+
+        if (result.success) {
+            setStep("otp");
+        } else {
+            setErrorMessage(result.message);
+        }
+    }
+
+    async function handleVerifyOtp(event: React.FormEvent) {
+        event.preventDefault();
+        setStep("details"); // In a real scenario, we might want to actually verify here too or just pass the OTP to the final register
+    }
+
+    async function handleRegister(event: React.FormEvent) {
+        event.preventDefault();
+        setIsSubmitting(true);
+        setErrorMessage("");
+
+        const result = await verifyOtpAndRegister({
+            phone,
+            otp, // We need to ensure we have the OTP from the previous step if not already verified
             fullName,
-            email,
             password,
-            role: "STUDENT",
-            department: "GENERAL"
+            role: "STUDENT"
         });
 
         setIsSubmitting(false);
@@ -77,61 +112,83 @@ export default function SignupPage() {
                         </div>
                     </div>
 
-                    <form className="space-y-6" onSubmit={handleSubmit}>
-                        <div className="space-y-3">
-                            <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Full name</label>
-                            <div className="relative group">
-                                <User size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
-                                <input
-                                    type="text"
-                                    value={fullName}
-                                    onChange={(event) => setFullName(event.target.value)}
-                                    placeholder="Aditya S"
-                                    className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
-                                    required
-                                />
+                    <form className="space-y-6" onSubmit={step === "phone" ? handleRequestOtp : step === "otp" ? handleVerifyOtp : handleRegister}>
+                        {step === "phone" && (
+                            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Phone Number</label>
+                                <div className="relative group">
+                                    <DeviceMobile size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                    <input
+                                        type="tel"
+                                        value={phone}
+                                        onChange={(event) => setPhone(event.target.value)}
+                                        placeholder="Enter your phone number"
+                                        className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                        required
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div className="space-y-3">
-                            <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Email</label>
-                            <div className="relative group">
-                                <Envelope size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(event) => setEmail(event.target.value)}
-                                    placeholder="name@example.com"
-                                    className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
-                                    required
-                                />
+                        {step === "otp" && (
+                            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="flex items-center justify-between">
+                                    <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Verification Code</label>
+                                    <button type="button" onClick={() => setStep("phone")} className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1f5c50] hover:underline flex items-center gap-1">
+                                        <ArrowLeft size={10} /> Change
+                                    </button>
+                                </div>
+                                <div className="relative group">
+                                    <ShieldCheck size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                    <input
+                                        type="text"
+                                        value={otp}
+                                        onChange={(event) => setOtp(event.target.value)}
+                                        placeholder="Enter OTP"
+                                        className="w-full tracking-[0.5em] text-center rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-lg font-black text-[#1f2b2f] outline-none transition-all placeholder:text-sm placeholder:tracking-normal focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                        required
+                                        maxLength={6}
+                                    />
+                                </div>
+                                <p className="text-center text-[10px] font-medium text-[#667370]">
+                                    OTP sent to <span className="font-bold text-[#1f2b2f]">{phone}</span>
+                                </p>
                             </div>
-                        </div>
+                        )}
 
-                        <div className="space-y-3">
-                            <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Password</label>
-                            <div className="relative group">
-                                <Lock size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(event) => setPassword(event.target.value)}
-                                    placeholder="Create a secure password"
-                                    className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
-                                    required
-                                />
+                        {step === "details" && (
+                            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="space-y-3">
+                                    <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Full name</label>
+                                    <div className="relative group">
+                                        <User size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                        <input
+                                            type="text"
+                                            value={fullName}
+                                            onChange={(event) => setFullName(event.target.value)}
+                                            placeholder="Aditya S"
+                                            className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Create Password</label>
+                                    <div className="relative group">
+                                        <Lock size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(event) => setPassword(event.target.value)}
+                                            placeholder="Choose a secure password"
+                                            className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                            required
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="flex items-start gap-3 rounded-[22px] border border-[#e6dccd] bg-[#fcfaf6] px-4 py-3">
-                            <input type="checkbox" id="terms" className="mt-0.5 h-4 w-4 rounded border-[#d7c5a9] text-[#1f5c50] focus:ring-[#dcebe6]" required />
-                            <label htmlFor="terms" className="text-sm font-medium leading-relaxed text-[#4f5b58]">
-                                I agree to the{" "}
-                                <Link href="#" className="font-bold text-[#1f5c50] hover:underline">
-                                    Terms and Privacy Policy
-                                </Link>
-                            </label>
-                        </div>
+                        )}
 
                         {errorMessage ? (
                             <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
@@ -144,7 +201,13 @@ export default function SignupPage() {
                             disabled={isSubmitting}
                             className="flex w-full items-center justify-center gap-3 rounded-[22px] border border-[#1f5c50] bg-[#1f5c50] py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-[0_16px_34px_rgba(31,92,80,0.14)] transition-all duration-300 hover:bg-[#18493f] active:scale-95 disabled:opacity-70"
                         >
-                            {isSubmitting ? "Creating account..." : "Create my account"}
+                            {isSubmitting 
+                                ? "Processing..." 
+                                : step === "phone" 
+                                    ? "Request OTP" 
+                                    : step === "otp" 
+                                        ? "Verify Code" 
+                                        : "Complete Registration"}
                             <ArrowRight size={18} weight="bold" />
                         </button>
                     </form>

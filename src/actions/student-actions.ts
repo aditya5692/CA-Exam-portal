@@ -11,6 +11,8 @@ import {
 } from "@/lib/server/action-utils";
 import { startExamAttemptRecord } from "@/lib/server/exam-workflow";
 import { getStudentStudyRecommendations } from "@/lib/server/study-intelligence";
+import { buildStudentVisibleExamWhere } from "@/lib/server/exam-publishing";
+import { buildStudentExamTargetLabel,resolveStudentExamTarget } from "@/lib/student-level";
 import { ActionResponse,UnifiedExam,UnifiedMaterial } from "@/types/shared";
 import type { ExamHubData,StudentAttempt,StudentHistoryData } from "@/types/student";
 import { revalidatePath } from "next/cache";
@@ -36,10 +38,11 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
         );
 
         const xpToNextLevel = (learningProfile?.level ?? 1) * 100;
+        const examTarget = resolveStudentExamTarget(user);
 
         const profile = {
             name: user.fullName ?? user.email ?? "Student",
-            caLevel: user.examTarget ?? "CA Final",
+            caLevel: examTarget.caLevelLabel,
             level: learningProfile?.level ?? 1,
             totalXP: learningProfile?.totalXP ?? 0,
             xpToNextLevel,
@@ -190,24 +193,6 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
 
         const allWeakTopics = Array.from(new Set(attempts.flatMap(a => a.weakTopics))).slice(0, 5);
 
-        // 6. Exam Target
-        let examTargetDays = 0;
-        const examTargetLabel = user.examTarget || "Not Set";
-        if (user.examTarget) {
-            const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
-            const parts = user.examTarget.split(" ");
-            if (parts.length === 2) {
-                const mo = parts[0].substring(0, 3);
-                const yr = parseInt(parts[1]);
-                if (months[mo as keyof typeof months] !== undefined && !isNaN(yr)) {
-                    const targetDate = new Date(yr, months[mo as keyof typeof months], 1);
-                    const now = new Date();
-                    const diffTime = targetDate.getTime() - now.getTime();
-                    examTargetDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-                }
-            }
-        }
-
         return {
             success: true,
             data: { 
@@ -217,8 +202,8 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
                 performanceTrend, 
                 comparativeAnalysis,
                 weakTopics: allWeakTopics,
-                examTargetDays,
-                examTargetLabel
+                examTargetDays: examTarget.daysToExam,
+                examTargetLabel: examTarget.label
             },
         };
     } catch (err) {
@@ -433,10 +418,7 @@ export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
         });
 
         // 3. Level Detection and Subject mapping
-        const target = (user.examTarget || "").toLowerCase();
-        let currentLevel: 'foundation' | 'ipc' | 'final' = 'final';
-        if (target.includes("foundation")) currentLevel = 'foundation';
-        else if (target.includes("inter") || target.includes("ipc")) currentLevel = 'ipc';
+        const currentLevel = resolveStudentExamTarget(user).caLevelKey;
 
         let levelSubjects: { name: string, dbMatch: string, chapters: (string | { name: string })[] }[] = [];
 
@@ -509,18 +491,11 @@ export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
             };
         }));
 
-        // 4. Mock Tests (Fetch all exams in student's category)
-        let resolvedCategory = "CA Final";
-        if (currentLevel === 'foundation') resolvedCategory = "CA Foundation";
-        else if (currentLevel === 'ipc') resolvedCategory = "CA Intermediate";
+        // 4. Mock Tests (Fetch all exams in student's category that are visible to this student)
+        const examWhere = await buildStudentVisibleExamWhere(user.id, currentLevel);
 
         const examsRaw = await prisma.exam.findMany({
-            where: { 
-                category: {
-                    contains: resolvedCategory
-                },
-                status: "PUBLISHED"
-            },
+            where: examWhere,
             include: {
                 questions: true,
                 attempts: {
@@ -580,34 +555,21 @@ export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
 export async function updateStudentLevel(level: "foundation" | "ipc" | "final"): Promise<ActionResponse<undefined>> {
     try {
         const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
-        const categoryMap = {
-            foundation: "CA Foundation",
-            ipc: "CA Intermediate",
-            final: "CA Final",
-        };
-        
-        const existingTarget = user.examTarget || "";
-        const parts = existingTarget.split(" ");
-        let datePart = "";
-        
-        // Try to identify if the last two parts are Month and Year (e.g. "May 2026")
-        if (parts.length >= 2) {
-            const mo = parts[parts.length - 2].toLowerCase();
-            const yrRaw = parts[parts.length - 1];
-            const yr = parseInt(yrRaw);
-            const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-            const isMonth = months.some(m => mo.startsWith(m));
-            // Check for 4-digit or 2-digit years
-            if (isMonth && !isNaN(yr)) {
-                datePart = `${parts[parts.length - 2]} ${yrRaw}`;
-            }
-        }
-
-        const newTarget = datePart ? `${categoryMap[level]} ${datePart}` : categoryMap[level];
+        const existingTarget = resolveStudentExamTarget(user);
+        const newTarget = buildStudentExamTargetLabel(
+            level,
+            existingTarget.attemptMonth,
+            existingTarget.attemptYear,
+        );
         
         await prisma.user.update({
             where: { id: user.id },
-            data: { examTarget: newTarget }
+            data: {
+                examTarget: newTarget,
+                examTargetLevel: level,
+                examTargetMonth: existingTarget.attemptMonth,
+                examTargetYear: existingTarget.attemptYear,
+            }
         });
 
         revalidatePath("/");

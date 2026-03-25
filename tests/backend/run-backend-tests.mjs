@@ -11,8 +11,10 @@ const testFiles = [
   resolve("tests/backend/batch-utils.test.ts"),
   resolve("tests/backend/exam-workflow.test.ts"),
   resolve("tests/backend/plan-entitlements.test.ts"),
+  resolve("tests/backend/profile-validation.test.ts"),
   resolve("tests/backend/prisma-runtime.test.ts"),
   resolve("tests/backend/resource-intelligence.test.ts"),
+  resolve("tests/backend/session-cookie-sync.test.ts"),
   resolve("tests/backend/storage-utils.test.ts"),
   resolve("tests/backend/student-level.test.ts"),
   resolve("tests/backend/study-intelligence.test.ts"),
@@ -20,7 +22,15 @@ const testFiles = [
 
 const result = spawnSync(
   process.execPath,
-  ["--conditions=react-server", "--import", "tsx", "--test", ...testFiles],
+  [
+    "--conditions=react-server",
+    "--require",
+    resolve("tests/support/register-test-runtime.cjs"),
+    "--import",
+    "tsx",
+    "--test",
+    ...testFiles,
+  ],
   {
     cwd: process.cwd(),
     env,

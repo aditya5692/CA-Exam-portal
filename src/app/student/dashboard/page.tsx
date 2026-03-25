@@ -1,12 +1,16 @@
-import { getGlobalLeaderboard,getUserRank } from "@/actions/leaderboard-actions";
+import { getGlobalLeaderboard, getUserRank } from "@/actions/leaderboard-actions";
 import { getStudentFeed } from "@/actions/batch-actions";
 import { resumeProgress } from "@/actions/progress-actions";
-import { getStudentHistory,getExamHubData } from "@/actions/student-actions";
+import { getStudentHistory, getExamHubData } from "@/actions/student-actions";
 import { ResumeCard } from "@/components/student/dashboard/resume-card";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { getStudentCACategory,resolveStudentExamTarget,type CaLevelKey } from "@/lib/student-level";
+import { 
+    getStudentCACategory, 
+    resolveStudentExamTarget, 
+    type CaLevelKey 
+} from "@/lib/student-level";
 import { listStudentVisibleExams } from "@/lib/server/exam-publishing";
 import { getRoleRedirectPath } from "@/lib/server/auth-management";
 import type { AppRole } from "@/lib/auth/demo-accounts";

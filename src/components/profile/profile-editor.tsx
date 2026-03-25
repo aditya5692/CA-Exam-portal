@@ -2,6 +2,8 @@
 
 import { getStudentProfile,getTeacherProfile,updateStudentProfile,updateTeacherProfile } from "@/actions/profile-actions";
 import { Calendar } from "@phosphor-icons/react";
+import { type ProfileFieldErrors } from "@/lib/profile-validation";
+import { resolveStudentExamTarget } from "@/lib/student-level";
 import {
   BookOpenCheck,
   CheckCircle2,
@@ -15,6 +17,7 @@ import {
   UserRound,
   UsersRound
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect,useMemo,useState } from "react";
 
 type Mode = "teacher" | "student";
@@ -117,8 +120,8 @@ const EMPTY_FORM: FormState = {
     location: "",
     firm: "",
     firmRole: "",
-    articleshipYear: "0",
-    articleshipTotal: "3",
+    articleshipYear: "",
+    articleshipTotal: "",
     foundationCleared: false,
     intermediateCleared: false,
     finalCleared: false,
@@ -126,10 +129,12 @@ const EMPTY_FORM: FormState = {
 };
 
 export function ProfileEditor({ mode }: { mode: Mode }) {
+    const router = useRouter();
     const [profile, setProfile] = useState<Profile | null>(null);
     const [formState, setFormState] = useState<FormState>(EMPTY_FORM);
     const [isSaving, setIsSaving] = useState(false);
     const [statusMessage, setStatusMessage] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
     const [tempLevel, setTempLevel] = useState("CA Final");
     const [tempCycle, setTempCycle] = useState("");
 
@@ -165,8 +170,8 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                 location: loadedProfile.location ?? "",
                 firm: loadedProfile.firm ?? "",
                 firmRole: loadedProfile.firmRole ?? "",
-                articleshipYear: String(loadedProfile.articleshipYear ?? "0"),
-                articleshipTotal: String(loadedProfile.articleshipTotal ?? "3"),
+                articleshipYear: loadedProfile.articleshipYear === null || loadedProfile.articleshipYear === undefined ? "" : String(loadedProfile.articleshipYear),
+                articleshipTotal: loadedProfile.articleshipTotal === null || loadedProfile.articleshipTotal === undefined ? "" : String(loadedProfile.articleshipTotal),
                 foundationCleared: loadedProfile.foundationCleared ?? false,
                 intermediateCleared: loadedProfile.intermediateCleared ?? false,
                 finalCleared: loadedProfile.finalCleared ?? false,
@@ -174,16 +179,9 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
             });
             
             // Re-parse level and cycle for UI
-            const target = loadedProfile.examTarget ?? "";
-            const levels = ["CA Foundation", "CA Intermediate", "CA Final"];
-            const foundLevel = levels.find(l => target.includes(l));
-            if (foundLevel) {
-                setTempLevel(foundLevel);
-                setTempCycle(target.replace(foundLevel, "").trim());
-            } else {
-                setTempLevel("CA Final");
-                setTempCycle(target);
-            }
+            const studentTarget = resolveStudentExamTarget(loadedProfile);
+            setTempLevel(studentTarget.caLevelLabel);
+            setTempCycle(studentTarget.cycleLabel ?? "");
         })();
 
         return () => {
@@ -217,25 +215,26 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
         return Math.min(100, Math.round((profile.storageUsed / profile.storageLimit) * 100));
     }, [profile]);
 
-    const daysToExam = useMemo(() => {
-        if (mode !== "student" || !formState.examTarget) return 0;
-        const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
-        const parts = formState.examTarget.split(" ");
-        if (parts.length >= 2) {
-            const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
-            const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
-            const yrPart = parseInt(parts[parts.length - 1]);
-            if (moKey && !isNaN(yrPart)) {
-                const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
-                const now = new Date();
-                const diffTime = targetDate.getTime() - now.getTime();
-                return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-            }
+    const studentTargetPreview = useMemo(() => {
+        if (mode !== "student") {
+            return null;
         }
-        return 0;
-    }, [mode, formState.examTarget]);
+
+        return resolveStudentExamTarget({
+            examTarget: `${tempLevel} ${tempCycle}`.trim(),
+        });
+    }, [mode, tempCycle, tempLevel]);
+
+    const validationMessages = useMemo(
+        () => Array.from(new Set(Object.values(fieldErrors).filter((value): value is string => Boolean(value)))),
+        [fieldErrors],
+    );
+
+    const daysToExam = studentTargetPreview?.daysToExam ?? 0;
 
     const handleChange = (key: keyof FormState, value: string | boolean) => {
+        setStatusMessage("");
+        setFieldErrors({});
         setFormState((current) => ({ ...current, [key]: value }));
     };
 
@@ -243,6 +242,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
         event.preventDefault();
         setIsSaving(true);
         setStatusMessage("");
+        setFieldErrors({});
 
         const formData = new FormData();
         const combinedTarget = `${tempLevel} ${tempCycle}`.trim();
@@ -263,10 +263,13 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
         if (response.success) {
             const updatedProfile = response.data as Profile;
             setProfile(updatedProfile);
+            setFieldErrors({});
             setStatusMessage("Profile saved successfully.");
+            router.refresh();
             return;
         }
 
+        setFieldErrors(response.fieldErrors ?? {});
         setStatusMessage(response.message || "Failed to save profile.");
     };
 
@@ -378,7 +381,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                         ) : (
                             <div className="rounded-[28px] bg-slate-50 border border-slate-100 px-7 py-7 md:col-span-2 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 relative overflow-hidden">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-600 relative z-10">Diagnostic Target</p>
-                                <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter relative z-10">{profile.examTarget || "Chartered Accountancy 2027"}</p>
+                                <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter relative z-10">{studentTargetPreview?.label || profile.examTarget || "Chartered Accountancy 2027"}</p>
                             </div>
                         )}
                     </div>
@@ -534,7 +537,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                 type="checkbox"
                                                 className="sr-only peer"
                                                 checked={formState.isPublicProfile}
-                                                onChange={(e) => handleChange("isPublicProfile", e.target.checked.toString())}
+                                                onChange={(e) => handleChange("isPublicProfile", e.target.checked)}
                                             />
                                             <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-7 after:transition-all peer-checked:bg-indigo-600"></div>
                                         </div>
@@ -706,9 +709,22 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                         )}
                     </div>
 
-                    {statusMessage && (
+                    {statusMessage && Object.keys(fieldErrors).length === 0 && (
                         <div className="rounded-[20px] bg-emerald-50 border border-emerald-100 px-6 py-4 text-[10px] font-black text-emerald-700 uppercase tracking-widest flex items-center gap-3">
                             <CheckCircle2 className="w-4 h-4" /> {statusMessage}
+                        </div>
+                    )}
+
+                    {validationMessages.length > 0 && (
+                        <div className="rounded-[20px] border border-rose-100 bg-rose-50 px-6 py-4 text-rose-700">
+                            <p className="text-[10px] font-black uppercase tracking-widest">
+                                {statusMessage || "Please correct the highlighted fields."}
+                            </p>
+                            <ul className="mt-3 space-y-2 text-xs font-bold normal-case tracking-normal leading-relaxed">
+                                {validationMessages.map((message) => (
+                                    <li key={message}>{message}</li>
+                                ))}
+                            </ul>
                         </div>
                     )}
 

@@ -5,6 +5,7 @@ import { getStudentProfile } from "@/actions/profile-actions";
 import { getSavedItems,toggleSavedItem } from "@/actions/student-actions";
 import { deletePersonalMaterial,getMyVaultMaterials,uploadPersonalMaterial } from "@/actions/vault-actions";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
 import { Bookmark,BookOpen,Clock,Download,FileText,Flame,Folder as FolderIcon,Lock,ShieldCheck,Star,Trash2,Unlock,Upload,Users,X } from "lucide-react";
 import { useEffect,useState } from "react";
@@ -82,21 +83,8 @@ export default function StudentVaultPage() {
         }
 
         const profileRes = await getStudentProfile();
-        if (profileRes.success && profileRes.data?.examTarget) {
-            const userTarget = profileRes.data.examTarget;
-            const months = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
-            const parts = userTarget.split(" ");
-            if (parts.length >= 2) {
-                const moPartRaw = parts[parts.length - 2].substring(0, 3).toLowerCase();
-                const moKey = Object.keys(months).find(k => k.toLowerCase() === moPartRaw);
-                const yrPart = parseInt(parts[parts.length - 1]);
-                if (moKey && !isNaN(yrPart)) {
-                    const targetDate = new Date(yrPart, months[moKey as keyof typeof months], 1);
-                    const now = new Date();
-                    const diffTime = targetDate.getTime() - now.getTime();
-                    setDaysToExam(Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24))));
-                }
-            }
+        if (profileRes.success && profileRes.data) {
+            setDaysToExam(resolveStudentExamTarget(profileRes.data).daysToExam);
         }
 
         const savedRes = await getSavedItems();
