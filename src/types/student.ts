@@ -31,6 +31,8 @@ export type StudentHistoryData = {
         avgAccuracy: number;
         joinedDaysAgo: number;
         badges: string[];
+        rank?: number;
+        percentile?: number;
     };
     subjectAccuracy: { subject: string; accuracy: number; attempts: number }[];
     attempts: StudentAttempt[];
@@ -78,5 +80,6 @@ export type ExamHubData = {
         isLocked?: boolean;
         lockedReason?: string;
         lastAttemptId?: string;
+        teacherName: string;
     }[];
 };

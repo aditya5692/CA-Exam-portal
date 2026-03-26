@@ -39,7 +39,7 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
 
     const tabs: { key: FilterTab; label: string; active: string; inactive: string }[] = [
         { key: "all", label: `All (${counts.all})`, active: "student-tab-active border-[var(--student-border)] text-[var(--student-accent-strong)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-panel-solid)]" },
-        { key: "wrong", label: `Wrong (${counts.wrong})`, active: "bg-rose-500 text-white border-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.18)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-rose-50" },
+        { key: "wrong", label: `Wrong (${counts.wrong})`, active: "bg-[var(--student-destructive)] text-white border-[var(--student-destructive)] shadow-[0_12px_24px_rgba(220,38,38,0.18)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-destructive-soft)]" },
         { key: "correct", label: `Correct (${counts.correct})`, active: "bg-[var(--student-accent-strong)] text-white border-[var(--student-accent-strong)] shadow-[0_12px_24px_rgba(31,92,80,0.18)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-accent-soft)]" },
     ];
 
@@ -76,7 +76,7 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                     key={answer.id}
                     className={cn(
                         "student-surface rounded-[28px] p-6 transition-all duration-300",
-                        !answer.isCorrect && "border-rose-200"
+                        !answer.isCorrect && "border-[var(--student-destructive-soft-strong)]"
                     )}
                 >
                     <div className="flex items-start gap-4">
@@ -84,8 +84,8 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                             className={cn(
                                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-sm font-bold shadow-inner",
                                 answer.isCorrect
-                                    ? "border-[#cfe0d5] bg-[#e5f0e9] text-[var(--student-success)]"
-                                    : "border-rose-200 bg-rose-50 text-rose-600"
+                                    ? "border-[var(--student-success-soft-strong,var(--student-border-strong))] bg-[var(--student-success-soft,var(--student-panel-muted))] text-[var(--student-success)]"
+                                    : "border-[var(--student-destructive-soft-strong)] bg-[var(--student-destructive-soft)] text-[var(--student-destructive)]"
                             )}
                         >
                             {idx + 1}
@@ -103,9 +103,9 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                                         className={cn(
                                             "rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
                                             answer.question.difficulty === "EASY"
-                                                ? "border-[#cfe0d5] bg-[#e5f0e9] text-[var(--student-success)]"
+                                                ? "border-[var(--student-success-soft-strong,var(--student-border-strong))] bg-[var(--student-success-soft,var(--student-panel-muted))] text-[var(--student-success)]"
                                                 : answer.question.difficulty === "HARD"
-                                                    ? "border-rose-200 bg-rose-50 text-rose-600"
+                                                    ? "border-[var(--student-destructive-soft-strong)] bg-[var(--student-destructive-soft)] text-[var(--student-destructive)]"
                                                     : "border-[var(--student-support-soft-strong)] bg-[var(--student-support-soft)] text-[var(--student-support)]"
                                         )}
                                     >
@@ -134,9 +134,9 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                                             className={cn(
                                                 "flex items-center justify-between gap-3 rounded-xl border p-4 text-sm font-bold transition-all",
                                                 isCorrect
-                                                    ? "border-[#cfe0d5] bg-[#e5f0e9] text-[var(--student-success)] shadow-sm"
+                                                    ? "border-[var(--student-success-soft-strong,var(--student-border-strong))] bg-[var(--student-success-soft,var(--student-panel-muted))] text-[var(--student-success)] shadow-sm"
                                                     : isChosen && !isCorrect
-                                                        ? "border-rose-200 bg-rose-50 text-rose-700 shadow-sm"
+                                                        ? "border-[var(--student-destructive-soft-strong)] bg-[var(--student-destructive-soft)] text-[var(--student-destructive)] shadow-sm"
                                                         : "border-[var(--student-border)] bg-[var(--student-panel-solid)] text-[var(--student-muted-strong)]"
                                             )}
                                         >
@@ -147,7 +147,7 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                                                         isCorrect
                                                             ? "bg-[var(--student-success)] text-white"
                                                             : isChosen
-                                                                ? "bg-rose-500 text-white"
+                                                                ? "bg-[var(--student-destructive)] text-white"
                                                                 : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]"
                                                     )}
                                                 >
@@ -156,7 +156,7 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                                                 {opt.text}
                                             </span>
                                             {isCorrect && <CheckCircle size={18} weight="fill" className="shrink-0 text-[var(--student-success)]" />}
-                                            {isChosen && !isCorrect && <XCircle size={18} weight="fill" className="shrink-0 text-rose-500" />}
+                                            {isChosen && !isCorrect && <XCircle size={18} weight="fill" className="shrink-0 text-[var(--student-destructive)]" />}
                                         </div>
                                     );
                                 })}

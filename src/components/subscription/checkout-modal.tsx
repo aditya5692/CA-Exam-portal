@@ -111,7 +111,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
             <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
                 <Dialog.Portal>
                     <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 animate-in fade-in duration-300" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-[32px] p-8 shadow-2xl z-50 animate-in zoom-in-95 fade-in duration-300">
+                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-[var(--landing-panel)] rounded-[32px] p-8 shadow-[var(--landing-shadow-dark-lg)] z-50 animate-in zoom-in-95 fade-in duration-300">
 
                         {status === "success" ? (
                             <ActivationSuccess planName={plan.name} />
@@ -119,49 +119,49 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                             <>
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                        <div className="w-10 h-10 rounded-xl bg-[var(--landing-accent)] flex items-center justify-center shadow-[var(--landing-shadow-accent)]">
                                             <CreditCard size={20} weight="bold" className="text-white" />
                                         </div>
-                                        <Dialog.Title className="text-xl font-bold text-gray-900 font-outfit">
+                                        <Dialog.Title className="text-xl font-bold text-[var(--landing-text)] font-outfit">
                                             Activate {plan.name}
                                         </Dialog.Title>
                                     </div>
                                     <Dialog.Close asChild>
-                                        <button className="p-2 rounded-xl hover:bg-gray-50 text-gray-400 transition-colors">
+                                        <button className="p-2 rounded-xl hover:bg-[var(--landing-bg)] text-[var(--landing-muted-light)] transition-colors">
                                             <X size={20} weight="bold" />
                                         </button>
                                     </Dialog.Close>
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="p-6 rounded-2xl bg-gray-50 border border-gray-100">
+                                    <div className="p-6 rounded-2xl bg-[var(--landing-bg)] border border-[var(--landing-border)]">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Plan Selected</span>
-                                            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md uppercase">Annual</span>
+                                            <span className="text-sm font-bold text-[var(--landing-muted-light)] uppercase tracking-widest">Plan Selected</span>
+                                            <span className="text-xs font-bold text-[var(--landing-accent)] bg-[var(--landing-selection-bg)] px-2 py-0.5 rounded-md uppercase">Annual</span>
                                         </div>
                                         <div className="flex justify-between items-baseline">
-                                            <h4 className="text-2xl font-bold text-gray-900 font-outfit">{plan.name}</h4>
+                                            <h4 className="text-2xl font-bold text-[var(--landing-text)] font-outfit">{plan.name}</h4>
                                             <div className="text-right">
-                                                <span className="text-2xl font-bold text-gray-900 font-outfit">{plan.price}</span>
+                                                <span className="text-2xl font-bold text-[var(--landing-text)] font-outfit">{plan.price}</span>
                                                 {plan.price !== "Custom" && plan.price !== "₹0" && (
-                                                    <span className="text-gray-400 font-bold text-xs ml-1">/year</span>
+                                                    <span className="text-[var(--landing-muted-light)] font-bold text-xs ml-1">/year</span>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
-                                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                        <div className="flex items-center gap-3 p-4 rounded-xl border border-[var(--landing-border)]">
+                                            <div className="w-8 h-8 rounded-lg bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] flex items-center justify-center">
                                                 <ShieldCheck size={18} weight="bold" />
                                             </div>
-                                            <span className="text-sm font-medium text-gray-600">Secure Payment via UPI, Cards, Netbanking</span>
+                                            <span className="text-sm font-medium text-[var(--landing-muted)]">Secure Payment via UPI, Cards, Netbanking</span>
                                         </div>
-                                        <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
-                                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                        <div className="flex items-center gap-3 p-4 rounded-xl border border-[var(--landing-border)]">
+                                            <div className="w-8 h-8 rounded-lg bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] flex items-center justify-center">
                                                 <Sparkle size={18} weight="bold" />
                                             </div>
-                                            <span className="text-sm font-medium text-gray-600">Instant Activation · 1 Year Access</span>
+                                            <span className="text-sm font-medium text-[var(--landing-muted)]">Instant Activation · 1 Year Access</span>
                                         </div>
                                     </div>
 
@@ -175,7 +175,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                         <button
                                             onClick={handleActivate}
                                             disabled={status === "processing"}
-                                            className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                            className="w-full py-4 rounded-2xl bg-[var(--landing-accent)] text-white font-bold text-sm shadow-[var(--landing-shadow-accent)] hover:bg-[var(--landing-accent-hover)] transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
                                         >
                                             {status === "processing" ? (
                                                 <>
@@ -189,7 +189,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                                 </>
                                             )}
                                         </button>
-                                        <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest px-8 leading-relaxed">
+                                        <p className="text-center text-[10px] text-[var(--landing-muted-light)] font-bold uppercase tracking-widest px-8 leading-relaxed">
                                             By continuing, you agree to our Terms of Service and Privacy Policy.
                                         </p>
                                     </div>

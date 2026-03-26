@@ -1,7 +1,7 @@
 "use server";
 
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { getCurrentUserOrDemoUser, syncCurrentAuthSession } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
@@ -19,7 +19,7 @@ import {
   resolveManagedEducatorId,
   type ManagedEducatorOption,
 } from "@/lib/server/educator-management";
-import { revalidateBatchSurfaces } from "@/lib/server/revalidation";
+import { revalidateBatchSurfaces, revalidateProfileSurfaces } from "@/lib/server/revalidation";
 import { ActionResponse } from "@/types/shared";
 import { Prisma } from "@prisma/client";
 
@@ -204,6 +204,12 @@ type StudentFeedData = {
     feedItems: StudentFeedItem[];
     myBatches: StudentFeedBatch[];
     isAdminView: boolean;
+};
+
+export type MyEducator = {
+    id: string;
+    name: string;
+    subjects: string[];
 };
 
 export async function getOrCreateMockTeacherB() {
@@ -579,7 +585,17 @@ export async function joinBatch(formData: FormData): Promise<ActionResponse<Join
 
         const batch = await joinStudentToBatchByCode(student.id, code);
 
+        // SYNC: Update the student's primary batch field in their profile
+        const updatedStudent = await prisma.user.update({
+            where: { id: student.id },
+            data: { batch: code }
+        });
+
+        // Trigger session sync and UI refresh for profile-dependent components (Sidebar, Profile page)
+        await syncCurrentAuthSession(updatedStudent);
+        revalidateProfileSurfaces("STUDENT");
         revalidateBatchSurfaces();
+
         return { success: true, data: { batchName: batch.name }, message: `You've joined ${batch.name}!` };
     } catch (error: unknown) {
         return { success: false, message: getActionErrorMessage(error, "Failed to join batch.") };
@@ -699,10 +715,23 @@ export async function getStudentFeed(): Promise<ActionResponse<StudentFeedData>>
         await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "read");
 
         const isAdminView = isAdminUser(student);
+        
+        // Find teachers linked via Access Codes
+        const accessCodes = await prisma.studentAccessCode.findMany({
+            where: { studentId: student.id, status: "VERIFIED" },
+            select: { teacherId: true }
+        });
+        const linkedTeacherIds = accessCodes.map((a: any) => a.teacherId);
+
         const batches = await prisma.batch.findMany({
             where: isAdminView
                 ? undefined
-                : { enrollments: { some: { studentId: student.id } } },
+                : { 
+                    OR: [
+                        { enrollments: { some: { studentId: student.id } } },
+                        { teacherId: { in: linkedTeacherIds } }
+                    ]
+                },
             include: {
                 teacher: { select: { id: true, fullName: true, email: true } },
                 announcements: {
@@ -741,5 +770,71 @@ export async function getStudentFeed(): Promise<ActionResponse<StudentFeedData>>
         return { success: true, data: { feedItems, myBatches, isAdminView } };
     } catch (error: unknown) {
         return { success: false, message: error instanceof Error ? error.message : "Failed to load feed." };
+    }
+}
+/**
+ * Verifies if a batch code exists.
+ */
+export async function verifyBatchCode(code: string): Promise<ActionResponse<{ name: string }>> {
+    try {
+        const normalized = normalizeJoinCode(code);
+        if (!normalized) throw new Error("Batch code is required.");
+
+        const batch = await prisma.batch.findUnique({
+            where: { uniqueJoinCode: normalized },
+            select: { name: true },
+        });
+
+        if (!batch) {
+            return { success: false, message: "Invalid batch code." };
+        }
+
+        return { success: true, data: { name: batch.name }, message: "Batch verified." };
+    } catch (error: unknown) {
+        return { success: false, message: getActionErrorMessage(error, "Verification failed.") };
+    }
+}
+
+/**
+ * Fetches all educators (teachers) a student is explicitly linked to.
+ */
+export async function getMyEducators(): Promise<ActionResponse<MyEducator[]>> {
+    try {
+        const student = await getOrCreateMockStudentB();
+        
+        const [enrollments, accessCodes] = await Promise.all([
+            prisma.enrollment.findMany({
+                where: { studentId: student.id },
+                include: { batch: { include: { teacher: true } } }
+            }),
+            prisma.studentAccessCode.findMany({
+                where: { studentId: student.id, status: "VERIFIED" },
+                include: { teacher: true }
+            })
+        ]);
+
+        const educatorMap = new Map<string, MyEducator>();
+        
+        for (const e of enrollments) {
+            const t = e.batch.teacher;
+            if (!educatorMap.has(t.id)) {
+                educatorMap.set(t.id, { id: t.id, name: t.fullName || t.email || "Educator", subjects: [] });
+            }
+        }
+
+        for (const ac of accessCodes) {
+            const t = ac.teacher;
+            if (!educatorMap.has(t.id)) {
+                educatorMap.set(t.id, { id: t.id, name: t.fullName || t.email || "Educator", subjects: [] });
+            }
+            if (ac.subject) {
+                const ed = educatorMap.get(t.id)!;
+                if (!ed.subjects.includes(ac.subject)) ed.subjects.push(ac.subject);
+            }
+        }
+
+        return { success: true, data: Array.from(educatorMap.values()) };
+    } catch (error) {
+         return { success: false, message: "Failed to fetch educators" };
     }
 }

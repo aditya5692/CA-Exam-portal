@@ -1,5 +1,6 @@
 "use client";
 
+
 import { updateStudentProfile } from "@/actions/profile-actions";
 import { type ProfileFieldErrors, type ProfileFieldName } from "@/lib/profile-validation";
 import type { UserProfile } from "@/types/profile";
@@ -32,7 +33,7 @@ type ProfileFormState = {
     examTargetMonth: string;
     examTargetYear: string;
     caLevel: string;
-    batch: string;
+
     dob: string;
     location: string;
     firm: string;
@@ -82,7 +83,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
         examTargetMonth: examTarget.attemptMonth ? String(examTarget.attemptMonth) : "",
         examTargetYear: examTarget.attemptYear ? String(examTarget.attemptYear) : "",
         caLevel: examTarget.caLevelKey,
-        batch: profile.batch ?? "",
+
         dob: profile.dob ? String(profile.dob) : "",
         location: profile.location ?? "",
         firm: profile.firm ?? "",
@@ -127,6 +128,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
         setError("");
         setFormData(prev => ({ ...prev, [key]: value }));
     };
+
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -233,14 +235,21 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                             icon={<ShieldCheck className="w-4 h-4" />}
                             error={fieldErrors.caLevel}
                         />
-                        <InputField 
-                            label="Batch" 
-                            name="batch" 
-                            value={formData.batch} 
-                            onChange={handleTextChange} 
-                            placeholder="Nov 2024"
-                            error={fieldErrors.batch}
-                        />
+                        <div className="flex flex-col gap-2.5">
+                            <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Class/Batch Connection</span>
+                            <div className="flex h-[56px] w-full items-center justify-between rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-6 shadow-inner">
+                                <span className="text-sm font-bold text-[var(--student-muted)]">
+                                    Manage linked educators and batches
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/student/redeem')}
+                                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-[var(--student-accent-strong)] text-white shadow-[0_4px_12px_rgba(31,92,80,0.15)]"
+                                >
+                                    Redeem Code
+                                </button>
+                            </div>
+                        </div>
                         <SelectField 
                             label="Attempt Month" 
                             name="examTargetMonth" 
@@ -403,9 +412,10 @@ type InputFieldProps = {
     type?: string;
     icon?: ReactNode;
     error?: string;
+    suffix?: ReactNode;
 };
 
-function InputField({ label, name, value, onChange, placeholder, type = "text", icon, error }: InputFieldProps) {
+function InputField({ label, name, value, onChange, placeholder, type = "text", icon, error, suffix }: InputFieldProps) {
     return (
         <label className="block space-y-2.5">
             <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">{label}</span>
@@ -417,8 +427,13 @@ function InputField({ label, name, value, onChange, placeholder, type = "text", 
                     onChange={(e) => onChange(name, e.target.value)}
                     placeholder={placeholder}
                     aria-invalid={Boolean(error)}
-                    className={`w-full rounded-2xl border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-6 text-sm font-bold text-[var(--student-text)] placeholder:text-[var(--student-muted)]/45 focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
+                    className={`w-full rounded-2xl border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} ${suffix ? "pr-32" : "pr-6"} text-sm font-bold text-[var(--student-text)] placeholder:text-[var(--student-muted)]/45 focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
                 />
+                {suffix && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        {suffix}
+                    </div>
+                )}
             </div>
             {error && (
                 <p className="ml-1 text-xs font-bold text-rose-600">{error}</p>

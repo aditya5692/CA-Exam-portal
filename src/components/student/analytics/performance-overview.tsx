@@ -12,16 +12,16 @@ export function StudentAnalyticsOverview({ data }: Props) {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {/* Score Trend Card */}
-                <div className="student-surface lg:col-span-2 relative flex h-[400px] flex-col overflow-hidden rounded-2xl p-10 font-outfit">
-                    <div className="flex items-center justify-between mb-8">
+                <div className="student-surface lg:col-span-2 relative flex h-[320px] md:h-[400px] flex-col overflow-hidden rounded-2xl p-6 md:p-10 font-outfit">
+                    <div className="flex items-center justify-between mb-4 md:mb-8">
                         <div className="space-y-1">
-                            <h3 className="font-outfit">Performance Trend</h3>
-                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">Progress over time</p>
+                            <h3 className="text-lg md:text-xl font-outfit">Performance Trend</h3>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Progress over time</p>
                         </div>
-                        <div className="student-chip flex items-center gap-2.5 rounded-xl px-5 py-2.5 transition-all active:scale-95">
-                            <TrendUp size={18} weight="bold" className="text-[var(--student-accent-strong)]" />
+                        <div className="student-chip hidden sm:flex items-center gap-2.5 rounded-xl px-4 py-2 transition-all active:scale-95">
+                            <TrendUp size={16} weight="bold" className="text-[var(--student-accent-strong)]" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">Improving</span>
                         </div>
                     </div>
@@ -30,8 +30,8 @@ export function StudentAnalyticsOverview({ data }: Props) {
                             <AreaChart data={performanceTrend}>
                                 <defs>
                                     <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#2b7a69" stopOpacity={0.16} />
-                                        <stop offset="95%" stopColor="#2b7a69" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="var(--student-accent)" stopOpacity={0.16} />
+                                        <stop offset="95%" stopColor="var(--student-accent)" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -39,7 +39,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                     dataKey="date"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
+                                    tick={{ fill: 'var(--student-muted)', fontSize: 12, fontWeight: 600 }}
                                     dy={10}
                                 />
                                 <YAxis
@@ -50,9 +50,9 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                     content={({ active, payload }) => {
                                         if (active && payload && payload.length) {
                                             return (
-                                                <div className="bg-white p-4 rounded-xl shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{payload[0].payload.date}</p>
-                                                    <p className="text-2xl font-bold text-gray-900 font-outfit">{payload[0].value}%</p>
+                                                <div className="bg-[var(--student-panel)] p-4 rounded-xl shadow-xl border border-[var(--student-border)] animate-in zoom-in-95 duration-200">
+                                                    <p className="text-[10px] font-bold text-[var(--student-muted)] uppercase tracking-widest mb-1">{payload[0].payload.date}</p>
+                                                    <p className="text-2xl font-bold text-[var(--student-text)] font-outfit">{payload[0].value}%</p>
                                                 </div>
                                             );
                                         }
@@ -62,7 +62,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                 <Area
                                     type="monotone"
                                     dataKey="score"
-                                    stroke="#2b7a69"
+                                    stroke="var(--student-accent)"
                                     strokeWidth={4}
                                     fillOpacity={1}
                                     fill="url(#scoreGradient)"
@@ -73,11 +73,11 @@ export function StudentAnalyticsOverview({ data }: Props) {
                     </div>
                 </div>
 
-                {/* Comparative Analysis */}
-                <div className="student-surface flex h-[400px] flex-col rounded-2xl p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
-                    <div className="mb-8">
-                        <h3 className="font-outfit">Global Ranking</h3>
-                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">Benchmark against peers</p>
+                {/* Performance Benchmark */}
+                <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                    <div className="mb-6 md:mb-8">
+                        <h3 className="text-lg md:text-xl font-outfit">Performance Benchmark</h3>
+                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Accuracy vs Peers</p>
                     </div>
                     <div className="flex-1 w-full flex flex-col">
                         <div className="flex-1 relative">
@@ -89,7 +89,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                         dataKey="name"
                                         hide
                                     />
-                                    <Bar dataKey="value" radius={[0, 12, 12, 0]} className="filter drop-shadow-sm">
+                                    <Bar dataKey="value" radius={[0, 12, 12, 0]} className="filter drop-shadow-sm" minPointSize={4}>
                                         {comparativeAnalysis.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
@@ -97,14 +97,14 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
-                        <div className="space-y-4 mt-8">
+                        <div className="space-y-3 mt-6">
                             {comparativeAnalysis.map((item, i) => (
                                 <div key={i} className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.name}</span>
                                     </div>
-                                    <span className="text-base font-bold text-slate-900 font-outfit">{Math.round(item.value)}%</span>
+                                    <span className="text-sm md:text-base font-bold text-slate-900 font-outfit">{Math.round(item.value)}%</span>
                                 </div>
                             ))}
                         </div>
@@ -113,24 +113,32 @@ export function StudentAnalyticsOverview({ data }: Props) {
             </div>
 
             {/* Personalized AI Insights */}
-            <div className="grid lg:grid-cols-3 gap-6">
-                <div className="student-surface-dark lg:col-span-2 relative overflow-hidden rounded-2xl p-10 text-white">
+            <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="student-surface-dark lg:col-span-2 relative overflow-hidden rounded-2xl p-6 md:p-10 text-white">
                     <div className="relative z-10 w-full space-y-8">
-                        <div className="flex items-center gap-4">
-                            <div className="student-icon-tile-warm flex h-12 w-12 items-center justify-center rounded-xl">
-                                <Sparkle size={24} weight="fill" className="text-[var(--student-support)]" />
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="student-icon-tile-warm flex h-12 w-12 items-center justify-center rounded-xl">
+                                    <Sparkle size={24} weight="fill" className="text-[var(--student-support)]" />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/65">Performance Notes</span>
                             </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/65">Performance Notes</span>
+                            {(profile?.rank ?? 0) > 0 && (
+                                <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 text-right">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-0.5 whitespace-nowrap">Global Rank</p>
+                                    <p className="text-xl font-bold font-outfit text-[var(--student-support)]">#{profile.rank}</p>
+                                </div>
+                            )}
                         </div>
                         <div>
-                            <h2 className="text-white font-outfit mb-6">
+                            <h2 className="text-2xl md:text-3xl text-white font-outfit mb-4 md:mb-6 leading-tight">
                                 {profile.avgAccuracy >= 75 ? "Excellent Progress" : "Keep Improving"}, <br/>
                                 <span className="text-[var(--student-support-soft)]">{profile.name.split(' ')[0]}</span>
                             </h2>
                             <p className="text-slate-400 font-medium text-base leading-relaxed max-w-2xl font-sans opacity-90">
                                 {weakTopics.length > 0 
-                                    ? `Your current accuracy is ${profile.avgAccuracy}%. We've identified ${weakTopics.join(', ')} as areas that need more attention. Focused practice on these topics will help you improve your score quickly.`
-                                    : `Your current accuracy is ${profile.avgAccuracy}%. You are performing consistently across all modules. Keep up the good work to maintain your strong position.`}
+                                    ? `Your current accuracy is ${profile.avgAccuracy}%. You are ranked #${profile.rank} globally based on XP. We've identified ${weakTopics.join(', ')} as areas that need more attention. Focused practice on these topics will help you improve your score quickly.`
+                                    : `Your current accuracy is ${profile.avgAccuracy}%. You are ranked #${profile.rank} globally based on XP. You are performing consistently across all modules. Keep up the good work to maintain your strong position.`}
                             </p>
                         </div>
                         <button className="student-button-secondary group/btn flex items-center gap-3 rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
@@ -148,8 +156,8 @@ export function StudentAnalyticsOverview({ data }: Props) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Exam Deadline</span>
                         </div>
                         <h4 className="font-bold text-slate-900 font-outfit mb-4">{examTargetLabel}</h4>
-                        <div className="flex items-baseline gap-2 mb-8">
-                            <span className="font-outfit text-6xl font-bold leading-none tracking-tight text-[var(--student-accent-strong)]">{examTargetDays}</span>
+                        <div className="flex items-baseline gap-2 mb-4 md:mb-8">
+                            <span className="font-outfit text-4xl md:text-6xl font-bold leading-none tracking-tight text-[var(--student-accent-strong)]">{examTargetDays}</span>
                             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Days Left</span>
                         </div>
                     </div>

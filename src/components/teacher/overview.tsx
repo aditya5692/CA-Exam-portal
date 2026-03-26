@@ -314,7 +314,7 @@ export default function DashboardOverview() {
                     </div>
 
                     {/* Academy Insight Card */}
-                    <div className="bg-slate-900 p-6 rounded-[24px] border border-slate-800 shadow-lg relative overflow-hidden group">
+                    <div className="student-surface-dark group relative flex flex-col justify-between overflow-hidden rounded-[24px] p-6 transition-all duration-300 hover:shadow-[0_28px_44px_rgba(24,31,34,0.18)]">
                         <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:scale-110 transition-transform duration-700">
                             <Medal size={80} weight="bold" className="text-amber-500" />
                         </div>
@@ -322,7 +322,7 @@ export default function DashboardOverview() {
                             <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500">
                                 <Sparkle size={20} weight="fill" />
                             </div>
-                            <h4 className="text-white font-bold text-lg font-outfit leading-tight">Academy Growth</h4>
+                            <h4 className="font-bold text-lg font-outfit leading-tight">Academy Growth</h4>
                             <p className="text-slate-400 text-xs leading-relaxed font-medium">
                                 Your students have completed <span className="text-white font-bold">120+ new attempts</span> this week. Engagement is up by <span className="text-emerald-400 font-bold">18%</span>.
                             </p>

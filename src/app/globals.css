@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import "tailwindcss";
 
 @theme inline {
@@ -28,8 +29,9 @@
 }
 
 :root {
-  --font-outfit: "Aptos Display", "Segoe UI", "Trebuchet MS", sans-serif;
-  --font-inter: "Aptos", "Segoe UI", system-ui, sans-serif;
+  --font-outfit: "Open Sans", system-ui, sans-serif;
+  --font-inter: "Open Sans", system-ui, sans-serif;
+  --font-sans: "Open Sans", system-ui, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.25 0.02 260);
   --card: oklch(1 0 0);
@@ -39,11 +41,13 @@
   --primary: oklch(0.50 0.07 260);
   /* Soothing Professional Indigo */
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.98 0.01 60); /* Minimalist Cream */
+  --secondary: oklch(0.98 0.01 60);
+  /* Minimalist Cream */
   --secondary-foreground: oklch(0.45 0.05 60);
   --muted: oklch(0.97 0.005 260);
   --muted-foreground: oklch(0.55 0.01 260);
-  --accent: oklch(0.96 0.02 260); /* Subtle Indigo Tint */
+  --accent: oklch(0.96 0.02 260);
+  /* Subtle Indigo Tint */
   --accent-foreground: oklch(0.4 0.05 260);
   --destructive: oklch(0.55 0.15 25);
   --destructive-foreground: oklch(0.99 0 0);
@@ -52,6 +56,71 @@
   --ring: oklch(0.50 0.07 260);
   --radius: 0.75rem;
   --radius-xl: 1rem;
+
+  /* Landing & Auth Theme Variables — white/dark-navy (matches student portal) */
+  --landing-bg: #ffffff;
+  --landing-text: #0f172a;
+  --landing-panel: rgba(255, 255, 255, 0.96);
+  --landing-panel-dark: #0f172a;
+  --landing-border: #e2e8f0;
+  --landing-border-dark: #1e293b;
+  --landing-accent: #1d4ed8;
+  --landing-accent-hover: #1e3a8a;
+  --landing-warm: #eff6ff;
+  --landing-muted: #64748b;
+  --landing-muted-light: #94a3b8;
+  --landing-success: #15803d;
+  --landing-selection-bg: #dbeafe;
+  --landing-selection-text: #1e3a8a;
+
+  /* Student Portal Theme Variables (Global Defaults) */
+  --student-bg: #ffffff;
+  --student-bg-strong: #ffffff;
+  --student-panel: #ffffff;
+  --student-panel-solid: #ffffff;
+  --student-panel-muted: #f8fafc;
+  --student-border: #f1f5f9;
+  --student-border-strong: #e2e8f0;
+  --student-text: #0f172a;
+  --student-muted: #64748b;
+  --student-muted-strong: #475569;
+  --student-accent: #1d4ed8;
+  --student-accent-strong: #1e3a8a;
+  --student-accent-soft: #eff6ff;
+  --student-accent-soft-strong: #dbeafe;
+  --student-support: #b7791f;
+  --student-support-soft: #fef3c7;
+  --student-support-soft-strong: #fde68a;
+  --student-success: #15803d;
+  --student-destructive: #dc2626;
+  --student-destructive-soft: #fef2f2;
+  --student-destructive-soft-strong: #fee2e2;
+  --student-ink: #0f172a;
+  --student-ink-text: #ffffff;
+  --student-ink-muted: rgba(255, 255, 255, 0.6);
+  --student-ink-border: rgba(255, 255, 255, 0.08);
+  --student-ink-hover: rgba(255, 255, 255, 0.06);
+
+  /* Auth Dark Theme Tokens */
+  --auth-bg-from: #0c1a3d;
+  --auth-bg-via: #0f172a;
+  --auth-bg-to: #1e293b;
+  --auth-card-bg: rgba(15, 23, 42, 0.85);
+  --auth-accent: #2563eb;
+  --auth-accent-hover: #1d4ed8;
+
+  /* Destructive / Error States (Public) */
+  --landing-destructive: #dc2626;
+  --landing-destructive-bg: rgba(220, 38, 38, 0.08);
+
+  /* Shadows */
+  --landing-shadow-sm: 0 10px 20px rgba(15, 23, 42, 0.06);
+  --landing-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  --landing-shadow-lg: 0 28px 60px rgba(15, 23, 42, 0.08);
+  --landing-shadow-dark: 0 24px 56px rgba(15, 23, 42, 0.2);
+  --landing-shadow-dark-lg: 0 30px 70px rgba(15, 23, 42, 0.22);
+  --landing-shadow-accent: 0 12px 28px rgba(29, 78, 216, 0.14);
+  --landing-shadow-accent-strong: 0 16px 34px rgba(29, 78, 216, 0.18);
 }
 
 .dark {
@@ -78,51 +147,42 @@
 
 @layer components {
   .student-theme {
-    --student-bg: #f5efe5;
-    --student-bg-strong: rgba(255, 250, 242, 0.9);
-    --student-panel: rgba(255, 253, 249, 0.84);
-    --student-panel-solid: #fffdfa;
-    --student-panel-muted: #f4ede2;
-    --student-border: #e6dccd;
-    --student-border-strong: #d7c5a9;
-    --student-text: #1f2b2f;
-    --student-muted: #667370;
-    --student-muted-strong: #4f5b58;
-    --student-accent: #2b7a69;
-    --student-accent-strong: #1f5c50;
-    --student-accent-soft: #dcebe6;
-    --student-accent-soft-strong: #c5ddd5;
-    --student-support: #b7791f;
-    --student-support-soft: #f2e3c0;
-    --student-support-soft-strong: #e5d2a3;
-    --student-success: #2f7d55;
-    --student-ink: #223036;
+    /* Theme context marker - variables now live in :root for stability */
+    pointer-events: auto; /* Dummy property to avoid empty ruleset warning */
   }
 
   .student-shell {
     background-color: var(--student-bg);
-    background-image:
-      radial-gradient(circle at 8% 0%, rgba(242, 227, 192, 0.34), transparent 26%),
-      radial-gradient(circle at 85% 12%, rgba(220, 235, 230, 0.42), transparent 22%),
-      linear-gradient(180deg, rgba(255, 250, 242, 0.96), rgba(245, 239, 229, 0.92));
   }
 
   .student-surface {
-    background: var(--student-panel);
-    border: 1px solid var(--student-border);
+    background: var(--student-panel) !important;
+    border: 1px solid var(--student-border) !important;
+    color: var(--student-text) !important;
     box-shadow: 0 18px 40px rgba(55, 48, 38, 0.05);
   }
 
   .student-surface-strong {
-    background: var(--student-panel-solid);
-    border: 1px solid var(--student-border);
+    background: var(--student-panel-solid) !important;
+    border: 1px solid var(--student-border) !important;
+    color: var(--student-text) !important;
     box-shadow: 0 14px 34px rgba(55, 48, 38, 0.06);
   }
 
   .student-surface-dark {
-    background: var(--student-ink);
-    border: 1px solid #314148;
-    box-shadow: 0 24px 46px rgba(24, 31, 34, 0.14);
+    background: var(--student-ink) !important;
+    border: 1px solid var(--student-ink-border) !important;
+    color: var(--student-ink-text) !important;
+    box-shadow: 0 24px 46px rgba(15, 23, 42, 0.1);
+  }
+
+  .student-surface-dark * {
+    color: inherit;
+  }
+
+  .student-surface-dark [class*="text-white/40"] {
+    color: var(--student-ink-muted) !important;
+    opacity: 0.5;
   }
 
   .student-chip {
@@ -193,12 +253,14 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased scroll-smooth;
+    @apply bg-background text-foreground antialiased scroll-smooth;
+    font-family: 'Open Sans', system-ui, sans-serif !important;
     text-rendering: optimizeLegibility;
   }
 
   /* Global Auto-Fit & Neaten Rules */
-  html, body {
+  html,
+  body {
     overflow-x: hidden;
     width: 100%;
     -webkit-font-smoothing: antialiased;
@@ -207,23 +269,40 @@
     background-color: var(--background);
   }
 
-  img, video, iframe {
+  img,
+  video,
+  iframe {
     max-width: 100%;
     height: auto;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-outfit tracking-tight font-bold;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight font-bold;
+    font-family: 'Open Sans', system-ui, sans-serif !important;
     text-wrap: balance;
     color: var(--foreground);
   }
 
-  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
-  h2 { @apply text-2xl md:text-3xl; }
-  h3 { @apply text-xl; }
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
 }
 
 @layer utilities {
+
   .student-theme [class~="bg-white"],
   .student-theme [class*="bg-white/50"],
   .student-theme [class*="bg-white/80"] {

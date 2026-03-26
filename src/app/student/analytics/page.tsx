@@ -114,9 +114,9 @@ export default async function StudentAnalyticsPage() {
                     </div>
                 </div>
                 <div className="flex-1 space-y-3 text-center lg:text-left relative z-10">
-                    <h3 className="text-2xl font-bold text-white font-outfit tracking-tight">How is my ranking calculated?</h3>
+                    <h3 className="text-2xl font-bold text-white font-outfit tracking-tight">Understanding Your Ranking</h3>
                     <p className="max-w-4xl font-sans text-base font-medium leading-relaxed text-white/70">
-                        Your global ranking is based on your total XP earned across all practice sessions. We compare your performance with other students to provide a clear understanding of your competitive standing and overall progress.
+                        We use two key metrics to track your progress: <strong className="text-[var(--student-support)]">Performance Benchmark</strong> measures your average accuracy against peers and toppers, while your <strong className="text-[var(--student-support)]">Global Rank</strong> is determined by your total XP earned. Keep practicing to climb the leaderboard!
                     </p>
                 </div>
                 <button className="student-button-secondary relative z-10 shrink-0 rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">

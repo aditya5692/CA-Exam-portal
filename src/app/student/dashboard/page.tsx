@@ -1,15 +1,16 @@
 import { getGlobalLeaderboard, getUserRank } from "@/actions/leaderboard-actions";
-import { getStudentFeed } from "@/actions/batch-actions";
+import { getStudentFeed, getMyEducators, type MyEducator } from "@/actions/batch-actions";
 import { resumeProgress } from "@/actions/progress-actions";
 import { getStudentHistory, getExamHubData } from "@/actions/student-actions";
 import { ResumeCard } from "@/components/student/dashboard/resume-card";
+import { TutorialCards } from "@/components/student/dashboard/tutorial-cards";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { 
-    getStudentCACategory, 
-    resolveStudentExamTarget, 
-    type CaLevelKey 
+import {
+    getStudentCACategory,
+    resolveStudentExamTarget,
+    type CaLevelKey
 } from "@/lib/student-level";
 import { listStudentVisibleExams } from "@/lib/server/exam-publishing";
 import { getRoleRedirectPath } from "@/lib/server/auth-management";
@@ -17,7 +18,7 @@ import type { AppRole } from "@/lib/auth/demo-accounts";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import type { StudentVisibleExam } from "@/types/publish-exam";
-import { BookOpen,ChartLineUp,Clock,FilePdf,FileText,List,Medal,Play,Sparkle,Target,Trophy } from "@phosphor-icons/react/dist/ssr";
+import { BookOpen, ChartLineUp, Clock, FilePdf, FileText, List, Medal, Play, Sparkle, Target, Trophy, ChalkboardTeacher, CaretRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
@@ -131,12 +132,13 @@ export default async function StudentDashboardPage() {
     let topPracticeExams: DashboardPracticeExam[] = [];
     let freeResources: DashboardResource[] = [];
     let latestProgress: ResumeCardProgress = null;
+    let myEducators: MyEducator[] = [];
 
     const user = await getCurrentUser();
     if (!user) {
         redirect("/auth/login");
     }
-    
+
     if (user.role !== "STUDENT" && user.role !== "ADMIN") {
         redirect(getRoleRedirectPath(user.role as AppRole));
     }
@@ -159,6 +161,7 @@ export default async function StudentDashboardPage() {
             topicProgressTotals,
             submittedAttempts,
             resourceLibrary,
+            educatorsResult,
         ] = await Promise.all([
             resumeProgress(),
             getStudentHistory(),
@@ -202,6 +205,7 @@ export default async function StudentDashboardPage() {
                 ],
                 take: 4,
             }).catch(() => [] as DashboardResourceRecord[]),
+            getMyEducators()
         ]);
 
         userName = user.fullName?.trim() || user.email?.trim() || "Student";
@@ -297,6 +301,10 @@ export default async function StudentDashboardPage() {
             category: resource.category,
             type: resource.subType,
         }));
+        
+        if (educatorsResult && educatorsResult.success) {
+            myEducators = educatorsResult.data || [];
+        }
     } catch (error) {
         console.error("Dashboard error:", error);
     }
@@ -329,6 +337,11 @@ export default async function StudentDashboardPage() {
                 daysToExam={daysToExam}
             />
 
+            {/* Tutorial Section - Shown on first login */}
+            {(validUser as any).loginCount === 1 && (
+                <TutorialCards />
+            )}
+
             {/* Resume Card Section */}
             {latestProgress && (
                 <div className="px-1 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-150">
@@ -339,7 +352,7 @@ export default async function StudentDashboardPage() {
             {/* Top 4 Metrics Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1 relative">
                 {/* Decorative gradients for the row */}
-                <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[rgba(242,227,192,0.18)] via-transparent to-[rgba(220,235,230,0.26)] blur-3xl" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[var(--student-accent-soft)] via-transparent to-[var(--student-support-soft)] blur-3xl" />
 
                 {/* MCQ Progress */}
                 <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_20px_36px_rgba(55,48,38,0.08)]">
@@ -358,7 +371,7 @@ export default async function StudentDashboardPage() {
                         <span className="text-[var(--student-accent-strong)]">{practiceCoverageLabel}</span>
                     </div>
                     {/* Progress Bar */}
-                    <div className="absolute bottom-0 left-0 right-0 h-1.5 overflow-hidden bg-[rgba(244,237,226,0.9)]">
+                    <div className="absolute bottom-0 left-0 right-0 h-1.5 overflow-hidden bg-[var(--student-panel-muted)]">
                         <div className="h-full bg-[var(--student-accent)] transition-all duration-1000 ease-out" style={{ width: `${Math.min(mcqProgressPct, 100)}%` }}></div>
                     </div>
                 </div>
@@ -380,7 +393,7 @@ export default async function StudentDashboardPage() {
                 </div>
 
                 {/* Total MCQ Score */}
-                <div className="student-surface group relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-8 transition-all duration-300 hover:border-[#cfe0d5] hover:shadow-[0_20px_36px_rgba(55,48,38,0.08)]">
+                <div className="student-surface group relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-8 transition-all duration-300 hover:border-[var(--student-success-soft-strong)] hover:shadow-[0_20px_36px_rgba(55,48,38,0.08)]">
                     <div className="flex items-start justify-between mb-4 relative z-10">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
                             Points Earned
@@ -398,14 +411,14 @@ export default async function StudentDashboardPage() {
                 {/* Current Ranking */}
                 <div className="student-surface-dark group relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-8 transition-all duration-300 hover:shadow-[0_28px_44px_rgba(24,31,34,0.18)]">
                     <div className="flex items-start justify-between relative z-10">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/45">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-ink-muted)]">
                             Global Rank
                         </span>
                         <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300">
                             <Medal size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="relative z-10 mb-3 mt-2 font-outfit text-4xl font-bold leading-none tracking-tight text-white">#{currentRank > 0 ? currentRank : '-'} <span className="pl-1 text-xs font-bold uppercase tracking-widest text-white/40">RANK</span></div>
+                    <div className="relative z-10 mb-3 mt-2 font-outfit text-4xl font-bold leading-none tracking-tight">#{currentRank > 0 ? currentRank : '-'} <span className="pl-1 text-xs font-bold uppercase tracking-widest opacity-40">RANK</span></div>
                     <div className="relative z-10 text-[10px] font-bold uppercase tracking-widest text-[var(--student-support)]">
                         {rankLabel}
                     </div>
@@ -414,23 +427,66 @@ export default async function StudentDashboardPage() {
 
             {/* Main Content Area */}
             <div className="grid lg:grid-cols-3 gap-8 pt-4">
-                {/* Left Column: Update Feeds */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="flex items-center justify-between mb-2">
+                {/* Left Column: Educators & Update Feeds */}
+                <div className="lg:col-span-2 space-y-10">
+                    
+                    {/* My Educators Horizontal List */}
+                    {myEducators.length > 0 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-[var(--student-text)]">
+                                        <ChalkboardTeacher size={20} className="text-[var(--student-muted)]" weight="bold" />
+                                        My Educators
+                                    </h2>
+                                    <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Quick access to your faculties</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex overflow-x-auto gap-4 pb-4 custom-scrollbar snap-x">
+                                {myEducators.map(ed => (
+                                    <Link key={ed.id} href={`/student/educator/${ed.id}`} className="snap-start shrink-0 w-[260px] student-surface group relative flex flex-col justify-between overflow-hidden rounded-2xl p-5 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_16px_32px_rgba(79,70,229,0.08)]">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg shadow-inner">
+                                                {ed.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                <CaretRight size={14} weight="bold" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-outfit text-lg font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{ed.name}</h3>
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {ed.subjects.length > 0 ? ed.subjects.slice(0, 2).map((s, i) => (
+                                                    <span key={i} className="text-[9px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100/50 truncate max-w-[100px]">{s}</span>
+                                                )) : (
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 px-2.5 py-1 rounded truncate">General Faculty</span>
+                                                )}
+                                                {ed.subjects.length > 2 && <span className="text-[9px] font-black tracking-widest text-slate-500 bg-slate-100 px-1.5 py-1 rounded">+{ed.subjects.length - 2}</span>}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between mb-2">
                         <div className="space-y-1">
                             <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-[var(--student-text)]">
                                 <FileText size={20} className="text-[var(--student-muted)]" weight="bold" />
                                 Latest Announcements
                             </h2>
-                            <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">Stay updated with the latest news</p>
+                            <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Stay updated with the latest news</p>
                         </div>
                         <Link href="/student/updates" className="student-button-secondary rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 active:scale-95">View All</Link>
                     </div>
 
                     <div className="space-y-4">
                         {announcements.length === 0 ? (
-                            <div className="student-surface rounded-2xl border-2 border-dashed p-12 text-center">
-                                <FileText size={40} className="mx-auto mb-4 text-[var(--student-border-strong)] opacity-70" />
+                            <div className="student-surface rounded-2xl border-2 border-dashed border-[var(--student-border)] p-12 text-center">
+                                <FileText size={40} className="mx-auto mb-4 text-[var(--student-border-strong)] opacity-30" />
                                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">No active announcements</h3>
                             </div>
                         ) : (
@@ -463,6 +519,7 @@ export default async function StudentDashboardPage() {
                         )}
                     </div>
                 </div>
+            </div>
 
                 {/* Right Column: Rankings */}
                 <div className="space-y-6">
@@ -471,12 +528,12 @@ export default async function StudentDashboardPage() {
                             <Trophy size={20} className="text-[var(--student-muted)]" weight="bold" />
                             Peer Leaderboard
                         </h2>
-                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">Your standing among peers</p>
+                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Your standing among peers</p>
                     </div>
 
                     <div className="student-surface rounded-2xl p-5">
                         {leaderboard.length === 0 ? (
-                            <div className="py-20 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]/60">
+                            <div className="py-20 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-light)]">
                                 No Peer Data
                             </div>
                         ) : (
@@ -498,14 +555,14 @@ export default async function StudentDashboardPage() {
                                                 <div className={cn("mb-0.5 font-outfit text-sm font-bold leading-tight tracking-tight", item.isMe ? "text-white" : "text-[var(--student-text)]")}>
                                                     {item.name}
                                                 </div>
-                                                <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-[rgba(220,235,230,0.74)]" : "text-[var(--student-muted)]")}>
+                                                <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-white/70" : "text-[var(--student-muted)]")}>
                                                     LVL {Math.floor(1 + Math.sqrt(item.score / 50))}
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <div className={cn("mb-0.5 font-outfit text-sm font-bold leading-tight tracking-tight", item.isMe ? "text-white" : "text-[var(--student-text)]")}>{item.score.toLocaleString()}</div>
-                                            <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-[rgba(220,235,230,0.74)]" : "text-[var(--student-accent-strong)]")}>Unit XP</div>
+                                            <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-white/70" : "text-[var(--student-accent-strong)]")}>Unit XP</div>
                                         </div>
                                     </div>
                                 ))}
@@ -535,7 +592,7 @@ export default async function StudentDashboardPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {freeResources.length === 0 ? (
-                        <div className="student-surface lg:col-span-4 rounded-2xl border-2 border-dashed p-12 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]/60">
+                        <div className="student-surface lg:col-span-4 rounded-2xl border-2 border-dashed border-[var(--student-border)] p-12 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-light)]">
                             No resources available yet
                         </div>
                     ) : freeResources.map((res) => (
@@ -576,7 +633,7 @@ export default async function StudentDashboardPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {topPracticeExams.length === 0 ? (
-                        <div className="student-surface lg:col-span-4 rounded-2xl border-2 border-dashed p-12 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]/60">
+                        <div className="student-surface lg:col-span-4 rounded-2xl border-2 border-dashed border-[var(--student-border)] p-12 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-light)]">
                             No exams available yet
                         </div>
                     ) : topPracticeExams.map((exam) => {

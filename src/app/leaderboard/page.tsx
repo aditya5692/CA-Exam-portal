@@ -159,8 +159,8 @@ export default async function LeaderboardPage() {
                                 <div className="absolute -right-14 -top-12 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(220,235,230,0.42),transparent_66%)]" />
                                 <div className="relative z-10 space-y-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#a8d0c5]">Personal Analysis</h3>
-                                        <TrendUp size={20} weight="bold" className="text-[#a8d0c5]" />
+                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--student-accent-soft-strong)]">Personal Analysis</h3>
+                                        <TrendUp size={20} weight="bold" className="text-[var(--student-accent-soft-strong)]" />
                                     </div>
 
                                     <div className="space-y-4">
@@ -171,7 +171,7 @@ export default async function LeaderboardPage() {
                                             </div>
                                             <div className="text-right">
                                                 <div className="mb-1 text-[10px] font-bold uppercase text-white/55">Percentile</div>
-                                                <div className="text-xl font-black text-[#f2d295]">Top {100 - myRankData.percentile}%</div>
+                                                <div className="text-xl font-black text-[var(--student-support)]">Top {100 - myRankData.percentile}%</div>
                                             </div>
                                         </div>
 
@@ -181,7 +181,7 @@ export default async function LeaderboardPage() {
                                                 <span>Lvl {myRankData.level} to {myRankData.level + 1}</span>
                                             </div>
                                             <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                                                <div className="h-full rounded-full bg-gradient-to-r from-[#8dbdaf] to-[#f2d295]" style={{ width: "65%" }} />
+                                                <div className="h-full rounded-full bg-gradient-to-r from-[var(--student-accent-soft-strong)] to-[var(--student-support)]" style={{ width: "65%" }} />
                                             </div>
                                             <p className="text-[10px] font-medium text-white/60">
                                                 About {Math.round((myRankData.level + 1) * 250 - myRankData.totalXP % 500)} XP to the next level.
@@ -189,7 +189,7 @@ export default async function LeaderboardPage() {
                                         </div>
                                     </div>
 
-                                    <button className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2b7a69] text-xs font-black uppercase tracking-widest transition-all hover:bg-[#225f53]">
+                                    <button className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--student-accent-strong)] text-xs font-black uppercase tracking-widest transition-all hover:bg-[var(--student-accent)]">
                                         <ShareNetwork size={18} weight="bold" />
                                         Share My Rank
                                     </button>
@@ -202,8 +202,8 @@ export default async function LeaderboardPage() {
                                 <div className="absolute -right-16 -top-14 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(242,227,192,0.28),transparent_66%)]" />
                                 <div className="relative z-10 space-y-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#f2d295]">Teacher Insights</h3>
-                                        <Presentation size={20} weight="bold" className="text-[#f2d295]" />
+                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--student-support)]">Teacher Insights</h3>
+                                        <Presentation size={20} weight="bold" className="text-[var(--student-support)]" />
                                     </div>
 
                                     <div className="space-y-4">
@@ -214,7 +214,7 @@ export default async function LeaderboardPage() {
                                             </div>
                                             <div className="text-right">
                                                 <div className="mb-1 text-[10px] font-bold uppercase text-white/55">Growth</div>
-                                                <div className="text-xl font-black text-[#8dbdaf]">+12%</div>
+                                                <div className="text-xl font-black text-[var(--student-accent-soft-strong)]">+12%</div>
                                             </div>
                                         </div>
 
@@ -225,7 +225,7 @@ export default async function LeaderboardPage() {
 
                                     <Link
                                         href="/teacher/dashboard"
-                                        className="flex h-12 w-full items-center justify-center rounded-xl border border-white/15 bg-white/10 text-xs font-black uppercase tracking-widest transition-all hover:bg-white/18"
+                                        className="flex h-12 w-full items-center justify-center rounded-xl border border-white/15 bg-white/10 text-xs font-black uppercase tracking-widest transition-all hover:bg-white/20"
                                     >
                                         View All Batches
                                     </Link>
@@ -300,18 +300,18 @@ function ChampionCard({
             border: "border-[#d8ddd9]",
             halo: "shadow-[0_0_46px_-18px_rgba(102,115,112,0.26)]",
             icon: Medal,
-            iconColor: "text-[#7a8581]",
-            badgeBg: "bg-[#7a8581]",
-            tileBg: "bg-[#eef1ed]",
+            iconColor: "text-[var(--student-muted-strong)]",
+            badgeBg: "bg-[var(--student-muted-strong)]",
+            tileBg: "bg-[var(--student-panel-muted)]",
             title: "Scholar Silver"
         },
         bronze: {
-            border: "border-[#d6b497]",
-            halo: "shadow-[0_0_46px_-18px_rgba(167,112,67,0.28)]",
+            border: "border-[var(--student-border-strong)]",
+            halo: "shadow-[0_0_46px_-18px_rgba(183,121,31,0.28)]",
             icon: Medal,
-            iconColor: "text-[#a56b3e]",
-            badgeBg: "bg-[#a56b3e]",
-            tileBg: "bg-[#f5e8dc]",
+            iconColor: "text-[var(--student-support)]",
+            badgeBg: "bg-[var(--student-support)]",
+            tileBg: "bg-[var(--student-support-soft)]",
             title: "Scholar Bronze"
         }
     } as const;

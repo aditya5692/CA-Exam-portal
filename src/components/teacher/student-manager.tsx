@@ -21,7 +21,8 @@ import {
   Users,
   X
 } from "@phosphor-icons/react";
-import { useCallback,useEffect,useMemo,useState,type ComponentProps,type ComponentType } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState, type ComponentProps, type ComponentType } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -294,6 +295,34 @@ export function StudentManager() {
     const [removeStudent, setRemoveStudent] = useState<StudentDirectoryRow | null>(null);
     const [removeSaving, setRemoveSaving] = useState(false);
     const [toast, setToast] = useState("");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Auto-open performance panel if id is in URL
+    useEffect(() => {
+        const id = searchParams.get("id");
+        if (id) {
+            const student = students.find(s => s.id === id);
+            if (student) {
+                setPerformanceStudent({ id: student.id, name: student.name });
+            } else {
+                // Fallback to name in URL if student not in current teacher's batch
+                const name = searchParams.get("name");
+                if (name) {
+                    setPerformanceStudent({ id, name });
+                }
+            }
+        }
+    }, [searchParams, students]);
+
+    const handleClosePanel = () => {
+        setPerformanceStudent(null);
+        // Clear the id from URL without refreshing
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("id");
+        router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+    };
 
     const reload = useCallback(async () => {
         const res = await getTeacherStudents();
@@ -382,7 +411,7 @@ export function StudentManager() {
                 <PerformancePanel
                     studentId={performanceStudent.id}
                     studentName={performanceStudent.name}
-                    onClose={() => setPerformanceStudent(null)}
+                    onClose={handleClosePanel}
                 />
             )}
 

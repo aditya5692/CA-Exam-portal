@@ -3,8 +3,13 @@
 import { cn } from "@/lib/utils";
 import type { ExamHubData } from "@/types/student";
 import Link from "next/link";
+import { useState } from "react";
 
 export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
+    const [selectedEducator, setSelectedEducator] = useState<string>("ALL");
+    const educators = Array.from(new Set(hubData?.mockTests?.map(t => t.teacherName) || []));
+    const displayedTests = hubData?.mockTests?.filter(t => selectedEducator === "ALL" || t.teacherName === selectedEducator) || [];
+
     return (
         <section>
             <div className="flex items-center justify-between mb-[9px]">
@@ -16,9 +21,29 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                 </div>
             </div>
 
+            {educators.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar mb-2">
+                    <button
+                        onClick={() => setSelectedEducator("ALL")}
+                        className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === "ALL" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                    >
+                        All Educators
+                    </button>
+                    {educators.map(ed => (
+                        <button
+                            key={ed}
+                            onClick={() => setSelectedEducator(ed)}
+                            className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === ed ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                        >
+                            {ed}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             <div className="space-y-2">
-                {hubData?.mockTests && hubData.mockTests.length > 0 ? (
-                    hubData.mockTests.map((test) => (
+                {displayedTests.length > 0 ? (
+                    displayedTests.map((test) => (
                         <div key={test.id} className={cn(
                             "student-surface group flex flex-col gap-4 rounded-xl p-5 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)] md:flex-row md:items-center",
                             test.isLocked && "opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
@@ -43,7 +68,7 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-500">
-                                        {test.isCompleted ? `Score: ${test.score}/${test.totalMarks} • Attempted on ${test.attemptedDate}` : test.isLocked ? "Unlock this test by completing chapters in MCQs." : "Based on latest ICAI amendments for upcoming attempt."}
+                                        {test.isCompleted ? `Score: ${test.score}/${test.totalMarks} • Attempted on ${test.attemptedDate}` : test.isLocked ? "Unlock this test by completing chapters in MCQs." : `By ${test.teacherName}`}
                                     </p>
                                 </div>
                             </div>

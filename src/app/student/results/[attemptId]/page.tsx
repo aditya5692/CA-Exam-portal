@@ -18,11 +18,11 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
     if (!success || !attempt) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--student-bg)]">
                 <div className="text-center space-y-4">
                     <div className="text-6xl">😕</div>
-                    <div className="font-black text-xl text-gray-700">Results not found</div>
-                    <Link href="/student/analytics" className="text-indigo-600 font-bold hover:underline text-sm">← Back to Analytics</Link>
+                    <div className="font-black text-xl text-[var(--student-text)]">Results not found</div>
+                    <Link href="/student/analytics" className="text-[var(--student-accent)] font-bold hover:underline text-sm">← Back to Analytics</Link>
                 </div>
             </div>
         );
@@ -71,14 +71,14 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         ? new Date(attempt.endTime).toLocaleDateString("en-IN", { dateStyle: "long" })
         : "—";
 
-    const scoreColor = accuracy >= 75 ? "#22c55e" : accuracy >= 55 ? "#f59e0b" : "#ef4444";
+    const scoreColor = accuracy >= 75 ? "var(--student-success)" : accuracy >= 55 ? "var(--student-support)" : "var(--student-destructive)";
 
     const titleParts = attempt.exam.title.split(" ");
     const lastWord = titleParts.pop();
     const mainTitle = titleParts.join(" ");
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] font-outfit">
+        <div className="min-h-screen bg-[var(--student-bg)] font-outfit">
             <div className="max-w-6xl mx-auto px-6 py-10 space-y-12">
 
                 {/* Standardized Header Section */}
@@ -116,8 +116,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 </div>
 
                 {/* ── Score Hero ─────────────────────────────────────────────── */}
-                <div className="relative overflow-hidden rounded-2xl shadow-xl bg-slate-900 p-8 text-white">
-                    <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative overflow-hidden rounded-2xl shadow-xl bg-[var(--student-accent-strong)] p-8 text-white">
+                    <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl pointer-events-none" />
                     <div className="relative z-10">
                         <div className="flex flex-col sm:flex-row gap-8 items-center">
                             {/* Score ring */}
@@ -174,7 +174,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
                     {/* Solution Review (client component for filter interactivity) */}
                     <div className="space-y-4">
-                        <h2 className="font-outfit tracking-tight">Solution Review</h2>
+                        <h2 className="font-outfit tracking-tight text-[var(--student-text)]">Solution Review</h2>
                         <SolutionReview answers={answers} />
                     </div>
 
@@ -182,28 +182,28 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                     <aside className="space-y-5 sticky top-6">
 
                         {/* Topic breakdown */}
-                        <div className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm group">
-                            <h3 className="font-bold font-outfit text-slate-900 mb-6 flex items-center gap-2.5 text-[10px] uppercase tracking-widest">
-                                <ChartLineUp size={20} weight="bold" className="text-indigo-600 opacity-60 group-hover:scale-110 transition-transform" /> Topic Breakdown
+                        <div className="p-6 rounded-2xl bg-[var(--student-panel)] border border-[var(--student-border)] shadow-sm group">
+                            <h3 className="font-bold font-outfit text-[var(--student-text)] mb-6 flex items-center gap-2.5 text-[10px] uppercase tracking-widest">
+                                <ChartLineUp size={20} weight="bold" className="text-[var(--student-accent)] opacity-60 group-hover:scale-110 transition-transform" /> Topic Breakdown
                             </h3>
                             {topicBreakdown.length === 0 ? (
-                                <p className="text-sm text-slate-400">No topic data.</p>
+                                <p className="text-sm text-[var(--student-muted)]">No topic data.</p>
                             ) : (
                                 <div className="space-y-4">
                                     {topicBreakdown.map((t) => {
-                                        const color = t.accuracy >= 75 ? "#22c55e" : t.accuracy >= 55 ? "#f59e0b" : "#ef4444";
-                                        const tagColor = t.accuracy >= 75 ? "text-green-600" : t.accuracy >= 55 ? "text-amber-600" : "text-rose-500";
+                                        const color = t.accuracy >= 75 ? "var(--student-success)" : t.accuracy >= 55 ? "var(--student-support)" : "var(--student-destructive)";
+                                        const tagColor = t.accuracy >= 75 ? "text-[var(--student-success)]" : t.accuracy >= 55 ? "text-[var(--student-support)]" : "text-[var(--student-destructive)]";
                                         const tag = t.accuracy >= 75 ? "Strong" : t.accuracy >= 55 ? "Average" : "Weak";
                                         return (
                                             <div key={t.topic}>
                                                 <div className="flex justify-between mb-1">
-                                                    <span className="text-xs font-bold text-gray-700 truncate max-w-[140px]">{t.topic}</span>
+                                                    <span className="text-xs font-bold text-[var(--student-text)] truncate max-w-[140px]">{t.topic}</span>
                                                     <span className={cn("text-[10px] font-bold", tagColor)}>{tag} · {t.accuracy}%</span>
                                                 </div>
-                                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                <div className="h-2 bg-[var(--student-panel-muted)] rounded-full overflow-hidden">
                                                     <div className="h-full rounded-full" style={{ width: `${t.accuracy}%`, backgroundColor: color }} />
                                                 </div>
-                                                <div className="text-[10px] text-gray-400 mt-0.5">{t.correct}/{t.total} correct</div>
+                                                <div className="text-[10px] text-[var(--student-muted)] mt-0.5">{t.correct}/{t.total} correct</div>
                                             </div>
                                         );
                                     })}
@@ -213,15 +213,15 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
                         {/* Weak topics: improvement plan */}
                         {weakTopics.length > 0 && (
-                            <div className="p-5 rounded-[20px] bg-rose-50 border border-rose-100">
-                                <h3 className="text-sm font-bold font-outfit text-rose-700 mb-3">🎯 Focus On These</h3>
+                            <div className="p-5 rounded-[20px] bg-[var(--student-destructive-soft)] border border-[var(--student-destructive-soft-strong)]">
+                                <h3 className="text-sm font-bold font-outfit text-[var(--student-destructive)] mb-3">🎯 Focus On These</h3>
                                 <div className="space-y-2">
                                     {weakTopics.map((t, i) => (
                                         <div key={t.topic} className="flex items-center gap-2">
-                                            <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
+                                            <span className="w-5 h-5 rounded-full bg-[var(--student-destructive)] text-white text-[10px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
                                             <div>
-                                                <div className="text-xs font-bold text-gray-900">{t.topic}</div>
-                                                <div className="text-[10px] text-rose-500">{t.accuracy}% accuracy</div>
+                                                <div className="text-xs font-bold text-[var(--student-text)]">{t.topic}</div>
+                                                <div className="text-[10px] text-[var(--student-destructive)]">{t.accuracy}% accuracy</div>
                                             </div>
                                         </div>
                                     ))}
@@ -231,31 +231,31 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
                         {/* Strong topics */}
                         {strongTopics.length > 0 && (
-                            <div className="p-5 rounded-2xl bg-green-50 border border-green-100">
-                                <h3 className="text-sm font-black text-green-700 mb-3 flex items-center gap-1.5"><Trophy size={13} /> Your Strengths</h3>
+                            <div className="p-5 rounded-2xl bg-[var(--student-accent-soft)] border border-[var(--student-accent-soft-strong)]">
+                                <h3 className="text-sm font-bold text-[var(--student-accent)] mb-3 flex items-center gap-1.5"><Trophy size={13} /> Your Strengths</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {strongTopics.map(t => (
-                                        <span key={t.topic} className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">{t.topic}</span>
+                                        <span key={t.topic} className="px-2 py-1 rounded-full bg-[var(--student-accent-soft-strong)] text-[var(--student-accent-strong)] text-xs font-bold">{t.topic}</span>
                                     ))}
                                 </div>
                             </div>
                         )}
 
                         {/* Next steps */}
-                        <div className="p-10 rounded-2xl bg-slate-900 text-white shadow-xl relative overflow-hidden group/cta">
+                        <div className="p-10 rounded-2xl bg-[var(--student-accent-strong)] text-white shadow-xl relative overflow-hidden group/cta">
                             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/cta:scale-110 transition-transform duration-700">
                                 <Star size={80} weight="fill" />
                             </div>
                             <div className="relative z-10">
-                                <Star size={24} className="text-indigo-400 mb-4" weight="fill" />
+                                <Star size={24} className="text-[var(--student-support)] mb-4" weight="fill" />
                                 <div className="font-bold text-2xl font-outfit mb-2 tracking-tight">
                                     {accuracy >= 75 ? "Excellent Work!" : accuracy >= 55 ? "Keep it up!" : "Need more practice."}
                                 </div>
-                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-6 leading-relaxed">
+                                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-6 leading-relaxed">
                                     Average time: <strong className="text-white">{avgTimePerQ}s / question</strong>
                                 </p>
                                 <Link href="/student/exams"
-                                    className="block text-center py-4 rounded-xl bg-white text-slate-950 font-bold text-[10px] uppercase tracking-widest hover:bg-white shadow-lg active:scale-95 transition-all">
+                                    className="block text-center py-4 rounded-xl bg-white text-[var(--student-accent-strong)] font-bold text-[10px] uppercase tracking-widest hover:bg-white shadow-lg active:scale-95 transition-all">
                                     Try Next Exam
                                 </Link>
                             </div>

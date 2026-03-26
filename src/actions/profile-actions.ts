@@ -10,6 +10,7 @@ import {
 import prisma from "@/lib/prisma/client";
 import { normalizeStudentExamTargetInput } from "@/lib/student-level";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
+import { joinStudentToBatchByCode } from "@/lib/server/batch-management";
 import { revalidateProfileSurfaces } from "@/lib/server/revalidation";
 import type { UserProfile } from "@/types/profile";
 import { ActionResponse } from "@/types/shared";
@@ -97,6 +98,19 @@ async function updateProfile(role: ProfileRole, formData: FormData): Promise<Act
             }
         }
 
+        if (role === "STUDENT" && validatedInput.batch) {
+            const batchExists = await prisma.batch.findUnique({
+                where: { uniqueJoinCode: validatedInput.batch.trim().toUpperCase() },
+                select: { id: true },
+            });
+
+            if (!batchExists) {
+                throw new ProfileValidationError({
+                    batch: "The provided batch code is invalid. Please verify and try again.",
+                });
+            }
+        }
+
         const data: Prisma.UserUpdateInput = {
             fullName: validatedInput.fullName,
             email: validatedInput.email,
@@ -130,6 +144,20 @@ async function updateProfile(role: ProfileRole, formData: FormData): Promise<Act
             where: { id: user.id },
             data,
         });
+
+        // Sync Batch Enrollment: If a student updates their batch, ensure they are enrolled to see content
+        if (role === "STUDENT" && validatedInput.batch) {
+            try {
+                // Ensure the student is enrolled in the batch to see updates and materials
+                await joinStudentToBatchByCode(updatedProfile.id, validatedInput.batch.trim().toUpperCase());
+            } catch (enrollmentError) {
+                // Ignore "Already enrolled" errors during profile sync to prevent save failure
+                const errorMessage = enrollmentError instanceof Error ? enrollmentError.message : "";
+                if (!errorMessage.toLowerCase().includes("already enrolled")) {
+                   console.error("Selective enrollment failure during profile update:", enrollmentError);
+                }
+            }
+        }
 
         await syncCurrentAuthSession(updatedProfile);
         revalidateProfileSurfaces(role);

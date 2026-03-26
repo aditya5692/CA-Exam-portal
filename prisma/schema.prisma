@@ -36,6 +36,7 @@ model User {
   isPublicProfile    Boolean             @default(true)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+  loginCount         Int                 @default(0)
 
   // Extended Student Profile Fields
   batch              String?
@@ -62,6 +63,8 @@ model User {
   enrollments        Enrollment[]
   announcements      Announcement[]      @relation("TeacherAnnouncements")
   draftMCQs          DraftMCQ[]          @relation("DraftMCQs")
+  teacherAccessCodes StudentAccessCode[] @relation("TeacherAccessCodes")
+  studentClaimedCodes StudentAccessCode[] @relation("StudentClaimedCodes")
 
   // Extended Relations
   notifications      Notification[]      @relation("UserNotifications")
@@ -480,3 +483,29 @@ model Subscription {
   @@index([userId])
   @@index([status])
 }
+
+// Student Access Codes - Teacher to Student Map
+model StudentAccessCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  email     String
+  caLevel   String?  // CA Foundation, Inter, Final
+  subject   String?  // The subject they are enrolled for
+  status    String   @default("PENDING") // PENDING, VERIFIED
+  isEmailed Boolean  @default(false)    // True once Mailchimp sends the email
+  
+  teacherId String
+  teacher   User     @relation("TeacherAccessCodes", fields: [teacherId], references: [id], onDelete: Cascade)
+
+  // Once student verifies, we link them here
+  studentId String?
+  student   User?    @relation("StudentClaimedCodes", fields: [studentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([teacherId])
+  @@index([email])
+}
+

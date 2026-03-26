@@ -242,9 +242,27 @@ export async function getStudentSharedMaterials(studentId?: string): Promise<Act
             }
         });
 
+        // Pull Model: Fetch general materials from teachers where student redeemed an access code
+        const accessCodes = await prisma.studentAccessCode.findMany({
+            where: { studentId: viewer.id, status: "VERIFIED" },
+            select: { teacherId: true }
+        });
+        const linkedTeacherIds = accessCodes.map((a: any) => a.teacherId);
+
+        const generalTeacherMaterials = await prisma.studyMaterial.findMany({
+            where: {
+                uploadedById: { in: linkedTeacherIds },
+                batches: { none: {} }, // Unbound materials from these teachers
+            },
+            include: {
+                uploadedBy: { select: { fullName: true, email: true } },
+            }
+        });
+
         const allMaterials = [
             ...accesses.map((a) => a.material),
             ...batchMaterials.map((bm: (typeof batchMaterials)[number]) => bm.material),
+            ...generalTeacherMaterials,
         ];
 
         // Deduplicate by ID

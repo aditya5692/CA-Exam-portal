@@ -69,6 +69,11 @@ export async function verifyOtpAndLogin(phone: string, otp: string): Promise<Act
             return { success: true, data: { needsRegistration: true }, message: "OTP verified. Please complete your registration." };
         }
 
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { loginCount: { increment: 1 } },
+        });
+
         await setAuthSession(user);
 
         return {
@@ -117,15 +122,18 @@ export async function login(input: AuthLoginInput): Promise<ActionResponse<Login
     }
 }
 
-/**
- * Verifies OTP and completes registration.
- */
 export async function verifyOtpAndRegister(formData: {
     phone: string;
     otp: string;
     fullName: string;
+    email?: string;
     password?: string;
     role: "STUDENT" | "TEACHER";
+    dob?: string;
+    location?: string;
+    examTargetLevel?: string;
+    examTargetMonth?: number;
+    examTargetYear?: number;
 }): Promise<ActionResponse<{ redirectTo: string }>> {
     try {
         const verification = await verifyMsg91Otp(formData.phone, formData.otp);
@@ -135,10 +143,16 @@ export async function verifyOtpAndRegister(formData: {
 
         const registered = await registerUserRecord({
             fullName: formData.fullName,
+            email: formData.email,
             phone: formData.phone,
             password: formData.password,
             role: formData.role,
             registrationNumber: `STU-${Date.now().toString().slice(-6)}`,
+            dob: formData.dob,
+            location: formData.location,
+            examTargetLevel: formData.examTargetLevel,
+            examTargetMonth: formData.examTargetMonth,
+            examTargetYear: formData.examTargetYear,
         });
 
         await setAuthSession(registered.user);
@@ -225,5 +239,45 @@ export async function getDemoLogins(): Promise<ActionResponse<DemoLoginData>> {
     } catch (error) {
         console.error("Failed to fetch demo logins:", error);
         return { success: false, message: "Failed to fetch demo logins." };
+    }
+}
+/**
+ * Logs in directly as a demo user (for testing purposes).
+ */
+export async function loginAsDemoUser(registrationNumber: string): Promise<ActionResponse<LoginResult>> {
+    try {
+        await ensureDemoAccounts();
+
+        const demoAccount = DEMO_ACCOUNTS.find(a => a.registrationNumber === registrationNumber);
+        if (!demoAccount) {
+            return { success: false, message: "Invalid demo account." };
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { registrationNumber },
+        });
+
+        if (!user) {
+            return { success: false, message: "User record not found." };
+        }
+
+        await setAuthSession(user);
+
+        return {
+            success: true,
+            message: "Logged in as demo user.",
+            data: {
+                redirectTo: getRoleRedirectPath(user.role as AppRole),
+                user: {
+                    fullName: user.fullName,
+                    role: user.role,
+                    registrationNumber: user.registrationNumber,
+                    phone: user.phone,
+                },
+            }
+        };
+    } catch (error) {
+        console.error("Direct login failed:", error);
+        return { success: false, message: "Direct login failed." };
     }
 }

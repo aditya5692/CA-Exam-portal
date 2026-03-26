@@ -56,6 +56,7 @@ export default function StudentVaultPage() {
     const [activeTab, setActiveTab] = useState<"MY_NOTES" | "EDUCATOR">("MY_NOTES");
     const [materials, setMaterials] = useState<VaultMaterial[]>([]);
     const [sharedMaterials, setSharedMaterials] = useState<SharedMaterial[]>([]);
+    const [selectedEducator, setSelectedEducator] = useState<string>("ALL");
     const [storageUsed, setStorageUsed] = useState(0);
     const [storageLimit, setStorageLimit] = useState(52428800);
     const [managedStudentsCount, setManagedStudentsCount] = useState(1);
@@ -355,13 +356,40 @@ export default function StudentVaultPage() {
                         </div>
                     </div>
 
+                    {(() => {
+                        const educators = Array.from(new Set(sharedMaterials.map(m => m.uploadedBy?.fullName || "Expert")));
+                        if (educators.length <= 1) return null;
+                        
+                        return (
+                            <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                                <button
+                                    onClick={() => setSelectedEducator("ALL")}
+                                    className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === "ALL" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                                >
+                                    All Educators
+                                </button>
+                                {educators.map(ed => (
+                                    <button
+                                        key={ed}
+                                        onClick={() => setSelectedEducator(ed)}
+                                        className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === ed ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                                    >
+                                        {ed}
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    })()}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {sharedMaterials.length === 0 ? (
+                        {sharedMaterials.filter(m => selectedEducator === "ALL" || (m.uploadedBy?.fullName || "Expert") === selectedEducator).length === 0 ? (
                             <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700">
                                 {isAdminView ? "No educator materials have been distributed yet." : "No educator materials shared with you yet."}
                             </div>
                         ) : (
-                            sharedMaterials.map((material) => (
+                            sharedMaterials
+                                .filter(m => selectedEducator === "ALL" || (m.uploadedBy?.fullName || "Expert") === selectedEducator)
+                                .map((material) => (
                                 <div key={material.id} className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
                                      {material.isTrending && (
                                         <div className="absolute top-4 left-4 z-10">

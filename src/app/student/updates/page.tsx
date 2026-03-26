@@ -7,6 +7,7 @@ import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
 import { Plus,ShieldCheck,X } from "@phosphor-icons/react";
 import { useCallback,useEffect,useRef,useState } from "react";
+import { useRouter } from "next/navigation";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ export default function StudentUpdatesPage() {
     const [selectedSubject, setSelectedSubject] = useState("All Updates");
     const [visibleCount, setVisibleCount] = useState(6);
     const [daysToExam, setDaysToExam] = useState(0);
+    const router = useRouter();
 
     // Join Batch State
     const [showJoinModal, setShowJoinModal] = useState(false);
@@ -47,7 +49,7 @@ export default function StudentUpdatesPage() {
         const res = await getStudentFeed();
         if (!res.success) return;
 
-        // Fetch profile for daysToExam
+        // Fetch profile for daysToExam and batch status
         const profileRes = await getStudentProfile();
         if (profileRes.success && profileRes.data) {
             setDaysToExam(resolveStudentExamTarget(profileRes.data).daysToExam);
@@ -178,11 +180,11 @@ export default function StudentUpdatesPage() {
                         </button>
                         {!isAdminView && (
                             <button
-                                onClick={() => setShowJoinModal(true)}
+                                onClick={() => router.push("/student/redeem")}
                                 className="student-chip-accent flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
                             >
                                 <Plus size={16} weight="bold" />
-                                Join Batch
+                                Redeem batch code
                             </button>
                         )}
                     </div>
@@ -314,53 +316,7 @@ export default function StudentUpdatesPage() {
                 </div>
             )}
 
-            {!isAdminView && showJoinModal && (
-                <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-md flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
-                        <div className="p-8 pb-4 flex items-center justify-between border-b border-slate-50">
-                            <div>
-                                <h2 className="font-outfit tracking-tight">Join a Batch</h2>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-70">Enter your batch code</p>
-                            </div>
-                            <button onClick={() => setShowJoinModal(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
-                                <X size={20} weight="bold" className="text-slate-400" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleJoin} className="p-8 pt-6 space-y-6">
-                            <div className="space-y-4 text-center">
-                                <div className="w-16 h-16 rounded-2xl bg-indigo-50/50 flex items-center justify-center mx-auto text-indigo-600 mb-2 border border-indigo-100/50 shadow-inner">
-                                    <ShieldCheck size={32} weight="fill" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center opacity-70">Batch Code</label>
-                                    <input
-                                        type="text"
-                                        value={joinCode}
-                                        onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
-                                        placeholder="XXXXXX"
-                                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-xl text-center font-mono font-bold text-3xl tracking-widest text-indigo-500 focus:ring-4 focus:ring-indigo-100/20 focus:bg-white focus:border-indigo-500/50 outline-none transition-all placeholder:text-slate-200 shadow-inner uppercase"
-                                    />
-                                </div>
-                                <p className="text-[10px] text-slate-400 font-medium leading-relaxed max-w-[240px] mx-auto opacity-60">Enter the code provided by your educator to join their batch.</p>
-                            </div>
-                            {joinError && <div className="text-[10px] font-bold text-rose-600 bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-center gap-3 uppercase tracking-widest transition-all"><X size={16} weight="bold" /> {joinError}</div>}
-                            {joinSuccess && <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center gap-3 uppercase tracking-widest transition-all"><ShieldCheck size={16} weight="fill" /> {joinSuccess}</div>}
-                            <button
-                                type="submit"
-                                disabled={isJoining || !joinCode.trim()}
-                                className="w-full h-14 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 hover:bg-slate-800 shadow-lg shadow-slate-900/10"
-                            >
-                                {isJoining ? (
-                                    <div className="flex items-center justify-center gap-3">
-                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                        Joining...
-                                    </div>
-                                ) : "Join Now"}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 }

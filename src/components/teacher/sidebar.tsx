@@ -41,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: "My Batches", href: "/teacher/batches", icon: GraduationCap },
     { label: "Updates", href: "/teacher/updates", icon: BellSimple },
     { label: "Students", href: "/teacher/students", icon: Users },
+    { label: "Batch Codes", href: "/teacher/access-codes", icon: IdentificationBadge },
     { label: "Analytics", href: "/teacher/analytics", icon: ChartPieSlice },
     { label: "My Plan", href: "/teacher/plan", icon: Sparkle },
 ];
@@ -207,7 +208,7 @@ export function TeacherSidebar({
     return (
         <aside
             className={cn(
-                "group/sidebar z-50 flex h-screen flex-col overflow-hidden border-r border-[var(--student-border)] bg-[rgba(255,253,249,0.94)] backdrop-blur-md transition-all duration-300 ease-in-out",
+                "group/sidebar z-50 flex h-screen flex-col overflow-hidden border-r border-[var(--student-border)] bg-[var(--student-panel)]/94 backdrop-blur-md transition-all duration-300 ease-in-out",
                 isCollapsed ? "w-20" : "w-64"
             )}
             role="navigation"
@@ -232,7 +233,7 @@ export function TeacherSidebar({
 
             <div className="p-6 transition-all duration-300">
                 <Link href="/teacher/dashboard" className="flex items-center gap-3 outline-none">
-                    <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_14px_28px_rgba(31,92,80,0.12)]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--student-accent-soft)] shadow-[0_14px_28px_rgba(31,92,80,0.12)]">
                         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-[var(--student-accent-strong)]" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>

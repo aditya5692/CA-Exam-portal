@@ -53,16 +53,16 @@ export function LayoutTuner() {
         return (
             <button 
                 onClick={() => setIsMinimized(false)}
-                className="fixed bottom-6 right-6 z-[9999] bg-indigo-600 text-white p-3 rounded-full shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center hover:scale-105"
+                className="fixed bottom-4 right-4 z-[9999] bg-indigo-600 text-white p-2.5 rounded-full shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center hover:scale-110 active:scale-90"
                 title="Open Layout Tuner"
             >
-                <span className="material-symbols-outlined">tune</span>
+                <span className="material-symbols-outlined text-[20px]">tune</span>
             </button>
         );
     }
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl p-5 w-80 font-outfit animate-in slide-in-from-bottom flex flex-col gap-6">
+        <div className="fixed bottom-4 right-4 left-4 md:left-auto z-[9999] md:w-80 bg-white border border-slate-200 shadow-2xl rounded-2xl p-5 font-outfit animate-in slide-in-from-bottom flex flex-col gap-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-indigo-600 text-[18px]">tune</span>

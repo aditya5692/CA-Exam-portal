@@ -1,7 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "@prisma/client";
-import { Pool,type PoolConfig } from "pg";
+import { Pool, type PoolConfig } from "pg";
 
 const DEFAULT_POOL_MAX = 10;
 const DEFAULT_DEVELOPMENT_CONNECT_TIMEOUT_MS = 10_000;
@@ -160,7 +160,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
     }
 
     const redacted = redactDatabaseUrl(databaseUrl);
-    
+
     // Runtime logging for connection source
     console.log(`[RuntimePrisma] Connecting via ${sourceEnvKey} (${protocol})`);
     if (env.NODE_ENV !== "production") {
@@ -228,16 +228,16 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
         };
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        
+
         if (message.includes("is not compatible with the provider")) {
             const isSqliteError = message.includes("provider sqlite");
-            
+
             console.error("\n" + "=".repeat(60));
             console.error("❌ [PrismaRuntimeError] DATABASE ADAPTER MISMATCH");
             console.error(`- Environment Context: ${env.NODE_ENV || "development"}`);
             console.error(`- Selected Connection: ${config.sourceEnvKey} (${config.protocol})`);
             console.error(`- Detected Mismatch: ${message}`);
-            
+
             if (isSqliteError && config.protocol !== "file:") {
                 console.error("\nDIAGNOSIS:");
                 console.error("The Prisma schema expects SQLite, but a Postgres URL was found.");
@@ -248,7 +248,7 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
             }
             console.error("=".repeat(60) + "\n");
         }
-        
+
         throw error;
     }
 }

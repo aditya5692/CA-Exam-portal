@@ -13,6 +13,7 @@ import { startExamAttemptRecord } from "@/lib/server/exam-workflow";
 import { getStudentStudyRecommendations } from "@/lib/server/study-intelligence";
 import { buildStudentVisibleExamWhere } from "@/lib/server/exam-publishing";
 import { buildStudentExamTargetLabel,resolveStudentExamTarget } from "@/lib/student-level";
+import { getUserRank } from "./leaderboard-actions";
 import { ActionResponse,UnifiedExam,UnifiedMaterial } from "@/types/shared";
 import type { ExamHubData,StudentAttempt,StudentHistoryData } from "@/types/student";
 import { revalidatePath } from "next/cache";
@@ -56,7 +57,15 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
             avgAccuracy: Math.round((learningProfile?.avgAccuracy ?? 0) * 100),
             joinedDaysAgo,
             badges: readJsonStringArray(learningProfile?.badgesJson),
+            rank: 0,
+            percentile: 0,
         };
+
+        const rankRes = await getUserRank(user.id);
+        if (rankRes.success) {
+            profile.rank = rankRes.data.rank;
+            profile.percentile = rankRes.data.percentile;
+        }
 
         // 2. Topic progress → subject accuracy heatmap
         const topicProgress = await prisma.topicProgress.findMany({
@@ -497,6 +506,7 @@ export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
         const examsRaw = await prisma.exam.findMany({
             where: examWhere,
             include: {
+                teacher: { select: { fullName: true, email: true } },
                 questions: true,
                 attempts: {
                     where: { studentId: user.id },
@@ -515,6 +525,7 @@ export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
             return {
                 id: e.id,
                 title: e.title,
+                teacherName: e.teacher?.fullName || e.teacher?.email || "Teacher",
                 isNew,
                 isCompleted,
                 score: isCompleted ? lastAttempt.score : undefined,

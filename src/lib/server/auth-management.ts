@@ -31,6 +31,11 @@ export type AuthRegistrationInput = {
     department?: string | null;
     role: string;
     password?: string | null;
+    dob?: string | null;
+    location?: string | null;
+    examTargetLevel?: string | null;
+    examTargetMonth?: number | null;
+    examTargetYear?: number | null;
 };
 
 const APP_ROLES = new Set<AppRole>(["ADMIN", "TEACHER", "STUDENT"]);
@@ -147,6 +152,12 @@ export async function registerUserRecord(
                 department: trimmedDepartment,
                 role: normalizedRole,
                 passwordHash: createPasswordHash(trimmedPassword, normalizedRegistrationNumber),
+                dob: input.dob,
+                location: input.location,
+                examTargetLevel: input.examTargetLevel,
+                examTargetMonth: input.examTargetMonth,
+                examTargetYear: input.examTargetYear,
+                loginCount: 1,
             },
         });
 

@@ -3,22 +3,23 @@
 import { logout } from "@/actions/auth-actions";
 import { cn } from "@/lib/utils";
 import {
-  CaretDown,
-  CaretLeft,
-  CaretRight,
-  House,
-  Notebook,
-  Books,
-  Sparkle,
-  SuitcaseSimple,
-  Megaphone,
-  ChartPolar,
-  Bookmarks,
-  Gear,
-  SignOut,
-  User,
-  ShieldCheck,
-  X
+    CaretDown,
+    CaretLeft,
+    CaretRight,
+    House,
+    Notebook,
+    Books,
+    Sparkle,
+    SuitcaseSimple,
+    Megaphone,
+    ChartPolar,
+    Bookmarks,
+    Gear,
+    SignOut,
+    User,
+    ShieldCheck,
+    IdentificationBadge,
+    X
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -49,17 +50,18 @@ const MAIN_NAV: NavItem[] = [
 const PERSONAL_NAV: NavItem[] = [
     { label: "My Progress", href: "/student/analytics", icon: ChartPolar },
     { label: "Saved Items", href: "/student/saved-items", icon: Bookmarks },
+    { label: "Redeem Code", href: "/student/redeem", icon: IdentificationBadge },
 ];
 
 // --- Sub-components ---
 
-function SidebarNavItem({ 
-    item, 
-    isActive, 
-    isCollapsed 
-}: { 
-    item: NavItem; 
-    isActive: boolean; 
+function SidebarNavItem({
+    item,
+    isActive,
+    isCollapsed
+}: {
+    item: NavItem;
+    isActive: boolean;
     isCollapsed: boolean;
 }) {
     return (
@@ -70,7 +72,7 @@ function SidebarNavItem({
                 "group/item relative flex items-center gap-3 rounded-xl px-4 py-2.5 transition-all duration-200",
                 isActive
                     ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] shadow-sm"
-                    : "text-[var(--student-muted)] hover:bg-white/80 hover:text-[var(--student-text)]"
+                    : "text-[var(--student-muted)] hover:bg-[var(--student-panel)]/80 hover:text-[var(--student-text)]"
             )}
         >
             {isActive && (
@@ -80,9 +82,9 @@ function SidebarNavItem({
                 "flex h-8 w-8 shrink-0 items-center justify-center transition-colors",
                 isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] group-hover/item:text-[var(--student-text)]"
             )}>
-                <item.icon 
-                    size={20} 
-                    weight={isActive ? "fill" : "bold"} 
+                <item.icon
+                    size={20}
+                    weight={isActive ? "fill" : "bold"}
                 />
             </div>
             {!isCollapsed && <span className="text-sm font-semibold">{item.label}</span>}
@@ -90,15 +92,15 @@ function SidebarNavItem({
     );
 }
 
-function UserProfile({ 
-    isCollapsed, 
-    isProfileOpen, 
-    setIsProfileOpen, 
-    handleLogout, 
-    showAdminLink 
-}: { 
-    isCollapsed: boolean; 
-    isProfileOpen: boolean; 
+function UserProfile({
+    isCollapsed,
+    isProfileOpen,
+    setIsProfileOpen,
+    handleLogout,
+    showAdminLink
+}: {
+    isCollapsed: boolean;
+    isProfileOpen: boolean;
     setIsProfileOpen: (open: boolean) => void;
     handleLogout: () => void;
     showAdminLink: boolean;
@@ -111,8 +113,8 @@ function UserProfile({
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className={cn(
                         "w-full rounded-xl p-2 transition-all duration-200",
-                        isCollapsed ? "flex justify-center" : "flex items-center gap-3 hover:bg-white/80",
-                        isProfileOpen && "bg-white/90 shadow-sm"
+                        isCollapsed ? "flex justify-center" : "flex items-center gap-3 hover:bg-[var(--student-panel)]/80",
+                        isProfileOpen && "bg-[var(--student-panel)]/90 shadow-sm"
                     )}
                 >
                     <div className={cn(
@@ -123,16 +125,16 @@ function UserProfile({
                     )}>
                         <User size={20} weight={isProfileOpen ? "fill" : "bold"} />
                     </div>
-                    
+
                     {!isCollapsed && (
                         <div className="flex-1 flex items-center justify-between overflow-hidden text-left">
                             <div>
                                 <div className="truncate text-xs font-bold text-[var(--student-text)]">My Account</div>
                                 <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--student-muted)]">Student</div>
                             </div>
-                            <CaretDown 
-                                size={12} 
-                                weight="bold" 
+                            <CaretDown
+                                size={12}
+                                weight="bold"
                                 className={cn("text-[var(--student-muted)] transition-transform", isProfileOpen && "rotate-180")}
                             />
                         </div>
@@ -173,10 +175,10 @@ function UserProfile({
 
 // --- Main Component ---
 
-export function StudentSidebar({ 
+export function StudentSidebar({
     showAdminLink = false,
     onClose
-}: { 
+}: {
     showAdminLink?: boolean;
     onClose?: () => void;
 }) {
@@ -215,12 +217,12 @@ export function StudentSidebar({
         router.refresh();
     };
 
-    if (!mounted) return <aside className="h-screen w-64 border-r border-[var(--student-border)] bg-[rgba(255,253,249,0.9)]" />;
+    if (!mounted) return <aside className="h-screen w-64 border-r border-[var(--student-border)] bg-[var(--student-panel)]/90" />;
 
     return (
         <aside
             className={cn(
-                "group/sidebar sticky top-0 z-50 flex h-screen flex-col overflow-hidden border-r border-[var(--student-border)] bg-[rgba(255,250,244,0.88)] shadow-[16px_0_40px_rgba(55,48,38,0.04)] backdrop-blur-xl transition-all duration-300 ease-in-out",
+                "group/sidebar sticky top-0 z-50 flex h-screen flex-col overflow-hidden border-r border-[var(--student-border)] bg-[var(--student-panel)]/90 shadow-[16px_0_40px_rgba(55,48,38,0.04)] backdrop-blur-xl transition-all duration-300 ease-in-out",
                 isCollapsed ? "w-20" : "w-64"
             )}
             role="navigation"
@@ -237,7 +239,7 @@ export function StudentSidebar({
 
             {/* Close Button (Mobile) */}
             {onClose && (
-                <button 
+                <button
                     onClick={onClose}
                     className="absolute -right-12 top-4 rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-2 text-[var(--student-muted-strong)] shadow-md md:hidden"
                 >
@@ -250,7 +252,7 @@ export function StudentSidebar({
                 <Link href="/student/dashboard" className="flex items-center gap-3 outline-none">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--student-accent-strong)] shadow-[0_12px_28px_rgba(31,92,80,0.18)]">
                         <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
 
@@ -269,11 +271,11 @@ export function StudentSidebar({
 
             <nav className={cn("flex-1 px-3 space-y-0.5 mt-2 overflow-y-auto custom-scrollbar", isCollapsed && "px-2")}>
                 {MAIN_NAV.map((item) => (
-                    <SidebarNavItem 
-                        key={item.href} 
-                        item={item} 
-                        isActive={pathname === item.href} 
-                        isCollapsed={isCollapsed} 
+                    <SidebarNavItem
+                        key={item.href}
+                        item={item}
+                        isActive={pathname === item.href}
+                        isCollapsed={isCollapsed}
                     />
                 ))}
 
@@ -284,11 +286,11 @@ export function StudentSidebar({
                         </h3>
                         <div className="space-y-0.5">
                             {PERSONAL_NAV.map((item) => (
-                                <SidebarNavItem 
-                                    key={item.href} 
-                                    item={item} 
-                                    isActive={pathname === item.href} 
-                                    isCollapsed={isCollapsed} 
+                                <SidebarNavItem
+                                    key={item.href}
+                                    item={item}
+                                    isActive={pathname === item.href}
+                                    isCollapsed={isCollapsed}
                                 />
                             ))}
                         </div>
@@ -296,7 +298,7 @@ export function StudentSidebar({
                 )}
             </nav>
 
-            <UserProfile 
+            <UserProfile
                 isCollapsed={isCollapsed}
                 isProfileOpen={isProfileOpen}
                 setIsProfileOpen={setIsProfileOpen}

@@ -1,11 +1,10 @@
 "use client";
 
-import { requestOtp, verifyOtpAndLogin } from "@/actions/auth-actions";
+import { loginAsDemoUser, requestOtp, verifyOtpAndLogin } from "@/actions/auth-actions";
 import {
     ArrowRight,
     ChalkboardTeacher,
     Envelope,
-    GoogleLogo,
     GraduationCap,
     IdentificationBadge,
     Lock,
@@ -105,33 +104,33 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen overflow-x-hidden bg-[#f5efe5] px-4 py-4 text-[#1f2b2f] sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+        <div className="min-h-screen overflow-x-hidden bg-[var(--landing-bg)] px-4 py-4 text-[var(--landing-text)] sm:px-8 sm:py-8 lg:px-10 lg:py-10">
             {/* Background blobs omitted for brevity - keeping existing ones */}
-            <div className="absolute left-[-10rem] top-[-8rem] h-80 w-80 rounded-full bg-[#f2e3c0] blur-3xl opacity-70" />
-            <div className="absolute bottom-[-10rem] right-[-8rem] h-96 w-96 rounded-full bg-[#dcebe6] blur-3xl opacity-70" />
+            <div className="absolute left-[-10rem] top-[-8rem] h-80 w-80 rounded-full bg-[var(--landing-warm)] blur-3xl opacity-70" />
+            <div className="absolute bottom-[-10rem] right-[-8rem] h-96 w-96 rounded-full bg-[var(--landing-selection-bg)] blur-3xl opacity-70" />
 
             <div className="relative mx-auto grid w-full max-w-6xl gap-5 lg:min-h-[calc(100vh-4rem)] lg:grid-cols-[0.92fr_1.08fr] lg:gap-8">
                 {/* Left side panel omitted for brevity - keeping existing */}
-                <div className="order-2 flex flex-col justify-between rounded-[32px] border border-[#314148] bg-[#223036] p-6 text-[#fff8f0] shadow-[0_30px_70px_rgba(24,31,34,0.16)] sm:p-8 lg:order-1 lg:rounded-[40px] lg:p-10">
+                <div className="order-2 flex flex-col justify-between rounded-[32px] border border-[var(--landing-border-dark)] bg-[var(--landing-panel-dark)] p-6 text-white shadow-[0_30px_70px_rgba(24,31,34,0.16)] sm:p-8 lg:order-1 lg:rounded-[40px] lg:p-10">
                     <div className="space-y-8">
                         <Link href="/" className="inline-flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-[#f2e3c0]">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-[var(--landing-warm)]">
                                 <GraduationCap size={26} weight="bold" />
                             </div>
                             <div>
                                 <div className="font-outfit text-2xl font-black tracking-tight text-white">Financly</div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d9e8e3]">CA Exam Workspace</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--landing-selection-bg)]/80">CA Exam Workspace</div>
                             </div>
                         </Link>
 
                         <div className="space-y-5">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#d9e8e3]">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-selection-bg)]/80">
                                 Secure sign in
                             </div>
                             <h1 className="font-outfit text-4xl font-black leading-[0.98] tracking-[-0.05em] text-white sm:text-5xl">
                                 Enter the workspace without the usual dashboard noise
                             </h1>
-                            <p className="max-w-xl text-base font-medium leading-relaxed text-[#d0d9d6]">
+                            <p className="max-w-xl text-base font-medium leading-relaxed text-white/70">
                                 Choose the role you need, sign in with your phone and OTP, and continue directly into the correct exam workflow.
                             </p>
                         </div>
@@ -144,7 +143,7 @@ export default function LoginPage() {
                             ].map((metric) => (
                                 <div key={metric.label} className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-4 sm:rounded-[24px] sm:py-5">
                                     <div className="font-outfit text-3xl font-black tracking-tight text-white">{metric.value}</div>
-                                    <div className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#d9e8e3]">{metric.label}</div>
+                                    <div className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--landing-muted-light)]">{metric.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -162,19 +161,19 @@ export default function LoginPage() {
                                         key={itemRole}
                                         className={`rounded-[24px] border px-5 py-4 transition-all ${
                                             isActive
-                                                ? "border-[#c5ddd5] bg-[#dcebe6] text-[#1f5c50]"
-                                                : "border-white/10 bg-white/5 text-[#d0d9d6]"
+                                                ? "border-[var(--landing-selection-bg)] bg-[var(--landing-selection-bg)] text-[var(--landing-accent)]"
+                                                : "border-white/10 bg-white/5 text-white/70"
                                         }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isActive ? "bg-white text-[#1f5c50]" : "bg-white/10 text-[#f2e3c0]"}`}>
+                                            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isActive ? "bg-white text-[var(--landing-accent)]" : "bg-white/10 text-[var(--landing-warm)]"}`}>
                                                 <Icon size={20} weight="bold" />
                                             </div>
                                             <div>
-                                                <div className={`text-[10px] font-black uppercase tracking-[0.18em] ${isActive ? "text-[#1f5c50]" : "text-[#d9e8e3]"}`}>
+                                                <div className={`text-[10px] font-black uppercase tracking-[0.18em] ${isActive ? "text-[var(--landing-accent)]" : "text-[var(--landing-selection-bg)]/80"}`}>
                                                     {meta.title}
                                                 </div>
-                                                <div className={`mt-1 text-sm font-medium leading-relaxed ${isActive ? "text-[#1f5c50]" : "text-[#d0d9d6]"}`}>
+                                                <div className={`mt-1 text-sm font-medium leading-relaxed ${isActive ? "text-[var(--landing-accent)]" : "text-white/70"}`}>
                                                     {meta.description}
                                                 </div>
                                             </div>
@@ -186,20 +185,20 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                <div className="order-1 rounded-[32px] border border-[#e6dccd] bg-[rgba(255,253,249,0.94)] p-5 shadow-[0_28px_60px_rgba(55,48,38,0.08)] backdrop-blur-md sm:p-8 lg:order-2 lg:rounded-[40px] lg:p-10">
+                <div className="order-1 rounded-[32px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-5 shadow-[var(--landing-shadow-lg)] backdrop-blur-md sm:p-8 lg:order-2 lg:rounded-[40px] lg:p-10">
                     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#667370]">OTP-based access</div>
-                            <h2 className="mt-3 font-outfit text-4xl font-black tracking-tight text-[#1f2b2f]">
+                            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--landing-muted)]">OTP-based access</div>
+                            <h2 className="mt-3 font-outfit text-4xl font-black tracking-tight text-[var(--landing-text)]">
                                 {step === "phone" ? "Welcome back" : "Verify identity"}
                             </h2>
                         </div>
-                        <Link href="/" className="text-sm font-bold text-[#1f5c50] transition-colors hover:text-[#18493f]">
+                        <Link href="/" className="text-sm font-bold text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)]">
                             Back to homepage
                         </Link>
                     </div>
 
-                    <div className="mb-6 rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] p-2 sm:mb-8 sm:rounded-[24px]">
+                    <div className="mb-6 rounded-[22px] border border-[var(--landing-border)] bg-[var(--landing-bg)] p-2 sm:mb-8 sm:rounded-[24px]">
                         <div className="grid grid-cols-2 gap-2">
                             {([
                                 { value: "student", label: "Student", icon: IdentificationBadge },
@@ -216,8 +215,8 @@ export default function LoginPage() {
                                         onClick={() => setRole(item.value)}
                                         className={`flex items-center justify-center gap-1.5 rounded-[16px] px-2 py-3 text-[10px] font-black uppercase tracking-[0.12em] transition-all sm:gap-2 sm:rounded-[18px] sm:text-[11px] sm:tracking-[0.16em] ${
                                             isActive
-                                                ? "border border-[#c5ddd5] bg-white text-[#1f5c50] shadow-[0_10px_20px_rgba(55,48,38,0.05)]"
-                                                : "text-[#667370] hover:text-[#1f5c50] disabled:opacity-50"
+                                                ? "border border-[var(--landing-selection-bg)] bg-white text-[var(--landing-accent)] shadow-[0_10px_20px_rgba(55,48,38,0.05)]"
+                                                : "text-[var(--landing-muted)] hover:text-[var(--landing-accent)] disabled:opacity-50"
                                         }`}
                                     >
                                         <Icon size={18} weight={isActive ? "fill" : "bold"} />
@@ -231,15 +230,15 @@ export default function LoginPage() {
                     <form className="space-y-5 sm:space-y-6" onSubmit={step === "phone" ? handleRequestOtp : handleVerifyOtp}>
                         {step === "phone" ? (
                             <div className="space-y-3">
-                                <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Phone Number</label>
+                                <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">Phone Number</label>
                                 <div className="relative group">
-                                    <IdentificationBadge size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                    <IdentificationBadge size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--landing-muted-light)] transition-colors group-focus-within:text-[var(--landing-accent)]" weight="bold" />
                                     <input
                                         type="tel"
                                         value={phone}
                                         onChange={(event) => setPhone(event.target.value)}
                                         placeholder="Enter your registered phone"
-                                        className="w-full rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-sm font-medium text-[#1f2b2f] outline-none transition-all placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                        className="w-full rounded-[22px] border border-[var(--landing-border)] bg-[var(--landing-bg)] py-4 pl-14 pr-6 text-sm font-medium text-[var(--landing-text)] outline-none transition-all placeholder:text-[var(--landing-muted-light)] focus:border-[var(--landing-selection-bg)] focus:bg-white focus:ring-4 focus:ring-[var(--landing-selection-bg)]"
                                         required
                                     />
                                 </div>
@@ -247,29 +246,29 @@ export default function LoginPage() {
                         ) : (
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Verification Code</label>
+                                    <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">Verification Code</label>
                                     <button
                                         type="button"
                                         onClick={() => setStep("phone")}
-                                        className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1f5c50] hover:underline"
+                                        className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--landing-accent)] hover:underline"
                                     >
                                         Change Phone
                                     </button>
                                 </div>
                                 <div className="relative group">
-                                    <ShieldCheck size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b9693] transition-colors group-focus-within:text-[#1f5c50]" weight="bold" />
+                                    <ShieldCheck size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--landing-muted-light)] transition-colors group-focus-within:text-[var(--landing-accent)]" weight="bold" />
                                     <input
                                         type="text"
                                         value={otp}
                                         onChange={(event) => setOtp(event.target.value)}
                                         placeholder="Enter 4-6 digit OTP"
-                                        className="w-full tracking-[0.5em] text-center rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 pl-14 pr-6 text-lg font-black text-[#1f2b2f] outline-none transition-all placeholder:text-sm placeholder:tracking-normal placeholder:font-medium placeholder:text-[#8b9693] focus:border-[#c5ddd5] focus:bg-white focus:ring-4 focus:ring-[#dcebe6]"
+                                        className="w-full tracking-[0.5em] text-center rounded-[22px] border border-[var(--landing-border)] bg-[var(--landing-bg)] py-4 pl-14 pr-6 text-lg font-black text-[var(--landing-text)] outline-none transition-all placeholder:text-sm placeholder:tracking-normal placeholder:font-medium placeholder:text-[var(--landing-muted-light)] focus:border-[var(--landing-selection-bg)] focus:bg-white focus:ring-4 focus:ring-[var(--landing-selection-bg)]"
                                         required
                                         maxLength={6}
                                     />
                                 </div>
-                                <p className="text-center text-[10px] font-medium text-[#667370]">
-                                    OTP sent to <span className="font-bold text-[#1f2b2f]">{phone}</span>
+                                <p className="text-center text-[10px] font-medium text-[var(--landing-muted)]">
+                                    OTP sent to <span className="font-bold text-[var(--landing-text)]">{phone}</span>
                                 </p>
                             </div>
                         )}
@@ -283,7 +282,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex w-full items-center justify-center gap-3 rounded-[20px] border border-[#1f5c50] bg-[#1f5c50] py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-[0_16px_34px_rgba(31,92,80,0.14)] transition-all duration-300 hover:bg-[#18493f] active:scale-95 disabled:opacity-70 sm:rounded-[22px]"
+                            className="flex w-full items-center justify-center gap-3 rounded-[20px] border border-[var(--landing-accent)] bg-[var(--landing-accent)] py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-[0_16px_34px_rgba(31,92,80,0.14)] transition-all duration-300 hover:bg-[var(--landing-accent-hover)] active:scale-95 disabled:opacity-70 sm:rounded-[22px]"
                         >
                             {isSubmitting
                                 ? "Authenticating..."
@@ -294,69 +293,83 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-8 rounded-[24px] border border-[#e6dccd] bg-[#f4ede2] p-4 sm:rounded-[28px] sm:p-5">
+                    <div className="mt-8 rounded-[24px] border border-[var(--landing-border)] bg-[var(--landing-warm)] p-4 sm:rounded-[28px] sm:p-5">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#667370]">Demo access</div>
-                                <div className="mt-1 text-sm font-medium text-[#4f5b58]">
-                                    Use password <span className="font-bold text-[#1f5c50]">demo123</span> for all demo accounts.
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">Demo access</div>
+                                <div className="mt-1 text-sm font-medium text-[var(--landing-muted)]">
+                                    Use password <span className="font-bold text-[var(--landing-accent)]">demo123</span> for all demo accounts.
                                 </div>
                             </div>
-                            <div className="rounded-full border border-[#d7c5a9] bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#b7791f]">
+                            <div className="rounded-full border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--landing-accent)]">
                                 {role}
                             </div>
                         </div>
 
                         <div className="mt-4 grid gap-3">
                             {activeCards.map((account) => (
-                                <button
+                                <div
                                     key={account.label}
-                                    type="button"
                                     onClick={() => {
                                         setRole(account.role);
                                         setPhone(account.registrationNumber); // Using reg number as demo phone
                                         setStep("phone");
                                         setErrorMessage("");
                                     }}
-                                    className="rounded-[22px] border border-[#e6dccd] bg-white px-4 py-3 text-left transition-all hover:border-[#c5ddd5] hover:bg-[#fcfaf6]"
+                                    className="rounded-[22px] border border-[var(--landing-border)] bg-white px-4 py-3 text-left transition-all hover:border-[var(--landing-selection-bg)] hover:bg-[var(--landing-warm)] cursor-pointer"
                                 >
-                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
-                                            <div className="text-sm font-bold text-[#1f2b2f]">{account.label}</div>
-                                            <div className="text-xs font-medium text-[#667370]">{account.registrationNumber}</div>
+                                            <div className="text-sm font-bold text-[var(--landing-text)]">{account.label}</div>
+                                            <div className="text-xs font-medium text-[var(--landing-muted)]">{account.registrationNumber}</div>
                                         </div>
-                                        <div className="text-xs font-medium text-[#1f5c50]">{account.email}</div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-xs font-medium text-[var(--landing-accent)]">{account.email}</div>
+                                            <button
+                                                type="button"
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    setIsSubmitting(true);
+                                                    setErrorMessage("");
+                                                    try {
+                                                        const res = await loginAsDemoUser(account.registrationNumber);
+                                                        if (res.success && res.data && 'redirectTo' in res.data) {
+                                                            router.push(res.data.redirectTo);
+                                                        } else {
+                                                            setErrorMessage(res.message || "Direct login failed.");
+                                                            setIsSubmitting(false);
+                                                        }
+                                                    } catch (err) {
+                                                        setErrorMessage("An unexpected error occurred.");
+                                                        setIsSubmitting(false);
+                                                    }
+                                                }}
+                                                className="rounded-xl border border-[var(--landing-accent)] bg-[var(--landing-accent)]/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--landing-accent)] transition-all hover:bg-[var(--landing-accent)] hover:text-white active:scale-95"
+                                            >
+                                                One-Click Login
+                                            </button>
+                                        </div>
                                     </div>
-                                </button>
+                                </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className="mt-8">
-                        <div className="relative mb-7">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-[#e6dccd]" />
-                            </div>
-                            <div className="relative flex justify-center text-[9px] font-black uppercase tracking-[0.3em] text-[#8b9693]">
-                                <span className="bg-[rgba(255,253,249,0.94)] px-5">Third-party auth</span>
-                            </div>
-                        </div>
 
-                        <button
-                            type="button"
-                            className="group flex w-full items-center justify-center gap-3 rounded-[22px] border border-[#e6dccd] bg-[#f4ede2] py-4 text-[10px] font-black uppercase tracking-[0.16em] text-[#4f5b58] transition-all active:scale-95"
-                        >
-                            <GoogleLogo size={20} weight="bold" className="text-rose-500 transition-transform group-hover:scale-110" />
-                            Continue with Google
-                        </button>
-                    </div>
-
-                    <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.14em] text-[#8b9693] sm:tracking-[0.16em]">
+                    <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.14em] text-[var(--landing-muted-light)] sm:tracking-[0.16em]">
                         Do not have an account?{" "}
-                        <Link href="/auth/signup" className="text-[#1f5c50] transition-colors hover:text-[#18493f]">
+                        <Link href="/auth/signup" className="text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)]">
                             Create for free
                         </Link>
                     </p>
+
+                    {/* Razorpay Compliance Footer */}
+                    <div className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-[var(--landing-border)] pt-6 text-[9px] font-black uppercase tracking-[0.12em] text-[var(--landing-muted-light)]">
+                        <Link href="/contact" className="hover:text-[var(--landing-accent)]">Contact</Link>
+                        <Link href="/privacy-policy" className="hover:text-[var(--landing-accent)]">Privacy Policy</Link>
+                        <Link href="/terms-and-conditions" className="hover:text-[var(--landing-accent)]">Terms & Conditions</Link>
+                        <Link href="/refund-policy" className="hover:text-[var(--landing-accent)]">Refund Policy</Link>
+                    </div>
                 </div>
             </div>
         </div>

@@ -14,15 +14,15 @@ export default async function PricingPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white selection:bg-indigo-100 selection:text-indigo-900">
+        <div className="min-h-screen bg-[var(--landing-bg)] selection:bg-[var(--landing-selection-bg)] selection:text-[var(--landing-accent)]">
             <Navbar user={session} />
 
             <main className="max-w-7xl mx-auto px-6 py-32 sm:py-48">
                 <div className="text-center space-y-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                    <h1 className="text-5xl md:text-7xl font-bold font-outfit tracking-tight text-gray-900">
-                        Invest in your <span className="text-indigo-600">success</span>.
+                    <h1 className="text-5xl md:text-7xl font-bold font-outfit tracking-tight text-[var(--landing-text)]">
+                        Invest in your <span className="text-[var(--landing-accent)]">success</span>.
                     </h1>
-                    <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium">
+                    <p className="text-xl text-[var(--landing-muted)] max-w-2xl mx-auto font-medium">
                         The most comprehensive CA preparation platform designed specifically for the latest ICAI pattern.
                     </p>
                 </div>
@@ -32,26 +32,26 @@ export default async function PricingPage() {
                 </div>
 
                 {/* FAQ / Trust Section */}
-                <div className="mt-32 border-t border-gray-100 pt-20 animate-in fade-in duration-1000 delay-500">
+                <div className="mt-32 border-t border-[var(--landing-border)] pt-20 animate-in fade-in duration-1000 delay-500">
                     <div className="grid md:grid-cols-3 gap-12">
                         <div>
-                            <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Secure Checkout</h4>
-                            <h3 className="text-xl font-bold text-gray-900 font-outfit mb-4">Instant Access</h3>
-                            <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                                Get immediate access to all mock tests and premium features upon successful payment. All transactions are ₹ secured.
+                            <h4 className="text-[10px] font-bold text-[var(--landing-accent)] uppercase tracking-widest mb-4">Secure Checkout</h4>
+                            <h3 className="text-xl font-bold text-[var(--landing-text)] font-outfit mb-4">Instant Access</h3>
+                            <p className="text-[var(--landing-muted)] text-sm font-medium leading-relaxed">
+                                Get immediate access to all mock tests and premium features upon successful payment. All transactions are secure.
                             </p>
                         </div>
                         <div>
-                            <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Upgrade Anytime</h4>
-                            <h3 className="text-xl font-bold text-gray-900 font-outfit mb-4">Flexible Scaling</h3>
-                            <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                            <h4 className="text-[10px] font-bold text-[var(--landing-accent)] uppercase tracking-widest mb-4">Upgrade Anytime</h4>
+                            <h3 className="text-xl font-bold text-[var(--landing-text)] font-outfit mb-4">Flexible Scaling</h3>
+                            <p className="text-[var(--landing-muted)] text-sm font-medium leading-relaxed">
                                 Start with Basic and upgrade to Pass Pro as you move closer to your exams. We offer prorated credits.
                             </p>
                         </div>
                         <div>
-                            <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">24/7 Support</h4>
-                            <h3 className="text-xl font-bold text-gray-900 font-outfit mb-4">Dedicated Help</h3>
-                            <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                            <h4 className="text-[10px] font-bold text-[var(--landing-accent)] uppercase tracking-widest mb-4">24/7 Support</h4>
+                            <h3 className="text-xl font-bold text-[var(--landing-text)] font-outfit mb-4">Dedicated Help</h3>
+                            <p className="text-[var(--landing-muted)] text-sm font-medium leading-relaxed">
                                 Our support team is always available to help you with technical or billing questions via live chat.
                             </p>
                         </div>

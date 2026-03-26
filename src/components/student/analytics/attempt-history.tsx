@@ -10,16 +10,16 @@ interface Props {
 }
 
 const STATUS_CONFIG: Record<"completed" | "in-progress" | "abandoned", { label: string; color: string; dot: string }> = {
-    completed: { label: "Completed", color: "bg-green-50 text-green-600 border border-green-100", dot: "bg-green-500" },
-    "in-progress": { label: "In Progress", color: "bg-amber-50 text-amber-600 border border-amber-100", dot: "bg-amber-500 animate-pulse" },
-    abandoned: { label: "Abandoned", color: "bg-gray-100 text-gray-500 border border-gray-200", dot: "bg-gray-400" },
+    completed: { label: "Completed", color: "bg-[var(--student-accent-soft)] text-[var(--student-accent)] border border-[var(--student-accent-soft-strong)]", dot: "bg-[var(--student-accent)]" },
+    "in-progress": { label: "In Progress", color: "bg-[var(--student-support-soft)] text-[var(--student-support)] border border-[var(--student-support-soft-strong)]", dot: "bg-[var(--student-support)] animate-pulse" },
+    abandoned: { label: "Abandoned", color: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] border border-[var(--student-border)]", dot: "bg-[var(--student-muted)]" },
 };
 
 function AccuracyBar({ accuracy }: { accuracy: number }) {
-    const color = accuracy >= 75 ? "#10b981" : accuracy >= 55 ? "#f59e0b" : "#f43f5e";
+    const color = accuracy >= 75 ? "var(--student-success)" : accuracy >= 55 ? "var(--student-support)" : "var(--student-destructive)";
     return (
-        <div className="h-2 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden flex-1 shadow-inner border border-slate-200/50">
-            <div className="h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_currentColor]" style={{ width: `${accuracy}%`, backgroundColor: color }} />
+        <div className="h-2 bg-[var(--student-panel-muted)] rounded-full overflow-hidden flex-1 shadow-inner border border-[var(--student-border)]">
+            <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${accuracy}%`, backgroundColor: color }} />
         </div>
     );
 }

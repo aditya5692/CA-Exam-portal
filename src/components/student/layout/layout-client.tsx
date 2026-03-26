@@ -1,18 +1,17 @@
 "use client";
 
 import { refreshTokenAction } from "@/actions/auth-token-actions";
-import { 
-    List, 
-    MagnifyingGlass,
-    BookOpen, 
-    Calendar, 
-    Cards, 
-    ChartBar, 
-    Gear, 
-    House, 
-    SignOut, 
-    Sparkle, 
-    Student, 
+import {
+    List,
+    BookOpen,
+    Calendar,
+    Cards,
+    ChartBar,
+    Gear,
+    House,
+    SignOut,
+    Sparkle,
+    Student,
     User,
     Bell,
     X
@@ -23,6 +22,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { StudentSidebar } from "../sidebar";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { GlobalSearch } from "@/components/shared/global-search";
 
 interface StudentLayoutClientProps {
     children: ReactNode;
@@ -92,8 +92,8 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
 
             {/* Backdrop for mobile */}
             {isMobileSidebarOpen && (
-                <div 
-                    className="fixed inset-0 z-[60] bg-[#201a13]/20 backdrop-blur-sm md:hidden"
+                <div
+                    className="fixed inset-0 z-[60] bg-[var(--student-ink)]/20 backdrop-blur-sm md:hidden"
                     onClick={() => setIsMobileSidebarOpen(false)}
                 />
             )}
@@ -103,39 +103,32 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                 "fixed inset-y-0 left-0 z-[70] transition-transform duration-500 md:relative md:translate-x-0",
                 isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <StudentSidebar 
-                    showAdminLink={session.role === "ADMIN"} 
+                <StudentSidebar
+                    showAdminLink={session.role === "ADMIN"}
                     onClose={() => setIsMobileSidebarOpen(false)}
                 />
             </div>
 
             <main className="flex-1 flex flex-col h-screen overflow-y-auto">
                 {/* Global Top Navigation */}
-                <header 
-                    className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-[var(--student-border)] bg-[rgba(255,250,242,0.8)] px-4 shadow-[0_12px_30px_rgba(55,48,38,0.06)] backdrop-blur-xl transition-all md:px-8"
+                <header
+                    className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-[var(--student-border)] bg-[var(--student-panel)]/80 px-3 md:px-8 shadow-[0_12px_30px_rgba(55,48,38,0.06)] backdrop-blur-xl transition-all"
                     style={{ height: "var(--tuner-header-height, 80px)", display: "var(--tuner-header-display, flex)" }}
                 >
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center gap-2 md:gap-4 flex-1">
                         {/* Mobile Toggle */}
-                        <button 
-                            className="rounded-xl border border-[var(--student-border)] bg-[rgba(255,253,249,0.92)] p-2.5 text-[var(--student-muted-strong)] shadow-sm transition-all hover:bg-white active:scale-95 md:hidden"
+                        <button
+                            className="rounded-xl border border-[var(--student-border)] bg-[var(--student-panel)]/92 p-2 text-[var(--student-muted-strong)] shadow-sm transition-all hover:bg-white active:scale-95 md:hidden"
                             onClick={() => setIsMobileSidebarOpen(true)}
                         >
-                            <List size={22} weight="bold" />
+                            <List size={20} weight="bold" />
                         </button>
 
-                        {/* Search Bar */}
-                        <div className="group relative flex w-full max-w-md items-center rounded-2xl border border-[var(--student-border)] bg-[rgba(255,253,249,0.72)] px-4 py-2.5 transition-all focus-within:border-[var(--student-border-strong)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[rgba(31,92,80,0.08)] md:px-5 md:py-3">
-                            <MagnifyingGlass size={20} weight="bold" className="mr-3 shrink-0 text-[var(--student-muted)] transition-colors group-focus-within:text-[var(--student-accent)]" />
-                            <input
-                                className="w-full border-none bg-transparent text-sm font-medium text-[var(--student-text)] placeholder:text-[var(--student-muted)] outline-none focus:ring-0"
-                                placeholder="Search..."
-                                type="text"
-                            />
-                        </div>
+                        {/* Global Search Component */}
+                        <GlobalSearch role="STUDENT" />
                     </div>
 
-                    <div className="flex items-center gap-3 md:gap-8">
+                    <div className="flex items-center gap-2 md:gap-8 ml-2">
                         {/* Action Suite */}
                         <div className="flex items-center gap-1 md:gap-2">
                             <NotificationBell />
@@ -147,11 +140,11 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                                     "hidden rounded-xl p-2.5 transition-all sm:block",
                                     whiteBackground
                                         ? "bg-[var(--student-accent-strong)] text-white shadow-md"
-                                        : "text-[var(--student-muted)] hover:bg-white/80 hover:text-[var(--student-accent-strong)]"
+                                        : "text-[var(--student-muted)] hover:bg-[var(--student-panel)]/80 hover:text-[var(--student-accent-strong)]"
                                 )}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256">
-                                    <path d="M221.67,90.91,141.41,25.18a20,20,0,0,0-26.82,0L34.33,90.91A19.93,19.93,0,0,0,28,105.47V208a12,12,0,0,0,12,12H104a12,12,0,0,0,12-12V160h24v48a12,12,0,0,0,12,12h64a12,12,0,0,0,12-12V105.47A19.93,19.93,0,0,0,221.67,90.91ZM216,208H152V160a12,12,0,0,0-12-12H116a12,12,0,0,0-12,12v48H52V105.47l76-65.78,88,76Z"/>
+                                    <path d="M221.67,90.91,141.41,25.18a20,20,0,0,0-26.82,0L34.33,90.91A19.93,19.93,0,0,0,28,105.47V208a12,12,0,0,0,12,12H104a12,12,0,0,0,12-12V160h24v48a12,12,0,0,0,12,12h64a12,12,0,0,0,12-12V105.47A19.93,19.93,0,0,0,221.67,90.91ZM216,208H152V160a12,12,0,0,0-12-12H116a12,12,0,0,0-12,12v48H52V105.47l76-65.78,88,76Z" />
                                 </svg>
                             </button>
                         </div>
@@ -159,7 +152,7 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                         <div className="hidden h-8 w-px bg-[var(--student-border)] sm:block"></div>
 
                         {/* Identity Section */}
-                        <Link href="/student/profile" className="flex items-center gap-2 md:gap-4 group">
+                        <Link href="/student/profile" className="flex items-center gap-2 md:gap-4 group shrink-0">
                             <div className="text-right hidden md:block">
                                 <p className="font-outfit text-sm font-bold leading-none text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
                                     {session.fullName ?? "Student"}
@@ -170,20 +163,20 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                                     </span>
                                 </div>
                             </div>
-                            <div className="relative rounded-2xl border border-[var(--student-border)] bg-[rgba(255,253,249,0.92)] p-1 shadow-[0_10px_24px_rgba(55,48,38,0.08)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_16px_26px_rgba(55,48,38,0.1)]">
+                            <div className="relative rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel)]/92 p-1 shadow-[0_10px_24px_rgba(55,48,38,0.08)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_16px_26px_rgba(55,48,38,0.1)]">
                                 <div className="rounded-xl border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-0.5">
-                                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] bg-[rgba(255,250,242,0.9)] text-[10px] font-black text-[var(--student-accent-strong)] md:h-10 md:w-10 md:text-xs">
+                                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] bg-[var(--student-panel)]/90 text-[10px] font-black text-[var(--student-accent-strong)] md:h-10 md:w-10 md:text-xs">
                                         {initials}
                                     </div>
                                 </div>
-                                <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[rgba(255,250,242,0.95)] bg-[var(--student-success)] shadow-sm md:h-3.5 md:w-3.5"></div>
+                                <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[var(--student-panel)]/95 bg-[var(--student-success)] shadow-sm md:h-3.5 md:w-3.5"></div>
                             </div>
                         </Link>
                     </div>
                 </header>
 
                 {/* Page Content */}
-                <div 
+                <div
                     className="mx-auto w-full max-w-[1600px] animate-in px-4 font-outfit fade-in slide-in-from-bottom-2 duration-700 sm:px-6 md:px-8 tuner-content-container"
                 >
                     {children}
