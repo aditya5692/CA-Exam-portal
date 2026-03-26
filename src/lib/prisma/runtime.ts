@@ -73,9 +73,26 @@ function getDatabaseUrlEnvKeys(env: EnvLike) {
 }
 
 function readDatabaseUrlFromEnv(env: EnvLike) {
-    for (const key of getDatabaseUrlEnvKeys(env)) {
+    const keysToCheck = getDatabaseUrlEnvKeys(env);
+
+    // Phase 1: In development, prefer SQLite file: if present in any key
+    if (env.NODE_ENV !== "production") {
+        for (const key of keysToCheck) {
+            const value = normalizeEnvString(env[key]);
+            if (value && value.startsWith("file:")) {
+                const redacted = redactDatabaseUrl(value);
+                console.log(`[RuntimePrisma] Prioritizing SQLite via ${key}: ${redacted}`);
+                return { key, value };
+            }
+        }
+    }
+
+    // Phase 2: Standard first-match-priority
+    for (const key of keysToCheck) {
         const value = normalizeEnvString(env[key]);
         if (value) {
+            const redacted = redactDatabaseUrl(value);
+            console.log(`[RuntimePrisma] Using database URL from ${key}: ${redacted}`);
             return { key, value };
         }
     }
@@ -213,10 +230,23 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
         const message = error instanceof Error ? error.message : String(error);
         
         if (message.includes("is not compatible with the provider")) {
-            console.error("\n[PrismaRuntimeError] FATAL MISMATCH DETECTED:");
-            console.error(`- Environment selected: ${config.sourceEnvKey} (${config.protocol})`);
-            console.error(`- Error: ${message}`);
-            console.error("\nTIP: If you intended to use SQLite locally, ensure DO NOT have DOKPLOY_DATABASE_URL or POSTGRES_URL set to a Postgres connection string.\n");
+            const isSqliteError = message.includes("provider sqlite");
+            
+            console.error("\n" + "=".repeat(60));
+            console.error("❌ [PrismaRuntimeError] DATABASE ADAPTER MISMATCH");
+            console.error(`- Environment Context: ${env.NODE_ENV || "development"}`);
+            console.error(`- Selected Connection: ${config.sourceEnvKey} (${config.protocol})`);
+            console.error(`- Detected Mismatch: ${message}`);
+            
+            if (isSqliteError && config.protocol !== "file:") {
+                console.error("\nDIAGNOSIS:");
+                console.error("The Prisma schema expects SQLite, but a Postgres URL was found.");
+                console.error("This usually happens if you have system variables like DOKPLOY_DATABASE_URL or POSTGRES_URL set.");
+                console.error("\nFIX:");
+                console.error("1. Check your .env file or system environment variables.");
+                console.error("2. Ensure only DATABASE_URL=file:./dev.db is set for local development.");
+            }
+            console.error("=".repeat(60) + "\n");
         }
         
         throw error;

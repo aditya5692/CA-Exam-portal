@@ -12,8 +12,8 @@ import {
   registerUserRecord,
   getRoleRedirectPath,
   type AuthLoginInput,
+  type AppRole,
 } from "@/lib/server/auth-management";
-import type { AppRole } from "@/lib/auth/demo-accounts";
 import { ActionResponse } from "@/types/shared";
 import prisma from "@/lib/prisma/client";
 

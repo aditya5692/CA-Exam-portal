@@ -1,12 +1,13 @@
 import "server-only";
 
-import {
-    createPasswordHash,
-    ensureDemoAccounts,
-    verifyPassword,
-    generateTemporaryPassword,
-    type AppRole,
-} from "@/lib/auth/demo-accounts";
+    export type { AppRole } from "@/lib/auth/demo-accounts";
+    import {
+        createPasswordHash,
+        ensureDemoAccounts,
+        verifyPassword,
+        generateTemporaryPassword,
+        type AppRole,
+    } from "@/lib/auth/demo-accounts";
 import prisma from "@/lib/prisma/client";
 import type { User } from "@prisma/client";
 import { isUniqueConstraintError } from "./action-utils";
