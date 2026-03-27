@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { AdminDirectory } from "@/components/admin/admin-directory";
 import prisma from "@/lib/prisma/client";
 import { cn } from "@/lib/utils";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { TopicMasteryHeatmap } from "@/components/teacher/analytics/topic-mastery";
 import prisma from "@/lib/prisma/client";
 import { cn } from "@/lib/utils";

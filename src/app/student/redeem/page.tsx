@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Metadata } from "next";
 import { RedeemCodeClient } from "@/components/student/redeem/client-page";
 import { getCurrentUser } from "@/lib/auth/session";

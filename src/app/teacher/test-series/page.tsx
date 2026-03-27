@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { cn } from "@/lib/utils";
