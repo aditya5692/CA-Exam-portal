@@ -32,11 +32,11 @@ import {
 } from "recharts";
 
 const TEACHER_CHART_THEME = {
-    accent: "#1f5c50",
-    accentSoft: "rgba(43, 122, 105, 0.14)",
-    border: "#e6dccd",
-    muted: "#667370",
-    surface: "#fffdfa"
+    accent: "#4f46e5", // Indigo-600
+    accentSoft: "rgba(79, 70, 229, 0.1)",
+    border: "#f1f5f9",
+    muted: "#94a3b8",
+    surface: "#ffffff"
 } as const;
 
 export default function DashboardOverview() {
@@ -123,7 +123,7 @@ export default function DashboardOverview() {
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
                                 {stat.label}
                             </span>
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border border-slate-100/50 group-hover:bg-indigo-600 group-hover:text-white", stat.bg, stat.color)}>
+                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border border-slate-100/50 group-hover:border-indigo-200 group-hover:scale-110 group-hover:shadow-indigo-600/10", stat.bg, stat.color)}>
                                 <stat.icon size={20} weight="bold" />
                             </div>
                         </div>

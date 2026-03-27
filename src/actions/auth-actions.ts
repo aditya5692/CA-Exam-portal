@@ -17,7 +17,7 @@ import {
 import { ActionResponse } from "@/types/shared";
 import prisma from "@/lib/prisma/client";
 
-import { sendMsg91Otp, verifyMsg91Otp } from "@/lib/server/msg91";
+import { sendMsg91Otp, verifyMsg91Otp, verifyMsg91WidgetToken, normalizePhone } from "@/lib/server/msg91";
 
 type LoginResult = {
     redirectTo: string;
@@ -90,7 +90,56 @@ export async function verifyOtpAndLogin(phone: string, otp: string): Promise<Act
             }
         };
     } catch (error) {
-        console.error("verifyOtpAndLogin error:", error);
+        return { success: false, message: "Verification failed." };
+    }
+}
+
+/**
+ * Verifies the MSG91 widget access token and logs in or redirects to registration.
+ */
+export async function verifyWidgetOtpAndLogin(accessToken: string): Promise<ActionResponse<LoginResult | { needsRegistration: boolean }>> {
+    try {
+        const verification = await verifyMsg91WidgetToken(accessToken);
+        if (!verification.success || !verification.phone) {
+            return { success: false, message: verification.message };
+        }
+
+        const phone = verification.phone;
+        await ensureDemoAccounts();
+        
+        const normalizedPhone = normalizePhone(phone);
+
+        // Logic to find user by phone and log them in
+        const user = await prisma.user.findUnique({
+            where: { phone: normalizedPhone },
+        });
+
+        if (!user) {
+            return { success: true, data: { needsRegistration: true }, message: "OTP verified. Please complete your registration." };
+        }
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { loginCount: { increment: 1 } },
+        });
+
+        await setAuthSession(user);
+
+        return {
+            success: true,
+            message: "Logged in successfully.",
+            data: {
+                redirectTo: getRoleRedirectPath(user.role as AppRole), 
+                user: {
+                    fullName: user.fullName,
+                    role: user.role,
+                    registrationNumber: user.registrationNumber,
+                    phone: user.phone,
+                },
+            }
+        };
+    } catch (error) {
+        console.error("verifyWidgetOtpAndLogin error:", error);
         return { success: false, message: "Verification failed." };
     }
 }

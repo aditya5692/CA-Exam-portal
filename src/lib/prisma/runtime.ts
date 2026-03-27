@@ -125,6 +125,9 @@ function parseDatabaseIntegerEnv(
 }
 
 export function redactDatabaseUrl(databaseUrl: string) {
+    if (databaseUrl.startsWith("file:")) {
+        return databaseUrl; // No sensitive info in file paths usually, and avoid URL constructor bugs
+    }
     try {
         const parsedUrl = new URL(databaseUrl);
 
@@ -149,10 +152,14 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
     }
 
     let protocol: string;
-    try {
-        protocol = new URL(databaseUrl).protocol;
-    } catch {
-        throw new Error("DATABASE_URL is invalid.");
+    if (databaseUrl.startsWith("file:")) {
+        protocol = "file:";
+    } else {
+        try {
+            protocol = new URL(databaseUrl).protocol;
+        } catch {
+            throw new Error("DATABASE_URL is invalid.");
+        }
     }
 
     if (!SUPPORTED_DATABASE_PROTOCOLS.has(protocol)) {

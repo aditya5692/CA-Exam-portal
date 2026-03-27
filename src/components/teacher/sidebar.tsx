@@ -41,16 +41,12 @@ const NAV_ITEMS: NavItem[] = [
     { label: "My Batches", href: "/teacher/batches", icon: GraduationCap },
     { label: "Updates", href: "/teacher/updates", icon: BellSimple },
     { label: "Students", href: "/teacher/students", icon: Users },
-    { label: "Batch Codes", href: "/teacher/access-codes", icon: IdentificationBadge },
     { label: "Analytics", href: "/teacher/analytics", icon: ChartPieSlice },
     { label: "My Plan", href: "/teacher/plan", icon: Sparkle },
 ];
 
 const ADMIN_NAV_ITEMS: NavItem[] = [
-    { label: "User Management", href: "/admin/dashboard", icon: Users },
-    { label: "Control Center", href: "/admin/control-center", icon: IdentificationBadge },
-    { label: "Global Marketplace", href: "/admin/past-year-questions", icon: Books },
-    { label: "Subscriptions", href: "/teacher/subscriptions", icon: CurrencyInr },
+    { label: "Platform Governance", href: "/admin/control-center", icon: IdentificationBadge },
 ];
 
 function SidebarNavItem({
@@ -131,7 +127,7 @@ function UserProfile({
                             <div>
                                 <div className="truncate text-xs font-bold text-[var(--student-text)]">My Account</div>
                                 <div className="text-[10px] font-medium uppercase tracking-tighter text-[var(--student-muted)]">
-                                    {showAdminLink ? "Super Admin" : "Faculty"}
+                                    {showAdminLink ? "Administrator" : "Faculty"}
                                 </div>
                             </div>
                             <CaretDown size={12} weight="bold" className={cn("text-[var(--student-muted)] transition-transform", isProfileOpen && "rotate-180")} />
@@ -150,7 +146,7 @@ function UserProfile({
                         </Link>
                         {showAdminLink && (
                             <Link
-                                href="/admin/dashboard"
+                                href="/admin/control-center"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-bold text-[var(--student-muted-strong)] transition-all hover:bg-[var(--student-accent-soft)] hover:text-[var(--student-accent-strong)]"
                             >
                                 <IdentificationBadge size={16} weight="bold" />
@@ -245,7 +241,7 @@ export function TeacherSidebar({
                                 Financly
                             </h1>
                             <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                                Teacher Studio
+                                {showAdminLink ? "Administration" : "Teacher Studio"}
                             </p>
                         </div>
                     )}
@@ -262,7 +258,7 @@ export function TeacherSidebar({
                     />
                 ))}
 
-                {isSuperAdmin && (
+                {showAdminLink && (
                     <div className="mt-8 space-y-2">
                         {!isCollapsed && (
                             <div className="px-4 py-2">

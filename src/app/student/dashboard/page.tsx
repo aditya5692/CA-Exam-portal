@@ -18,7 +18,7 @@ import type { AppRole } from "@/lib/auth/demo-accounts";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import type { StudentVisibleExam } from "@/types/publish-exam";
-import { BookOpen, ChartLineUp, Clock, FilePdf, FileText, List, Medal, Play, Sparkle, Target, Trophy, ChalkboardTeacher, CaretRight } from "@phosphor-icons/react/dist/ssr";
+import { BookOpen, ChartLineUp, Clock, FilePdf, FileText, List, Medal, Play, Sparkle, Target, Trophy, ChalkboardTeacher, CaretRight, ShieldCheck, CreditCard, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
@@ -144,6 +144,10 @@ export default async function StudentDashboardPage() {
     }
 
     const validUser = user; // Type guard helper for TS
+    const isPro = user.plan !== "FREE";
+    const planName = user.plan === "FREE" ? "Standard Pass" : user.plan;
+    const expiresAt = user.planExpiresAt;
+    const daysLeft = expiresAt ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
 
     try {
         const examTarget = resolveStudentExamTarget(user);
@@ -470,6 +474,57 @@ export default async function StudentDashboardPage() {
                             </div>
                         </div>
                     )}
+
+                    {/* Treasury Portal (Subscription Control) */}
+                    <div className="space-y-6">
+                        <div className="space-y-1 mb-2">
+                            <h2 className="flex items-center gap-3 uppercase font-outfit font-bold text-[var(--student-text)]">
+                                <ShieldCheck size={20} className="text-[var(--student-muted)]" weight="bold" />
+                                Treasury Oversight
+                            </h2>
+                            <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Financial & Access Instrumentation</p>
+                        </div>
+
+                        <div className="student-surface group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-[0_20px_40px_rgba(16,185,129,0.08)]">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
+                            
+                            <div className="relative flex justify-between items-start mb-6">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-outfit text-xl font-black text-slate-900 tracking-tight">{planName}</h3>
+                                        {isPro && (
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 font-black uppercase tracking-widest border border-emerald-200">PRO</span>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Governance Active</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                    <CreditCard size={20} weight="bold" />
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-4 mb-6">
+                                <div className="flex justify-between items-end">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan Validity</span>
+                                    <span className="text-sm font-black text-slate-800">{isPro ? `${daysLeft} Days Remaining` : "Perpetual Free"}</span>
+                                </div>
+                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                    <div 
+                                        className={cn("h-full transition-all duration-1000", isPro ? "bg-emerald-500" : "bg-slate-300")} 
+                                        style={{ width: isPro ? `${Math.min(100, (daysLeft / 365) * 100)}%` : "100%" }} 
+                                    />
+                                </div>
+                            </div>
+
+                            <Link 
+                                href="/pricing"
+                                className="relative flex items-center justify-center gap-3 w-full py-3.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95 group"
+                            >
+                                {isPro ? "Manage Subscription" : "Upgrade to PRO"}
+                                <ArrowRight size={14} weight="bold" className="group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
+                    </div>
 
                     <div className="space-y-6">
                         <div className="flex items-center justify-between mb-2">

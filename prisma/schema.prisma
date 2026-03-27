@@ -222,6 +222,7 @@ model Batch {
   announcements   Announcement[]
   exams           Exam[]         @relation("BatchExams")
   batchMaterials  BatchMaterial[]
+  batchAccessCodes StudentAccessCode[] @relation("BatchAccessCodes")
 }
 
 model Enrollment {
@@ -295,6 +296,7 @@ model Exam {
   chapter       String?
   status        String         @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   examType      String         @default("GENERAL") // RPT, MTP, PYQ, GENERAL
+  isFeatured    Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -472,9 +474,13 @@ model Subscription {
   razorpayOrderId     String?  @unique
   razorpayPaymentId   String?  @unique
   razorpaySignature   String?
+  razorpaySubscriptionId String? @unique
+  razorpayPlanId      String?
+  cancelAtPeriodEnd   Boolean  @default(false)
   grantedByAdminId    String?  // Set if manually granted by admin
   startedAt           DateTime @default(now())
   expiresAt           DateTime
+  currentPeriodEnd    DateTime?
   createdAt           DateTime @default(now())
 
   userId              String
@@ -497,6 +503,9 @@ model StudentAccessCode {
   
   teacherId String
   teacher   User     @relation("TeacherAccessCodes", fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  batchId   String?
+  batch     Batch?    @relation("BatchAccessCodes", fields: [batchId], references: [id], onDelete: Cascade)
 
   // Once student verifies, we link them here
   studentId String?

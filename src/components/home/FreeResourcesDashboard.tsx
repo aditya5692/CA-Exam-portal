@@ -8,7 +8,6 @@ import type { PublicResource } from "@/types/resource";
 import {
   BookmarkSimple,
   Calendar,
-  DownloadSimple,
   Eye,
   FilePdf,
   FileText,
@@ -18,10 +17,8 @@ import {
   Video,
   List,
   SquaresFour,
-  Trash,
-  PencilSimple
+  Trash
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -48,7 +45,6 @@ export function FreeResourcesDashboard({
     daysToExam = 0,
     saveState = "hidden",
     loginHref = "/auth/login",
-    showFeaturePrompt = false,
     mode = "STUDENT",
     defaultView = "GRID"
 }: Props) {
@@ -63,7 +59,6 @@ export function FreeResourcesDashboard({
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<ViewMode>(defaultView);
 
-    // Auto-switch to table for PYQs if not specified otherwise
     useEffect(() => {
         if (activeSecondary === "PYQ") {
             setViewMode("TABLE");
@@ -96,10 +91,7 @@ export function FreeResourcesDashboard({
     }, [activeCategory, activeSecondary, debouncedSearch]);
 
     useEffect(() => {
-        const timer = window.setTimeout(() => {
-            void fetchResources();
-        }, 0);
-        return () => window.clearTimeout(timer);
+        void fetchResources();
     }, [fetchResources]);
 
     useEffect(() => {
@@ -152,82 +144,81 @@ export function FreeResourcesDashboard({
 
     const getIcon = (subType: string) => {
         switch (subType) {
-            case 'VIDEO': return { icon: <Video size={24} weight="fill" className="text-blue-500" />, bg: "bg-blue-50 text-blue-600" };
-            case 'PYQ': return { icon: <FilePdf size={24} weight="fill" className="text-rose-500" />, bg: "bg-rose-50 text-rose-600" };
+            case 'VIDEO': return { icon: <Video size={24} weight="bold" className="text-blue-600" />, bg: "bg-blue-50" };
+            case 'PYQ': return { icon: <FilePdf size={24} weight="bold" className="text-rose-600" />, bg: "bg-rose-50" };
             case 'MTP':
-            case 'RTP': return { icon: <FileText size={24} weight="fill" className="text-amber-500" />, bg: "bg-amber-50 text-amber-600" };
-            default: return { icon: <FilePdf size={24} weight="fill" className="text-emerald-500" />, bg: "bg-emerald-50 text-emerald-600" };
+            case 'RTP': return { icon: <FileText size={24} weight="bold" className="text-amber-600" />, bg: "bg-amber-50" };
+            default: return { icon: <FilePdf size={24} weight="bold" className="text-emerald-600" />, bg: "bg-emerald-50" };
         }
     };
 
     return (
-        <div className="w-full space-y-10 pb-12 font-outfit">
+        <div className="w-full space-y-10 pb-12">
+            
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-200 pb-10">
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Resource Library</span>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Library Workspace</span>
                     </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-2xl md:text-3xl font-black text-slate-900">
-                        {mode === "TEACHER" ? "Management" : "Study"} <span className="text-indigo-600">Materials</span>
+                    <h1 className="font-outfit text-4xl font-bold text-slate-900 tracking-tight">
+                        {mode === "TEACHER" ? "Library Management" : "Study Materials"}
                     </h1>
-                    <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
-                        A unified repository of study materials, revision packs, and past papers optimized for academic success.
+                    <p className="text-slate-500 font-medium text-base max-w-2xl leading-relaxed">
+                        Access exam-calibrated resources, previous year papers, and revision packs tailored for the latest syllabus.
                     </p>
                 </div>
                 {daysToExam > 0 && (
-                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 mb-1 pointer-events-none">
-                        <Calendar size={18} weight="bold" className="text-indigo-400" />
-                        Next Milestone: {daysToExam} Days
+                    <div className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-slate-900 text-white font-bold text-xs uppercase tracking-widest shadow-lg">
+                        <Calendar size={18} weight="bold" className="text-emerald-400" />
+                        Attempt: {daysToExam} Days Left
                     </div>
                 )}
             </div>
 
-            {/* Controls Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/50 p-2 rounded-2xl border border-slate-100/50 backdrop-blur-sm">
-                <div className="relative w-full md:w-[400px] group">
-                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none z-20">
-                        <MagnifyingGlass size={22} weight="bold" className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                    </div>
+            {/* Toolbar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="relative w-full md:w-[450px]">
+                    <MagnifyingGlass size={20} weight="bold" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search library..."
+                        placeholder="SEARCH MATERIALS..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="block w-full pl-14 pr-8 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-[10px] uppercase tracking-widest shadow-sm"
+                        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-200 bg-white text-sm font-bold placeholder:text-slate-300 focus:border-slate-900 outline-none transition-all uppercase tracking-widest"
                     />
                 </div>
 
-                <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl self-end md:self-auto">
+                <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
                     <button 
                         onClick={() => setViewMode("GRID")}
-                        className={cn("p-2 rounded-lg transition-all", viewMode === "GRID" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}
+                        className={cn("p-2.5 rounded-lg transition-all", viewMode === "GRID" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600")}
                     >
-                        <SquaresFour size={20} weight="bold" />
+                        <SquaresFour size={22} weight="bold" />
                     </button>
                     <button 
                         onClick={() => setViewMode("TABLE")}
-                        className={cn("p-2 rounded-lg transition-all", viewMode === "TABLE" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}
+                        className={cn("p-2.5 rounded-lg transition-all", viewMode === "TABLE" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600")}
                     >
-                        <List size={20} weight="bold" />
+                        <List size={22} weight="bold" />
                     </button>
                 </div>
             </div>
 
-            {/* Filters Area */}
-            <div className="space-y-6">
-                <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mr-2 opacity-70">Syllabus:</span>
+            {/* Filters */}
+            <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mr-2">Syllabus:</span>
                     {dynamicCategories.map((cat) => (
                         <button
                             key={cat}
                             onClick={() => setActiveCategory(cat)}
                             className={cn(
-                                "px-6 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                                "px-5 py-2 rounded-lg text-xs font-bold transition-all border",
                                 activeCategory === cat
-                                    ? "bg-slate-900 text-white shadow-lg border border-slate-900"
-                                    : "bg-white text-slate-400 border border-slate-200 hover:border-slate-400 hover:text-slate-800 shadow-sm"
+                                    ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-900 hover:text-slate-900"
                             )}
                         >
                             {cat}
@@ -235,17 +226,17 @@ export function FreeResourcesDashboard({
                     ))}
                 </div>
 
-                <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mr-2 opacity-70">Resource Type:</span>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mr-2">Type:</span>
                     {CONTENT_TYPES.map((type) => (
                         <button
                             key={type}
                             onClick={() => setActiveSecondary(type)}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border",
+                                "px-4 py-1.5 rounded-lg text-xs font-bold transition-all border",
                                 activeSecondary === type
-                                    ? "bg-indigo-50 border-indigo-200/50 text-indigo-600 shadow-sm"
-                                    : "bg-white/50 border-slate-100 text-slate-400 hover:text-slate-600 hover:bg-white hover:border-slate-300"
+                                    ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                                    : "bg-slate-50 border-slate-100 text-slate-400 hover:text-slate-700"
                             )}
                         >
                             {type}
@@ -254,23 +245,23 @@ export function FreeResourcesDashboard({
                 </div>
             </div>
 
-            {/* List/Grid Container */}
+            {/* Content Area */}
             <div className="min-h-[400px]">
                 {loading ? (
-                    <div className="py-20 text-center">
-                        <div className="animate-spin inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Synchronizing Library...</p>
+                    <div className="py-24 text-center">
+                        <div className="animate-spin inline-block w-8 h-8 border-[3px] border-slate-900 border-t-transparent rounded-full"></div>
+                        <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Updating Library Registry...</p>
                     </div>
                 ) : resources.length === 0 ? (
-                    <div className="py-24 text-center bg-slate-50/50 rounded-[32px] border border-dashed border-slate-200">
-                        <Funnel size={48} weight="light" className="mx-auto text-slate-200 mb-4" />
-                        <h3 className="text-lg font-bold text-slate-900 font-outfit uppercase tracking-tight">No resources detected</h3>
-                        <p className="text-slate-400 text-sm font-medium mt-1">Try broadening your search or switching categories.</p>
+                    <div className="py-24 text-center bg-white rounded-2xl border border-slate-200 shadow-sm">
+                        <Funnel size={48} weight="bold" className="mx-auto text-slate-100 mb-4" />
+                        <h3 className="text-lg font-bold text-slate-900 font-outfit">No Resources Detected</h3>
+                        <p className="text-slate-400 text-sm font-medium mt-1">Refine your filters or search query.</p>
                         <button
                             onClick={() => { setActiveCategory("All"); setActiveSecondary("All"); }}
-                            className="mt-6 px-6 py-2.5 bg-white border border-slate-200 text-indigo-600 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+                            className="mt-6 px-6 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg"
                         >
-                            Reset Registry
+                            Reset Workspace
                         </button>
                     </div>
                 ) : viewMode === "GRID" ? (
@@ -279,73 +270,71 @@ export function FreeResourcesDashboard({
                             const { icon, bg } = getIcon(res.subType);
                             const isSaved = canSave && visibleSavedIds.has(res.id);
                             return (
-                                <div key={res.id} className="group relative bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-100/50 transition-all duration-500 flex flex-col h-full hover:-translate-y-1">
+                                <div key={res.id} className="group relative flex flex-col h-full bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300">
                                     <div className="flex items-start justify-between mb-8">
-                                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 shadow-sm", bg.replace('50', '50/50'))}>
+                                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110", bg)}>
                                             {icon}
                                         </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <div className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 border border-slate-100 px-3 py-1.5 rounded-xl bg-slate-50 shadow-sm">
-                                                {res.category}
+                                        <div className="flex items-center gap-2">
+                                            {saveState !== "hidden" && (
+                                                <button
+                                                    onClick={(e) => handleToggleSave(res.id, e)}
+                                                    className={cn(
+                                                        "w-10 h-10 rounded-xl transition-all border flex items-center justify-center",
+                                                        isSaved
+                                                            ? "bg-indigo-600 border-indigo-600 text-white shadow-lg"
+                                                            : "bg-white border-slate-100 text-slate-300 hover:text-indigo-600 hover:border-slate-900"
+                                                    )}
+                                                >
+                                                    <BookmarkSimple size={20} weight={isSaved ? "fill" : "bold"} />
+                                                </button>
+                                            )}
+                                            {mode === "TEACHER" && (
+                                                 <button
+                                                    onClick={() => handleDelete(res.id)}
+                                                    className="w-10 h-10 rounded-xl bg-white border border-slate-100 text-slate-300 hover:text-rose-600 hover:border-rose-900 transition-all flex items-center justify-center"
+                                                >
+                                                    <Trash size={20} weight="bold" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-grow">
+                                        <div className="mb-2">
+                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{res.category}</span>
+                                        </div>
+                                        <h3 className="text-lg font-bold font-outfit text-slate-900 leading-tight mb-4 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                                            {res.title}
+                                        </h3>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-400">
+                                                {(res.author || "A").charAt(0)}
                                             </div>
-                                            <div className="flex gap-2">
-                                                {saveState !== "hidden" && (
-                                                    <button
-                                                        onClick={(e) => handleToggleSave(res.id, e)}
-                                                        className={cn(
-                                                            "w-10 h-10 rounded-xl transition-all duration-300 flex items-center justify-center border shadow-sm",
-                                                            isSaved
-                                                                ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                                                : "bg-white border-slate-100 text-slate-300 hover:text-indigo-600 hover:border-indigo-100"
-                                                        )}
-                                                    >
-                                                        <BookmarkSimple size={20} weight={isSaved ? "fill" : "bold"} />
-                                                    </button>
-                                                )}
-                                                {mode === "TEACHER" && (
-                                                     <button
-                                                        onClick={() => handleDelete(res.id)}
-                                                        className="w-10 h-10 rounded-xl bg-white border border-slate-100 text-slate-300 hover:text-rose-600 hover:border-rose-100 transition-all flex items-center justify-center shadow-sm"
-                                                    >
-                                                        <Trash size={20} weight="bold" />
-                                                    </button>
-                                                )}
+                                            <div className="flex flex-col">
+                                                <span className="text-[11px] font-bold text-slate-700 leading-none">{res.author || "Global Faculty"}</span>
+                                                <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mt-1">Verified Resource</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <h3 className="text-xl font-bold font-outfit text-slate-900 leading-snug mb-4 group-hover:text-indigo-600 transition-colors line-clamp-2 min-h-[56px]">
-                                        {res.title}
-                                    </h3>
-
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 uppercase">
-                                            {(res.author || "A").charAt(0)}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-slate-700 uppercase tracking-tight">{res.author || "Faculty"}</span>
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Syllabus Expert</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                                    <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-slate-900 leading-none">{res.downloads}</span>
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Saves</span>
+                                                <span className="text-sm font-bold text-slate-900">{res.downloads}</span>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Saves</span>
                                             </div>
-                                            <div className="h-4 w-[1px] bg-slate-100" />
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-slate-900 leading-none">{(res.rating || 4.5).toFixed(1)}</span>
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 font-sans flex items-center gap-1">
-                                                    Rating <Star size={10} weight="fill" className="text-amber-500" />
+                                                <span className="text-sm font-bold text-slate-900 flex items-center gap-1">
+                                                    {(res.rating || 4.5).toFixed(1)} <Star size={12} weight="fill" className="text-amber-500" />
                                                 </span>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Rating</span>
                                             </div>
                                         </div>
 
                                         <button
                                             onClick={() => handleDownload(res.id, res.fileUrl)}
-                                            className="h-11 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 hover:bg-indigo-600 hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2"
+                                            className="h-10 px-6 bg-slate-900 text-white rounded-lg text-xs font-bold transition-all hover:bg-indigo-600 active:scale-95 flex items-center gap-2"
                                         >
                                             Access <Eye size={18} weight="bold" />
                                         </button>
@@ -355,49 +344,49 @@ export function FreeResourcesDashboard({
                         })}
                     </div>
                 ) : (
-                    <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50/50 border-b border-slate-100">
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Material Bundle</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Category</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Protocol</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center text-indigo-600">Metric</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Material</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Syllabus</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Format</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Saves</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Action</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
+                            <tbody className="divide-y divide-slate-100">
                                 {resources.map((res) => {
                                     const { icon } = getIcon(res.subType);
                                     return (
-                                        <tr key={res.id} className="group hover:bg-slate-50/30 transition-all">
-                                            <td className="px-8 py-5">
+                                        <tr key={res.id} className="group hover:bg-slate-50 transition-colors">
+                                            <td className="px-6 py-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shadow-sm group-hover:bg-white transition-all">
+                                                    <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white transition-colors border border-transparent group-hover:border-slate-200">
                                                         {icon}
                                                     </div>
                                                     <div>
-                                                        <div className="text-sm font-bold text-slate-900 uppercase tracking-tight">{res.title}</div>
-                                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{res.author || "Global Faculty"}</div>
+                                                        <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{res.title}</div>
+                                                        <div className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">{res.author || "Global Faculty"}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                            <td className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
                                                 {res.category}
                                             </td>
-                                            <td className="px-8 py-5">
-                                                <span className="px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 text-[10px] font-bold uppercase tracking-widest">
+                                            <td className="px-6 py-4">
+                                                <span className="px-2 py-1 rounded-md bg-white border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
                                                     {res.subType}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-5 text-center">
-                                                <span className="text-sm font-bold text-slate-900 tracking-tighter">{res.downloads.toLocaleString()}</span>
+                                            <td className="px-6 py-4 text-center text-sm font-bold text-slate-900">
+                                                {res.downloads.toLocaleString()}
                                             </td>
-                                            <td className="px-8 py-5">
+                                            <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button 
                                                         onClick={() => handleDownload(res.id, res.fileUrl)}
-                                                        className="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 shadow-sm transition-all"
+                                                        className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-900 transition-all"
                                                         title="View"
                                                     >
                                                         <Eye size={18} weight="bold" />
@@ -405,7 +394,7 @@ export function FreeResourcesDashboard({
                                                     {mode === "TEACHER" && (
                                                         <button 
                                                             onClick={() => handleDelete(res.id)}
-                                                            className="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-rose-600 hover:border-rose-100 shadow-sm transition-all"
+                                                            className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-900 transition-all"
                                                             title="Delete"
                                                         >
                                                             <Trash size={18} weight="bold" />

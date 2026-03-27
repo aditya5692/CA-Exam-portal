@@ -14,11 +14,14 @@ function generateRandomCode(prefix = "BATCH") {
 /**
  * Fetches all student access codes for the currently logged-in teacher.
  */
-export async function getTeacherStudents(): Promise<ActionResponse<StudentAccessCode[]>> {
+export async function getTeacherStudents(batchId?: string): Promise<ActionResponse<StudentAccessCode[]>> {
   try {
     const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
     const students = await prisma.studentAccessCode.findMany({
-      where: { teacherId: user.id },
+      where: { 
+        teacherId: user.id,
+        ...(batchId ? { batchId } : {})
+      },
       orderBy: { createdAt: "desc" },
     });
     return { success: true, data: students };
@@ -36,6 +39,7 @@ export async function createStudentAccess(data: {
   email: string;
   caLevel?: string;
   subject?: string;
+  batchId?: string;
 }): Promise<ActionResponse<StudentAccessCode>> {
   try {
     const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
@@ -51,7 +55,8 @@ export async function createStudentAccess(data: {
       data: {
         ...data,
         teacherId: user.id,
-        code: generateRandomCode()
+        code: generateRandomCode(),
+        batchId: data.batchId || null
       }
     });
     return { success: true, data: newCode, message: "Student created successfully." };
@@ -69,7 +74,7 @@ export async function bulkCreateStudentAccess(studentsData: {
   email: string;
   caLevel?: string;
   subject?: string;
-}[]): Promise<ActionResponse<{ count: number }>> {
+}[], batchId?: string): Promise<ActionResponse<{ count: number }>> {
   try {
     const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
     
@@ -89,7 +94,8 @@ export async function bulkCreateStudentAccess(studentsData: {
     const dataToInsert = toCreate.map((s: any) => ({
         ...s,
         teacherId: user.id,
-        code: generateRandomCode()
+        code: generateRandomCode(),
+        batchId: batchId || null
     }));
 
     const result = await prisma.studentAccessCode.createMany({
@@ -131,7 +137,19 @@ export async function verifyAccessCode(code: string): Promise<ActionResponse<Stu
         data: { status: "VERIFIED", studentId: user.id }
       });
 
-      return { success: true, data: updated, message: "Code verified successfully! Your profile is now linked." };
+      // --- AUTO-ENROLLMENT LOGIC ---
+      if (updated.batchId) {
+          const existingEnr = await prisma.enrollment.findUnique({
+              where: { studentId_batchId: { studentId: user.id, batchId: updated.batchId } }
+          });
+          if (!existingEnr) {
+              await prisma.enrollment.create({
+                  data: { studentId: user.id, batchId: updated.batchId }
+              });
+          }
+      }
+
+      return { success: true, data: updated, message: "Code verified successfully!" + (updated.batchId ? " You have been automatically added to the batch." : "") };
     }
 
     // --- Path 2: Batch uniqueJoinCode ---

@@ -1,18 +1,20 @@
 "use client";
 
-import { loginAsDemoUser, requestOtp, verifyOtpAndLogin } from "@/actions/auth-actions";
+import { loginAsDemoUser, requestOtp, verifyOtpAndLogin, verifyWidgetOtpAndLogin } from "@/actions/auth-actions";
+import Msg91Widget from "@/components/auth/msg91-widget";
 import {
     ArrowRight,
     ChalkboardTeacher,
-    Envelope,
     GraduationCap,
     IdentificationBadge,
-    Lock,
-    ShieldCheck
+    ShieldCheck,
+    SignOut,
+    Spinner
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 type LoginRole = "student" | "teacher";
 
@@ -25,13 +27,13 @@ const DEMO_ACCOUNT_CARDS = [
 
 const ROLE_META: Record<LoginRole, { title: string; description: string; icon: typeof IdentificationBadge }> = {
     student: {
-        title: "Student workspace",
-        description: "Sign in to practice timed papers, revisit weak chapters, and keep revision material tied to real progress.",
+        title: "Student Workspace",
+        description: "Practice timed papers, revisit weak chapters, and track progress.",
         icon: IdentificationBadge
     },
     teacher: {
-        title: "Teacher workspace",
-        description: "Manage batches, publish materials, monitor attempts, and intervene where students are actually slipping.",
+        title: "Teacher Workspace",
+        description: "Manage batches, monitor student attempts, and publish materials.",
         icon: ChalkboardTeacher
     }
 };
@@ -44,13 +46,28 @@ export default function LoginPage() {
     const [step, setStep] = useState<"phone" | "otp">("phone");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [showWidget, setShowWidget] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const activeCards = useMemo(
         () => DEMO_ACCOUNT_CARDS.filter((account) => account.role === role),
         [role]
     );
 
-    const activeMeta = ROLE_META[role];
+    const isLocalhost = useMemo(() => {
+        if (!mounted || typeof window === "undefined") return false;
+        return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    }, [mounted]);
+
+    const normalizedPhone = useMemo(() => {
+        const digits = phone.replace(/\D/g, "");
+        if (digits.length === 10) return `91${digits}`;
+        return digits;
+    }, [phone]);
 
     async function handleRequestOtp(event: React.FormEvent) {
         event.preventDefault();
@@ -59,17 +76,37 @@ export default function LoginPage() {
             return;
         }
 
-        setIsSubmitting(true);
         setErrorMessage("");
+        
+        if (normalizedPhone.length < 11) {
+            setErrorMessage("Please enter a valid 10-digit phone number.");
+            return;
+        }
 
-        const result = await requestOtp(phone);
+        setShowWidget(true);
+    }
+
+    async function handleWidgetSuccess(accessToken: string) {
+        setIsSubmitting(true);
+        setShowWidget(false);
+        const result = await verifyWidgetOtpAndLogin(accessToken);
         setIsSubmitting(false);
 
-        if (result.success) {
-            setStep("otp");
-        } else {
+        if (!result.success) {
             setErrorMessage(result.message);
+            return;
         }
+
+        if ('needsRegistration' in result.data! && result.data.needsRegistration) {
+            router.push(`/auth/signup?phone=${phone}&verified=true`);
+            return;
+        }
+
+        const loginData = result.data as any;
+        const redirectTo = loginData.redirectTo || (role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
+
+        router.push(redirectTo);
+        router.refresh();
     }
 
     async function handleVerifyOtp(event: React.FormEvent) {
@@ -91,7 +128,6 @@ export default function LoginPage() {
         }
 
         if ('needsRegistration' in result.data! && result.data.needsRegistration) {
-            // Redirect to signup with prefilled phone and verified status
             router.push(`/auth/signup?phone=${phone}&verified=true`);
             return;
         }
@@ -104,53 +140,33 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen overflow-x-hidden bg-[var(--landing-bg)] px-4 py-4 text-[var(--landing-text)] sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-            {/* Background blobs omitted for brevity - keeping existing ones */}
-            <div className="absolute left-[-10rem] top-[-8rem] h-80 w-80 rounded-full bg-[var(--landing-warm)] blur-3xl opacity-70" />
-            <div className="absolute bottom-[-10rem] right-[-8rem] h-96 w-96 rounded-full bg-[var(--landing-selection-bg)] blur-3xl opacity-70" />
-
-            <div className="relative mx-auto grid w-full max-w-6xl gap-5 lg:min-h-[calc(100vh-4rem)] lg:grid-cols-[0.92fr_1.08fr] lg:gap-8">
-                {/* Left side panel omitted for brevity - keeping existing */}
-                <div className="order-2 flex flex-col justify-between rounded-[32px] border border-[var(--landing-border-dark)] bg-[var(--landing-panel-dark)] p-6 text-white shadow-[0_30px_70px_rgba(24,31,34,0.16)] sm:p-8 lg:order-1 lg:rounded-[40px] lg:p-10">
-                    <div className="space-y-8">
+        <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 flex items-center justify-center p-6 sm:p-12">
+            
+            <div className="relative w-full max-w-5xl grid lg:grid-cols-[0.8fr_1.2fr] gap-0 bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+                
+                {/* Left side panel (Dark) */}
+                <div className="hidden lg:flex flex-col justify-between bg-slate-900 p-12 text-white">
+                    <div className="space-y-12">
                         <Link href="/" className="inline-flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-[var(--landing-warm)]">
-                                <GraduationCap size={26} weight="bold" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-900 shadow-lg">
+                                <GraduationCap size={22} weight="bold" />
                             </div>
                             <div>
-                                <div className="font-outfit text-2xl font-black tracking-tight text-white">Financly</div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--landing-selection-bg)]/80">CA Exam Workspace</div>
+                                <div className="font-outfit text-xl font-bold tracking-tight text-white leading-none">Financly</div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mt-1">CA Exam Workspace</div>
                             </div>
                         </Link>
 
-                        <div className="space-y-5">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-selection-bg)]/80">
-                                Secure sign in
-                            </div>
-                            <h1 className="font-outfit text-4xl font-black leading-[0.98] tracking-[-0.05em] text-white sm:text-5xl">
-                                Enter the workspace without the usual dashboard noise
+                        <div className="space-y-6">
+                            <h1 className="font-outfit text-4xl font-bold leading-tight tracking-tight text-white">
+                                Enter your <span className="text-emerald-400">workspace</span> without the noise.
                             </h1>
-                            <p className="max-w-xl text-base font-medium leading-relaxed text-white/70">
-                                Choose the role you need, sign in with your phone and OTP, and continue directly into the correct exam workflow.
+                            <p className="text-base font-medium text-white/60 leading-relaxed">
+                                Sign in with your phone and OTP to access your tailored workflow and continue your preparation.
                             </p>
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            {[
-                                { value: "3", label: "Access roles" },
-                                { value: "Timed", label: "Exam workflows" },
-                                { value: "OTP", label: "Secure login" }
-                            ].map((metric) => (
-                                <div key={metric.label} className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-4 sm:rounded-[24px] sm:py-5">
-                                    <div className="font-outfit text-3xl font-black tracking-tight text-white">{metric.value}</div>
-                                    <div className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--landing-muted-light)]">{metric.label}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="mt-8 sm:mt-10">
-                        <div className="mt-4 hidden space-y-4 sm:block">
+                        <div className="grid gap-3 pt-4">
                             {(["student", "teacher"] as LoginRole[]).map((itemRole) => {
                                 const meta = ROLE_META[itemRole];
                                 const Icon = meta.icon;
@@ -159,23 +175,23 @@ export default function LoginPage() {
                                 return (
                                     <div
                                         key={itemRole}
-                                        className={`rounded-[24px] border px-5 py-4 transition-all ${
+                                        className={cn(
+                                            "rounded-xl border p-5 transition-all text-left",
                                             isActive
-                                                ? "border-[var(--landing-selection-bg)] bg-[var(--landing-selection-bg)] text-[var(--landing-accent)]"
-                                                : "border-white/10 bg-white/5 text-white/70"
-                                        }`}
+                                                ? "border-emerald-500/20 bg-white/5 text-white"
+                                                : "border-white/5 text-white/40"
+                                        )}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isActive ? "bg-white text-[var(--landing-accent)]" : "bg-white/10 text-[var(--landing-warm)]"}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn(
+                                                "flex h-10 w-10 items-center justify-center rounded-lg",
+                                                isActive ? "bg-emerald-500 text-slate-900" : "bg-white/5"
+                                            )}>
                                                 <Icon size={20} weight="bold" />
                                             </div>
                                             <div>
-                                                <div className={`text-[10px] font-black uppercase tracking-[0.18em] ${isActive ? "text-[var(--landing-accent)]" : "text-[var(--landing-selection-bg)]/80"}`}>
-                                                    {meta.title}
-                                                </div>
-                                                <div className={`mt-1 text-sm font-medium leading-relaxed ${isActive ? "text-[var(--landing-accent)]" : "text-white/70"}`}>
-                                                    {meta.description}
-                                                </div>
+                                                <div className="text-xs font-bold uppercase tracking-widest">{meta.title}</div>
+                                                <div className="mt-1 text-sm font-medium leading-normal text-white/50">{meta.description}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -183,195 +199,203 @@ export default function LoginPage() {
                             })}
                         </div>
                     </div>
+
+                    <div className="pt-8 border-t border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                        TLS 1.3 Certified Session
+                    </div>
                 </div>
 
-                <div className="order-1 rounded-[32px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-5 shadow-[var(--landing-shadow-lg)] backdrop-blur-md sm:p-8 lg:order-2 lg:rounded-[40px] lg:p-10">
-                    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                {/* Right side form (Light) */}
+                <div className="p-8 sm:p-12 flex flex-col justify-center">
+                    <div className="mb-8 flex items-center justify-between">
                         <div>
-                            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--landing-muted)]">OTP-based access</div>
-                            <h2 className="mt-3 font-outfit text-4xl font-black tracking-tight text-[var(--landing-text)]">
-                                {step === "phone" ? "Welcome back" : "Verify identity"}
+                            <h2 className="font-outfit text-3xl font-bold text-slate-900 tracking-tight">
+                                {step === "phone" ? "Welcome Back" : "Verify OTP"}
                             </h2>
+                            <p className="text-sm font-medium text-slate-400 mt-1">
+                                {step === "phone" ? "Identify yourself to continue" : `Code sent to ${phone}`}
+                            </p>
                         </div>
-                        <Link href="/" className="text-sm font-bold text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)]">
-                            Back to homepage
+                        <Link href="/" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-widest">
+                            Home
                         </Link>
                     </div>
 
-                    <div className="mb-6 rounded-[22px] border border-[var(--landing-border)] bg-[var(--landing-bg)] p-2 sm:mb-8 sm:rounded-[24px]">
-                        <div className="grid grid-cols-2 gap-2">
-                            {([
-                                { value: "student", label: "Student", icon: IdentificationBadge },
-                                { value: "teacher", label: "Teacher", icon: ChalkboardTeacher }
-                            ] as const).map((item) => {
-                                const Icon = item.icon;
-                                const isActive = role === item.value;
+                    {/* Role Selector */}
+                    <div className="mb-8 p-1 bg-slate-100 rounded-xl inline-flex w-full">
+                        {([
+                            { value: "student", label: "Student", icon: IdentificationBadge },
+                            { value: "teacher", label: "Teacher", icon: ChalkboardTeacher }
+                        ] as const).map((item) => {
+                            const Icon = item.icon;
+                            const isActive = role === item.value;
 
-                                return (
-                                    <button
-                                        key={item.value}
-                                        type="button"
-                                        disabled={step === "otp"}
-                                        onClick={() => setRole(item.value)}
-                                        className={`flex items-center justify-center gap-1.5 rounded-[16px] px-2 py-3 text-[10px] font-black uppercase tracking-[0.12em] transition-all sm:gap-2 sm:rounded-[18px] sm:text-[11px] sm:tracking-[0.16em] ${
-                                            isActive
-                                                ? "border border-[var(--landing-selection-bg)] bg-white text-[var(--landing-accent)] shadow-[0_10px_20px_rgba(55,48,38,0.05)]"
-                                                : "text-[var(--landing-muted)] hover:text-[var(--landing-accent)] disabled:opacity-50"
-                                        }`}
-                                    >
-                                        <Icon size={18} weight={isActive ? "fill" : "bold"} />
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                            return (
+                                <button
+                                    key={item.value}
+                                    type="button"
+                                    disabled={step === "otp"}
+                                    onClick={() => setRole(item.value)}
+                                    className={cn(
+                                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-xs font-bold transition-all",
+                                        isActive
+                                            ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                                            : "text-slate-500 hover:text-slate-900 disabled:opacity-50"
+                                    )}
+                                >
+                                    <Icon size={18} weight="bold" />
+                                    {item.label}
+                                </button>
+                            );
+                        })}
                     </div>
 
-                    <form className="space-y-5 sm:space-y-6" onSubmit={step === "phone" ? handleRequestOtp : handleVerifyOtp}>
+                    <form className="space-y-6" onSubmit={step === "phone" ? handleRequestOtp : handleVerifyOtp}>
                         {step === "phone" ? (
-                            <div className="space-y-3">
-                                <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">Phone Number</label>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</label>
                                 <div className="relative group">
-                                    <IdentificationBadge size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--landing-muted-light)] transition-colors group-focus-within:text-[var(--landing-accent)]" weight="bold" />
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
+                                        <IdentificationBadge size={20} weight="bold" />
+                                    </span>
                                     <input
                                         type="tel"
                                         value={phone}
                                         onChange={(event) => setPhone(event.target.value)}
-                                        placeholder="Enter your registered phone"
-                                        className="w-full rounded-[22px] border border-[var(--landing-border)] bg-[var(--landing-bg)] py-4 pl-14 pr-6 text-sm font-medium text-[var(--landing-text)] outline-none transition-all placeholder:text-[var(--landing-muted-light)] focus:border-[var(--landing-selection-bg)] focus:bg-white focus:ring-4 focus:ring-[var(--landing-selection-bg)]"
+                                        placeholder="EX: 9876543210"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
                                         required
                                     />
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">Verification Code</label>
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep("phone")}
-                                        className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--landing-accent)] hover:underline"
-                                    >
-                                        Change Phone
-                                    </button>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Verification Code</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep("phone")}
+                                            className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:underline"
+                                        >
+                                            Change Phone
+                                        </button>
+                                    </div>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
+                                            <ShieldCheck size={20} weight="bold" />
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={otp}
+                                            onChange={(event) => setOtp(event.target.value)}
+                                            placeholder="Enter OTP"
+                                            className="w-full tracking-[1.5em] text-center rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-lg font-bold text-slate-900 outline-none transition-all placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
+                                            required
+                                            maxLength={6}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="relative group">
-                                    <ShieldCheck size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--landing-muted-light)] transition-colors group-focus-within:text-[var(--landing-accent)]" weight="bold" />
-                                    <input
-                                        type="text"
-                                        value={otp}
-                                        onChange={(event) => setOtp(event.target.value)}
-                                        placeholder="Enter 4-6 digit OTP"
-                                        className="w-full tracking-[0.5em] text-center rounded-[22px] border border-[var(--landing-border)] bg-[var(--landing-bg)] py-4 pl-14 pr-6 text-lg font-black text-[var(--landing-text)] outline-none transition-all placeholder:text-sm placeholder:tracking-normal placeholder:font-medium placeholder:text-[var(--landing-muted-light)] focus:border-[var(--landing-selection-bg)] focus:bg-white focus:ring-4 focus:ring-[var(--landing-selection-bg)]"
-                                        required
-                                        maxLength={6}
-                                    />
-                                </div>
-                                <p className="text-center text-[10px] font-medium text-[var(--landing-muted)]">
-                                    OTP sent to <span className="font-bold text-[var(--landing-text)]">{phone}</span>
-                                </p>
                             </div>
                         )}
 
-                        {errorMessage ? (
-                            <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                        {errorMessage && (
+                            <div className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 text-xs font-bold text-rose-600">
                                 {errorMessage}
                             </div>
-                        ) : null}
+                        )}
 
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex w-full items-center justify-center gap-3 rounded-[20px] border border-[var(--landing-accent)] bg-[var(--landing-accent)] py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-[0_16px_34px_rgba(31,92,80,0.14)] transition-all duration-300 hover:bg-[var(--landing-accent-hover)] active:scale-95 disabled:opacity-70 sm:rounded-[22px]"
+                            className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
                         >
-                            {isSubmitting
-                                ? "Authenticating..."
-                                : step === "phone"
-                                    ? "Request OTP code"
-                                    : "Verify & Enter Workspace"}
-                            <ArrowRight size={18} weight="bold" />
+                            {isSubmitting ? <Spinner className="animate-spin" size={20} weight="bold" /> : step === "phone" ? "Request OTP" : "Verify & Login"}
+                            {!isSubmitting && <ArrowRight size={20} weight="bold" />}
                         </button>
+
+                        {isLocalhost && !showWidget && (
+                            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-[10px] font-medium text-amber-700 leading-relaxed shadow-sm">
+                                <strong className="block mb-1 font-bold uppercase tracking-wider">Localhost Detected:</strong>
+                                MSG91 verification often fails on <code className="bg-amber-100/50 px-1 rounded text-amber-900 font-bold">localhost</code>. 
+                                <br />
+                                1. Try accessing via <code className="bg-amber-100/50 px-1 rounded text-amber-900 font-bold">127.0.0.1:3000</code>.
+                                <br />
+                                2. Or disable **"re-Captcha validation"** in your MSG91 Widget dashboard.
+                            </div>
+                        )}
                     </form>
 
-                    <div className="mt-8 rounded-[24px] border border-[var(--landing-border)] bg-[var(--landing-warm)] p-4 sm:rounded-[28px] sm:p-5">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">Demo access</div>
-                                <div className="mt-1 text-sm font-medium text-[var(--landing-muted)]">
-                                    Use password <span className="font-bold text-[var(--landing-accent)]">demo123</span> for all demo accounts.
-                                </div>
-                            </div>
-                            <div className="rounded-full border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--landing-accent)]">
-                                {role}
-                            </div>
+                    {/* Demo Accounts List - Simplified */}
+                    <div className="mt-12 bg-slate-50 rounded-xl border border-slate-100 p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Demo Accounts</h3>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Quick Access</span>
                         </div>
-
-                        <div className="mt-4 grid gap-3">
+                        <div className="grid gap-2">
                             {activeCards.map((account) => (
                                 <div
                                     key={account.label}
                                     onClick={() => {
                                         setRole(account.role);
-                                        setPhone(account.registrationNumber); // Using reg number as demo phone
+                                        setPhone(account.registrationNumber);
                                         setStep("phone");
                                         setErrorMessage("");
                                     }}
-                                    className="rounded-[22px] border border-[var(--landing-border)] bg-white px-4 py-3 text-left transition-all hover:border-[var(--landing-selection-bg)] hover:bg-[var(--landing-warm)] cursor-pointer"
+                                    className="group flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-slate-200 p-3 rounded-lg hover:border-slate-900 cursor-pointer transition-colors"
                                 >
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                        <div>
-                                            <div className="text-sm font-bold text-[var(--landing-text)]">{account.label}</div>
-                                            <div className="text-xs font-medium text-[var(--landing-muted)]">{account.registrationNumber}</div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-xs font-medium text-[var(--landing-accent)]">{account.email}</div>
-                                            <button
-                                                type="button"
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    setIsSubmitting(true);
-                                                    setErrorMessage("");
-                                                    try {
-                                                        const res = await loginAsDemoUser(account.registrationNumber);
-                                                        if (res.success && res.data && 'redirectTo' in res.data) {
-                                                            router.push(res.data.redirectTo);
-                                                        } else {
-                                                            setErrorMessage(res.message || "Direct login failed.");
-                                                            setIsSubmitting(false);
-                                                        }
-                                                    } catch (err) {
-                                                        setErrorMessage("An unexpected error occurred.");
-                                                        setIsSubmitting(false);
-                                                    }
-                                                }}
-                                                className="rounded-xl border border-[var(--landing-accent)] bg-[var(--landing-accent)]/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--landing-accent)] transition-all hover:bg-[var(--landing-accent)] hover:text-white active:scale-95"
-                                            >
-                                                One-Click Login
-                                            </button>
-                                        </div>
+                                    <div>
+                                        <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{account.label}</div>
+                                        <div className="text-[10px] text-slate-400 font-medium">{account.registrationNumber}</div>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            setIsSubmitting(true);
+                                            const res = await loginAsDemoUser(account.registrationNumber);
+                                            if (res.success && res.data && 'redirectTo' in res.data) {
+                                                router.push(res.data.redirectTo);
+                                            } else {
+                                                setErrorMessage(res.message || "Login failed.");
+                                                setIsSubmitting(false);
+                                            }
+                                        }}
+                                        className="mt-2 sm:mt-0 px-3 py-1.5 bg-slate-100 rounded text-[9px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                                    >
+                                        Login
+                                    </button>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-
-                    <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.14em] text-[var(--landing-muted-light)] sm:tracking-[0.16em]">
-                        Do not have an account?{" "}
-                        <Link href="/auth/signup" className="text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)]">
+                    <p className="mt-8 text-center text-xs font-bold text-slate-400 tracking-tight">
+                        Don't have an account?{" "}
+                        <Link href="/auth/signup" className="text-indigo-600 hover:underline">
                             Create for free
                         </Link>
                     </p>
 
-                    {/* Razorpay Compliance Footer */}
-                    <div className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-[var(--landing-border)] pt-6 text-[9px] font-black uppercase tracking-[0.12em] text-[var(--landing-muted-light)]">
-                        <Link href="/contact" className="hover:text-[var(--landing-accent)]">Contact</Link>
-                        <Link href="/privacy-policy" className="hover:text-[var(--landing-accent)]">Privacy Policy</Link>
-                        <Link href="/terms-and-conditions" className="hover:text-[var(--landing-accent)]">Terms & Conditions</Link>
-                        <Link href="/refund-policy" className="hover:text-[var(--landing-accent)]">Refund Policy</Link>
+                    <div className="mt-8 pt-8 border-t border-slate-100 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-widest text-slate-300">
+                        <Link href="/privacy-policy" className="hover:text-slate-900 transition-colors">Privacy</Link>
+                        <Link href="/terms-and-conditions" className="hover:text-slate-900 transition-colors">Terms</Link>
+                        <Link href="/refund-policy" className="hover:text-slate-900 transition-colors">Refunds</Link>
                     </div>
                 </div>
             </div>
+
+            {showWidget && (
+                <Msg91Widget
+                    phoneNumber={normalizedPhone}
+                    onSuccess={handleWidgetSuccess}
+                    onFailure={(err) => {
+                        setErrorMessage(typeof err === "string" ? err : "Verification failed. Please try again.");
+                        setShowWidget(false);
+                    }}
+                    autoTrigger={true}
+                />
+            )}
         </div>
     );
 }

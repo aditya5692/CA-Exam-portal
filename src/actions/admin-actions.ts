@@ -29,6 +29,49 @@ import { Prisma } from "@prisma/client";
 const ALLOWED_ROLES: AppRole[] = ["ADMIN", "TEACHER", "STUDENT"];
 const ALLOWED_FEATURE_KEYS = new Set(FEATURE_DEFINITIONS.map((feature) => feature.key));
 
+/**
+ * Fetches full user details for administration oversight.
+ */
+export async function getAdminUserDetail(userId: string): Promise<ActionResponse<{
+  user: any;
+  featureOverrides: any[];
+  materialAccess: any[];
+  availableMaterials: any[];
+}>> {
+  try {
+    await requireAdmin();
+
+    const [user, materialAccess, allMaterials] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        include: { featureOverrides: true }
+      }),
+      prisma.materialAccess.findMany({
+        where: { studentId: userId },
+        include: { material: true }
+      }),
+      prisma.studyMaterial.findMany({
+        where: { isPublic: true },
+        orderBy: { createdAt: "desc" }
+      })
+    ]);
+
+    if (!user) throw new Error("User not found.");
+
+    return {
+      success: true,
+      data: {
+        user,
+        featureOverrides: user.featureOverrides,
+        materialAccess,
+        availableMaterials: allMaterials
+      }
+    };
+  } catch (error) {
+    return { success: false, message: getActionErrorMessage(error, "Failed to load user details.") };
+  }
+}
+
 function normalizeRole(input: string): AppRole {
   const normalized = input.trim().toUpperCase();
   if (ALLOWED_ROLES.includes(normalized as AppRole)) {
@@ -615,6 +658,54 @@ export async function deleteAdminManagedMaterial(formData: FormData): Promise<Ac
   } catch (error) {
     console.error("deleteAdminManagedMaterial failed", error);
     return { success: false, message: getActionErrorMessage(error, "Deletion failed.") };
+  }
+}
+
+/**
+ * Toggles the featured status of an exam.
+ */
+export async function toggleAdminExamFeatured(formData: FormData): Promise<ActionResponse<void>> {
+  try {
+    await requireAdmin();
+    const examId = String(formData.get("examId") ?? "").trim();
+    const isFeatured = readBooleanField(formData.get("isFeatured"));
+
+    if (!examId) throw new Error("Exam id is required.");
+
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { isFeatured } as any,
+    });
+
+    revalidateAdminSurfaces();
+    return { success: true, message: isFeatured ? "Exam featured." : "Exam unfeatured.", data: undefined };
+  } catch (error) {
+    console.error("toggleAdminExamFeatured failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to toggle featured status.") };
+  }
+}
+
+/**
+ * Toggles the trending status of a study material.
+ */
+export async function toggleAdminMaterialTrending(formData: FormData): Promise<ActionResponse<void>> {
+  try {
+    await requireAdmin();
+    const materialId = String(formData.get("materialId") ?? "").trim();
+    const isTrending = readBooleanField(formData.get("isTrending"));
+
+    if (!materialId) throw new Error("Material id is required.");
+
+    await prisma.studyMaterial.update({
+      where: { id: materialId },
+      data: { isTrending } as any,
+    });
+
+    revalidateAdminSurfaces();
+    return { success: true, message: isTrending ? "Material marked as trending." : "Material unmarked.", data: undefined };
+  } catch (error) {
+    console.error("toggleAdminMaterialTrending failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to toggle trending status.") };
   }
 }
 

@@ -96,3 +96,43 @@ export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ succ
         return { success: false, message: "Network error while verifying OTP." };
     }
 }
+
+/**
+ * Verifies an access token (JWT) obtained from the MSG91 OTP widget.
+ * This should be called from the server after the client-side verification is complete.
+ */
+export async function verifyMsg91WidgetToken(token: string): Promise<{ success: boolean; message: string; phone?: string }> {
+    if (!MSG91_AUTH_KEY) {
+        console.warn("Msg91 auth key missing for widget token verification.");
+        return { success: false, message: "SMS configuration missing." };
+    }
+
+    try {
+        const response = await fetch(`https://api.msg91.com/api/v5/widget/verifyAccessToken`, {
+            method: "POST",
+            headers: { 
+                "authkey": MSG91_AUTH_KEY,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ token })
+        });
+
+        const result = await response.json();
+        
+        // MSG91 Verify Access Token API typical response:
+        // { "status": "success", "data": { "mobile": "911234567890", ... } }
+        if (result.status === "success" || result.type === "success") {
+            const phone = result.data?.mobile || result.mobile;
+            return { 
+                success: true, 
+                message: "Verification successful.", 
+                phone 
+            };
+        }
+
+        return { success: false, message: result.message || "Invalid or expired token." };
+    } catch (error) {
+        console.error("Msg91 verifyWidgetToken error:", error);
+        return { success: false, message: "Network error during token verification." };
+    }
+}
