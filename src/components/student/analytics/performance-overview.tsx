@@ -73,43 +73,83 @@ export function StudentAnalyticsOverview({ data }: Props) {
                     </div>
                 </div>
 
-                {/* Performance Benchmark */}
-                <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
-                    <div className="mb-6 md:mb-8">
-                        <h3 className="text-lg md:text-xl font-outfit">Performance Benchmark</h3>
-                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Accuracy vs Peers</p>
-                    </div>
-                    <div className="flex-1 w-full flex flex-col">
-                        <div className="flex-1 relative">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={comparativeAnalysis} layout="vertical" barSize={36}>
-                                    <XAxis type="number" hide domain={[0, 100]} />
-                                    <YAxis
-                                        type="category"
-                                        dataKey="name"
-                                        hide
-                                    />
-                                    <Bar dataKey="value" radius={[0, 12, 12, 0]} className="filter drop-shadow-sm" minPointSize={4}>
-                                        {comparativeAnalysis.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                {/* Error Distribution (Conditional) */}
+                {data.errorDistribution && data.errorDistribution.length > 0 ? (
+                    <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                        <div className="mb-6 md:mb-8">
+                            <h3 className="text-lg md:text-xl font-outfit">Error Distribution</h3>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Self-Diagnosis Insights</p>
                         </div>
-                        <div className="space-y-3 mt-6">
-                            {comparativeAnalysis.map((item, i) => (
-                                <div key={i} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.name}</span>
+                        <div className="flex-1 w-full flex flex-col">
+                            <div className="flex-1 relative">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={data.errorDistribution} layout="vertical" barSize={36}>
+                                        <XAxis type="number" hide domain={[0, 100]} />
+                                        <YAxis
+                                            type="category"
+                                            dataKey="label"
+                                            hide
+                                        />
+                                        <Bar dataKey="value" radius={[0, 12, 12, 0]} className="filter drop-shadow-sm" minPointSize={4}>
+                                            {data.errorDistribution.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="space-y-3 mt-6">
+                                {data.errorDistribution.map((item, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.label}</span>
+                                        </div>
+                                        <span className="text-sm md:text-base font-bold text-slate-900 font-outfit">{item.value}%</span>
                                     </div>
-                                    <span className="text-sm md:text-base font-bold text-slate-900 font-outfit">{Math.round(item.value)}%</span>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
+                ) : (
+                    /* Fallback to Performance Benchmark if no sub-tags yet */
+                    <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                        <div className="mb-6 md:mb-8">
+                            <h3 className="text-lg md:text-xl font-outfit">Performance Benchmark</h3>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Accuracy vs Peers</p>
+                        </div>
+                        <div className="flex-1 w-full flex flex-col">
+                            <div className="flex-1 relative">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={comparativeAnalysis} layout="vertical" barSize={36}>
+                                        <XAxis type="number" hide domain={[0, 100]} />
+                                        <YAxis
+                                            type="category"
+                                            dataKey="name"
+                                            hide
+                                        />
+                                        <Bar dataKey="value" radius={[0, 12, 12, 0]} className="filter drop-shadow-sm" minPointSize={4}>
+                                            {comparativeAnalysis.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="space-y-3 mt-6">
+                                {comparativeAnalysis.map((item, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.name}</span>
+                                        </div>
+                                        <span className="text-sm md:text-base font-bold text-slate-900 font-outfit">{Math.round(item.value)}%</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Personalized AI Insights */}
@@ -136,9 +176,21 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                 <span className="text-[var(--student-support-soft)]">{profile.name.split(' ')[0]}</span>
                             </h2>
                             <p className="text-slate-400 font-medium text-base leading-relaxed max-w-2xl font-sans opacity-90">
-                                {weakTopics.length > 0 
-                                    ? `Your current accuracy is ${profile.avgAccuracy}%. You are ranked #${profile.rank} globally based on XP. We've identified ${weakTopics.join(', ')} as areas that need more attention. Focused practice on these topics will help you improve your score quickly.`
-                                    : `Your current accuracy is ${profile.avgAccuracy}%. You are ranked #${profile.rank} globally based on XP. You are performing consistently across all modules. Keep up the good work to maintain your strong position.`}
+                                {data.errorDistribution && data.errorDistribution.length > 0 ? (
+                                    <>
+                                        You know the concepts, but 
+                                        <span className="text-white mx-1 font-bold">
+                                            {data.errorDistribution.find(e => e.name === "SILLY")?.value || 0}%
+                                        </span>
+                                        of your errors are due to Silly Mistakes. 
+                                        <span className="text-[var(--student-support-soft)] ml-1 font-bold italic">Slow down.</span>
+                                        {weakTopics.length > 0 && ` We've also flagged ${weakTopics.slice(0, 2).join(' and ')} for conceptual review.`}
+                                    </>
+                                ) : (
+                                    weakTopics.length > 0 
+                                        ? `Your current accuracy is ${profile.avgAccuracy}%. We've identified ${weakTopics.slice(0, 3).join(', ')} as areas that need more attention. Focused practice on these topics will help you improve your score quickly.`
+                                        : `Your current accuracy is ${profile.avgAccuracy}%. You are performing consistently across all modules. Keep up the good work to maintain your strong position.`
+                                )}
                             </p>
                         </div>
                         <button className="student-button-secondary group/btn flex items-center gap-3 rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">

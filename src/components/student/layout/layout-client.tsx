@@ -2,22 +2,10 @@
 
 import { refreshTokenAction } from "@/actions/auth-token-actions";
 import {
-    List,
-    BookOpen,
-    Calendar,
-    Cards,
-    ChartBar,
-    Gear,
-    House,
-    SignOut,
-    Sparkle,
-    Student,
-    User,
-    Bell,
-    X
+    List
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { StudentSidebar } from "../sidebar";
 import { cn } from "@/lib/utils";
@@ -65,6 +53,7 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
     // Persist preference
     useEffect(() => {
         const saved = localStorage.getItem("student-white-bg");
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (saved === "true") setWhiteBackground(true);
     }, []);
 

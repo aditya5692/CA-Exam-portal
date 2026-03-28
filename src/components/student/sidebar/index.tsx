@@ -9,7 +9,6 @@ import {
     CaretRight,
     House,
     Notebook,
-    Books,
     Sparkle,
     SuitcaseSimple,
     Megaphone,

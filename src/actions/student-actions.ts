@@ -212,13 +212,48 @@ export async function getStudentHistory(): Promise<ActionResponse<StudentHistory
                 comparativeAnalysis,
                 weakTopics: allWeakTopics,
                 examTargetDays: examTarget.daysToExam,
-                examTargetLabel: examTarget.label
+                examTargetLabel: examTarget.label,
+                errorDistribution: await calculateErrorDistribution(user.id)
             },
         };
     } catch (err) {
         console.error("getStudentHistory error:", err);
         return { success: false, message: err instanceof Error ? err.message : "Failed to fetch history." };
     }
+}
+
+async function calculateErrorDistribution(studentId: string) {
+    const gaps: any[] = await (prisma.studentAnswer as any).groupBy({
+        by: ['gapTag'],
+        where: { 
+            attempt: { studentId },
+            isCorrect: false,
+            gapTag: { not: null }
+        },
+        _count: { _all: true }
+    });
+
+    const total = gaps.reduce((sum, g) => sum + (g._count?._all || 0), 0);
+    if (total === 0) return [];
+
+    const colorMap: Record<string, string> = {
+        CONCEPTUAL: "#3b82f6", // Blue
+        SILLY: "#f59e0b",      // Amber
+        TIME: "#ef4444"        // Red
+    };
+
+    const labelMap: Record<string, string> = {
+        CONCEPTUAL: "Conceptual Error",
+        SILLY: "Silly Mistake",
+        TIME: "Time Pressure"
+    };
+
+    return gaps.map(g => ({
+        name: (g as any).gapTag!,
+        label: labelMap[(g as any).gapTag!] || (g as any).gapTag!,
+        value: Math.round(((g as any)._count._all / total) * 100),
+        color: colorMap[(g as any).gapTag!] || "#94a3b8"
+    }));
 }
 
 /**

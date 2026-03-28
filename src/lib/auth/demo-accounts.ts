@@ -6,7 +6,7 @@ import { createHash,randomBytes,scryptSync,timingSafeEqual } from "crypto";
 
 export type AppRole = "ADMIN" | "TEACHER" | "STUDENT";
 
-type DemoAccountKey = "admin" | "teacher1" | "teacher2" | "student1" | "student2";
+type DemoAccountKey = "admin" | "teacher1" | "teacher2" | "student1" | "student2" | "teacher-main";
 
 type DemoAccountSeed = {
     key: DemoAccountKey;
@@ -111,7 +111,7 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         phone: "+91 90000 10002",
     },
     {
-        key: "student1" as any,
+        key: "student1",
         fullName: "Sample Student",
         email: "sample-student@demo.local",
         registrationNumber: "SAMP-STU-001",
@@ -122,7 +122,7 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         department: "General",
     },
     {
-        key: "teacher1" as any,
+        key: "teacher1",
         fullName: "Sample Teacher (Admin)",
         email: "sample-admin@demo.local",
         registrationNumber: "SAMP-ADM-001",
@@ -134,7 +134,7 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         department: "Administration",
     },
     {
-        key: "teacher-main" as any,
+        key: "teacher-main",
         fullName: "Aditya (Main)",
         email: "aditya@demo.local",
         registrationNumber: "MAIN-001",
@@ -176,8 +176,8 @@ export function verifyPassword(password: string, storedHash: string | null | und
     return timingSafeEqual(candidate, expected);
 }
 
-async function upsertDemoUser(seed: DemoAccountSeed) {
-  return (prisma.user as any).upsert({
+async function upsertDemoUser(seed: DemoAccountSeed): Promise<User> {
+  return prisma.user.upsert({
     where: { registrationNumber: seed.registrationNumber },
     update: {
       fullName: seed.fullName,

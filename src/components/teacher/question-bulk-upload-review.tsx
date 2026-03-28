@@ -32,7 +32,7 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Stage = "processing" | "ready";
 type AudienceMode = "all" | "batch";
@@ -72,21 +72,21 @@ export function QuestionBulkUploadReview() {
     const [publishResult, setPublishResult] = useState<{ success: boolean; examTitles?: string[]; targetLabel?: string } | null>(null);
 
     // Get available subjects based on selected CA level
-    const getAvailableSubjects = () => {
+    const getAvailableSubjects = useCallback(() => {
         if (caLevel === "foundation") return CA_FOUNDATION_CONTENT.subjects;
         if (caLevel === "ipc") return CA_INTER_CONTENT.subjects;
         return CA_FINAL_CONTENT.subjects;
-    };
+    }, [caLevel]);
 
-    const availableSubjects = getAvailableSubjects();
+    const availableSubjects = useMemo(() => getAvailableSubjects(), [getAvailableSubjects]);
 
     // Reset subject when CA level changes if the current subject is not in the new level
     useEffect(() => {
         const subs = getAvailableSubjects();
-        if (!subs.some(s => s.name === subject)) {
+        if (subject && !subs.some(s => s.name === subject)) {
             setSubject("");
         }
-    }, [caLevel]);
+    }, [caLevel, subject, getAvailableSubjects]);
 
     useEffect(() => {
         const data = readBulkUploadSession();
@@ -103,7 +103,7 @@ export function QuestionBulkUploadReview() {
 
         const timer = window.setTimeout(() => setStage("ready"), 1200);
         return () => window.clearTimeout(timer);
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (stage !== "ready" || batchesLoaded) return;

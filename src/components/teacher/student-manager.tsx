@@ -305,6 +305,7 @@ export function StudentManager() {
         if (id) {
             const student = students.find(s => s.id === id);
             if (student) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setPerformanceStudent({ id: student.id, name: student.name });
             } else {
                 // Fallback to name in URL if student not in current teacher's batch

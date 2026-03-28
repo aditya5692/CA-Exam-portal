@@ -59,11 +59,10 @@ export function FreeResourcesDashboard({
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<ViewMode>(defaultView);
 
-    useEffect(() => {
-        if (activeSecondary === "PYQ") {
-            setViewMode("TABLE");
-        }
-    }, [activeSecondary]);
+    const handleSecondaryChange = (type: string) => {
+        setActiveSecondary(type);
+        if (type === "PYQ") setViewMode("TABLE");
+    };
 
     const canSave = saveState === "enabled";
     const visibleSavedIds = canSave ? savedIds : EMPTY_SAVED_IDS;
@@ -213,7 +212,7 @@ export function FreeResourcesDashboard({
                         {CONTENT_TYPES.map((type) => (
                             <button
                                 key={type}
-                                onClick={() => setActiveSecondary(type)}
+                                onClick={() => handleSecondaryChange(type)}
                                 className={cn(
                                     "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border whitespace-nowrap",
                                     activeSecondary === type ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"

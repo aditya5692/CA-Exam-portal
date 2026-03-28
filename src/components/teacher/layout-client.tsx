@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Bell, List, UserCircle } from "@phosphor-icons/react";
+import { List, UserCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import { TeacherSidebar } from "./sidebar";

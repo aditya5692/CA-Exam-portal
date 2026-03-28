@@ -79,7 +79,7 @@ export function NotificationBell() {
                         {notifications.length === 0 ? (
                             <div className="p-8 text-center text-[var(--student-muted)]">
                                 <Bell size={32} weight="light" className="mx-auto mb-3 opacity-20" />
-                                <p className="text-sm font-medium">You're all caught up!</p>
+                                <p className="text-sm font-medium">You&apos;re all caught up!</p>
                             </div>
                         ) : (
                             notifications.map(notification => (

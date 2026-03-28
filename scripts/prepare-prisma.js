@@ -12,11 +12,10 @@ function getDatabaseUrl() {
             'POSTGRES_PRISMA_URL',
             'POSTGRESQL_URL',
             'DATABASE_URI',
-            'LOCAL_DATABASE_URL',
         ]
         : [
-            'LOCAL_DATABASE_URL',
             'DATABASE_URL',
+            'LOCAL_DATABASE_URL',
             'POSTGRES_EXTERNAL_URL',
             'DOKPLOY_DATABASE_URL',
             'POSTGRES_INTERNAL_URL',

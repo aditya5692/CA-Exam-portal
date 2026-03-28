@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 generator client {
@@ -329,7 +329,22 @@ model Question {
   options       Option[]
   exams         ExamQuestion[]
   studentAnswers StudentAnswer[]
+
+  // Case Study Support
+  caseStudyId   String?
+  caseStudy     CaseStudy?     @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
 }
+
+model CaseStudy {
+  id            String         @id @default(cuid())
+  title         String
+  content       String         // Markdown or plain text case study
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  questions     Question[]
+}
+
 
 model Option {
   id            String         @id @default(cuid())
@@ -377,6 +392,7 @@ model StudentAnswer {
   id            String         @id @default(cuid())
   isCorrect     Boolean        @default(false)
   timeSpent     Int            @default(0) // seconds
+  gapTag        String?        // CONCEPTUAL, SILLY, TIME
 
   attemptId     String
   attempt       ExamAttempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)

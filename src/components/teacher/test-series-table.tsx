@@ -6,7 +6,6 @@ import {
     ArrowUpRight,
     CaretRight,
     Clock,
-    DotsThreeVertical,
     FileText,
     Globe,
     MagnifyingGlass,

@@ -8,14 +8,8 @@ export function LayoutTuner() {
     const [contentPadding, setContentPadding] = useState(40);
     const [headingMargin, setHeadingMargin] = useState(32);
     const [showHeader, setShowHeader] = useState(true);
-    const [isDev, setIsDev] = useState(false);
+    const isDev = process.env.NODE_ENV === "development";
     const [isMinimized, setIsMinimized] = useState(false);
-
-    useEffect(() => {
-        if (process.env.NODE_ENV === "development") {
-            setIsDev(true);
-        }
-    }, []);
 
     useEffect(() => {
         // Map states to CSS variables

@@ -4,33 +4,55 @@ const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
 const MSG91_OTP_TEMPLATE_ID = process.env.MSG91_OTP_TEMPLATE_ID;
 
 /**
- * Helper to normalize phone numbers for consistency (remove spaces, dashes, etc.)
+ * Validates that the necessary MSG91 configuration is present.
+ * In production, this will throw an error if keys are missing.
+ */
+function validateConfig() {
+    if (!MSG91_AUTH_KEY) {
+        const msg = "MSG91_AUTH_KEY is not configured in environment variables.";
+        if (process.env.NODE_ENV === "production") throw new Error(msg);
+        console.warn(msg);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Helper to normalize phone numbers for consistency.
+ * In Production: Strictly follows E.164-like formatting without '+' for MSG91.
  */
 export function normalizePhone(phone: string): string {
     const digitsOnly = phone.replace(/\D/g, "");
-    // If it starts with 91 and has 12 digits, it's already formatted
-    if (digitsOnly.length === 12 && digitsOnly.startsWith("91")) {
-        return digitsOnly;
-    }
-    // Assume 10-digit numbers are Indian and prepend 91
+    
+    // Handle Indian numbers (10 digits) -> Prepend 91
     if (digitsOnly.length === 10) {
         return `91${digitsOnly}`;
     }
+    
+    // Already has 12 digits (91XXXXXXXXXX)
+    if (digitsOnly.length === 12 && digitsOnly.startsWith("91")) {
+        return digitsOnly;
+    }
+
+    // Default: return as is if it doesn't match standard Indian format
     return digitsOnly;
 }
 
-const MOCK_OTPS: Record<string, string> = {
-    "91123456789": "1234",  // Legacy Sample Student
-    "91987654321": "4321",  // Legacy Sample Admin
-    "911123456789": "1234", // User Provided Sample Student
-    "919987654321": "4321", // User Provided Sample Admin
-    "919000000001": "1234", // Demo Portal Admin
-    "919000000011": "1234", // Demo Teacher 1
-    "919000000012": "1234", // Demo Teacher 2
-    "919000010001": "1234", // Demo Student 1
-    "919000010002": "1234", // Demo Student 2
-    "917065751756": "0424", // User's Default Testing Number
-};
+const IS_PROD = process.env.NODE_ENV === "production";
+
+// Mock OTPS are ONLY accessible in non-production environments
+const MOCK_OTPS: Record<string, string> = !IS_PROD ? {
+    "91123456789": "1234",
+    "91987654321": "4321",
+    "911123456789": "1234",
+    "919987654321": "4321",
+    "919000000001": "1234",
+    "919000000011": "1234",
+    "919000000012": "1234",
+    "919000010001": "1234",
+    "919000010002": "1234",
+    "917065751756": "0424",
+} : {};
 
 /**
  * Sends an OTP to the specified phone number using Msg91.
@@ -38,24 +60,24 @@ const MOCK_OTPS: Record<string, string> = {
 export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; message: string }> {
     const formattedPhone = normalizePhone(phone);
 
-    // Bypass for mock numbers
-    if (MOCK_OTPS[formattedPhone]) {
-        console.log(`Mock OTP requested for ${formattedPhone}. No SMS sent.`);
+    // Bypass for mock numbers (Dev/Test only)
+    if (!IS_PROD && MOCK_OTPS[formattedPhone]) {
+        console.log(`[DEV] Mock OTP requested for ${formattedPhone}. No real SMS sent.`);
         return { success: true, message: "OTP sent successfully (Mock)." };
     }
 
-    if (!MSG91_AUTH_KEY) {
-        console.warn("Msg91 Auth Key not configured. OTP services will not work.");
-        return { success: false, message: "SMS configuration missing (Auth Key)." };
+    if (!validateConfig()) {
+        return { success: false, message: "SMS service is currently unavailable (Config)." };
     }
 
     if (!MSG91_OTP_TEMPLATE_ID) {
-        console.warn("Msg91 Template ID not configured. Fallback OTP will not be sent.");
-        return { success: false, message: "SMS configuration missing (Template ID)." };
+        console.warn("MSG91_OTP_TEMPLATE_ID is missing.");
+        return { success: false, message: "SMS configuration error (Template)." };
     }
 
     try {
-        const response = await fetch(`https://control.msg91.com/api/v5/otp?template_id=${MSG91_OTP_TEMPLATE_ID}&mobile=${formattedPhone}&authkey=${MSG91_AUTH_KEY}`, {
+        // Updated to api.msg91.com for standard production access
+        const response = await fetch(`https://api.msg91.com/api/v5/otp?template_id=${MSG91_OTP_TEMPLATE_ID}&mobile=${formattedPhone}&authkey=${MSG91_AUTH_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
         });
@@ -65,29 +87,33 @@ export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; m
             return { success: true, message: "OTP sent successfully." };
         }
 
-        return { success: false, message: result.message || "Failed to send OTP." };
+        console.error("MSG91 API Business Error:", result);
+        return { success: false, message: result.message || "Failed to deliver OTP." };
     } catch (error) {
-        console.error("Msg91 sendOtp error:", error);
-        return { success: false, message: "Network error while sending OTP." };
+        console.error("MSG91 Network Error (sendOtp):", error);
+        return { success: false, message: "Temporary network issue. Please try again later." };
     }
 }
 
+/**
+ * Verifies the OTP entered by the user.
+ */
 export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ success: boolean; message: string }> {
     const formattedPhone = normalizePhone(phone);
 
-    // Mock OTP logic for development/testing
-    // Allow the specific mock OTP OR a 'VERIFIED' bypass string for staged registrations
-    if (MOCK_OTPS[formattedPhone] === otp || (MOCK_OTPS[formattedPhone] && otp === "VERIFIED")) {
-        return { success: true, message: "OTP verified (Mock)." };
+    // Dev/Test bypass
+    if (!IS_PROD && MOCK_OTPS[formattedPhone]) {
+        if (MOCK_OTPS[formattedPhone] === otp || otp === "VERIFIED") {
+            return { success: true, message: "OTP verified (Mock)." };
+        }
     }
 
-    if (!MSG91_AUTH_KEY) {
-        console.warn("Msg91 auth key missing. OTP verification skipped.");
-        return { success: false, message: "SMS configuration missing." };
+    if (!validateConfig()) {
+        return { success: false, message: "Verification service temporarily unavailable." };
     }
 
     try {
-        const response = await fetch(`https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=${formattedPhone}&authkey=${MSG91_AUTH_KEY}`, {
+        const response = await fetch(`https://api.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=${formattedPhone}&authkey=${MSG91_AUTH_KEY}`, {
             method: "GET",
         });
 
@@ -96,33 +122,31 @@ export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ succ
             return { success: true, message: "OTP verified." };
         }
 
-        return { success: false, message: result.message || "Invalid OTP." };
+        return { success: false, message: result.message || "The entered OTP is incorrect." };
     } catch (error) {
-        console.error("Msg91 verifyOtp error:", error);
-        return { success: false, message: "Network error while verifying OTP." };
+        console.error("MSG91 Network Error (verifyOtp):", error);
+        return { success: false, message: "Could not connect to verification service." };
     }
 }
 
 /**
  * Verifies an access token (JWT) obtained from the MSG91 OTP widget.
- * This should be called from the server after the client-side verification is complete.
+ * Crucial for the embedded widget flow.
  */
 export async function verifyMsg91WidgetToken(token: string): Promise<{ success: boolean; message: string; phone?: string }> {
-    if (!MSG91_AUTH_KEY) {
-        console.warn("Msg91 auth key missing for widget token verification.");
-        return { success: false, message: "SMS configuration missing." };
+    if (!validateConfig()) {
+        return { success: false, message: "Configuration error. Please contact support." };
     }
 
-    // [DEV ONLY] Bypass for mock testing
-    if (token === "mock-verified-token" || (token && token.length > 20)) {
-        // If we see a JWT-like token (typical long string), 
-        // we'll assume it's for the developer's number for now to allow local testing.
-        console.log("MSG91: Bypassing real verification for development JWT");
-        return { success: true, message: "Verification successful (Mock Bypass).", phone: "917065751756" };
+    // Dev/Test bypass for specific widget tokens
+    if (!IS_PROD && (token === "mock-verified-token" || (token && token.length > 50 && token.startsWith("ey")))) {
+        console.log("[DEV] Bypassing real verification for development JWT");
+        // Defaulting to user's test number for dev bypass
+        return { success: true, message: "Verified via Mock Bypass.", phone: "917065751756" };
     }
 
     try {
-        const response = await fetch(`https://control.msg91.com/api/v5/widget/verifyAccessToken`, {
+        const response = await fetch(`https://api.msg91.com/api/v5/widget/verifyAccessToken`, {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
@@ -136,11 +160,8 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
 
         const result = await response.json();
         
-        console.log("MSG91 Widget Verification Response:", JSON.stringify(result, null, 2));
-        
         if (result.status === "success" || result.type === "success") {
             const phone = result.data?.mobile || result.mobile;
-            console.log(`MSG91 Verification SUCCESS for phone: ${phone}`);
             return { 
                 success: true, 
                 message: "Verification successful.", 
@@ -148,10 +169,10 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
             };
         }
 
-        console.error(`MSG91 Verification FAILED: ${result.message || "Invalid or expired token."}`);
-        return { success: false, message: result.message || "Invalid or expired token." };
+        console.error("MSG91 Widget Token Validation Failed:", result);
+        return { success: false, message: result.message || "Authentication token is invalid." };
     } catch (error) {
-        console.error("Msg91 verifyWidgetToken error:", error);
-        return { success: false, message: "Network error during token verification." };
+        console.error("MSG91 Network Error (verifyWidgetToken):", error);
+        return { success: false, message: "Server connection failed during token validation." };
     }
 }

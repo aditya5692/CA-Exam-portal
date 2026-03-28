@@ -4,6 +4,42 @@ import { useState } from "react";
 import { CheckCircle, IdentificationBadge, WarningCircle } from "@phosphor-icons/react";
 import { verifyAccessCode } from "@/actions/student-manager-actions";
 
+interface ClaimedCode {
+    id: string;
+    subject?: string;
+    teacher?: {
+        fullName?: string;
+        email?: string;
+    };
+}
+
+function LinkedContexts({ claimedCodes }: { claimedCodes: ClaimedCode[] }) {
+    if (claimedCodes.length === 0) return null;
+
+    return (
+        <div className="mt-16 pt-10 border-t border-[var(--student-border)]">
+            <h3 className="text-xl font-bold font-outfit text-[var(--student-text)] tracking-tight mb-6">Your Linked Contexts</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+                {claimedCodes.map((c: ClaimedCode) => (
+                    <div key={c.id} className="p-5 rounded-2xl border border-[var(--student-border)] bg-[var(--student-surface)] flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] flex items-center justify-center font-bold text-lg relative shrink-0">
+                            {(c.teacher?.fullName || c.teacher?.email || "T").charAt(0).toUpperCase()}
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[var(--student-success)] rounded-full border-2 border-[var(--student-panel-muted)]" />
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="font-bold text-[var(--student-text)] tracking-tight">{c.teacher?.fullName || c.teacher?.email || "Educator"}</h4>
+                            <p className="text-xs font-semibold text-[var(--student-muted)] line-clamp-1">{c.subject || "General CA Resources"}</p>
+                            <div className="mt-2 text-[9px] font-black uppercase tracking-widest text-[var(--student-success)] bg-[var(--student-success-soft)] px-2.5 py-1 rounded inline-flex items-center">
+                                Verified Access
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function RedeemCodeClient({ claimedCodes = [] }: { claimedCodes?: any[] }) {
     const [code, setCode] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +60,9 @@ export function RedeemCodeClient({ claimedCodes = [] }: { claimedCodes?: any[] }
             setSuccessMessage(res.message || "Code redeemed successfully!");
             setCode("");
             // Refresh to see the new batch
-            typeof window !== 'undefined' && window.location.reload();
+            if (typeof window !== 'undefined') {
+                window.location.reload();
+            }
         } else {
             setErrorMessage(res.message || "Failed to redeem code.");
         }
@@ -85,28 +123,7 @@ export function RedeemCodeClient({ claimedCodes = [] }: { claimedCodes?: any[] }
                 </button>
             </form>
 
-            {claimedCodes.length > 0 && (
-                <div className="mt-16 pt-10 border-t border-[var(--student-border)]">
-                    <h3 className="text-xl font-bold font-outfit text-[var(--student-text)] tracking-tight mb-6">Your Linked Contexts</h3>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {claimedCodes.map(c => (
-                            <div key={c.id} className="p-5 rounded-2xl border border-[var(--student-border)] bg-[var(--student-surface)] flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] flex items-center justify-center font-bold text-lg relative shrink-0">
-                                    {(c.teacher?.fullName || c.teacher?.email || "T").charAt(0).toUpperCase()}
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[var(--student-success)] rounded-full border-2 border-[var(--student-panel-muted)]" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h4 className="font-bold text-[var(--student-text)] tracking-tight">{c.teacher?.fullName || c.teacher?.email || "Educator"}</h4>
-                                    <p className="text-xs font-semibold text-[var(--student-muted)] line-clamp-1">{c.subject || "General CA Resources"}</p>
-                                    <div className="mt-2 text-[9px] font-black uppercase tracking-widest text-[var(--student-success)] bg-[var(--student-success-soft)] px-2.5 py-1 rounded inline-flex items-center">
-                                        Verified Access
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <LinkedContexts claimedCodes={claimedCodes as ClaimedCode[]} />
         </div>
     );
 }

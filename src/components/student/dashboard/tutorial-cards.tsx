@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { 
-    CheckCircle, 
     ArrowRight, 
     ArrowLeft, 
     X, 
@@ -16,7 +15,7 @@ import { cn } from "@/lib/utils";
 type TutorialStep = {
     title: string;
     description: string;
-    icon: any;
+    icon: React.ElementType;
     color: string;
 };
 

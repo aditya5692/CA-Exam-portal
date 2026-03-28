@@ -41,6 +41,7 @@ export type StudentHistoryData = {
     weakTopics: string[];
     examTargetDays: number;
     examTargetLabel: string;
+    errorDistribution?: { name: string; value: number; color: string; label: string }[];
 };
 
 export type ExamHubData = {

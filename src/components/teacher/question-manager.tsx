@@ -28,9 +28,18 @@ import { useRouter } from "next/navigation";
 import { useEffect,useRef,useState } from "react";
 import * as XLSX from "xlsx";
 
+interface VaultQuestion {
+    id: string;
+    text: string;
+    subject?: string;
+    topic?: string;
+    difficulty?: string;
+    type?: string;
+    options: { text: string; isCorrect: boolean }[];
+}
+
 export function QuestionManager() {
-    const [questions, setQuestions] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [questions, setQuestions] = useState<VaultQuestion[]>([]);
     const [draft, setDraft] = useState({ prompt: "", options: ["", "", "", ""], correct: [] as number[], subject: "", topic: "", difficulty: "Medium" });
     const [isPreparingUpload, setIsPreparingUpload] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -42,12 +51,10 @@ export function QuestionManager() {
     const dropdownRef = useRef<HTMLDivElement | null>(null);
 
     const fetchQuestions = async () => {
-        setIsLoading(true);
         const res = await getVaultQuestions();
         if (res.success) {
-            setQuestions(res.data || []);
+            setQuestions((res.data || []) as VaultQuestion[]);
         }
-        setIsLoading(false);
     };
 
     useEffect(() => {
@@ -132,6 +139,7 @@ export function QuestionManager() {
             subject: draft.subject,
             topic: draft.topic,
             difficulty: draft.difficulty,
+            explanation: "",
         }]);
 
         if (res.success) {
@@ -243,7 +251,7 @@ export function QuestionManager() {
                     </div>
                     
                     <div className="space-y-4">
-                        {questions.filter(q => q.prompt.toLowerCase().includes(searchQuery.toLowerCase())).map((q, i) => (
+                        {questions.filter(q => q.text.toLowerCase().includes(searchQuery.toLowerCase())).map((q, i) => (
                             <div key={i} className="group bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 transition-all hover:shadow-md hover:border-indigo-100 relative">
                                 <div className="absolute top-6 right-8 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                     <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-white border border-transparent hover:border-indigo-100 transition-all flex items-center justify-center"><PencilSimple size={18} weight="bold" /></button>
@@ -279,7 +287,7 @@ export function QuestionManager() {
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {q.options.map((opt: any, idx: number) => (
+                                            {q.options.map((opt, idx: number) => (
                                                 <div key={idx} className={cn(
                                                     "p-4 rounded-2xl border flex items-center justify-between text-xs font-bold transition-all",
                                                     opt.isCorrect

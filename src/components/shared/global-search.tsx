@@ -4,14 +4,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { 
     MagnifyingGlass, 
     User, 
-    Video, 
-    FileText, 
-    ProjectorScreen, 
-    Users, 
-    IdentificationBadge, 
     CircleNotch,
     X,
-    Keyboard
+    Keyboard,
+    ArrowLeft,
+    FileText,
+    ProjectorScreen,
+    Users,
+    IdentificationBadge
 } from "@phosphor-icons/react";
 import { performGlobalSearch, SearchResult } from "@/actions/search-actions";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,8 @@ interface Props {
     role: "STUDENT" | "TEACHER";
 }
 
-export function GlobalSearch({ role }: Props) {
+export function GlobalSearch({ role }: { role: string }) {
+    // role is currently unused but kept for future role-based result filtering
     const router = useRouter();
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResult[]>([]);
@@ -219,8 +220,6 @@ export function GlobalSearch({ role }: Props) {
     );
 }
 
-import { ArrowLeft } from "@phosphor-icons/react";
-
 function ResultsList({ 
     results, 
     loading, 
@@ -289,7 +288,7 @@ function ResultsList({
     return (
         <div className="py-10 text-center">
             <X size={32} weight="light" className="mx-auto mb-3 text-[var(--student-border-strong)]" />
-            <p className="text-xs font-bold uppercase tracking-widest text-[var(--student-muted)]">No results found for "{query}"</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--student-muted)]">No results found for &quot;{query}&quot;</p>
         </div>
     );
 }

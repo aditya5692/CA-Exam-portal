@@ -4,10 +4,8 @@ import prisma from "@/lib/prisma/client";
 import { getCurrentUserOrDemoUser } from "./session";
 import type { AppRole } from "./demo-accounts";
 import { 
-  FEATURE_DEFINITIONS, 
   FeatureKey, 
   FeatureCapability, 
-  UserWithOverrides,
   resolveFeatureAccessForUser,
   buildFeatureMatrixForUser
 } from "./feature-access-shared";

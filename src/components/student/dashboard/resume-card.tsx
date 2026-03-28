@@ -9,7 +9,7 @@ type ResumeCardProps = {
     progress: {
         resourceType: string;
         resourceId: string;
-        data: any;
+        data: Record<string, unknown>;
         updatedAt: Date;
     } | null;
 };
@@ -26,9 +26,10 @@ export function ResumeCard({ progress }: ResumeCardProps) {
     let Icon = BookOpen;
 
     if (resourceType === "VIDEO") {
-        href = `/student/courses/watch/${resourceId}?t=${data.time || 0}`;
+        const d = data as { time?: number; title?: string };
+        href = `/student/courses/watch/${resourceId}?t=${d.time || 0}`;
         label = "Resume Video";
-        sublabel = data.title || "Continue watching";
+        sublabel = d.title || "Continue watching";
         Icon = Play;
     } else if (resourceType === "EXAM") {
         href = `/exam/war-room?examId=${resourceId}`;
@@ -36,9 +37,10 @@ export function ResumeCard({ progress }: ResumeCardProps) {
         sublabel = "Continue your attempt";
         Icon = FileText;
     } else if (resourceType === "CHAPTER") {
+        const d = data as { chapterName?: string };
         href = `/student/chapters/${resourceId}`;
         label = "Resume Reading";
-        sublabel = data.chapterName || "Continue reading";
+        sublabel = d.chapterName || "Continue reading";
         Icon = BookOpen;
     }
 

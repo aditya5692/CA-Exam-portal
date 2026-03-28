@@ -6,7 +6,7 @@ import {
     adminUpdateSubscription,
 } from "@/actions/subscription-actions";
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Subscription = {
     id: string;
@@ -43,7 +43,6 @@ function fmtAmount(paise: number) {
 
 export function SubscriptionManager() {
     const [subs, setSubs] = useState<Subscription[]>([]);
-    const [filtered, setFiltered] = useState<Subscription[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -60,8 +59,9 @@ export function SubscriptionManager() {
 
     useEffect(() => { void load(); }, [load]);
 
-    useEffect(() => {
-        setFiltered(statusFilter === "ALL" ? subs : subs.filter(s => s.status === statusFilter));
+    // Derived state for filtered list
+    const filtered = useMemo(() => {
+        return statusFilter === "ALL" ? subs : subs.filter(s => s.status === statusFilter);
     }, [subs, statusFilter]);
 
     const handleCancel = async (id: string) => {
@@ -86,11 +86,16 @@ export function SubscriptionManager() {
     // Stats
     const totalActive = subs.filter(s => s.status === "ACTIVE").length;
     const totalRevenue = subs.filter(s => s.razorpayPaymentId).reduce((acc, s) => acc + s.amountPaise, 0);
-    const expiringIn30 = subs.filter(s => {
-        if (s.status !== "ACTIVE") return false;
-        const diff = new Date(s.expiresAt).getTime() - Date.now();
-        return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
-    }).length;
+
+    const expiringIn30 = useMemo(() => {
+        // eslint-disable-next-line react-hooks/purity
+        const now = Date.now();
+        return subs.filter(s => {
+            if (s.status !== "ACTIVE") return false;
+            const diff = new Date(s.expiresAt).getTime() - now;
+            return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
+        }).length;
+    }, [subs]);
 
     return (
         <div className="space-y-8">

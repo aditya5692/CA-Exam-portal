@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { saveProgress } from "@/actions/progress-actions";
 
 type AutoSaveOptions = {
@@ -28,7 +28,7 @@ export function useAutoSave<T>({
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Sync with server
-    const syncWithServer = async (currentData: T) => {
+    const syncWithServer = useCallback(async (currentData: T) => {
         const dataStr = JSON.stringify(currentData);
         if (dataStr === lastSavedDataRef.current) return;
 
@@ -45,10 +45,11 @@ export function useAutoSave<T>({
             } else {
                 onSaveError?.(result.message);
             }
-        } catch (err: any) {
-            onSaveError?.(err.message || "Failed to sync progress");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Failed to sync progress";
+            onSaveError?.(message);
         }
-    };
+    }, [resourceType, resourceId, onSaveSuccess, onSaveError]);
 
     // Effect to handle manual updates and timer
     useEffect(() => {
@@ -63,7 +64,7 @@ export function useAutoSave<T>({
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
-    }, [data, debounceMs]);
+    }, [data, debounceMs, syncWithServer]);
 
     // Handle initial state or manual trigger
     const updateProgress = (newData: T) => {
