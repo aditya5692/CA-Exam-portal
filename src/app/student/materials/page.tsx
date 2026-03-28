@@ -2,13 +2,13 @@
 
 import { getStudentSharedMaterials } from "@/actions/educator-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
-import { getSavedItems,toggleSavedItem } from "@/actions/student-actions";
-import { deletePersonalMaterial,getMyVaultMaterials,uploadPersonalMaterial } from "@/actions/vault-actions";
+import { getSavedItems, toggleSavedItem } from "@/actions/student-actions";
+import { deletePersonalMaterial, getMyVaultMaterials, uploadPersonalMaterial } from "@/actions/vault-actions";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
-import { Bookmark,BookOpen,Clock,Download,FileText,Flame,Folder as FolderIcon,Lock,ShieldCheck,Star,Trash2,Unlock,Upload,Users,X } from "lucide-react";
-import { useEffect,useState } from "react";
+import { Bookmark, BookOpen, Clock, Download, FileText, Flame, Folder as FolderIcon, Lock, ShieldCheck, Star, Trash2, Unlock, Upload, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type VaultMaterial = {
     id: string;
@@ -308,7 +308,7 @@ export default function StudentVaultPage() {
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
                                         <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
                                             {material.title}
@@ -317,11 +317,11 @@ export default function StudentVaultPage() {
                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 line-clamp-1 opacity-60">{material.description}</p>
                                         )}
                                     </button>
-                                    
+
                                     <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-50">
                                         <div className="flex items-center gap-4">
                                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                <Download className="w-3.5 h-3.5 text-indigo-500" /> {material.downloads > 1000 ? (material.downloads/1000).toFixed(1)+'k' : material.downloads}
+                                                <Download className="w-3.5 h-3.5 text-indigo-500" /> {material.downloads > 1000 ? (material.downloads / 1000).toFixed(1) + 'k' : material.downloads}
                                             </div>
                                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                                 <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {material.rating?.toFixed(1) || "5.0"}
@@ -359,7 +359,7 @@ export default function StudentVaultPage() {
                     {(() => {
                         const educators = Array.from(new Set(sharedMaterials.map(m => m.uploadedBy?.fullName || "Expert")));
                         if (educators.length <= 1) return null;
-                        
+
                         return (
                             <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                                 <button
@@ -390,75 +390,75 @@ export default function StudentVaultPage() {
                             sharedMaterials
                                 .filter(m => selectedEducator === "ALL" || (m.uploadedBy?.fullName || "Expert") === selectedEducator)
                                 .map((material) => (
-                                <div key={material.id} className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
-                                     {material.isTrending && (
-                                        <div className="absolute top-4 left-4 z-10">
-                                            <span className="bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                                                <Flame className="w-3.5 h-3.5 fill-current" /> Trending
+                                    <div key={material.id} className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
+                                        {material.isTrending && (
+                                            <div className="absolute top-4 left-4 z-10">
+                                                <span className="bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                                    <Flame className="w-3.5 h-3.5 fill-current" /> Trending
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-start justify-between relative z-10 mb-6 gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500/80 rounded-xl">
+                                                    {material.isProtected ? <Lock className="w-6 h-6" /> : <Unlock className="w-6 h-6" />}
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-indigo-500/80 uppercase tracking-widest">{material.subType}</span>
+                                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Study Material</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col items-end gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleToggleSave(material.id, "MATERIAL");
+                                                    }}
+                                                    className={cn(
+                                                        "rounded-xl p-2.5 transition-all shadow-sm border active:scale-95",
+                                                        savedIds.has(material.id)
+                                                            ? "bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-900/10"
+                                                            : "bg-white border-slate-100 text-slate-400 hover:text-indigo-500 hover:border-indigo-100"
+                                                    )}
+                                                    title={savedIds.has(material.id) ? "Saved" : "Save for later"}
+                                                >
+                                                    <Bookmark className={cn("w-4 h-4", savedIds.has(material.id) && "fill-current")} />
+                                                </button>
+                                                {isAdminView && (
+                                                    <div className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-500/80">
+                                                        <Users className="w-3 h-3" /> {material.accessedBy?.length || 0}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
+                                            <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
+                                                {material.title}
+                                            </h3>
+                                            {material.description && (
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 line-clamp-2 min-h-[32px] opacity-60">{material.description}</p>
+                                            )}
+                                        </button>
+
+                                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-50">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    <Download className="w-3.5 h-3.5 text-indigo-400" /> {material.downloads > 1000 ? (material.downloads / 1000).toFixed(1) + 'k' : material.downloads}
+                                                </div>
+                                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {material.rating?.toFixed(1) || "5.0"}
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-indigo-400 bg-indigo-50/50 px-2 py-0.5 rounded-full border border-indigo-100/50">
+                                                By {material.uploadedBy?.fullName?.split(' ')[1] || "Expert"}
                                             </span>
                                         </div>
-                                    )}
-                                    
-                                    <div className="flex items-start justify-between relative z-10 mb-6 gap-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500/80 rounded-xl">
-                                                {material.isProtected ? <Lock className="w-6 h-6" /> : <Unlock className="w-6 h-6" />}
-                                            </div>
-                                            <div>
-                                                <span className="text-[10px] font-bold text-indigo-500/80 uppercase tracking-widest">{material.subType}</span>
-                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Study Material</div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex flex-col items-end gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleToggleSave(material.id, "MATERIAL");
-                                                }}
-                                                className={cn(
-                                                    "rounded-xl p-2.5 transition-all shadow-sm border active:scale-95",
-                                                    savedIds.has(material.id)
-                                                        ? "bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-900/10"
-                                                        : "bg-white border-slate-100 text-slate-400 hover:text-indigo-500 hover:border-indigo-100"
-                                                )}
-                                                title={savedIds.has(material.id) ? "Saved" : "Save for later"}
-                                            >
-                                                <Bookmark className={cn("w-4 h-4", savedIds.has(material.id) && "fill-current")} />
-                                            </button>
-                                            {isAdminView && (
-                                                <div className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-500/80">
-                                                    <Users className="w-3 h-3" /> {material.accessedBy?.length || 0}
-                                                </div>
-                                            )}
-                                        </div>
                                     </div>
-                                    
-                                    <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
-                                        <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
-                                            {material.title}
-                                        </h3>
-                                        {material.description && (
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 line-clamp-2 min-h-[32px] opacity-60">{material.description}</p>
-                                        )}
-                                    </button>
-
-                                    <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-50">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                <Download className="w-3.5 h-3.5 text-indigo-400" /> {material.downloads > 1000 ? (material.downloads/1000).toFixed(1)+'k' : material.downloads}
-                                            </div>
-                                            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {material.rating?.toFixed(1) || "5.0"}
-                                            </div>
-                                        </div>
-                                        <span className="text-[10px] font-bold text-indigo-400 bg-indigo-50/50 px-2 py-0.5 rounded-full border border-indigo-100/50">
-                                            By {material.uploadedBy?.fullName?.split(' ')[1] || "Expert"}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))
+                                ))
                         )}
                     </div>
                 </div>

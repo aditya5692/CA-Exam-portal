@@ -1,18 +1,18 @@
 "use client";
 
-import { getTeacherUpdates,postAnnouncement } from "@/actions/batch-actions";
+import { getTeacherUpdates, postAnnouncement } from "@/actions/batch-actions";
 import { cn } from "@/lib/utils";
 import {
-  Bell,
-  CaretRight,
-  CheckCircle,
-  Megaphone,
-  PaperPlaneRight,
-  ShieldCheck,
-  Sparkle,
-  Users
+    Bell,
+    CaretRight,
+    CheckCircle,
+    Megaphone,
+    PaperPlaneRight,
+    ShieldCheck,
+    Sparkle,
+    Users
 } from "@phosphor-icons/react";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 type BatchTarget = {
     id: string;
@@ -144,7 +144,7 @@ export default function TeacherUpdatesPage() {
                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
                         <Megaphone size={120} weight="bold" className="text-indigo-600" />
                     </div>
-                    
+
                     <div className="flex items-center gap-4 relative z-10">
                         <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm border border-indigo-100/50">
                             <Megaphone size={24} weight="bold" />
@@ -310,7 +310,7 @@ export default function TeacherUpdatesPage() {
                             ))
                         )}
                     </div>
-                    
+
                     {announcements.length > 0 && (
                         <button className="w-full py-4 mt-4 text-[10px] font-bold tracking-[0.2em] uppercase text-slate-400 hover:text-slate-900 transition-all border border-slate-100 rounded-[16px] hover:bg-white shadow-sm active:scale-95 group flex items-center justify-center gap-2">
                             Load Older Updates <CaretRight size={14} className="group-hover:translate-x-1 transition-transform" />

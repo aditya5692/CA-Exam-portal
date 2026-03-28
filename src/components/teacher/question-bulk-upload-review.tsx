@@ -1,38 +1,38 @@
 "use client";
 
-import { getTeacherBatchOptions,publishExamFromQuestions } from "@/actions/publish-exam-actions";
+import { getTeacherBatchOptions, publishExamFromQuestions } from "@/actions/publish-exam-actions";
 import {
-  clearBulkUploadSession,
-  readBulkUploadSession,
-  TEMPLATE_COLUMNS,
-  type UploadReport,
-  type Question,
+    clearBulkUploadSession,
+    readBulkUploadSession,
+    TEMPLATE_COLUMNS,
+    type UploadReport,
+    type Question,
 } from "@/lib/question-bank-upload";
 import { saveQuestionsToVault } from "@/actions/mcq-vault-actions";
 import { cn } from "@/lib/utils";
 import type { BatchOption } from "@/types/publish-exam";
 import {
-  ArrowLeft,
-  CaretRight,
-  CheckCircle,
-  CloudArrowUp,
-  Database,
-  FileArrowUp,
-  Globe,
-  Info,
-  Rocket,
-  Sparkle,
-  SpinnerGap,
-  TerminalWindow,
-  Users,
-  WarningCircle,
-  Selection,
-  ListNumbers,
-  Shuffle
+    ArrowLeft,
+    CaretRight,
+    CheckCircle,
+    CloudArrowUp,
+    Database,
+    FileArrowUp,
+    Globe,
+    Info,
+    Rocket,
+    Sparkle,
+    SpinnerGap,
+    TerminalWindow,
+    Users,
+    WarningCircle,
+    Selection,
+    ListNumbers,
+    Shuffle
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 type Stage = "processing" | "ready";
 type AudienceMode = "all" | "batch";
@@ -63,12 +63,12 @@ export function QuestionBulkUploadReview() {
     const [selectedBatchId, setSelectedBatchId] = useState("");
     const [batches, setBatches] = useState<BatchOption[]>([]);
     const [batchesLoaded, setBatchesLoaded] = useState(false);
-    
+
     // Breakdown state
     const [breakIntoTests, setBreakIntoTests] = useState(false);
     const [breakdownMode, setBreakdownMode] = useState<"RANDOM" | "FIFO">("FIFO");
     const [questionsPerTest, setQuestionsPerTest] = useState(15);
-    
+
     const [publishResult, setPublishResult] = useState<{ success: boolean; examTitles?: string[]; targetLabel?: string } | null>(null);
 
     // Get available subjects based on selected CA level
@@ -94,7 +94,7 @@ export function QuestionBulkUploadReview() {
             setIsLoaded(true);
             return;
         }
-        
+
         setReport(data);
         setIsLoaded(true);
 
@@ -224,13 +224,13 @@ export function QuestionBulkUploadReview() {
                         <Rocket size={44} weight="fill" className="animate-bounce" />
                     </div>
                 </div>
-                
+
                 <div className="space-y-3">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] border border-emerald-100 mb-2">
                         <CheckCircle size={14} weight="bold" /> Deployment Successful
                     </div>
                     <h2 className="text-3xl font-bold tracking-tighter text-slate-900 leading-tight">
-                        {publishResult.examTitles && publishResult.examTitles.length > 1 
+                        {publishResult.examTitles && publishResult.examTitles.length > 1
                             ? `${publishResult.examTitles.length} MCQ Series Published!`
                             : "MCQ Series Published!"}
                     </h2>
@@ -259,7 +259,7 @@ export function QuestionBulkUploadReview() {
                         href="/teacher/test-series"
                         className="h-16 rounded-[24px] bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-slate-900/10 hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 active:scale-95"
                     >
-                         View Registry <CaretRight size={18} weight="bold" />
+                        View Registry <CaretRight size={18} weight="bold" />
                     </Link>
                     <Link
                         href="/teacher/questions"
@@ -340,17 +340,17 @@ export function QuestionBulkUploadReview() {
 
                             {report.errors.length > 0 && (
                                 <div className="rounded-[24px] border border-rose-100 bg-rose-50/30 p-6">
-                                     <p className="text-[9px] font-black text-rose-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                         <WarningCircle size={14} weight="fill" /> Formatting Issues Detected
-                                     </p>
-                                     <div className="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
+                                    <p className="text-[9px] font-black text-rose-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                                        <WarningCircle size={14} weight="fill" /> Formatting Issues Detected
+                                    </p>
+                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
                                         {report.errors.map((err: string, i: number) => (
                                             <div key={i} className="text-[11px] font-medium text-rose-600 bg-white border border-rose-100/50 px-3 py-2 rounded-xl flex items-start gap-2">
-                                                <span className="opacity-40 font-black shrink-0">{i+1}</span>
+                                                <span className="opacity-40 font-black shrink-0">{i + 1}</span>
                                                 {err}
                                             </div>
                                         ))}
-                                     </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -432,12 +432,12 @@ export function QuestionBulkUploadReview() {
                                         ))}
                                     </select>
                                 </div>
-                                
+
                                 {/* Exam Type */}
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Exam Category</label>
-                                    <select 
-                                        value={examType} 
+                                    <select
+                                        value={examType}
                                         onChange={(e) => setExamType(e.target.value)}
                                         className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
                                     >
@@ -578,9 +578,9 @@ export function QuestionBulkUploadReview() {
                                     <div className="md:col-span-2 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                         {batches.length === 0 ? (
                                             <div className="p-8 rounded-[28px] bg-amber-50/50 border border-amber-100 text-center space-y-2">
-                                                 <Info size={24} weight="fill" className="text-amber-500 mx-auto" />
-                                                 <p className="text-xs font-bold text-amber-700 uppercase tracking-widest leading-relaxed">No Segments identified in the cloud registry.</p>
-                                                 <Link href="/teacher/batches" className="inline-block text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline pt-2">Initialize Segments Here</Link>
+                                                <Info size={24} weight="fill" className="text-amber-500 mx-auto" />
+                                                <p className="text-xs font-bold text-amber-700 uppercase tracking-widest leading-relaxed">No Segments identified in the cloud registry.</p>
+                                                <Link href="/teacher/batches" className="inline-block text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline pt-2">Initialize Segments Here</Link>
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

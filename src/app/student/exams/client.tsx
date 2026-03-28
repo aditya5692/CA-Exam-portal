@@ -3,7 +3,7 @@
 import { getExamHubData } from "@/actions/student-actions";
 import type { ExamHubData } from "@/types/student";
 import { useRouter } from "next/navigation";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import { ChapterMCQSection } from "@/components/student/exams/ChapterMCQSection";
@@ -64,12 +64,12 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, daysToExa
 
 
 
-            
+
             {caLevelKey !== "foundation" && (
-                <ChapterMCQSection 
-                    hubData={hubData} 
-                    selectedSubject={selectedSubject} 
-                    setSelectedSubject={setSelectedSubject} 
+                <ChapterMCQSection
+                    hubData={hubData}
+                    selectedSubject={selectedSubject}
+                    setSelectedSubject={setSelectedSubject}
                 />
             )}
 

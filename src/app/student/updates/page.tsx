@@ -1,12 +1,12 @@
 "use client";
 
-import { getStudentFeed,joinBatch } from "@/actions/batch-actions";
+import { getStudentFeed, joinBatch } from "@/actions/batch-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
-import { Plus,ShieldCheck,X } from "@phosphor-icons/react";
-import { useCallback,useEffect,useRef,useState } from "react";
+import { Plus, ShieldCheck, X } from "@phosphor-icons/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export default function StudentUpdatesPage() {
             const lines = item.content.split('\n');
             const title = lines[0].length > 60 ? lines[0].substring(0, 57) + "..." : lines[0];
             const description = lines.length > 1 ? lines.slice(1).join('\n') : item.content;
-            
+
             return {
                 id: item.id,
                 category: "ANNOUNCEMENT",

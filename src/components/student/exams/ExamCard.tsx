@@ -1,18 +1,18 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { BookmarkSimple,CheckCircle,Clock,List,Star,Users } from "@phosphor-icons/react";
+import { BookmarkSimple, CheckCircle, Clock, List, Star, Users } from "@phosphor-icons/react";
 import Link from "next/link";
 import { ExamShape } from "./types";
 
-export function ExamCard({ 
-    exam, 
-    onToggleSave, 
-    isSaved 
-}: { 
-    exam: ExamShape; 
-    onToggleSave: (id: string) => void; 
-    isSaved: boolean 
+export function ExamCard({
+    exam,
+    onToggleSave,
+    isSaved
+}: {
+    exam: ExamShape;
+    onToggleSave: (id: string) => void;
+    isSaved: boolean
 }) {
     const charCodeSum = exam.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const diffNum = charCodeSum % 3;

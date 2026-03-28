@@ -1,24 +1,24 @@
 "use client";
 
-import { getTeacherBatchesForMaterials,getTeacherMaterials,publishMaterial } from "@/actions/educator-actions";
+import { getTeacherBatchesForMaterials, getTeacherMaterials, publishMaterial } from "@/actions/educator-actions";
 import { cn } from "@/lib/utils";
 import {
-  BookOpen,
-  CaretRight,
-  CheckCircle,
-  Clock,
-  FilePdf,
-  Globe,
-  Info,
-  Link as LinkIcon,
-  Lock,
-  Plus,
-  Pulse,
-  ShieldCheck,
-  Upload,
-  Users
+    BookOpen,
+    CaretRight,
+    CheckCircle,
+    Clock,
+    FilePdf,
+    Globe,
+    Info,
+    Link as LinkIcon,
+    Lock,
+    Plus,
+    Pulse,
+    ShieldCheck,
+    Upload,
+    Users
 } from "@phosphor-icons/react";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 type EducatorOption = {
     id: string;
@@ -165,7 +165,7 @@ export default function EducatorHubPage() {
                         <h1 className="text-3xl font-bold tracking-tighter mb-4">{heading}</h1>
                         <p className="text-slate-400 text-base font-medium leading-relaxed max-w-2xl">{subheading}</p>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                         {[
                             { label: "Total Assets", value: materials.length, icon: FilePdf },
@@ -188,7 +188,7 @@ export default function EducatorHubPage() {
             <div className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-8 pt-4">
                 {/* Publish Form */}
                 <div className="bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm p-6 rounded-[24px] h-fit space-y-6 relative overflow-hidden group">
-                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
                         <Upload size={120} weight="bold" className="text-indigo-600" />
                     </div>
 
@@ -419,7 +419,7 @@ export default function EducatorHubPage() {
                                     <div key={material.id}
                                         className="bg-white/50 p-6 rounded-[28px] border border-slate-100 hover:shadow-xl hover:border-indigo-100 transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                                         <div className="flex items-center gap-5">
-                                            <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border group-hover:scale-105 transition-all duration-500", 
+                                            <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border group-hover:scale-105 transition-all duration-500",
                                                 material.isProtected ? "bg-indigo-50 text-indigo-600 border-indigo-100" : "bg-emerald-50 text-emerald-600 border-emerald-100")}>
                                                 {material.isProtected ? <Lock size={24} weight="bold" /> : <FilePdf size={24} weight="bold" />}
                                             </div>
