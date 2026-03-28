@@ -1,48 +1,69 @@
 "use server";
 
-
-import Razorpay from "razorpay";
 import { getCurrentUser } from "@/lib/auth/session";
+import {
+    calculatePlanExpiry,
+    getBillingAmount,
+    getBillingPlanDefinition,
+    getBillingValidityMonths,
+    getRazorpayInstance,
+} from "@/lib/server/razorpay";
+import { resolvePlanEntitlement } from "@/lib/server/plan-entitlements";
+import { revalidatePlanSurfaces } from "@/lib/server/revalidation";
 import prisma from "@/lib/prisma/client";
-import { revalidatePath } from "next/cache";
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID!,
-    key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
-export async function createRecurringSubscription(planId: string) {
+export async function createRecurringSubscription(input: {
+    planId: string;
+    razorpayPlanId: string;
+}) {
     try {
         const user = await getCurrentUser();
         if (!user) {
             return { success: false, message: "Authentication required." };
         }
 
-        // 1. Create Subscription in Razorpay
-        // Note: planId here is the Razorpay Plan ID (e.g., plan_P123...)
+        const plan = getBillingPlanDefinition(input.planId);
+        if (plan.role !== user.role && user.role !== "ADMIN") {
+            return { success: false, message: "This subscription is not available for your account role." };
+        }
+        if (resolvePlanEntitlement(user.plan, user.role).rank > resolvePlanEntitlement(plan.appPlan, user.role).rank) {
+            return {
+                success: false,
+                message: "Your account already includes a higher tier. Renew that plan instead of moving down.",
+            };
+        }
+
+        const razorpay = getRazorpayInstance();
         const subscription = await razorpay.subscriptions.create({
-            plan_id: planId,
+            plan_id: input.razorpayPlanId,
             customer_notify: 1,
-            total_count: 12, // e.g., for a 1-year monthly sub
+            total_count: 12,
             quantity: 1,
             addons: [],
             notes: {
                 userId: user.id,
                 userEmail: user.email || "",
+                planId: input.planId,
+                role: plan.role,
             },
         });
 
-        // 2. Pre-save a pending subscription record in our DB
+        const expiresAt = calculatePlanExpiry(
+            user.planExpiresAt,
+            getBillingValidityMonths(input.planId, "monthly"),
+        );
+
         await prisma.subscription.create({
             data: {
                 userId: user.id,
-                plan: "PRO_RECURRING", // Marker for recurring
-                role: user.role,
+                plan: plan.appPlan,
+                role: plan.role,
                 status: "PENDING",
-                amountPaise: 0, // Will be updated by webhook on first charge
+                amountPaise: getBillingAmount(input.planId, "monthly"),
                 razorpaySubscriptionId: subscription.id,
-                razorpayPlanId: planId,
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default 30 days, will be synced
+                razorpayPlanId: input.planId,
+                expiresAt,
+                currentPeriodEnd: expiresAt,
             },
         });
 
@@ -50,15 +71,18 @@ export async function createRecurringSubscription(planId: string) {
             success: true,
             data: {
                 subscriptionId: subscription.id,
-                keyId: process.env.RAZORPAY_KEY_ID!,
+                keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID ?? "",
                 userName: user.fullName || "Valued Student",
                 userEmail: user.email || "",
-                userPhone: (user as any).phone || "",
+                userPhone: user.phone || "",
             },
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Subscription Error:", error);
-        return { success: false, message: error.message || "Failed to initialize subscription." };
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : "Failed to initialize subscription.",
+        };
     }
 }
 
@@ -67,17 +91,34 @@ export async function cancelRecurringSubscription(subscriptionId: string) {
         const user = await getCurrentUser();
         if (!user) throw new Error("Unauthorized");
 
-        // Cancel in Razorpay at the end of cycle
+        const existingSubscription = await prisma.subscription.findFirst({
+            where: {
+                userId: user.id,
+                razorpaySubscriptionId: subscriptionId,
+            },
+        });
+
+        if (!existingSubscription) {
+            return { success: false, message: "Subscription not found." };
+        }
+
+        const razorpay = getRazorpayInstance();
         await razorpay.subscriptions.cancel(subscriptionId, false);
 
         await prisma.subscription.update({
-            where: { razorpaySubscriptionId: subscriptionId },
-            data: { cancelAtPeriodEnd: true },
+            where: { id: existingSubscription.id },
+            data: {
+                cancelAtPeriodEnd: true,
+                status: "ACTIVE",
+            },
         });
 
-        revalidatePath("/student/dashboard");
+        revalidatePlanSurfaces();
         return { success: true };
-    } catch (error: any) {
-        return { success: false, message: error.message };
+    } catch (error: unknown) {
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : "Failed to cancel subscription.",
+        };
     }
 }

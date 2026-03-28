@@ -1,6 +1,7 @@
 "use client";
 
 import { logout } from "@/actions/auth-actions";
+import { clearClientSessionState } from "@/lib/client/session-cleanup";
 import { cn } from "@/lib/utils";
 import {
     BellSimple,
@@ -197,6 +198,7 @@ export function TeacherSidebar({
 
     const handleLogout = async () => {
         await logout();
+        clearClientSessionState();
         router.push("/");
         router.refresh();
     };

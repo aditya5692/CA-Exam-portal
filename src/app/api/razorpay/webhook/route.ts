@@ -1,98 +1,247 @@
-
-import { NextResponse } from "next/server";
-import crypto from "crypto";
+import { resolvePlanEntitlement } from "@/lib/server/plan-entitlements";
+import { verifyWebhookSignature } from "@/lib/server/razorpay";
 import prisma from "@/lib/prisma/client";
+import { NextResponse } from "next/server";
+
+type RazorpayPayloadEntity = Record<string, unknown> | undefined;
+type UserWriteClient = Pick<typeof prisma, "user">;
+type RazorpayPaymentEntity = {
+    order_id?: string;
+    subscription_id?: string;
+    amount?: number;
+    id?: string;
+};
+type RazorpaySubscriptionEntity = {
+    id?: string;
+    current_end?: number;
+    end_at?: number;
+};
+
+function fromUnixTimestamp(value: number | null | undefined) {
+    if (!value || Number.isNaN(value)) {
+        return null;
+    }
+
+    return new Date(value * 1000);
+}
+
+async function applyUserPlanState(tx: UserWriteClient, input: {
+    userId: string;
+    plan: string;
+    role: string;
+    expiresAt: Date | null;
+}) {
+    const user = await tx.user.findUnique({
+        where: { id: input.userId },
+        select: { storageLimit: true },
+    });
+
+    if (!user) {
+        return;
+    }
+
+    const entitlement = resolvePlanEntitlement(input.plan, input.role);
+    await tx.user.update({
+        where: { id: input.userId },
+        data: {
+            plan: input.plan,
+            planExpiresAt: input.expiresAt,
+            storageLimit: Math.max(user.storageLimit, entitlement.storageLimitFloor),
+        },
+    });
+}
+
+async function downgradeUserToFree(tx: UserWriteClient, userId: string) {
+    await tx.user.update({
+        where: { id: userId },
+        data: {
+            plan: "FREE",
+            planExpiresAt: null,
+        },
+    });
+}
 
 export async function POST(req: Request) {
     try {
-        const body = await req.text();
+        const rawBody = await req.text();
         const signature = req.headers.get("x-razorpay-signature");
 
         if (!signature) {
-            return NextResponse.json({ message: "No signature" }, { status: 401 });
+            return NextResponse.json({ message: "Missing Razorpay signature." }, { status: 401 });
         }
 
-        // 1. Verify Signature
-        const expectedSignature = crypto
-            .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
-            .update(body)
-            .digest("hex");
-
-        if (signature !== expectedSignature) {
-            console.error("Signature Mismatch");
-            return NextResponse.json({ message: "Invalid signature" }, { status: 400 });
+        if (!verifyWebhookSignature(rawBody, signature)) {
+            return NextResponse.json({ message: "Invalid Razorpay signature." }, { status: 400 });
         }
 
-        const event = JSON.parse(body);
-        const { payload, event: eventType } = event;
+        const event = JSON.parse(rawBody);
+        const eventType = event.event as string;
+        const payload = event.payload as Record<string, RazorpayPayloadEntity>;
+        const subscriptionEntity = payload?.subscription?.entity as RazorpaySubscriptionEntity | undefined;
+        const paymentEntity = payload?.payment?.entity as RazorpayPaymentEntity | undefined;
 
-        console.log(`Razorpay Webhook: ${eventType}`);
-
-        // 2. Handle Events
         switch (eventType) {
-            case "subscription.authenticated":
-            case "subscription.activated": {
-                const rSub = payload.subscription.entity;
-                const userId = rSub.notes.userId;
+            case "payment.captured": {
+                const orderId = paymentEntity?.order_id;
+                if (!orderId) break;
 
-                // Sync status and period in DB
-                const expiresAt = new Date(rSub.end_at * 1000); // end_at is in seconds
+                const subscription = await prisma.subscription.findFirst({
+                    where: { razorpayOrderId: orderId },
+                });
+                if (!subscription) break;
 
-                await prisma.$transaction([
-                    // Update main user plan info
-                    prisma.user.update({
-                        where: { id: userId },
-                        data: {
-                            plan: "PRO_RECURRING",
-                            planExpiresAt: expiresAt,
-                        },
-                    }),
-                    // Update subscription record
-                    prisma.subscription.update({
-                        where: { razorpaySubscriptionId: rSub.id },
+                await prisma.$transaction(async (tx) => {
+                    await tx.subscription.update({
+                        where: { id: subscription.id },
                         data: {
                             status: "ACTIVE",
-                            currentPeriodEnd: expiresAt,
-                            expiresAt: expiresAt,
+                            amountPaise: paymentEntity?.amount ?? subscription.amountPaise,
+                            razorpayPaymentId: paymentEntity?.id ?? subscription.razorpayPaymentId,
+                            currentPeriodEnd: subscription.currentPeriodEnd ?? subscription.expiresAt,
+                            expiresAt: subscription.currentPeriodEnd ?? subscription.expiresAt,
+                            cancelAtPeriodEnd: false,
                         },
-                    }),
-                ]);
+                    });
+
+                    await applyUserPlanState(tx, {
+                        userId: subscription.userId,
+                        plan: subscription.plan,
+                        role: subscription.role,
+                        expiresAt: subscription.currentPeriodEnd ?? subscription.expiresAt,
+                    });
+                });
                 break;
             }
 
+            case "payment.failed": {
+                const subscription = paymentEntity?.subscription_id
+                    ? await prisma.subscription.findFirst({
+                        where: { razorpaySubscriptionId: paymentEntity.subscription_id },
+                    })
+                    : paymentEntity?.order_id
+                        ? await prisma.subscription.findFirst({
+                            where: { razorpayOrderId: paymentEntity.order_id },
+                        })
+                        : null;
+
+                if (!subscription) break;
+
+                const expiry = subscription.currentPeriodEnd ?? subscription.expiresAt;
+
+                await prisma.$transaction(async (tx) => {
+                    await tx.subscription.update({
+                        where: { id: subscription.id },
+                        data: {
+                            status: "FAILED",
+                            amountPaise: paymentEntity?.amount ?? subscription.amountPaise,
+                            razorpayPaymentId: paymentEntity?.id ?? subscription.razorpayPaymentId,
+                            currentPeriodEnd: expiry,
+                            expiresAt: expiry,
+                        },
+                    });
+
+                    if (expiry > new Date()) {
+                        await applyUserPlanState(tx, {
+                            userId: subscription.userId,
+                            plan: subscription.plan,
+                            role: subscription.role,
+                            expiresAt: expiry,
+                        });
+                    } else {
+                        await downgradeUserToFree(tx, subscription.userId);
+                    }
+                });
+                break;
+            }
+
+            case "subscription.authenticated":
+            case "subscription.activated":
             case "subscription.charged": {
-                const rPayment = payload.payment.entity;
-                const rSub = payload.subscription.entity;
+                const subscriptionId = subscriptionEntity?.id;
+                if (!subscriptionId) break;
 
-                // Mark as charged and maybe log payment records
-                await prisma.subscription.update({
-                    where: { razorpaySubscriptionId: rSub.id },
-                    data: {
-                        amountPaise: rPayment.amount,
-                        razorpayPaymentId: rPayment.id,
-                        status: "ACTIVE",
-                    },
+                const subscription = await prisma.subscription.findFirst({
+                    where: { razorpaySubscriptionId: subscriptionId },
+                });
+                if (!subscription) break;
+
+                const currentPeriodEnd = fromUnixTimestamp(
+                    subscriptionEntity?.current_end ?? subscriptionEntity?.end_at,
+                ) ?? subscription.currentPeriodEnd ?? subscription.expiresAt;
+
+                await prisma.$transaction(async (tx) => {
+                    await tx.subscription.update({
+                        where: { id: subscription.id },
+                        data: {
+                            status: "ACTIVE",
+                            amountPaise: paymentEntity?.amount ?? subscription.amountPaise,
+                            razorpayPaymentId: paymentEntity?.id ?? subscription.razorpayPaymentId,
+                            currentPeriodEnd,
+                            expiresAt: currentPeriodEnd,
+                            cancelAtPeriodEnd: false,
+                        },
+                    });
+
+                    await applyUserPlanState(tx, {
+                        userId: subscription.userId,
+                        plan: subscription.plan,
+                        role: subscription.role,
+                        expiresAt: currentPeriodEnd,
+                    });
                 });
                 break;
             }
 
-            case "subscription.cancelled": {
-                const rSub = payload.subscription.entity;
-                await prisma.user.update({
-                    where: { id: rSub.notes.userId },
-                    data: { plan: "FREE" },
+            case "subscription.cancelled":
+            case "subscription.completed": {
+                const subscriptionId = subscriptionEntity?.id;
+                if (!subscriptionId) break;
+
+                const subscription = await prisma.subscription.findFirst({
+                    where: { razorpaySubscriptionId: subscriptionId },
                 });
-                await prisma.subscription.update({
-                    where: { razorpaySubscriptionId: rSub.id },
-                    data: { status: "CANCELLED" },
+                if (!subscription) break;
+
+                const currentPeriodEnd = fromUnixTimestamp(
+                    subscriptionEntity?.current_end ?? subscriptionEntity?.end_at,
+                ) ?? subscription.currentPeriodEnd ?? subscription.expiresAt;
+                const retainAccessUntilPeriodEnd = currentPeriodEnd > new Date();
+
+                await prisma.$transaction(async (tx) => {
+                    await tx.subscription.update({
+                        where: { id: subscription.id },
+                        data: {
+                            status: "CANCELLED",
+                            cancelAtPeriodEnd: retainAccessUntilPeriodEnd,
+                            currentPeriodEnd,
+                            expiresAt: currentPeriodEnd,
+                        },
+                    });
+
+                    if (retainAccessUntilPeriodEnd) {
+                        await applyUserPlanState(tx, {
+                            userId: subscription.userId,
+                            plan: subscription.plan,
+                            role: subscription.role,
+                            expiresAt: currentPeriodEnd,
+                        });
+                    } else {
+                        await downgradeUserToFree(tx, subscription.userId);
+                    }
                 });
                 break;
             }
+
+            default:
+                break;
         }
 
         return NextResponse.json({ status: "ok" });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Webhook Error:", error);
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        return NextResponse.json(
+            { message: error instanceof Error ? error.message : "Webhook processing failed." },
+            { status: 500 },
+        );
     }
 }

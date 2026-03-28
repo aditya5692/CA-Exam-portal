@@ -1,6 +1,6 @@
 import { PricingCards } from "@/components/subscription/pricing-cards";
 import { getSessionPayload } from "@/lib/auth/session";
-import { buildPlanSummary,getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
+import { buildPlanSummary, getCurrentUserPlanSummary, planIncludesAtLeast, resolvePlanEntitlement } from "@/lib/server/plan-entitlements";
 import { CheckCircle,CreditCard,Crown,Info,ShieldCheck,Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 
@@ -8,7 +8,6 @@ export default async function TeacherPlanPage() {
     const session = await getSessionPayload();
     if (!session || session.role !== "TEACHER") redirect("/auth/login");
 
-    const isPro = session.plan === "PRO";
     let planSummary = buildPlanSummary({
         plan: session.plan,
         role: session.role,
@@ -24,6 +23,12 @@ export default async function TeacherPlanPage() {
         planStatusNotice = "Live entitlement metrics are temporarily unavailable. Upgrade options remain available below.";
     }
 
+    const isPremium = planSummary.isPremium;
+    const hasTopTier = planIncludesAtLeast(planSummary.plan, session.role, "PRO");
+    const recommendedPlanName = planSummary.recommendedPlan
+        ? resolvePlanEntitlement(planSummary.recommendedPlan, session.role).displayName
+        : null;
+
     return (
         <div className="space-y-10 pb-24 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
@@ -35,7 +40,7 @@ export default async function TeacherPlanPage() {
                     </div>
                     <h1 className="text-3xl font-bold tracking-tighter text-slate-900">Educator Plan</h1>
                     <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
-                        Manage your licensing, billing cycles, and premium feature access protocols. Unlock mission-critical tools for high-performance instruction.
+                        Manage your licensing, billing cycles, and feature access across the Free, Basic, and Pro educator tiers.
                     </p>
                 </div>
             </div>
@@ -54,11 +59,11 @@ export default async function TeacherPlanPage() {
                     <div className="flex items-center gap-8">
                         <div className={cn(
                             "w-20 h-20 rounded-[28px] flex items-center justify-center shadow-2xl relative transition-transform group-hover:scale-110 duration-500",
-                            isPro ? "bg-indigo-600 text-white shadow-indigo-500/20" : "bg-slate-800 text-slate-400 border border-slate-700"
+                            isPremium ? "bg-indigo-600 text-white shadow-indigo-500/20" : "bg-slate-800 text-slate-400 border border-slate-700"
                         )}>
-                            {isPro ? (
+                            {isPremium ? (
                                 <>
-                                    <Crown size={40} weight="fill" className="absolute -top-2 -right-2 text-amber-400 animate-bounce" />
+                                    {hasTopTier && <Crown size={40} weight="fill" className="absolute -top-2 -right-2 text-amber-400 animate-bounce" />}
                                     <Sparkle size={36} weight="bold" className="animate-pulse" />
                                 </>
                             ) : (
@@ -69,27 +74,35 @@ export default async function TeacherPlanPage() {
                         <div className="space-y-2">
                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Current License Status</p>
                             <h2 className="text-3xl font-bold tracking-tighter">
-                                {isPro ? "Educator PRO Protocol" : "Standard Entry License"}
+                                {isPremium ? `${planSummary.displayName} License Active` : "Free License Active"}
                             </h2>
                             <p className="text-slate-400 font-medium text-sm max-w-md">
-                                {isPro 
-                                    ? "Full spectrum access enabled. All AI-extraction and analytics modules active." 
-                                    : "Limited resource allocation active. Upgrade to PRO for neural extraction and unlimited segments."}
+                                {hasTopTier
+                                    ? "Full educator access is enabled across analytics, publishing, and scaled cohort operations."
+                                    : isPremium
+                                        ? "Your Basic tier is active. Upgrade to Pro for full analytics, unlimited operations, and the top storage band."
+                                        : "Start free with core publishing tools, then move up to Basic or Pro as your cohorts grow."}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex flex-col items-center md:items-end gap-3">
-                         {isPro ? (
+                         {hasTopTier ? (
                              <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
-                                 <CheckCircle size={18} weight="bold" /> Access: Fully Tokenized
+                                 <CheckCircle size={18} weight="bold" /> Full Access Active
+                             </div>
+                         ) : isPremium ? (
+                             <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
+                                 <Sparkle size={18} weight="bold" /> Growth Tier Active
                              </div>
                          ) : (
                              <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
                                  <Info size={18} weight="bold" /> Expansion Required
                              </div>
                          )}
-                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Billing Cycle: Active Monthly</p>
+                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                             {recommendedPlanName ? `Next recommended tier: ${recommendedPlanName}` : "Highest public tier active"}
+                         </p>
                     </div>
                 </div>
             </div>
@@ -149,7 +162,7 @@ export default async function TeacherPlanPage() {
                      <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
                          <CreditCard size={20} weight="bold" />
                      </div>
-                     <h3 className="text-2xl font-bold tracking-tighter text-slate-900">Available Deployments</h3>
+                     <h3 className="text-2xl font-bold tracking-tighter text-slate-900">Available Plans</h3>
                 </div>
                 
                 <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 lg:p-10 border border-slate-100 shadow-sm relative overflow-hidden">

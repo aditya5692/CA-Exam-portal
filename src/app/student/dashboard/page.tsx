@@ -7,6 +7,7 @@ import { TutorialCards } from "@/components/student/dashboard/tutorial-cards";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
+import { resolvePlanEntitlement, resolvePublicPlanTier } from "@/lib/server/plan-entitlements";
 import {
     getStudentCACategory,
     resolveStudentExamTarget,
@@ -144,8 +145,10 @@ export default async function StudentDashboardPage() {
     }
 
     const validUser = user; // Type guard helper for TS
-    const isPro = user.plan !== "FREE";
-    const planName = user.plan === "FREE" ? "Standard Pass" : user.plan;
+    const planEntitlement = resolvePlanEntitlement(user.plan, user.role);
+    const currentPlanTier = resolvePublicPlanTier(user.plan);
+    const isPaidPlan = planEntitlement.isPremium;
+    const planName = planEntitlement.displayName;
     const expiresAt = user.planExpiresAt;
     const daysLeft = expiresAt ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
 
@@ -342,7 +345,7 @@ export default async function StudentDashboardPage() {
             />
 
             {/* Tutorial Section - Shown on first login */}
-            {(validUser as any).loginCount === 1 && (
+            {validUser.loginCount === 1 && (
                 <TutorialCards />
             )}
 
@@ -492,8 +495,8 @@ export default async function StudentDashboardPage() {
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-outfit text-xl font-black text-slate-900 tracking-tight">{planName}</h3>
-                                        {isPro && (
-                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 font-black uppercase tracking-widest border border-emerald-200">PRO</span>
+                                        {isPaidPlan && (
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 font-black uppercase tracking-widest border border-emerald-200">{currentPlanTier}</span>
                                         )}
                                     </div>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Governance Active</p>
@@ -506,12 +509,12 @@ export default async function StudentDashboardPage() {
                             <div className="relative space-y-4 mb-6">
                                 <div className="flex justify-between items-end">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan Validity</span>
-                                    <span className="text-sm font-black text-slate-800">{isPro ? `${daysLeft} Days Remaining` : "Perpetual Free"}</span>
+                                    <span className="text-sm font-black text-slate-800">{isPaidPlan ? `${daysLeft} Days Remaining` : "Perpetual Free"}</span>
                                 </div>
                                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                                     <div 
-                                        className={cn("h-full transition-all duration-1000", isPro ? "bg-emerald-500" : "bg-slate-300")} 
-                                        style={{ width: isPro ? `${Math.min(100, (daysLeft / 365) * 100)}%` : "100%" }} 
+                                        className={cn("h-full transition-all duration-1000", isPaidPlan ? "bg-emerald-500" : "bg-slate-300")} 
+                                        style={{ width: isPaidPlan ? `${Math.min(100, (daysLeft / 365) * 100)}%` : "100%" }} 
                                     />
                                 </div>
                             </div>
@@ -520,7 +523,7 @@ export default async function StudentDashboardPage() {
                                 href="/pricing"
                                 className="relative flex items-center justify-center gap-3 w-full py-3.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95 group"
                             >
-                                {isPro ? "Manage Subscription" : "Upgrade to PRO"}
+                                {isPaidPlan ? "Manage Subscription" : "Compare Plans"}
                                 <ArrowRight size={14} weight="bold" className="group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>

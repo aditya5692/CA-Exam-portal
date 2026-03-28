@@ -1,13 +1,13 @@
-import { getSessionPayload } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
+import { requireSessionRole } from "@/lib/auth/route-guard";
 import type { ReactNode } from "react";
 import { TeacherLayoutClient } from "@/components/teacher/layout-client";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-    const admin = await getSessionPayload();
+    const admin = await requireSessionRole(["ADMIN", "TEACHER"]);
 
-    if (!admin || (admin.role !== "ADMIN" && !admin.isSuperAdmin)) {
-        redirect("/auth/login");
+    if (admin.role !== "ADMIN" && !admin.isSuperAdmin) {
+        redirect("/teacher/dashboard");
     }
 
     return (

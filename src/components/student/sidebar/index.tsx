@@ -1,6 +1,7 @@
 "use client";
 
 import { logout } from "@/actions/auth-actions";
+import { clearClientSessionState } from "@/lib/client/session-cleanup";
 import { cn } from "@/lib/utils";
 import {
     CaretDown,
@@ -213,6 +214,7 @@ export function StudentSidebar({
 
     const handleLogout = async () => {
         await logout();
+        clearClientSessionState();
         router.push("/");
         router.refresh();
     };

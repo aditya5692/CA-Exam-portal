@@ -19,6 +19,8 @@ import prisma from "@/lib/prisma/client";
 
 import { sendMsg91Otp, verifyMsg91Otp, verifyMsg91WidgetToken, normalizePhone } from "@/lib/server/msg91";
 
+type RequestedOtpRole = "STUDENT" | "TEACHER";
+
 type LoginResult = {
     redirectTo: string;
     user: {
@@ -28,6 +30,104 @@ type LoginResult = {
         phone: string | null;
     };
 };
+
+type RegistrationRequiredResult = {
+    needsRegistration: true;
+    verifiedPhone: string;
+    requestedRole?: RequestedOtpRole;
+};
+
+type RoleMismatchResult = {
+    roleMismatch: true;
+    actualRole: AppRole;
+    requestedRole: RequestedOtpRole;
+    redirectTo: string;
+};
+
+function normalizeRequestedRole(role?: string | null): RequestedOtpRole | undefined {
+    const normalizedRole = role?.trim().toUpperCase();
+    if (normalizedRole === "STUDENT" || normalizedRole === "TEACHER") {
+        return normalizedRole;
+    }
+
+    return undefined;
+}
+
+function formatRoleLabel(role: string) {
+    return `${role.slice(0, 1)}${role.slice(1).toLowerCase()}`;
+}
+
+function buildRoleMismatchResponse(
+    actualRole: AppRole,
+    requestedRole: RequestedOtpRole,
+): ActionResponse<RoleMismatchResult> {
+    return {
+        success: false,
+        message: `This phone number is already registered for the ${formatRoleLabel(actualRole)} workspace. Switch to ${formatRoleLabel(actualRole)} login to continue.`,
+        data: {
+            roleMismatch: true,
+            actualRole,
+            requestedRole,
+            redirectTo: getRoleRedirectPath(actualRole),
+        },
+    };
+}
+
+async function finalizeVerifiedPhoneLogin(
+    phone: string,
+    requestedRole?: RequestedOtpRole,
+): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
+    await ensureDemoAccounts();
+
+    const normalizedPhone = normalizePhone(phone);
+    const user = await prisma.user.findUnique({
+        where: { phone: normalizedPhone },
+    });
+
+    if (!user) {
+        return {
+            success: true,
+            data: {
+                needsRegistration: true,
+                verifiedPhone: normalizedPhone,
+                requestedRole,
+            },
+            message: "Phone verified. Please complete your registration.",
+        };
+    }
+
+    if (user.isBlocked) {
+        return {
+            success: false,
+            message: user.blockedReason?.trim() || "This account has been blocked by an administrator.",
+        };
+    }
+
+    if (requestedRole && user.role !== requestedRole) {
+        return buildRoleMismatchResponse(user.role as AppRole, requestedRole);
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { loginCount: { increment: 1 } },
+    });
+
+    await setAuthSession(updatedUser);
+
+    return {
+        success: true,
+        message: "Logged in successfully.",
+        data: {
+            redirectTo: getRoleRedirectPath(updatedUser.role as AppRole),
+            user: {
+                fullName: updatedUser.fullName,
+                role: updatedUser.role,
+                registrationNumber: updatedUser.registrationNumber,
+                phone: updatedUser.phone,
+            },
+        },
+    };
+}
 
 /**
  * Requests an OTP for a given phone number.
@@ -48,48 +148,19 @@ export async function requestOtp(phone: string): Promise<ActionResponse<void>> {
 /**
  * Verifies OTP and logs in or redirects to registration.
  */
-export async function verifyOtpAndLogin(phone: string, otp: string): Promise<ActionResponse<LoginResult | { needsRegistration: boolean }>> {
+export async function verifyOtpAndLogin(
+    phone: string,
+    otp: string,
+    requestedRole?: RequestedOtpRole,
+): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
     try {
         const verification = await verifyMsg91Otp(phone, otp);
         if (!verification.success) {
             return { success: false, message: verification.message };
         }
 
-        await ensureDemoAccounts();
-        
-        const normalizedPhone = (await import("@/lib/server/msg91")).normalizePhone(phone);
-
-        // Logic to find user by phone and log them in
-        // If not found, tell frontend we need registration details
-        const user = await prisma.user.findUnique({
-            where: { phone: normalizedPhone },
-        });
-
-        if (!user) {
-            return { success: true, data: { needsRegistration: true }, message: "OTP verified. Please complete your registration." };
-        }
-
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { loginCount: { increment: 1 } },
-        });
-
-        await setAuthSession(user);
-
-        return {
-            success: true,
-            message: "Logged in successfully.",
-            data: {
-                redirectTo: getRoleRedirectPath(user.role as AppRole), 
-                user: {
-                    fullName: user.fullName,
-                    role: user.role,
-                    registrationNumber: user.registrationNumber,
-                    phone: user.phone,
-                },
-            }
-        };
-    } catch (error) {
+        return finalizeVerifiedPhoneLogin(phone, normalizeRequestedRole(requestedRole));
+    } catch {
         return { success: false, message: "Verification failed." };
     }
 }
@@ -97,77 +168,32 @@ export async function verifyOtpAndLogin(phone: string, otp: string): Promise<Act
 /**
  * Verifies the MSG91 widget access token and handle the full login/registration flow.
  */
-export async function verifyWidgetOtpAndLogin(accessToken: string): Promise<ActionResponse<LoginResult | { needsRegistration: boolean }>> {
-    console.log("AuthAction: Starting verifyWidgetOtpAndLogin");
+export async function verifyWidgetOtpAndLogin(
+    accessToken: string,
+    requestedRole?: RequestedOtpRole,
+): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
+    const IS_PROD = process.env.NODE_ENV === "production";
     
     try {
         // 1. Server-side Token Verification
-        if (!process.env.MSG91_AUTH_KEY) {
-            console.error("FATAL: MSG91_AUTH_KEY is MISSING in backend environment! Verification will fail.");
-            return { success: false, message: "Server configuration error: Contact Administrator (Missing Auth Key)." };
-        }
-
         const verification = await verifyMsg91WidgetToken(accessToken);
         if (!verification.success || !verification.phone) {
-            console.error("AuthAction: MSG91 Verification Failed:", verification.message);
+            // Internal logging for admins
+            if (!IS_PROD) console.error("AuthAction: MSG91 Verification Failed:", verification.message);
             return { success: false, message: verification.message };
         }
 
         const phone = verification.phone;
         const normalizedPhone = normalizePhone(phone);
-        console.log(`AuthAction: Verified phone ${normalizedPhone}`);
-
-        // 2. Database Synchronization & User Lookup
-        await ensureDemoAccounts();
         
-        const user = await prisma.user.findUnique({
-            where: { phone: normalizedPhone },
-        });
+        if (!IS_PROD) console.log(`AuthAction: Verified phone ${normalizedPhone}`);
 
-        // 3. Conditional Branching (New vs Existing User)
-        if (!user) {
-            console.log("AuthAction: User not found in database. Sign-up required.");
-            return { 
-                success: true, 
-                data: { needsRegistration: true }, 
-                message: "Phone verified. Please create your profile." 
-            };
-        }
-
-        // 4. Update Persistence (Login Tracking)
-        console.log(`AuthAction: User ${user.registrationNumber} found. Finalizing login.`);
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { 
-                loginCount: { increment: 1 },
-            },
-        });
-
-        // 5. Session Establishment
-        await setAuthSession(user);
-
-        // 6. Role-Based Routing
-        const redirectTo = getRoleRedirectPath(user.role as AppRole);
-        console.log(`AuthAction: Login complete. Redirecting to ${redirectTo}`);
-
-        return {
-            success: true,
-            message: "Logged in successfully.",
-            data: {
-                redirectTo, 
-                user: {
-                    fullName: user.fullName,
-                    role: user.role,
-                    registrationNumber: user.registrationNumber,
-                    phone: user.phone,
-                },
-            }
-        };
+        return finalizeVerifiedPhoneLogin(normalizedPhone, normalizeRequestedRole(requestedRole));
     } catch (error) {
         console.error("AuthAction: Critical Failure in verifyWidgetOtpAndLogin:", error);
         return { 
             success: false, 
-            message: "A server error occurred during verification. Please contact support." 
+            message: "An unexpected error occurred during verification. Please try again or contact support." 
         };
     }
 }
@@ -213,24 +239,22 @@ export async function verifyOtpAndRegister(formData: {
     examTargetLevel?: string;
     examTargetMonth?: number;
     examTargetYear?: number;
-}): Promise<ActionResponse<LoginResult>> {
+}): Promise<ActionResponse<LoginResult | RoleMismatchResult>> {
     console.log(`AuthAction: Registering user ${formData.phone} with OTP/Token`);
     
     try {
         // 1. Verification Handshake
-        let verificationSuccess = false;
-        
+        const normalizedPhone = normalizePhone(formData.phone);
+
         if (formData.token && formData.otp === "VERIFIED") {
             const verification = await verifyMsg91WidgetToken(formData.token);
             if (verification.success && verification.phone) {
-                const normalizedIncoming = normalizePhone(formData.phone);
                 const normalizedVerified = normalizePhone(verification.phone);
                 
-                if (normalizedIncoming === normalizedVerified) {
-                    verificationSuccess = true;
+                if (normalizedPhone === normalizedVerified) {
                     console.log("AuthAction: Token verification matched phone number.");
                 } else {
-                    console.error("AuthAction: Phone mismatch", { expected: normalizedIncoming, actual: normalizedVerified });
+                    console.error("AuthAction: Phone mismatch", { expected: normalizedPhone, actual: normalizedVerified });
                     return { success: false, message: "Security Check: Verified phone number does not match registration number." };
                 }
             } else {
@@ -238,8 +262,38 @@ export async function verifyOtpAndRegister(formData: {
             }
         } else {
             const verification = await verifyMsg91Otp(formData.phone, formData.otp);
-            verificationSuccess = verification.success;
-            if (!verificationSuccess) return { success: false, message: verification.message };
+            if (!verification.success) return { success: false, message: verification.message };
+        }
+
+        const existingUser = await prisma.user.findUnique({
+            where: { phone: normalizedPhone },
+        });
+
+        if (existingUser) {
+            if (existingUser.role !== formData.role) {
+                return buildRoleMismatchResponse(existingUser.role as AppRole, formData.role);
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { id: existingUser.id },
+                data: { loginCount: { increment: 1 } },
+            });
+
+            await setAuthSession(updatedUser);
+
+            return {
+                success: true,
+                message: "Account already exists. Signed you in.",
+                data: {
+                    redirectTo: getRoleRedirectPath(updatedUser.role as AppRole),
+                    user: {
+                        fullName: updatedUser.fullName,
+                        role: updatedUser.role,
+                        registrationNumber: updatedUser.registrationNumber,
+                        phone: updatedUser.phone,
+                    },
+                },
+            };
         }
 
         const prefix = formData.role === "TEACHER" ? "TCH" : "STU";
@@ -247,7 +301,7 @@ export async function verifyOtpAndRegister(formData: {
         const registered = await registerUserRecord({
             fullName: formData.fullName,
             email: formData.email,
-            phone: formData.phone,
+            phone: normalizedPhone,
             password: formData.password,
             role: formData.role,
             registrationNumber: `${prefix}-${Date.now().toString().slice(-6)}`,

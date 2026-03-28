@@ -15,6 +15,7 @@ import {
     syncSessionCookiePayload,
     writeAccessTokenCookie,
 } from "./session-cookie-sync";
+import { buildAuthCookieOptions } from "./cookie-options";
 
 const REFRESH_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 let demoAccountsPromise: Promise<unknown> | null = null;
@@ -29,9 +30,94 @@ async function ensureDemoAccountsReady() {
     await demoAccountsPromise;
 }
 
+async function expireAuthCookies() {
+    const cookieStore = await cookies();
+    const secure = process.env.NODE_ENV === "production";
+    const expiredCookieOptions = buildAuthCookieOptions({
+        secure,
+        maxAge: 0,
+    });
+
+    cookieStore.set(ACCESS_COOKIE_NAME, "", expiredCookieOptions);
+    cookieStore.set(REFRESH_COOKIE_NAME, "", expiredCookieOptions);
+}
+
+type RefreshSessionOptions = {
+    syncAccessCookie?: boolean;
+    clearInvalidCookies?: boolean;
+};
+
+async function resolveSessionPayloadFromRefreshToken(
+    refreshToken: string,
+    options: RefreshSessionOptions = {},
+): Promise<SessionPayload | null> {
+    const {
+        syncAccessCookie = false,
+        clearInvalidCookies = false,
+    } = options;
+    const session = await prisma.session.findUnique({
+        where: { refreshToken },
+        include: { user: true },
+    });
+
+    if (!session) {
+        if (clearInvalidCookies) {
+            await expireAuthCookies();
+        }
+        return null;
+    }
+
+    if (session.expiresAt <= new Date()) {
+        await prisma.session.deleteMany({
+            where: { id: session.id },
+        });
+        if (clearInvalidCookies) {
+            await expireAuthCookies();
+        }
+        return null;
+    }
+
+    if (session.user.isBlocked) {
+        await prisma.session.deleteMany({
+            where: { userId: session.userId },
+        });
+        if (clearInvalidCookies) {
+            await expireAuthCookies();
+        }
+        return null;
+    }
+
+    const payload = buildSessionPayload(session.user);
+
+    await prisma.session.update({
+        where: { id: session.id },
+        data: { lastActiveAt: new Date() },
+    });
+
+    if (syncAccessCookie) {
+        await writeAccessTokenCookie(
+            await cookies(),
+            payload,
+            signAccessToken,
+            process.env.NODE_ENV === "production",
+        );
+    }
+
+    return payload;
+}
+
 export async function setAuthSession(user: User) {
     const payload = buildSessionPayload(user);
     const refreshToken = randomUUID();
+    const secure = process.env.NODE_ENV === "production";
+    const cookieStore = await cookies();
+    const existingRefreshToken = cookieStore.get(REFRESH_COOKIE_NAME)?.value;
+
+    if (existingRefreshToken) {
+        await prisma.session.deleteMany({
+            where: { refreshToken: existingRefreshToken },
+        });
+    }
 
     // Store refresh token in DB
     await prisma.session.create({
@@ -43,21 +129,21 @@ export async function setAuthSession(user: User) {
     });
 
     await writeAccessTokenCookie(
-        await cookies(),
+        cookieStore,
         payload,
         signAccessToken,
-        process.env.NODE_ENV === "production",
+        secure,
     );
 
     // Set Refresh Token (Long-lived)
-    const cookieStore = await cookies();
-    cookieStore.set(REFRESH_COOKIE_NAME, refreshToken, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: REFRESH_MAX_AGE_SECONDS,
-    });
+    cookieStore.set(
+        REFRESH_COOKIE_NAME,
+        refreshToken,
+        buildAuthCookieOptions({
+            secure,
+            maxAge: REFRESH_MAX_AGE_SECONDS,
+        }),
+    );
 }
 
 export async function syncCurrentAuthSession(user: SessionUser) {
@@ -79,18 +165,63 @@ export async function clearAuthSession() {
         });
     }
 
-    cookieStore.delete(ACCESS_COOKIE_NAME);
-    cookieStore.delete(REFRESH_COOKIE_NAME);
+    await expireAuthCookies();
+}
+
+export async function clearAllAuthSessions() {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(REFRESH_COOKIE_NAME)?.value;
+
+    if (refreshToken) {
+        const session = await prisma.session.findUnique({
+            where: { refreshToken },
+            select: { userId: true },
+        });
+
+        if (session) {
+            await prisma.session.deleteMany({
+                where: { userId: session.userId },
+            });
+        }
+    }
+
+    await expireAuthCookies();
+}
+
+export async function refreshCurrentAuthSession() {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(REFRESH_COOKIE_NAME)?.value;
+
+    if (!refreshToken) {
+        await expireAuthCookies();
+        return null;
+    }
+
+    return resolveSessionPayloadFromRefreshToken(refreshToken, {
+        syncAccessCookie: true,
+        clearInvalidCookies: true,
+    });
 }
 
 export async function getSessionPayload(): Promise<SessionPayload | null> {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
-    
-    if (!accessToken) return null;
-    
-    const payload = await verifyAccessToken(accessToken);
-    return payload as SessionPayload | null;
+
+    if (accessToken) {
+        const payload = await verifyAccessToken(accessToken);
+        if (payload) {
+            return payload as SessionPayload;
+        }
+    }
+
+    const refreshToken = cookieStore.get(REFRESH_COOKIE_NAME)?.value;
+    if (!refreshToken) {
+        return null;
+    }
+
+    // Server components can read cookies during render, but may not mutate them.
+    // Fall back to the refresh-token-backed DB session without attempting to rewrite cookies here.
+    return resolveSessionPayloadFromRefreshToken(refreshToken);
 }
 
 export async function getCurrentUser(role?: AppRole | AppRole[]) {

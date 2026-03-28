@@ -1,24 +1,44 @@
 "use server";
 
-import { getCurrentUser, setAuthSession } from "@/lib/auth/session";
+import { getCurrentUser, syncCurrentAuthSession } from "@/lib/auth/session";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
     getCurrentUserPlanSummary,
     promoteUserToProPlan,
+    resolvePlanEntitlement,
+    syncUserPlanAccess,
 } from "@/lib/server/plan-entitlements";
-import { getRazorpayInstance, PLAN_AMOUNTS, PLAN_NAMES, PLAN_VALIDITY_YEARS, verifyPaymentSignature } from "@/lib/server/razorpay";
+import {
+    calculatePlanExpiry,
+    getBillingAmount,
+    getBillingPlanDefinition,
+    getBillingValidityMonths,
+    getRazorpayInstance,
+    PLAN_NAMES,
+    verifyPaymentSignature,
+} from "@/lib/server/razorpay";
 import { revalidatePlanSurfaces } from "@/lib/server/revalidation";
 import prisma from "@/lib/prisma/client";
 import type { CurrentPlanSummary } from "@/types/plan";
 import { ActionResponse } from "@/types/shared";
 
-// ─── Student & Teacher Plan Actions ─────────────────────────────────────────
+function isPlanAllowedForUser(planId: string, userRole: string) {
+    const plan = getBillingPlanDefinition(planId);
+    return userRole === "ADMIN" || plan.role === userRole;
+}
+
+function isDowngradeSelection(currentPlan: string, userRole: string, targetPlan: string) {
+    return resolvePlanEntitlement(currentPlan, userRole).rank > resolvePlanEntitlement(targetPlan, userRole).rank;
+}
 
 export async function createRazorpayOrder(planId: string): Promise<ActionResponse<{
     orderId: string;
     amount: number;
     currency: string;
     keyId: string;
+    userName: string;
+    userEmail: string;
+    userPhone: string;
 }>> {
     try {
         const user = await getCurrentUser();
@@ -26,10 +46,23 @@ export async function createRazorpayOrder(planId: string): Promise<ActionRespons
             return { success: false, message: "You must be logged in to subscribe." };
         }
 
-        const amount = PLAN_AMOUNTS[planId];
-        if (!amount) {
-            return { success: false, message: "Invalid plan selected." };
+        if (!isPlanAllowedForUser(planId, user.role)) {
+            return { success: false, message: "This plan is not available for your account role." };
         }
+
+        const plan = getBillingPlanDefinition(planId);
+        if (isDowngradeSelection(user.plan, user.role, plan.appPlan)) {
+            return {
+                success: false,
+                message: "Your account already includes a higher tier. Choose your current plan to renew or keep the higher tier active.",
+            };
+        }
+
+        const amount = getBillingAmount(planId, "annual");
+        const expiresAt = calculatePlanExpiry(
+            user.planExpiresAt,
+            getBillingValidityMonths(planId, "annual"),
+        );
 
         const razorpay = getRazorpayInstance();
         const order = await razorpay.orders.create({
@@ -39,6 +72,21 @@ export async function createRazorpayOrder(planId: string): Promise<ActionRespons
                 userId: user.id,
                 planId,
                 planName: PLAN_NAMES[planId] ?? planId,
+                role: plan.role,
+            },
+        });
+
+        await prisma.subscription.create({
+            data: {
+                userId: user.id,
+                plan: plan.appPlan,
+                role: plan.role,
+                status: "PENDING",
+                amountPaise: amount,
+                razorpayOrderId: order.id,
+                razorpayPlanId: planId,
+                expiresAt,
+                currentPeriodEnd: expiresAt,
             },
         });
 
@@ -48,7 +96,10 @@ export async function createRazorpayOrder(planId: string): Promise<ActionRespons
                 orderId: order.id,
                 amount: order.amount as number,
                 currency: order.currency,
-                keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
+                keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID ?? "",
+                userName: user.fullName || "Valued Learner",
+                userEmail: user.email || "",
+                userPhone: user.phone || "",
             },
         };
     } catch (error: unknown) {
@@ -71,50 +122,77 @@ export async function verifyAndActivatePlan(payload: {
             return { success: false, message: "You must be logged in." };
         }
 
-        // Verify signature
         const isValid = verifyPaymentSignature(
             payload.razorpayOrderId,
             payload.razorpayPaymentId,
-            payload.razorpaySignature
+            payload.razorpaySignature,
         );
         if (!isValid) {
             return { success: false, message: "Payment verification failed. Please contact support." };
         }
 
-        const amount = PLAN_AMOUNTS[payload.planId];
-        if (!amount) {
-            return { success: false, message: "Invalid plan." };
+        if (!isPlanAllowedForUser(payload.planId, user.role)) {
+            return { success: false, message: "This plan is not available for your account role." };
         }
 
-        const validityYears = PLAN_VALIDITY_YEARS[payload.planId] ?? 1;
-        const expiresAt = new Date();
-        expiresAt.setFullYear(expiresAt.getFullYear() + validityYears);
+        const plan = getBillingPlanDefinition(payload.planId);
+        const amount = getBillingAmount(payload.planId, "annual");
+        const expiresAt = calculatePlanExpiry(
+            user.planExpiresAt,
+            getBillingValidityMonths(payload.planId, "annual"),
+        );
 
-        const role = payload.planId.startsWith("t-") ? "TEACHER" : "STUDENT";
+        const updatedUser = await prisma.$transaction(async (tx) => {
+            const existingSubscription = await tx.subscription.findFirst({
+                where: { razorpayOrderId: payload.razorpayOrderId },
+                select: { id: true },
+            });
 
-        // Create subscription record
-        await prisma.subscription.create({
-            data: {
-                userId: user.id,
-                plan: "PRO",
-                role,
-                status: "ACTIVE",
-                amountPaise: amount,
-                razorpayOrderId: payload.razorpayOrderId,
-                razorpayPaymentId: payload.razorpayPaymentId,
-                razorpaySignature: payload.razorpaySignature,
-                expiresAt,
-            },
+            if (existingSubscription) {
+                await tx.subscription.update({
+                    where: { id: existingSubscription.id },
+                    data: {
+                        plan: plan.appPlan,
+                        role: plan.role,
+                        status: "ACTIVE",
+                        amountPaise: amount,
+                        razorpayPaymentId: payload.razorpayPaymentId,
+                        razorpaySignature: payload.razorpaySignature,
+                        expiresAt,
+                        currentPeriodEnd: expiresAt,
+                        cancelAtPeriodEnd: false,
+                    },
+                });
+            } else {
+                await tx.subscription.create({
+                    data: {
+                        userId: user.id,
+                        plan: plan.appPlan,
+                        role: plan.role,
+                        status: "ACTIVE",
+                        amountPaise: amount,
+                        razorpayOrderId: payload.razorpayOrderId,
+                        razorpayPaymentId: payload.razorpayPaymentId,
+                        razorpaySignature: payload.razorpaySignature,
+                        razorpayPlanId: payload.planId,
+                        expiresAt,
+                        currentPeriodEnd: expiresAt,
+                    },
+                });
+            }
+
+            const entitlement = resolvePlanEntitlement(plan.appPlan, user.role);
+            return tx.user.update({
+                where: { id: user.id },
+                data: {
+                    plan: plan.appPlan,
+                    planExpiresAt: expiresAt,
+                    storageLimit: Math.max(user.storageLimit, entitlement.storageLimitFloor),
+                },
+            });
         });
 
-        // Update user plan + expiry
-        const updatedUser = await promoteUserToProPlan(user.id);
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { planExpiresAt: expiresAt },
-        });
-
-        await setAuthSession(updatedUser);
+        await syncCurrentAuthSession(updatedUser);
         revalidatePlanSurfaces();
 
         return { success: true, data: undefined };
@@ -131,15 +209,22 @@ export async function getMySubscription(): Promise<ActionResponse<{
     status: string;
     expiresAt: string;
     startedAt: string;
-    razorpayPaymentId?: string | null;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+    razorpayPaymentId: string | null;
+    razorpayOrderId: string | null;
+    razorpaySubscriptionId: string | null;
 } | null>> {
     try {
         const user = await getCurrentUser();
         if (!user) return { success: false, message: "Not authenticated." };
 
         const sub = await prisma.subscription.findFirst({
-            where: { userId: user.id, status: "ACTIVE" },
-            orderBy: { createdAt: "desc" },
+            where: { userId: user.id },
+            orderBy: [
+                { createdAt: "desc" },
+                { startedAt: "desc" },
+            ],
         });
 
         if (!sub) return { success: true, data: null };
@@ -151,7 +236,11 @@ export async function getMySubscription(): Promise<ActionResponse<{
                 status: sub.status,
                 expiresAt: sub.expiresAt.toISOString(),
                 startedAt: sub.startedAt.toISOString(),
+                currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
+                cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
                 razorpayPaymentId: sub.razorpayPaymentId,
+                razorpayOrderId: sub.razorpayOrderId,
+                razorpaySubscriptionId: sub.razorpaySubscriptionId,
             },
         };
     } catch (error: unknown) {
@@ -162,7 +251,35 @@ export async function getMySubscription(): Promise<ActionResponse<{
     }
 }
 
-// ─── Legacy action (kept for compatibility) ──────────────────────────────────
+export async function recordCheckoutResolution(input: {
+    orderId?: string;
+    subscriptionId?: string;
+    status: "FAILED" | "CANCELLED";
+}): Promise<ActionResponse<void>> {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            return { success: false, message: "You must be logged in." };
+        }
+
+        const where = input.orderId
+            ? { userId: user.id, razorpayOrderId: input.orderId }
+            : { userId: user.id, razorpaySubscriptionId: input.subscriptionId };
+
+        await prisma.subscription.updateMany({
+            where,
+            data: { status: input.status },
+        });
+
+        revalidatePlanSurfaces();
+        return { success: true, data: undefined };
+    } catch (error: unknown) {
+        return {
+            success: false,
+            message: getActionErrorMessage(error, "Failed to update checkout state."),
+        };
+    }
+}
 
 export async function activateProPlan(): Promise<ActionResponse<void>> {
     try {
@@ -174,7 +291,7 @@ export async function activateProPlan(): Promise<ActionResponse<void>> {
             return { success: false, message: "You are already on the PRO plan." };
         }
         const updatedUser = await promoteUserToProPlan(user.id);
-        await setAuthSession(updatedUser);
+        await syncCurrentAuthSession(updatedUser);
         revalidatePlanSurfaces();
         return { success: true, message: "Your PRO plan has been successfully activated!", data: undefined };
     } catch (error: unknown) {
@@ -199,8 +316,6 @@ export async function getCurrentPlanSummary(): Promise<ActionResponse<CurrentPla
         };
     }
 }
-
-// ─── Admin Actions ───────────────────────────────────────────────────────────
 
 export async function adminGetAllSubscriptions(filters?: {
     status?: string;
@@ -261,7 +376,7 @@ export async function adminGetAllSubscriptions(filters?: {
 
 export async function adminUpdateSubscription(
     subscriptionId: string,
-    status: "ACTIVE" | "CANCELLED" | "EXPIRED"
+    status: "ACTIVE" | "CANCELLED" | "EXPIRED",
 ): Promise<ActionResponse<void>> {
     try {
         const user = await getCurrentUser();
@@ -309,13 +424,11 @@ export async function adminGrantPlan(data: {
                 amountPaise: 0,
                 grantedByAdminId: admin.id,
                 expiresAt,
+                currentPeriodEnd: expiresAt,
             },
         });
 
-        await prisma.user.update({
-            where: { id: data.userId },
-            data: { plan: data.plan, planExpiresAt: expiresAt },
-        });
+        await syncUserPlanAccess(data.userId, data.plan, expiresAt);
 
         return { success: true, data: undefined };
     } catch (error: unknown) {

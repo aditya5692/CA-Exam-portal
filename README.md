@@ -1,51 +1,73 @@
 ## CA Exam Portal
 
-Next.js 16 + TypeScript + Prisma PostgreSQL deployment for CA students and educators.
+Next.js 16 + TypeScript + Prisma deployment for CA students and educators.
 
 ## Environment Setup
 
-Use the right database URL for the environment you are running in.
+Copy `.env.example` to `.env` and fill in the production values for your environment.
 
 ### Dokploy App Runtime
 
-Set this in the Dokploy app environment:
+Use the internal Dokploy database hostname inside the Dokploy app, not the public IP:
 
 ```env
 DOKPLOY_DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@YOUR_DOKPLOY_DB_HOST:5432/DB_NAME
-```
-
-For your current Dokploy database, that host should be the internal host, not the public IP:
-
-```env
-DOKPLOY_DATABASE_URL=postgresql://aditya424:aditya424@financly-cadatabase-bxixqg:5432/financlycadatabase
+JWT_SECRET=replace-with-a-long-random-secret
+AUTH_COOKIE_DOMAIN=.your-root-domain.com
+MSG91_AUTH_KEY=...
+MSG91_WIDGET_ID=...
+NEXT_PUBLIC_MSG91_WIDGET_ID=...
+NEXT_PUBLIC_MSG91_TOKEN_AUTH=...
+RAZORPAY_KEY_ID=...
+NEXT_PUBLIC_RAZORPAY_KEY_ID=...
+RAZORPAY_KEY_SECRET=...
+RAZORPAY_WEBHOOK_SECRET=...
+NEXT_PUBLIC_RAZORPAY_PLAN_BASIC=...
+NEXT_PUBLIC_RAZORPAY_PLAN_PRO=...
 ```
 
 ### Local Development
 
-If you want to test from your laptop, expose Postgres on a dedicated external port like `5433`, then use:
+For local testing you can use either:
+
+```env
+DATABASE_URL=file:./dev.db
+```
+
+or a forwarded Dokploy/Postgres connection such as:
 
 ```env
 LOCAL_DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@YOUR_SERVER_IP:5433/DB_NAME
 ```
 
-Do not use port `3000` for the external database if the app is also running there.
+Do not reuse port `3000` for the database if the app is also running there.
 
 ## Getting Started
 
-Create your local env file, then run:
+Run:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
+
+## Health Checks
+
+Dokploy health checks should use:
+
+```text
+/api/health/live
+/api/health/ready
+```
+
+`/api/health/live` only confirms the app is running.  
+`/api/health/ready` verifies required auth/payment env vars, database reachability, and outbound reachability to MSG91 and Razorpay before traffic should be routed.
 
 ## Database Check
 
-You can verify the current DB target quickly with:
+You can verify which database URL is being used with:
 
 ```bash
 npm run db:check
 ```
-
-It prints which env key was selected and whether the database is reachable.

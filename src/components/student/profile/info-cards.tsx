@@ -30,10 +30,19 @@ export function InfoCards(props: InfoCardsProps) {
         : 0;
 
     const normalizedPlan = props.plan?.trim().toUpperCase() || "FREE";
-    const planStatusLabel = normalizedPlan === "PRO"
+    const publicPlanLabel = normalizedPlan === "BASIC"
+        ? "Basic"
+        : normalizedPlan === "PRO"
+            ? "Pro"
+            : normalizedPlan === "ELITE"
+                ? "Pro"
+                : normalizedPlan === "ENTERPRISE"
+                    ? "Enterprise"
+                    : "Free";
+    const planStatusLabel = normalizedPlan === "PRO" || normalizedPlan === "ELITE"
         ? "Premium"
-        : normalizedPlan === "ELITE"
-            ? "Elite"
+        : normalizedPlan === "BASIC"
+            ? "Growth"
             : normalizedPlan === "ENTERPRISE"
                 ? "Enterprise"
                 : "Free";
@@ -120,7 +129,7 @@ export function InfoCards(props: InfoCardsProps) {
                                 <p className="mt-1 text-sm font-black tracking-tight text-[var(--student-text)]">{planStatusLabel}</p>
                             </div>
                             <span className="student-chip-accent rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest">
-                                {normalizedPlan}
+                                {publicPlanLabel.toUpperCase()}
                             </span>
                         </div>
                         <Link

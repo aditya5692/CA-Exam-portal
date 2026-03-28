@@ -26,57 +26,74 @@ const DEFAULT_ENTITLEMENT: EntitlementDefinition = {
     supportTier: "STANDARD",
     isPremium: false,
     featureHighlights: [
-        "Core portal access",
-        "Standard material and exam workflows",
+        "Core portal access across dashboard and profile surfaces",
+        "Starter materials and exam workflows",
     ],
     restrictions: [
-        "Advanced analytics and premium distribution tools remain locked",
+        "Advanced analytics, premium distribution tools, and higher storage stay locked",
     ],
 };
 
 const STUDENT_ENTITLEMENTS: RolePlanMatrix = {
     FREE: {
-        displayName: "CA Pass",
-        rank: 1,
+        displayName: "Free",
+        rank: 0,
         storageLimitFloor: 50 * MB,
         supportTier: "STANDARD",
         isPremium: false,
         featureHighlights: [
-            "Core mock tests and progress tracking",
-            "Standard study-material access",
+            "Student dashboard, profile, and batch update access",
+            "Starter mock exams with shared study materials",
+            "Free resources and core progress tracking",
         ],
         restrictions: [
-            "Advanced analytics and premium exam workflows are limited",
+            "Advanced analytics, premium PYQ packs, and War Room drills stay locked",
+            "Revision-vault storage remains on the starter limit",
+        ],
+    },
+    BASIC: {
+        displayName: "Basic",
+        rank: 1,
+        storageLimitFloor: 256 * MB,
+        supportTier: "STANDARD",
+        isPremium: true,
+        featureHighlights: [
+            "Everything in Free, plus a broader exam hub and more revision attempts",
+            "Extended personal study vault storage for saved materials and notes",
+            "Performance snapshots across exams, materials, and educator updates",
+        ],
+        restrictions: [
+            "Deep mastery analytics, premium War Room tooling, and the fastest support lane stay on Pro",
         ],
     },
     PRO: {
-        displayName: "CA Pass PRO",
+        displayName: "Pro",
         rank: 2,
-        storageLimitFloor: 256 * MB,
-        supportTier: "PRIORITY",
-        isPremium: true,
-        featureHighlights: [
-            "Extended mock-test access",
-            "Priority learning analytics",
-            "Protected storage allowance",
-        ],
-        restrictions: [],
-    },
-    ELITE: {
-        displayName: "CA Pass Elite",
-        rank: 3,
         storageLimitFloor: 512 * MB,
         supportTier: "PRIORITY",
         isPremium: true,
         featureHighlights: [
-            "Elite exam access",
-            "Deeper mastery insights",
-            "Expanded revision storage",
+            "Unlimited mock reattempts, premium PYQ workflows, and full War Room access",
+            "Advanced student analytics with mastery-focused performance views",
+            "Priority support and the highest protected study storage allocation",
+        ],
+        restrictions: [],
+    },
+    ELITE: {
+        displayName: "Pro",
+        rank: 3,
+        storageLimitFloor: 768 * MB,
+        supportTier: "PRIORITY",
+        isPremium: true,
+        featureHighlights: [
+            "Legacy elite access retained with all current Pro capabilities",
+            "Expanded revision storage for older premium accounts",
+            "Priority support continuity",
         ],
         restrictions: [],
     },
     ENTERPRISE: {
-        displayName: "Institutional Student Access",
+        displayName: "Enterprise",
         rank: 4,
         storageLimitFloor: GB,
         supportTier: "ENTERPRISE",
@@ -92,47 +109,63 @@ const STUDENT_ENTITLEMENTS: RolePlanMatrix = {
 
 const TEACHER_ENTITLEMENTS: RolePlanMatrix = {
     FREE: {
-        displayName: "Teacher Free",
-        rank: 1,
+        displayName: "Free",
+        rank: 0,
         storageLimitFloor: 50 * MB,
         supportTier: "STANDARD",
         isPremium: false,
         featureHighlights: [
-            "Core batch and publishing tools",
-            "Standard material distribution",
+            "Teacher dashboard, profile, and starter publishing workspace",
+            "Core batches, announcements, and material sharing",
+            "Starter question bank access for early cohorts",
         ],
         restrictions: [
-            "Advanced analytics and large-scale distribution remain limited",
+            "Large cohort operations, advanced analytics, and expanded content storage stay locked",
+        ],
+    },
+    BASIC: {
+        displayName: "Basic",
+        rank: 1,
+        storageLimitFloor: 512 * MB,
+        supportTier: "STANDARD",
+        isPremium: true,
+        featureHighlights: [
+            "Everything in Free, plus structured batch and student management at growing scale",
+            "Extended materials library and question-bank workflows for active classes",
+            "Operational insights across students, updates, and assessments",
+        ],
+        restrictions: [
+            "Unlimited distribution, advanced cohort analytics, and the highest storage band stay on Pro",
         ],
     },
     PRO: {
-        displayName: "Studio Pro",
+        displayName: "Pro",
         rank: 2,
-        storageLimitFloor: GB,
-        supportTier: "PRIORITY",
-        isPremium: true,
-        featureHighlights: [
-            "Premium batch management",
-            "Higher storage for content libraries",
-            "Priority support",
-        ],
-        restrictions: [],
-    },
-    ELITE: {
-        displayName: "Studio Elite",
-        rank: 3,
         storageLimitFloor: 2 * GB,
         supportTier: "PRIORITY",
         isPremium: true,
         featureHighlights: [
-            "Expanded content operations",
-            "Premium analytics readiness",
-            "Higher educator throughput",
+            "Unlimited teaching operations across batches, students, materials, and question banks",
+            "Premium analytics for cohort performance and teaching velocity",
+            "Priority support with maximum content-library storage",
+        ],
+        restrictions: [],
+    },
+    ELITE: {
+        displayName: "Pro",
+        rank: 3,
+        storageLimitFloor: 3 * GB,
+        supportTier: "PRIORITY",
+        isPremium: true,
+        featureHighlights: [
+            "Legacy elite access retained with all current Pro capabilities",
+            "Expanded storage preserved for older premium educator accounts",
+            "Priority support continuity",
         ],
         restrictions: [],
     },
     ENTERPRISE: {
-        displayName: "Academy Enterprise",
+        displayName: "Enterprise",
         rank: 4,
         storageLimitFloor: 4 * GB,
         supportTier: "ENTERPRISE",
@@ -175,8 +208,27 @@ function getRolePlanMatrix(role: string): RolePlanMatrix {
     }
 }
 
+export function normalizePlanCode(plan: string | null | undefined) {
+    const normalizedPlan = (plan ?? "").trim().toUpperCase();
+    return normalizedPlan || "FREE";
+}
+
+export function resolvePublicPlanTier(plan: string | null | undefined): "FREE" | "BASIC" | "PRO" {
+    const normalizedPlan = normalizePlanCode(plan);
+
+    if (normalizedPlan === "FREE") {
+        return "FREE";
+    }
+
+    if (normalizedPlan === "BASIC") {
+        return "BASIC";
+    }
+
+    return "PRO";
+}
+
 export function resolvePlanEntitlement(plan: string, role: string): EntitlementDefinition {
-    const normalizedPlan = plan.trim().toUpperCase() || "FREE";
+    const normalizedPlan = normalizePlanCode(plan);
     const matrix = getRolePlanMatrix(role);
     return matrix[normalizedPlan] ?? matrix.FREE ?? matrix.ENTERPRISE ?? DEFAULT_ENTITLEMENT;
 }
@@ -189,11 +241,21 @@ export function planIncludesAtLeast(plan: string, role: string, targetPlan: stri
 
 export function buildPlanSummary(input: Pick<User, "plan" | "role" | "storageUsed" | "storageLimit">): CurrentPlanSummary {
     const entitlement = resolvePlanEntitlement(input.plan, input.role);
+    const publicPlanTier = resolvePublicPlanTier(input.plan);
     const storageLimit = Math.max(input.storageLimit, 0);
     const storageUsagePercent = storageLimit > 0
         ? Math.min(100, Math.round((input.storageUsed / storageLimit) * 100))
         : 0;
-    const canUpgrade = !planIncludesAtLeast(input.plan, input.role, input.role === "ADMIN" ? "ENTERPRISE" : "PRO");
+    const canUpgrade = input.role === "ADMIN"
+        ? !planIncludesAtLeast(input.plan, input.role, "ENTERPRISE")
+        : publicPlanTier !== "PRO";
+    const recommendedPlan = input.role === "ADMIN"
+        ? (canUpgrade ? "ENTERPRISE" : null)
+        : publicPlanTier === "FREE"
+            ? "BASIC"
+            : publicPlanTier === "BASIC"
+                ? "PRO"
+                : null;
 
     return {
         plan: input.plan,
@@ -208,7 +270,7 @@ export function buildPlanSummary(input: Pick<User, "plan" | "role" | "storageUse
         featureHighlights: entitlement.featureHighlights,
         restrictions: entitlement.restrictions,
         canUpgrade,
-        recommendedPlan: canUpgrade ? (input.role === "ADMIN" ? "ENTERPRISE" : "PRO") : null,
+        recommendedPlan,
     };
 }
 
@@ -235,6 +297,35 @@ export async function getCurrentUserPlanSummary(userId: string): Promise<Current
     return buildPlanSummary(user);
 }
 
+export async function syncUserPlanAccess(
+    userId: string,
+    targetPlan: string,
+    planExpiresAt?: Date | null,
+) {
+    const normalizedUserId = userId.trim();
+    if (!normalizedUserId) {
+        throw new Error("User id is required.");
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: normalizedUserId },
+    });
+
+    if (!user) {
+        throw new Error("User not found.");
+    }
+
+    const entitlement = resolvePlanEntitlement(targetPlan, user.role);
+    return prisma.user.update({
+        where: { id: user.id },
+        data: {
+            plan: targetPlan,
+            planExpiresAt: planExpiresAt ?? user.planExpiresAt,
+            storageLimit: Math.max(user.storageLimit, entitlement.storageLimitFloor),
+        },
+    });
+}
+
 export async function promoteUserToProPlan(userId: string) {
     const normalizedUserId = userId.trim();
     if (!normalizedUserId) {
@@ -253,12 +344,5 @@ export async function promoteUserToProPlan(userId: string) {
         throw new Error("Your current plan already includes premium access.");
     }
 
-    const targetEntitlement = resolvePlanEntitlement("PRO", user.role);
-    return prisma.user.update({
-        where: { id: user.id },
-        data: {
-            plan: "PRO",
-            storageLimit: Math.max(user.storageLimit, targetEntitlement.storageLimitFloor),
-        },
-    });
+    return syncUserPlanAccess(user.id, "PRO");
 }

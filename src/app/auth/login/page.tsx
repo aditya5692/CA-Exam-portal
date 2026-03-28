@@ -1,6 +1,6 @@
 "use client";
 
-import { loginAsDemoUser, requestOtp, verifyOtpAndLogin, verifyWidgetOtpAndLogin } from "@/actions/auth-actions";
+import { loginAsDemoUser, verifyWidgetOtpAndLogin } from "@/actions/auth-actions";
 import Msg91Widget from "@/components/auth/msg91-widget";
 import {
     ArrowRight,
@@ -8,13 +8,11 @@ import {
     GraduationCap,
     IdentificationBadge,
     Phone,
-    ShieldCheck,
-    SignOut,
     Spinner
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 
 type LoginRole = "student" | "teacher";
@@ -47,21 +45,18 @@ export default function LoginPage() {
     const [phone, setPhone] = useState("");
     const [authState, setAuthState] = useState<AuthState>("IDLE");
     const [errorMessage, setErrorMessage] = useState("");
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     const activeCards = useMemo(
         () => DEMO_ACCOUNT_CARDS.filter((account) => account.role === role),
         [role]
     );
 
-    const isLocalhost = useMemo(() => {
-        if (!mounted || typeof window === "undefined") return false;
-        return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    }, [mounted]);
+    const hostname = useSyncExternalStore(
+        () => () => undefined,
+        () => window.location.hostname,
+        () => "",
+    );
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
 
     const normalizedPhone = useMemo(() => {
         const digits = phone.replace(/\D/g, "");
@@ -85,24 +80,34 @@ export default function LoginPage() {
         console.log("LoginPage: Starting server-side verification...");
 
         try {
-            const result = await verifyWidgetOtpAndLogin(accessToken);
+            const requestedRole = role.toUpperCase() as "STUDENT" | "TEACHER";
+            const result = await verifyWidgetOtpAndLogin(accessToken, requestedRole);
             
             if (!result.success) {
+                if (result.data && "roleMismatch" in result.data && result.data.roleMismatch) {
+                    if (result.data.actualRole === "STUDENT" || result.data.actualRole === "TEACHER") {
+                        setRole(result.data.actualRole.toLowerCase() as LoginRole);
+                    }
+                }
                 setErrorMessage(result.message);
-                setAuthState("VERIFYING"); // Allow retry
+                setAuthState("IDLE");
                 return;
             }
 
             setAuthState("SUCCESS");
 
             if ('needsRegistration' in result.data! && result.data.needsRegistration) {
+                window.sessionStorage.setItem("pending-msg91-token", accessToken);
                 console.log("LoginPage: New user detected. Redirecting to signup.");
                 router.push(`/auth/signup?phone=${phone}&role=${role}&verified=true`);
                 return;
             }
 
-            const loginData = result.data as any;
-            const redirectTo = loginData.redirectTo || (role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
+            const redirectTo = "redirectTo" in result.data
+                ? result.data.redirectTo
+                : role === "teacher"
+                    ? "/teacher/dashboard"
+                    : "/student/dashboard";
 
             console.log(`LoginPage: Login successful. Redirecting to ${redirectTo}`);
             router.push(redirectTo);
@@ -350,7 +355,7 @@ export default function LoginPage() {
                     )}
 
                     <p className="mt-8 text-center text-xs font-bold text-slate-400 tracking-tight">
-                        Don't have an account?{" "}
+                        Don&apos;t have an account?{" "}
                         <Link href={`/auth/signup?role=${role}`} className="text-indigo-600 hover:underline">
                             Create for free
                         </Link>

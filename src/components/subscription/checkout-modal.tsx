@@ -1,6 +1,6 @@
 "use client";
 
-import { createRazorpayOrder, verifyAndActivatePlan } from "@/actions/subscription-actions";
+import { createRazorpayOrder, recordCheckoutResolution, verifyAndActivatePlan } from "@/actions/subscription-actions";
 import { createRecurringSubscription } from "@/actions/razorpay-subscription-actions";
 import { ArrowRight, CreditCard, ShieldCheck, Sparkle, Spinner, X } from "@phosphor-icons/react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -22,10 +22,55 @@ interface CheckoutModalProps {
     onClose: () => void;
 }
 
+type CheckoutData = {
+    subscriptionId?: string;
+    orderId?: string;
+    amount?: number;
+    currency?: string;
+    keyId: string;
+    userName: string;
+    userEmail: string;
+    userPhone: string;
+};
+
+type RazorpaySuccessResponse = {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+};
+
+type RazorpayFailureResponse = {
+    error?: {
+        description?: string;
+    };
+};
+
+type RazorpayCheckoutOptions = {
+    key: string;
+    name: string;
+    description: string;
+    prefill: {
+        name: string;
+        email: string;
+        contact: string;
+    };
+    theme: { color: string };
+    modal: { ondismiss: () => Promise<void> | void };
+    handler: (response: RazorpaySuccessResponse) => Promise<void>;
+    subscription_id?: string;
+    order_id?: string;
+    amount?: number;
+    currency?: string;
+};
+
+type RazorpayCheckoutInstance = {
+    open: () => void;
+    on: (eventName: "payment.failed", handler: (response: RazorpayFailureResponse) => Promise<void> | void) => void;
+};
+
 declare global {
     interface Window {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        Razorpay: any;
+        Razorpay?: new (options: RazorpayCheckoutOptions) => RazorpayCheckoutInstance;
     }
 }
 
@@ -36,7 +81,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
 
     if (!plan) return null;
 
-    const isFree = plan.price === "₹0";
+    const isFree = plan.id.endsWith("-free") || plan.price === "Rs 0";
 
     const handleActivate = async () => {
         setErrorMsg("");
@@ -50,7 +95,10 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
 
             let razorpayData;
             if (plan.isRecurring && plan.razorpayPlanId) {
-                const res = await createRecurringSubscription(plan.razorpayPlanId);
+                const res = await createRecurringSubscription({
+                    planId: plan.id,
+                    razorpayPlanId: plan.razorpayPlanId,
+                });
                 if (!res.success) throw new Error(res.message);
                 razorpayData = res.data;
             } else {
@@ -59,21 +107,30 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                 razorpayData = res.data;
             }
 
-            const { subscriptionId, orderId, amount, currency, keyId, userName, userEmail, userPhone } = razorpayData as any;
+            const { subscriptionId, orderId, amount, currency, keyId, userName, userEmail, userPhone } = razorpayData as CheckoutData;
 
             await new Promise<void>((resolve, reject) => {
-                const options: any = {
+                const options: RazorpayCheckoutOptions = {
                     key: keyId,
                     name: "CA Exam Portal",
-                    description: `${plan.name} — Subscription`,
+                    description: `${plan.name} Subscription`,
                     prefill: {
                         name: userName,
                         email: userEmail,
                         contact: userPhone,
                     },
                     theme: { color: "#000000" },
-                    modal: { ondismiss: () => reject(new Error("DISMISSED")) },
-                    handler: async (response: any) => {
+                    modal: {
+                        ondismiss: async () => {
+                            await recordCheckoutResolution({
+                                orderId,
+                                subscriptionId,
+                                status: "CANCELLED",
+                            });
+                            reject(new Error("DISMISSED"));
+                        },
+                    },
+                    handler: async (response: RazorpaySuccessResponse) => {
                         if (!plan.isRecurring) {
                             const verifyRes = await verifyAndActivatePlan({
                                 razorpayOrderId: response.razorpay_order_id,
@@ -81,10 +138,17 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                 razorpaySignature: response.razorpay_signature,
                                 planId: plan.id,
                             });
-                            if (verifyRes.success) resolve();
-                            else reject(new Error(verifyRes.message));
+                            if (verifyRes.success) {
+                                resolve();
+                            } else {
+                                await recordCheckoutResolution({
+                                    orderId: response.razorpay_order_id,
+                                    status: "FAILED",
+                                });
+                                reject(new Error(verifyRes.message));
+                            }
                         } else {
-                             resolve();
+                            resolve();
                         }
                     },
                 };
@@ -97,7 +161,20 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                     options.currency = currency;
                 }
 
+                if (!window.Razorpay) {
+                    reject(new Error("Payment gateway is still loading. Please retry in a moment."));
+                    return;
+                }
+
                 const rzp = new window.Razorpay(options);
+                rzp.on("payment.failed", async (response: RazorpayFailureResponse) => {
+                    await recordCheckoutResolution({
+                        orderId,
+                        subscriptionId,
+                        status: "FAILED",
+                    });
+                    reject(new Error(response?.error?.description || "Payment failed. Please try again."));
+                });
                 rzp.open();
             });
 
@@ -118,63 +195,73 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
 
             <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
                 <Dialog.Portal>
-                    <Dialog.Overlay className="fixed inset-0 bg-black/60 z-50 animate-in fade-in duration-200" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl z-50 animate-in zoom-in-95 fade-in duration-300 overflow-hidden">
-                        
-                        {/* Header */}
+                    <Dialog.Overlay className="fixed inset-0 z-50 animate-in fade-in duration-200 bg-black/60" />
+                    <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 fade-in duration-300">
                         <div className="bg-slate-900 px-8 py-8 text-white">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/10">
                                         <ShieldCheck size={28} weight="bold" className="text-emerald-400" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <Dialog.Title className="text-xl font-bold font-outfit tracking-tight">
+                                        <Dialog.Title className="font-outfit text-xl font-bold tracking-tight">
                                             Secure Checkout
                                         </Dialog.Title>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 leading-none">Verified Payment Node</p>
+                                        <p className="text-[10px] font-bold uppercase leading-none tracking-widest text-white/40">
+                                            Verified Payment Node
+                                        </p>
                                     </div>
                                 </div>
                                 <Dialog.Close asChild>
-                                    <button className="p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors">
+                                    <button className="rounded-lg p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-white">
                                         <X size={20} weight="bold" />
                                     </button>
                                 </Dialog.Close>
                             </div>
                         </div>
 
-                        <div className="p-8 space-y-8">
+                        <div className="space-y-8 p-8">
                             {status === "success" ? (
                                 <ActivationSuccess planName={plan.name} />
                             ) : (
                                 <>
-                                    <div className="p-6 rounded-xl bg-slate-50 border border-slate-100">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selected Plan</span>
-                                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-100">
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-6">
+                                        <div className="mb-4 flex items-center justify-between">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                Selected Plan
+                                            </span>
+                                            <span className="rounded border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
                                                 {plan.isRecurring ? "Recurring" : "Full Term"}
                                             </span>
                                         </div>
-                                        
-                                        <div className="flex justify-between items-end">
+
+                                        <div className="flex items-end justify-between">
                                             <div className="space-y-1">
-                                                <h4 className="text-lg font-bold text-slate-900 font-outfit leading-none">{plan.name}</h4>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Governance Access</p>
+                                                <h4 className="font-outfit text-lg font-bold leading-none text-slate-900">
+                                                    {plan.name}
+                                                </h4>
+                                                <p className="text-[10px] font-bold uppercase leading-none tracking-widest text-slate-400">
+                                                    Governance Access
+                                                </p>
                                             </div>
                                             <div className="text-right">
-                                                <div className="flex items-baseline gap-1 justify-end">
-                                                    <span className="text-2xl font-bold text-slate-900 font-outfit">{plan.price}</span>
-                                                    {plan.price !== "₹0" && <span className="text-slate-400 font-bold text-[10px] uppercase"> 
-                                                        {plan.isRecurring ? "/mo" : "/yr"}
-                                                    </span>}
+                                                <div className="flex items-baseline justify-end gap-1">
+                                                    <span className="font-outfit text-2xl font-bold text-slate-900">
+                                                        {plan.price}
+                                                    </span>
+                                                    {plan.price !== "Rs 0" && (
+                                                        <span className="text-[10px] font-bold uppercase text-slate-400">
+                                                            {plan.isRecurring ? "/mo" : "/yr"}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-                                            <div className="w-8 h-8 rounded-lg bg-white text-emerald-500 flex items-center justify-center shadow-sm border border-slate-100">
+                                        <div className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-100 bg-white text-emerald-500 shadow-sm">
                                                 <CreditCard size={18} weight="bold" />
                                             </div>
                                             <div className="space-y-0.5">
@@ -182,8 +269,8 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                                 <p className="text-[10px] font-medium text-slate-400">UPI, Cards, Netbanking</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-                                            <div className="w-8 h-8 rounded-lg bg-white text-emerald-500 flex items-center justify-center shadow-sm border border-slate-100">
+                                        <div className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-100 bg-white text-emerald-500 shadow-sm">
                                                 <Sparkle size={18} weight="bold" />
                                             </div>
                                             <div className="space-y-0.5">
@@ -194,7 +281,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                     </div>
 
                                     {errorMsg && (
-                                        <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-xs text-red-600 font-bold">
+                                        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-600">
                                             {errorMsg}
                                         </div>
                                     )}
@@ -203,7 +290,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                         <button
                                             onClick={handleActivate}
                                             disabled={status === "processing"}
-                                            className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             {status === "processing" ? (
                                                 <>
@@ -217,7 +304,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                                 </>
                                             )}
                                         </button>
-                                        <p className="text-center mt-4 text-[10px] font-medium text-slate-400">
+                                        <p className="mt-4 text-center text-[10px] font-medium text-slate-400">
                                             Secure end-to-end encrypted transaction
                                         </p>
                                     </div>

@@ -3,26 +3,35 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 function getDatabaseUrl() {
-    // Priority 1: Check actual process.env (passed by Dokploy/OS)
-    // In production, DATABASE_URL is usually PostgreSQL.
-    // In local dev, we check for LOCAL_DATABASE_URL first to stick to SQLite.
-    
-    const envKeys = [
-        'LOCAL_DATABASE_URL', // LOCAL FIRST
-        'DATABASE_URL',
-        'DOKPLOY_DATABASE_URL',
-        'POSTGRES_INTERNAL_URL',
-        'DATABASE_URI'
-    ];
+    const envKeys = process.env.NODE_ENV === 'production'
+        ? [
+            'DOKPLOY_DATABASE_URL',
+            'POSTGRES_INTERNAL_URL',
+            'DATABASE_URL',
+            'POSTGRES_URL',
+            'POSTGRES_PRISMA_URL',
+            'POSTGRESQL_URL',
+            'DATABASE_URI',
+            'LOCAL_DATABASE_URL',
+        ]
+        : [
+            'LOCAL_DATABASE_URL',
+            'DATABASE_URL',
+            'POSTGRES_EXTERNAL_URL',
+            'DOKPLOY_DATABASE_URL',
+            'POSTGRES_INTERNAL_URL',
+            'POSTGRES_URL',
+            'POSTGRES_PRISMA_URL',
+            'POSTGRESQL_URL',
+            'DATABASE_URI',
+        ];
 
-    // Priority 1: Check actual process.env (passed by Dokploy/OS)
     for (const key of envKeys) {
         if (process.env[key] && process.env[key].trim()) {
             return process.env[key].trim();
         }
     }
 
-    // Priority 2: Try to read from .env if it exists (for local dev)
     const envPath = path.join(process.cwd(), '.env');
     if (fs.existsSync(envPath)) {
         const envContent = fs.readFileSync(envPath, 'utf8');

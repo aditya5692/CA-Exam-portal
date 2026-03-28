@@ -146,7 +146,7 @@ export default async function Home() {
                                                     <Timer size={20} weight="bold" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-[10px] font-bold uppercase text-white/40">Today's Goal</div>
+                                                    <div className="text-[10px] font-bold uppercase text-white/40">Today&apos;s Goal</div>
                                                     <div className="text-base font-bold text-white">3-hour mock window</div>
                                                 </div>
                                             </div>

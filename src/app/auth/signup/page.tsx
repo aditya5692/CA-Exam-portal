@@ -1,22 +1,21 @@
 "use client";
 
-import { requestOtp, verifyOtpAndRegister } from "@/actions/auth-actions";
+import { verifyOtpAndRegister } from "@/actions/auth-actions";
+import Msg91Widget from "@/components/auth/msg91-widget";
 import { 
-    ArrowLeft, 
     ArrowRight, 
     CheckCircle, 
     DeviceMobile, 
     Envelope, 
     GraduationCap, 
     Lock, 
-    ShieldCheck, 
     Sparkle, 
     User,
     Spinner
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { Suspense, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const SIGNUP_POINTS = [
@@ -28,17 +27,29 @@ const SIGNUP_POINTS = [
 function SignupFormContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    
-    const [step, setStep] = useState<"phone" | "otp" | "details">("phone");
-    const [phone, setPhone] = useState("");
-    const [otp, setOtp] = useState("");
+    const searchPhone = searchParams.get("phone") ?? "";
+    const searchRole = searchParams.get("role")?.toUpperCase();
+    const searchVerified = searchParams.get("verified") === "true";
+    const initialRole = searchRole === "TEACHER" || searchRole === "STUDENT" ? searchRole : "STUDENT";
+    const initialToken = typeof window !== "undefined"
+        ? window.sessionStorage.getItem("pending-msg91-token") ?? ""
+        : "";
+    const initialStep = searchVerified
+        ? initialToken
+            ? "details"
+            : searchPhone
+                ? "verify"
+                : "phone"
+        : "phone";
+
+    const [step, setStep] = useState<"phone" | "verify" | "details">(initialStep);
+    const [phone, setPhone] = useState(searchPhone);
+    const [msg91Token, setMsg91Token] = useState(initialToken);
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
+    const [role, setRole] = useState<"STUDENT" | "TEACHER">(initialRole);
     const [department, setDepartment] = useState("");
-    const [dob, setDob] = useState("");
-    const [location, setLocation] = useState("");
     const [caLevel, setCaLevel] = useState<"foundation" | "ipc" | "final">("final");
     const [attemptMonth, setAttemptMonth] = useState("5"); // Default to May
     const [attemptYear, setAttemptYear] = useState(new Date().getFullYear().toString());
@@ -46,40 +57,36 @@ function SignupFormContent() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
-    useEffect(() => {
-        const p = searchParams.get("phone");
-        const v = searchParams.get("verified");
-        const r = searchParams.get("role")?.toUpperCase();
-        
-        if (p) setPhone(p);
-        if (r === "TEACHER" || r === "STUDENT") {
-            setRole(r as any);
-        }
-        
-        if (v === "true") {
-            setStep("details");
-            setOtp("VERIFIED");
-        }
-    }, [searchParams]);
-
-    async function handleRequestOtp(event: React.FormEvent) {
-        event.preventDefault();
-        setIsSubmitting(true);
-        setErrorMessage("");
-
-        const result = await requestOtp(phone);
-        setIsSubmitting(false);
-
-        if (result.success) {
-            setStep("otp");
-        } else {
-            setErrorMessage(result.message);
+    function clearPendingVerification() {
+        setMsg91Token("");
+        if (typeof window !== "undefined") {
+            window.sessionStorage.removeItem("pending-msg91-token");
         }
     }
 
-    async function handleVerifyOtp(event: React.FormEvent) {
+    async function handleStartVerification(event: React.FormEvent) {
         event.preventDefault();
-        setStep("details"); 
+        setErrorMessage("");
+        clearPendingVerification();
+
+        const digitsOnly = phone.replace(/\D/g, "");
+        if (digitsOnly.length < 10) {
+            setErrorMessage("Please enter a valid 10-digit phone number.");
+            return;
+        }
+
+        setStep("verify");
+    }
+
+    function handleWidgetSuccess(accessToken: string) {
+        setMsg91Token(accessToken);
+        window.sessionStorage.setItem("pending-msg91-token", accessToken);
+        setErrorMessage("");
+        setStep("details");
+    }
+
+    function handleVerificationSubmit(event: React.FormEvent) {
+        event.preventDefault();
     }
 
     async function handleRegister(event: React.FormEvent) {
@@ -87,16 +94,22 @@ function SignupFormContent() {
         setIsSubmitting(true);
         setErrorMessage("");
 
+        if (!msg91Token) {
+            setIsSubmitting(false);
+            setErrorMessage("Please verify your phone number before creating the account.");
+            setStep("verify");
+            return;
+        }
+
         const result = await verifyOtpAndRegister({
             phone,
-            otp,
+            otp: "VERIFIED",
+            token: msg91Token,
             fullName,
             email,
             password,
             role,
             department: role === "TEACHER" ? department : undefined,
-            dob,
-            location,
             examTargetLevel: role === "STUDENT" ? caLevel : undefined,
             examTargetMonth: role === "STUDENT" ? parseInt(attemptMonth) : undefined,
             examTargetYear: role === "STUDENT" ? parseInt(attemptYear) : undefined
@@ -105,10 +118,16 @@ function SignupFormContent() {
         setIsSubmitting(false);
 
         if (!result.success) {
+            if (result.data && "roleMismatch" in result.data && result.data.roleMismatch) {
+                if (result.data.actualRole === "STUDENT" || result.data.actualRole === "TEACHER") {
+                    setRole(result.data.actualRole);
+                }
+            }
             setErrorMessage(result.message);
             return;
         }
 
+        clearPendingVerification();
         router.push(result.data?.redirectTo || "/student/dashboard");
         router.refresh();
     }
@@ -123,7 +142,7 @@ function SignupFormContent() {
                     <div className="mb-8 flex items-center justify-between">
                         <div>
                             <h2 className="font-outfit text-3xl font-bold text-slate-900 tracking-tight">
-                                {step === "phone" ? "Join the Workspace" : step === "otp" ? "Verify Code" : "Almost There"}
+                                {step === "phone" ? "Join the Workspace" : step === "verify" ? "Verify Number" : "Almost There"}
                             </h2>
                             <p className="text-sm font-medium text-slate-400 mt-1">
                                 {step === "details" ? `Finalize your ${role.toLowerCase()} profile` : "Start your prep journey today"}
@@ -146,7 +165,7 @@ function SignupFormContent() {
                         </div>
                     </div>
 
-                    <form className="space-y-6" onSubmit={step === "phone" ? handleRequestOtp : step === "otp" ? handleVerifyOtp : handleRegister}>
+                    <form className="space-y-6" onSubmit={step === "phone" ? handleStartVerification : step === "verify" ? handleVerificationSubmit : handleRegister}>
                         {step === "phone" && (
                             <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</label>
@@ -166,33 +185,33 @@ function SignupFormContent() {
                             </div>
                         )}
 
-                        {step === "otp" && (
+                        {step === "verify" && (
                             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Security Code</label>
-                                        <button type="button" onClick={() => setStep("phone")} className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:underline">
-                                            Change Phone
-                                        </button>
+                                <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Verified Channel</p>
+                                        <p className="mt-1 text-xs font-bold text-slate-900">+91 {phone.replace(/\D/g, "").slice(-10)}</p>
                                     </div>
-                                    <div className="relative group">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                            <ShieldCheck size={20} weight="bold" />
-                                        </span>
-                                        <input
-                                            type="text"
-                                            value={otp}
-                                            onChange={(event) => setOtp(event.target.value)}
-                                            placeholder="Enter OTP"
-                                            className="w-full tracking-[1.5em] text-center rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-lg font-bold text-slate-900 outline-none transition-all placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
-                                            required
-                                            maxLength={6}
-                                        />
-                                    </div>
-                                    <p className="text-center text-[10px] font-medium text-slate-400">
-                                        Code sent to <span className="font-bold text-slate-900">{phone}</span>
-                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            clearPendingVerification();
+                                            setStep("phone");
+                                        }}
+                                        className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:underline"
+                                    >
+                                        Change Phone
+                                    </button>
                                 </div>
+
+                                <Msg91Widget
+                                    phoneNumber={phone.replace(/\D/g, "").length === 10 ? `91${phone.replace(/\D/g, "")}` : phone.replace(/\D/g, "")}
+                                    onSuccess={handleWidgetSuccess}
+                                    onFailure={(message) => {
+                                        clearPendingVerification();
+                                        setErrorMessage(message);
+                                    }}
+                                />
                             </div>
                         )}
 
@@ -259,7 +278,7 @@ function SignupFormContent() {
                                             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">CA Level</label>
                                             <select
                                                 value={caLevel}
-                                                onChange={(e) => setCaLevel(e.target.value as any)}
+                                                onChange={(e) => setCaLevel(e.target.value as "foundation" | "ipc" | "final")}
                                                 className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
                                                 required
                                             >
@@ -334,20 +353,22 @@ function SignupFormContent() {
                             </div>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
-                        >
-                            {isSubmitting ? (
-                                <Spinner className="animate-spin" size={20} weight="bold" />
-                            ) : (
-                                <>
-                                    {step === "phone" ? "Verify Phone" : step === "otp" ? "Continue" : "Create Account"}
-                                    <ArrowRight size={20} weight="bold" />
-                                </>
-                            )}
-                        </button>
+                        {step !== "verify" && (
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                {isSubmitting ? (
+                                    <Spinner className="animate-spin" size={20} weight="bold" />
+                                ) : (
+                                    <>
+                                        {step === "phone" ? "Verify Phone" : "Create Account"}
+                                        <ArrowRight size={20} weight="bold" />
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </form>
 
                     <p className="mt-8 text-center text-xs font-bold text-slate-400 tracking-tight">

@@ -1,15 +1,27 @@
+import { getMySubscription } from "@/actions/subscription-actions";
+import { cancelRecurringSubscription } from "@/actions/razorpay-subscription-actions";
 import { PricingCards } from "@/components/subscription/pricing-cards";
 import { getSessionPayload } from "@/lib/auth/session";
-import { buildPlanSummary, getCurrentUserPlanSummary } from "@/lib/server/plan-entitlements";
-import { getMySubscription } from "@/actions/subscription-actions";
+import { buildPlanSummary, getCurrentUserPlanSummary, planIncludesAtLeast, resolvePlanEntitlement } from "@/lib/server/plan-entitlements";
 import { CheckCircle, Clock, RefreshCw, ShieldCheck, Sparkle, XCircle } from "lucide-react";
 import { redirect } from "next/navigation";
+
+function formatDate(date: Date | null) {
+    if (!date) {
+        return null;
+    }
+
+    return date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+}
 
 export default async function StudentPlanPage() {
     const session = await getSessionPayload();
     if (!session || session.role !== "STUDENT") redirect("/auth/login");
 
-    const isPro = session.plan === "PRO";
     let planSummary = buildPlanSummary({
         plan: session.plan,
         role: session.role,
@@ -25,30 +37,45 @@ export default async function StudentPlanPage() {
         planStatusNotice = "Live plan metrics are temporarily unavailable.";
     }
 
-    // Fetch live subscription via action (safe with adapter-based prisma)
-    const subRes = await getMySubscription().catch(() => null);
-    const activeSub = subRes?.success ? subRes.data : null;
+    const subscriptionResponse = await getMySubscription().catch(() => null);
+    const latestSubscription = subscriptionResponse?.success ? subscriptionResponse.data : null;
 
-    const isExpired = activeSub ? new Date(activeSub.expiresAt) < new Date() : false;
-    const expiryDate = activeSub
-        ? new Date(activeSub.expiresAt).toLocaleDateString("en-IN", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        })
+    const subscriptionExpiresAt = latestSubscription ? new Date(latestSubscription.expiresAt) : null;
+    const currentPeriodEnd = latestSubscription?.currentPeriodEnd
+        ? new Date(latestSubscription.currentPeriodEnd)
         : null;
-    const startDate = activeSub
-        ? new Date(activeSub.startedAt).toLocaleDateString("en-IN", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        })
+    const isExpired = subscriptionExpiresAt ? subscriptionExpiresAt < new Date() : false;
+    const hasPremiumAccess = planSummary.isPremium && !isExpired;
+    const hasProAccess = planIncludesAtLeast(planSummary.plan, session.role, "PRO");
+    const recurringSubscriptionId = latestSubscription?.razorpaySubscriptionId ?? null;
+    const isRecurringSubscription = Boolean(recurringSubscriptionId);
+    const isCancellationScheduled = Boolean(
+        latestSubscription?.cancelAtPeriodEnd &&
+        currentPeriodEnd &&
+        currentPeriodEnd > new Date(),
+    );
+    const showRetryPayment = Boolean(
+        latestSubscription &&
+        !hasPremiumAccess &&
+        ["FAILED", "PENDING", "CANCELLED"].includes(latestSubscription.status),
+    );
+    async function cancelAction(subscriptionId: string) {
+        "use server";
+
+        await cancelRecurringSubscription(subscriptionId);
+    }
+
+    const expiryDate = formatDate(subscriptionExpiresAt);
+    const startDate = latestSubscription ? formatDate(new Date(latestSubscription.startedAt)) : null;
+    const currentPeriodEndDate = formatDate(currentPeriodEnd);
+    const recommendedPlanName = planSummary.recommendedPlan
+        ? resolvePlanEntitlement(planSummary.recommendedPlan, session.role).displayName
         : null;
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-24">
+        <div className="mx-auto max-w-7xl animate-in space-y-12 p-8 fade-in duration-500 pb-24">
             <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">My Subscription</h1>
+                <h1 className="mb-2 text-3xl font-bold text-gray-900">My Subscription</h1>
                 <p className="text-gray-500">Manage your billing status and unlock premium features.</p>
             </div>
 
@@ -58,28 +85,57 @@ export default async function StudentPlanPage() {
                 </div>
             )}
 
-            {/* Live Subscription Status Card */}
-            <div className={`rounded-2xl border p-6 ${
-                isPro && !isExpired
-                    ? "bg-gradient-to-br from-indigo-50 to-violet-50 border-indigo-200"
-                    : "bg-gray-50 border-gray-200"
-            }`}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            {latestSubscription?.status === "FAILED" && (
+                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
+                    Your last payment attempt failed. You can retry below without creating a new account.
+                </div>
+            )}
+
+            {latestSubscription?.status === "PENDING" && (
+                <div className="rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-sm font-semibold text-sky-700">
+                    Payment authorization is still in progress. If you closed checkout midway, you can retry below.
+                </div>
+            )}
+
+            {isCancellationScheduled && currentPeriodEndDate && (
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
+                    Your subscription will cancel at the end of the current billing cycle. Premium access remains active until {currentPeriodEndDate}.
+                </div>
+            )}
+
+            <div
+                className={`rounded-2xl border p-6 ${
+                    hasPremiumAccess
+                        ? "border-indigo-200 bg-gradient-to-br from-indigo-50 to-violet-50"
+                        : "border-gray-200 bg-gray-50"
+                }`}
+            >
+                <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
                     <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-md ${
-                            isPro && !isExpired ? "bg-indigo-600 text-white" : "bg-gray-400 text-white"
-                        }`}>
-                            {isPro && !isExpired
-                                ? <Sparkle className="w-7 h-7 animate-pulse" />
-                                : <ShieldCheck className="w-7 h-7" />}
+                        <div
+                            className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${
+                                hasPremiumAccess ? "bg-indigo-600 text-white" : "bg-gray-400 text-white"
+                            }`}
+                        >
+                            {hasPremiumAccess
+                                ? <Sparkle className="h-7 w-7 animate-pulse" />
+                                : <ShieldCheck className="h-7 w-7" />}
                         </div>
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Current Status</p>
+                            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-gray-500">Current Status</p>
                             <h2 className="text-2xl font-bold text-gray-900">
-                                {isPro && !isExpired ? "CA Pass PRO — Active" : isPro && isExpired ? "CA Pass PRO — Expired" : "Free Plan"}
+                                {hasPremiumAccess
+                                    ? `${planSummary.displayName} - Active`
+                                    : latestSubscription?.status === "FAILED"
+                                        ? "Payment Failed"
+                                        : latestSubscription?.status === "PENDING"
+                                            ? "Payment Pending"
+                                            : isExpired
+                                                ? `${planSummary.displayName} - Expired`
+                                                : "Free Plan"}
                             </h2>
-                            {activeSub && (
-                                <div className="flex items-center gap-4 mt-2">
+                            {latestSubscription && (
+                                <div className="mt-2 flex flex-wrap items-center gap-4">
                                     {startDate && (
                                         <span className="text-xs font-medium text-gray-500">
                                             Started: {startDate}
@@ -87,8 +143,12 @@ export default async function StudentPlanPage() {
                                     )}
                                     {expiryDate && (
                                         <span className={`flex items-center gap-1 text-xs font-bold ${isExpired ? "text-red-600" : "text-emerald-600"}`}>
-                                            {isExpired ? <XCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                                            {isExpired ? `Expired on ${expiryDate}` : `Active until ${expiryDate}`}
+                                            {isExpired ? <XCircle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
+                                            {isCancellationScheduled && currentPeriodEndDate
+                                                ? `Access until ${currentPeriodEndDate}`
+                                                : isExpired
+                                                    ? `Expired on ${expiryDate}`
+                                                    : `Active until ${expiryDate}`}
                                         </span>
                                     )}
                                 </div>
@@ -96,35 +156,51 @@ export default async function StudentPlanPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {isPro && !isExpired && (
-                            <div className="flex items-center gap-2 text-indigo-700 bg-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm border border-indigo-100">
-                                <CheckCircle className="w-4 h-4" /> Fully Unlocked
+                    <div className="flex flex-wrap items-center gap-3">
+                        {hasPremiumAccess && (
+                            <div className="flex items-center gap-2 rounded-xl border border-indigo-100 bg-white px-5 py-2.5 text-sm font-bold text-indigo-700 shadow-sm">
+                                <CheckCircle className="h-4 w-4" /> {hasProAccess ? "Full Access Active" : "Premium Access Active"}
                             </div>
                         )}
-                        {/* Renew / Upgrade button — shown when expired or never subscribed */}
-                        {(!isPro || isExpired) && (
+
+                        {showRetryPayment && (
                             <a
                                 href="#plans"
-                                className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
                             >
-                                <RefreshCw className="w-4 h-4" />
-                                {isExpired ? "Renew Plan" : "Upgrade to PRO"}
+                                <RefreshCw className="h-4 w-4" />
+                                Retry Payment
                             </a>
                         )}
-                        {isPro && !isExpired && (
+
+                        {!showRetryPayment && (
                             <a
                                 href="#plans"
-                                className="flex items-center gap-2 bg-white text-indigo-600 border border-indigo-200 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all"
+                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
                             >
-                                <RefreshCw className="w-4 h-4" /> Renew Early
+                                <RefreshCw className="h-4 w-4" />
+                                {!hasPremiumAccess
+                                    ? (isExpired ? "Renew or Upgrade" : "Compare Plans")
+                                    : planSummary.canUpgrade && recommendedPlanName
+                                        ? `Move to ${recommendedPlanName}`
+                                        : "Renew Early"}
                             </a>
+                        )}
+
+                        {hasPremiumAccess && isRecurringSubscription && !latestSubscription?.cancelAtPeriodEnd && recurringSubscriptionId && (
+                            <form action={cancelAction.bind(null, recurringSubscriptionId)}>
+                                <button
+                                    type="submit"
+                                    className="rounded-xl border border-rose-200 bg-white px-6 py-2.5 text-sm font-bold text-rose-600 transition-all hover:bg-rose-50"
+                                >
+                                    Cancel Subscription
+                                </button>
+                            </form>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Plan Summary Grid */}
             <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
                 <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Plan Summary</p>
@@ -174,11 +250,10 @@ export default async function StudentPlanPage() {
                 </div>
             </div>
 
-            {/* Pricing / Upgrade Component */}
             <div id="plans">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Available Plans</h3>
-                <div className="bg-white rounded-3xl p-6 md:p-10 border border-gray-100 shadow-sm">
-                    <PricingCards userPlan={session.plan} userRole={session.role} />
+                <h3 className="mb-6 text-xl font-bold text-gray-900">Available Plans</h3>
+                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:p-10">
+                    <PricingCards userPlan={planSummary.plan} userRole={session.role} />
                 </div>
             </div>
         </div>

@@ -10,7 +10,7 @@ import {
 test("resolvePlanEntitlement falls back safely for unknown plans", () => {
   const entitlement = resolvePlanEntitlement("unknown", "STUDENT");
 
-  assert.equal(entitlement.displayName, "CA Pass");
+  assert.equal(entitlement.displayName, "Free");
   assert.equal(entitlement.isPremium, false);
 });
 
@@ -27,9 +27,9 @@ test("buildPlanSummary keeps actual storage usage and exposes the entitlement fl
     storageLimit: 128 * 1024 * 1024,
   });
 
-  assert.equal(summary.displayName, "CA Pass PRO");
+  assert.equal(summary.displayName, "Pro");
   assert.equal(summary.isPremium, true);
   assert.equal(summary.storageLimit, 128 * 1024 * 1024);
-  assert.equal(summary.entitledStorageLimit, 256 * 1024 * 1024);
+  assert.equal(summary.entitledStorageLimit, 512 * 1024 * 1024);
   assert.equal(summary.canUpgrade, false);
 });

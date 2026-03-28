@@ -1,14 +1,9 @@
-import { getSessionPayload } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
+import { requireSessionRole } from "@/lib/auth/route-guard";
 import { ReactNode } from "react";
 import { TeacherLayoutClient } from "./layout-client";
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
-    const session = await getSessionPayload();
-
-    if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
-        redirect("/auth/login");
-    }
+    const session = await requireSessionRole(["TEACHER", "ADMIN"]);
 
     const sessionData = {
         fullName: session.fullName,
@@ -22,4 +17,3 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
         </TeacherLayoutClient>
     );
 }
-

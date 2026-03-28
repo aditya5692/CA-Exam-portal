@@ -1,6 +1,7 @@
 "use client";
 
 import { logout } from "@/actions/auth-actions";
+import { clearClientSessionState } from "@/lib/client/session-cleanup";
 import { cn } from "@/lib/utils";
 import { GraduationCap, List, SignOut, X } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -80,6 +81,7 @@ export function Navbar({ user }: { user?: { fullName: string | null; role: strin
                                 <button
                                     onClick={async () => {
                                         await logout();
+                                        clearClientSessionState();
                                         router.push("/");
                                         router.refresh();
                                     }}
@@ -145,6 +147,7 @@ export function Navbar({ user }: { user?: { fullName: string | null; role: strin
                                     onClick={async () => {
                                         setIsMobileMenuOpen(false);
                                         await logout();
+                                        clearClientSessionState();
                                         router.push("/");
                                         router.refresh();
                                     }}

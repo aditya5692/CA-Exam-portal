@@ -42,6 +42,7 @@ test("buildSessionPayload preserves updated profile identity fields", () => {
     assert.deepEqual(payload, {
         userId: "student-1",
         role: "STUDENT",
+        roleSlug: "student",
         fullName: "Updated Student",
         registrationNumber: "CRO-001",
         plan: "PRO",
@@ -100,6 +101,7 @@ test("syncSessionCookiePayload rewrites the access cookie when a session exists"
     assert.deepEqual(signedPayload, {
         userId: "student-1",
         role: "STUDENT",
+        roleSlug: "student",
         fullName: "Renamed Student",
         registrationNumber: "CRO-009",
         plan: "FREE",

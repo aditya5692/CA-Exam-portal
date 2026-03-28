@@ -26,6 +26,13 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
     const [isVerifying, setIsVerifying] = useState(false);
     const [internalError, setInternalError] = useState<string | null>(null);
 
+    useEffect(() => {
+        wasSuccessCalled.current = false;
+        isInitialized.current = false;
+        setOtpValue("");
+        setInternalError(null);
+    }, [phoneNumber]);
+
     const initializeSDK = useCallback(() => {
         if (typeof window === "undefined" || !window.initSendOTP || isInitialized.current) return;
 

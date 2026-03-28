@@ -1,8 +1,10 @@
 import type { User } from "@prisma/client";
+import { buildAuthCookieOptions } from "./cookie-options";
 
 export type SessionPayload = {
     userId: string;
     role: User["role"];
+    roleSlug: "student" | "teacher" | "admin";
     fullName: string | null;
     registrationNumber: string | null;
     plan: string;
@@ -19,6 +21,7 @@ type CookieStoreLike = {
         secure: boolean;
         path: string;
         maxAge: number;
+        domain?: string;
     }): void;
 };
 
@@ -28,10 +31,17 @@ export const ACCESS_COOKIE_NAME = "modern_ca_access_token";
 export const REFRESH_COOKIE_NAME = "modern_ca_refresh_token";
 export const ACCESS_COOKIE_MAX_AGE_SECONDS = 60 * 15;
 
+export function toRoleSlug(role: User["role"]): SessionPayload["roleSlug"] {
+    if (role === "ADMIN") return "admin";
+    if (role === "TEACHER") return "teacher";
+    return "student";
+}
+
 export function buildSessionPayload(user: SessionUser): SessionPayload {
     return {
         userId: user.id,
         role: user.role,
+        roleSlug: toRoleSlug(user.role),
         fullName: user.fullName ?? null,
         registrationNumber: user.registrationNumber ?? null,
         plan: user.plan,
@@ -47,13 +57,14 @@ export async function writeAccessTokenCookie(
 ) {
     const accessToken = await signAccessToken(payload);
 
-    cookieStore.set(ACCESS_COOKIE_NAME, accessToken, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure,
-        path: "/",
-        maxAge: ACCESS_COOKIE_MAX_AGE_SECONDS,
-    });
+    cookieStore.set(
+        ACCESS_COOKIE_NAME,
+        accessToken,
+        buildAuthCookieOptions({
+            secure,
+            maxAge: ACCESS_COOKIE_MAX_AGE_SECONDS,
+        }),
+    );
 }
 
 export async function syncSessionCookiePayload(
