@@ -1,9 +1,11 @@
 "use client";
-
+import { updateStudentAnswerGapTag } from "@/actions/exam-actions";
 import { cn } from "@/lib/utils";
-import { CheckCircle, XCircle } from "@phosphor-icons/react";
+import { CheckCircle, Info, Timer, Warning, XCircle } from "@phosphor-icons/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export interface SolutionAnswer {
     id: string;
@@ -11,12 +13,18 @@ export interface SolutionAnswer {
     selectedOptionId: string | null;
     isCorrect: boolean;
     timeSpent: number;
+    gapTag?: string | null;
     question: {
         text: string;
         explanation: string | null;
         difficulty: string | null;
         subject: string | null;
         topic: string | null;
+        caseStudy?: {
+            id: string;
+            title: string;
+            content: string;
+        } | null;
         options: { id: string; text: string; isCorrect: boolean }[];
     };
 }
@@ -44,6 +52,17 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
     ];
 
     const optionLetters = ["A", "B", "C", "D", "E"];
+    const router = useRouter();
+
+    const handleTagUpdate = async (answerId: string, tag: string | null) => {
+        const res = await updateStudentAnswerGapTag(answerId, tag);
+        if (res.success) {
+            toast.success("Error insight saved successfully.");
+            router.refresh();
+        } else {
+            toast.error(res.message);
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -123,6 +142,36 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                                 {answer.question.text}
                             </p>
 
+                            {answer.question.caseStudy && (
+                                <div className="grid gap-4 rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                                    <div className="min-w-0 space-y-3 rounded-[20px] border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-5">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="rounded-full bg-[var(--student-accent-soft)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--student-accent-strong)]">
+                                                Case Scenario
+                                            </span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                                Keep this passage in view while reviewing the linked MCQ
+                                            </span>
+                                        </div>
+                                        <div className="text-base font-bold text-[var(--student-text)]">
+                                            {answer.question.caseStudy.title}
+                                        </div>
+                                        <div className="max-h-64 overflow-y-auto pr-1 text-sm leading-7 text-[var(--student-text)]">
+                                            {answer.question.caseStudy.content.split("\n").map((paragraph, paragraphIndex) =>
+                                                paragraph.trim() ? (
+                                                    <p key={paragraphIndex} className="mb-3 last:mb-0">
+                                                        {paragraph}
+                                                    </p>
+                                                ) : null,
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center rounded-[20px] border border-dashed border-[var(--student-border)] bg-white/60 p-5 text-sm font-medium leading-7 text-[var(--student-muted-strong)]">
+                                        This question was part of an ICAI-style integrated case bundle, so the scenario stays attached during review as well.
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="grid gap-3 sm:grid-cols-2">
                                 {answer.question.options.map((opt, oi) => {
                                     const isChosen = opt.id === answer.selectedOptionId;
@@ -170,6 +219,43 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                                     <p className="text-base font-medium leading-relaxed text-[var(--student-text)]">
                                         {answer.question.explanation}
                                     </p>
+                                </div>
+                            )}
+
+                            {/* Gap Tagging UI for Incorrect Answers */}
+                            {!answer.isCorrect && answer.selectedOptionId && (
+                                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                            Self-Diagnosis: Why was this incorrect?
+                                        </div>
+                                        {answer.gapTag && (
+                                            <button 
+                                                onClick={() => handleTagUpdate(answer.id, null)}
+                                                className="text-[10px] font-bold text-slate-400 hover:text-rose-500 uppercase tracking-widest"
+                                            >
+                                                Clear Tag
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            { id: "CONCEPTUAL", label: "Conceptual Error", icon: <Info size={14} weight="bold" />, color: "border-blue-200 bg-blue-50 text-blue-700 active:bg-blue-600", active: "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20" },
+                                            { id: "SILLY", label: "Silly Mistake", icon: <Warning size={14} weight="bold" />, color: "border-amber-200 bg-amber-50 text-amber-700 active:bg-amber-600", active: "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-500/20" },
+                                            { id: "TIME", label: "Time Pressure", icon: <Timer size={14} weight="bold" />, color: "border-rose-200 bg-rose-50 text-rose-700 active:bg-rose-600", active: "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/20" },
+                                        ].map((tag) => (
+                                            <button
+                                                key={tag.id}
+                                                onClick={() => handleTagUpdate(answer.id, tag.id)}
+                                                className={cn(
+                                                    "flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95",
+                                                    answer.gapTag === tag.id ? tag.active : `${tag.color} hover:shadow-sm`
+                                                )}
+                                            >
+                                                {tag.icon} {tag.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 

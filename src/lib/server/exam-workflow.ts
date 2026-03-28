@@ -232,6 +232,7 @@ export async function getExamDetailsRecord(examId: string): Promise<ExamDetailsR
                     question: {
                         include: {
                             options: true,
+                            caseStudy: true,
                         },
                     },
                 },
@@ -304,6 +305,7 @@ export async function getExamAttemptResultsRecord(attemptId: string): Promise<At
                                 difficulty: true,
                                 subject: true,
                                 topic: true,
+                                caseStudy: true,
                                 options: true,
                             },
                         },
@@ -346,6 +348,7 @@ export async function getExamAttemptResultsRecord(attemptId: string): Promise<At
                                     difficulty: true,
                                     subject: true,
                                     topic: true,
+                                    caseStudy: true,
                                     options: true,
                                 },
                             },

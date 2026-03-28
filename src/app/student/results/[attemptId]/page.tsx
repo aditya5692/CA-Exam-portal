@@ -1,6 +1,7 @@
 import { getExamResults } from "@/actions/exam-actions";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
+import { buildNegativeMarkingSnapshot, ICAI_NEGATIVE_MARKING_PENALTY } from "@/lib/exam/insights";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
 import { ArrowLeft,ChartLineUp,CheckCircle,Clock,Star,Target,Trophy,XCircle } from "@phosphor-icons/react/dist/ssr";
@@ -34,7 +35,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     const answers = attempt.answers as unknown as SolutionAnswer[];
     const totalQuestions = answers.length;
     const correctCount = answers.filter((a) => a.isCorrect).length;
-    const wrongCount = totalQuestions - correctCount;
+    const wrongCount = answers.filter((a) => Boolean(a.selectedOptionId) && !a.isCorrect).length;
+    const skippedCount = answers.filter((a) => !a.selectedOptionId).length;
     const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
     // Real time taken
@@ -66,6 +68,43 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
     const weakTopics = topicBreakdown.filter(t => t.accuracy < 60);
     const strongTopics = topicBreakdown.filter(t => t.accuracy >= 80);
+    const taggedReasonItems = [
+        {
+            key: "CONCEPTUAL",
+            label: "Conceptual Error",
+            helper: "Law or concept needs revision",
+            count: answers.filter((answer) => !answer.isCorrect && answer.gapTag === "CONCEPTUAL").length,
+            badgeClass: "border-blue-200 bg-blue-50 text-blue-700",
+            barClass: "bg-blue-500",
+        },
+        {
+            key: "SILLY",
+            label: "Silly Mistake",
+            helper: "Keywords and cues were rushed",
+            count: answers.filter((answer) => !answer.isCorrect && answer.gapTag === "SILLY").length,
+            badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
+            barClass: "bg-amber-500",
+        },
+        {
+            key: "TIME",
+            label: "Time Pressure",
+            helper: "Speed forced a low-conviction attempt",
+            count: answers.filter((answer) => !answer.isCorrect && answer.gapTag === "TIME").length,
+            badgeClass: "border-rose-200 bg-rose-50 text-rose-700",
+            barClass: "bg-rose-500",
+        },
+    ]
+        .filter((item) => item.count > 0)
+        .sort((left, right) => right.count - left.count);
+    const taggedWrongCount = taggedReasonItems.reduce((sum, item) => sum + item.count, 0);
+    const untaggedWrongCount = Math.max(0, wrongCount - taggedWrongCount);
+    const topReason = taggedReasonItems[0] ?? null;
+    const negativeMarking = buildNegativeMarkingSnapshot({
+        actualScore: attempt.score,
+        wrongAttemptedCount: wrongCount,
+        riskyWrongCount: wrongCount,
+        passingMarks: attempt.exam.passingMarks,
+    });
 
     const completedDate = attempt.endTime
         ? new Date(attempt.endTime).toLocaleDateString("en-IN", { dateStyle: "long" })
@@ -170,6 +209,180 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 </div>
 
                 {/* ── Main: Solution review + Sidebar ────────────────────────── */}
+                <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+                    <div className="student-surface rounded-[28px] p-6 md:p-8">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                            <div className="space-y-2">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                    Negative Marking Simulator
+                                </div>
+                                <h2 className="font-outfit text-2xl font-bold tracking-tight text-[var(--student-text)]">
+                                    ICAI penalty preview
+                                </h2>
+                                <p className="max-w-2xl text-sm leading-7 text-[var(--student-muted-strong)]">
+                                    This simulation applies {ICAI_NEGATIVE_MARKING_PENALTY} mark deduction for every wrong attempt while keeping skipped questions neutral.
+                                </p>
+                            </div>
+                            <div className="inline-flex items-center rounded-full border border-[var(--student-support-soft-strong)] bg-[var(--student-support-soft)] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[var(--student-support)]">
+                                Penalty active: -{ICAI_NEGATIVE_MARKING_PENALTY}
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid gap-4 md:grid-cols-3">
+                            {[
+                                {
+                                    label: "Raw Score",
+                                    value: `${attempt.score}/${attempt.exam.totalMarks}`,
+                                    helper: `${correctCount} correct · ${skippedCount} skipped`,
+                                },
+                                {
+                                    label: "With Penalty",
+                                    value: `${negativeMarking.negativeMarkedScore}/${attempt.exam.totalMarks}`,
+                                    helper: `${wrongCount} wrong attempts cost ${negativeMarking.penaltyLoss} marks`,
+                                },
+                                {
+                                    label: "If You Had Skipped",
+                                    value: `${negativeMarking.skipRecoveryScore}/${attempt.exam.totalMarks}`,
+                                    helper: wrongCount > 0
+                                        ? `Skipping those ${wrongCount} wrong attempts saves ${negativeMarking.recoveredMarks} marks`
+                                        : "No risky attempts to recover",
+                                },
+                            ].map((item) => (
+                                <div key={item.label} className="rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                        {item.label}
+                                    </div>
+                                    <div className="mt-3 text-2xl font-bold text-[var(--student-text)]">
+                                        {item.value}
+                                    </div>
+                                    <div className="mt-2 text-xs leading-6 text-[var(--student-muted-strong)]">
+                                        {item.helper}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-6 rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                What-if coaching note
+                            </div>
+                            <p className="mt-3 text-sm leading-7 text-[var(--student-text)]">
+                                {wrongCount > 0 ? (
+                                    <>
+                                        With ICAI-style negative marking enabled, your score would move from{" "}
+                                        <span className="font-bold">{attempt.score}</span> to{" "}
+                                        <span className="font-bold">{negativeMarking.negativeMarkedScore}</span>. If you had skipped those{" "}
+                                        {wrongCount} wrong attempts, the same paper lands at{" "}
+                                        <span className="font-bold">{negativeMarking.skipRecoveryScore}</span>.
+                                    </>
+                                ) : (
+                                    <>
+                                        You avoided all penalty traps in this attempt. Every attempted answer was either correct or strategically skipped.
+                                    </>
+                                )}
+                            </p>
+                            {attempt.exam.passingMarks > 0 && (
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <span className="rounded-full border border-[var(--student-border)] bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">
+                                        Pass line: {attempt.exam.passingMarks}
+                                    </span>
+                                    <span className={cn(
+                                        "rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
+                                        negativeMarking.wouldPassUnderPenalty
+                                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                            : "border-rose-200 bg-rose-50 text-rose-700",
+                                    )}>
+                                        {negativeMarking.wouldPassUnderPenalty ? "Still above pass line" : "Falls below pass line"}
+                                    </span>
+                                    {wrongCount > 0 && (
+                                        <span className={cn(
+                                            "rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
+                                            negativeMarking.wouldPassAfterRecovery
+                                                ? "border-[var(--student-support-soft-strong)] bg-[var(--student-support-soft)] text-[var(--student-support)]"
+                                                : "border-[var(--student-border)] bg-white text-[var(--student-muted-strong)]",
+                                        )}>
+                                            {negativeMarking.wouldPassAfterRecovery
+                                                ? "Skipping restores the pass line"
+                                                : "Skipping helps, but more concept work is still needed"}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="student-surface rounded-[28px] p-6 md:p-8">
+                        <div className="space-y-2">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                Why Marks Were Lost
+                            </div>
+                            <h2 className="font-outfit text-2xl font-bold tracking-tight text-[var(--student-text)]">
+                                Self-diagnosis for this paper
+                            </h2>
+                            <p className="text-sm leading-7 text-[var(--student-muted-strong)]">
+                                Tag each miss below so the dashboard learns whether the leak came from concepts, careless reading, or time pressure.
+                            </p>
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                            {wrongCount === 0 && (
+                                <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5 text-sm font-medium leading-7 text-emerald-800">
+                                    No incorrect attempts here. Your review can focus on speed and maintaining the same discipline in case-study bundles.
+                                </div>
+                            )}
+
+                            {wrongCount > 0 && taggedReasonItems.length === 0 && (
+                                <div className="rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5 text-sm leading-7 text-[var(--student-muted-strong)]">
+                                    Start tagging the wrong answers in the solution review below. This panel will turn into a pattern report as soon as you label them.
+                                </div>
+                            )}
+
+                            {taggedReasonItems.map((item) => {
+                                const width = wrongCount > 0 ? Math.max(10, Math.round((item.count / wrongCount) * 100)) : 0;
+
+                                return (
+                                    <div key={item.key} className="rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-4">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="space-y-1">
+                                                <div className={cn("inline-flex rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest", item.badgeClass)}>
+                                                    {item.label}
+                                                </div>
+                                                <div className="text-xs text-[var(--student-muted-strong)]">
+                                                    {item.helper}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-lg font-bold text-[var(--student-text)]">{item.count}</div>
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                                    {wrongCount > 0 ? Math.round((item.count / wrongCount) * 100) : 0}% of misses
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+                                            <div className={cn("h-full rounded-full", item.barClass)} style={{ width: `${width}%` }} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {untaggedWrongCount > 0 && (
+                                <div className="rounded-[24px] border border-dashed border-[var(--student-border)] bg-white p-4 text-sm leading-7 text-[var(--student-muted-strong)]">
+                                    {untaggedWrongCount} wrong answer{untaggedWrongCount === 1 ? "" : "s"} still need{untaggedWrongCount === 1 ? "s" : ""} a reason tag.
+                                </div>
+                            )}
+
+                            {topReason && (
+                                <div className="rounded-[24px] border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-5 text-sm leading-7 text-[var(--student-text)]">
+                                    <span className="font-bold">{topReason.label}</span> is the biggest leak in this attempt.
+                                    {topReason.key === "SILLY" && " The concept may already be there, but the final read of words like correct, incorrect, except, and not needs more patience."}
+                                    {topReason.key === "CONCEPTUAL" && " Revisit the underlying section before the retake, because speed alone will not fix these misses."}
+                                    {topReason.key === "TIME" && " Practice skipping low-conviction questions earlier and coming back after locking easier marks."}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid lg:grid-cols-[1fr_300px] gap-8 items-start">
 
                     {/* Solution Review (client component for filter interactivity) */}

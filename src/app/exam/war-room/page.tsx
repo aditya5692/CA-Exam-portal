@@ -2,6 +2,7 @@
 
 import { getExamDetails, submitExamAttempt, saveExamProgress, startMyExamAttempt } from "@/actions/exam-actions";
 import { saveExamResultsAndUpdateLearning } from "@/actions/learning-actions";
+import { buildNegativeMarkingSnapshot, getCaseStudyBundleMeta, ICAI_NEGATIVE_MARKING_PENALTY } from "@/lib/exam/insights";
 import { cn } from "@/lib/utils";
 import type { ExamWithQuestions } from "@/types/exam";
 import { useRouter,useSearchParams } from "next/navigation";
@@ -9,9 +10,11 @@ import { useCallback,useEffect,useRef,useState, Suspense } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type OptionShape = { id: string; text: string; isCorrect?: boolean };
-type QuestionShape = { id: string; no: number; marks: number; difficulty: string; subject: string; topic?: string | null; text: string; options: OptionShape[]; explanation?: string | null };
+type CaseStudyShape = { id: string; title: string; content: string };
+type QuestionShape = { id: string; no: number; marks: number; difficulty: string; subject: string; topic?: string | null; text: string; options: OptionShape[]; explanation?: string | null; caseStudy?: CaseStudyShape | null };
 type AnswerStatus = "answered" | "not-answered" | "marked" | "answered-marked" | "not-visited";
 type Answer = { optionId: string | null; status: AnswerStatus; startedAt: number; confidence: "sure" | "unsure" | "guess" | null };
+type PersistedAttemptAnswer = { questionId: string; selectedOptionId: string | null };
 
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -21,6 +24,9 @@ function paletteColor(status: AnswerStatus) {
     if (status === "not-answered") return "border border-rose-500 bg-rose-500 text-white";
     if (status === "marked" || status === "answered-marked") return "border border-[var(--student-support)] bg-[var(--student-support)] text-white";
     return "border border-[var(--student-border)] bg-[var(--student-panel-solid)] text-[var(--student-muted)]";
+}
+function totalMarksForQuestions(questions: QuestionShape[]) {
+    return questions.reduce((sum, question) => sum + question.marks, 0);
 }
 
 // ── Demo questions ───────────────────────────────────────────────────────────
@@ -56,6 +62,8 @@ function ExamWarRoomContent() {
     const [questions, setQuestions] = useState<QuestionShape[]>([]);
     const [examTitle, setExamTitle] = useState("CA MCQ Series");
     const [examCategory, setExamCategory] = useState("");
+    const [examTotalMarks, setExamTotalMarks] = useState(totalMarksForQuestions(DEMO_QUESTIONS));
+    const [examPassingMarks, setExamPassingMarks] = useState(Math.ceil(totalMarksForQuestions(DEMO_QUESTIONS) * 0.4));
     const [attemptId, setAttemptId] = useState<string | null>(null);
     const [studentId, setStudentId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -74,9 +82,10 @@ function ExamWarRoomContent() {
     const [pauseUsed, setPauseUsed] = useState(false);
     const [solFilter, setSolFilter] = useState<"all" | "wrong" | "correct">("all");
     const [showPracticeAnswer, setShowPracticeAnswer] = useState(false);
+    const [negativeMarkingEnabled, setNegativeMarkingEnabled] = useState(false);
 
     // Results state
-    const [resultData, setResultData] = useState<{ correct: number; total: number; xpGained: number; timeUsed: number; topicList: { topic: string; accuracy: number; correct: number; total: number }[] } | null>(null);
+    const [resultData, setResultData] = useState<{ correct: number; total: number; xpGained: number; timeUsed: number; actualScore: number; wrongAttemptedCount: number; guessedWrongCount: number; skippedCount: number; topicList: { topic: string; accuracy: number; correct: number; total: number }[] } | null>(null);
 
     const startedAtRef = useRef(Date.now());
 
@@ -85,6 +94,8 @@ function ExamWarRoomContent() {
         async function load() {
             if (!examId) {
                 setQuestions(DEMO_QUESTIONS);
+                setExamTotalMarks(totalMarksForQuestions(DEMO_QUESTIONS));
+                setExamPassingMarks(Math.ceil(totalMarksForQuestions(DEMO_QUESTIONS) * 0.4));
                 setTimeLeft(20 * 60);
                 setAnswers(Object.fromEntries(DEMO_QUESTIONS.map(q => [q.id, { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null }])));
                 startedAtRef.current = Date.now();
@@ -110,10 +121,13 @@ function ExamWarRoomContent() {
                     text: o.text, 
                     isCorrect: o.isCorrect 
                 })),
+                caseStudy: eq.question.caseStudy,
             }));
             setQuestions(mapped);
             setExamTitle(exam.title);
             setExamCategory(exam.category);
+            setExamTotalMarks(exam.totalMarks);
+            setExamPassingMarks(exam.passingMarks);
             setTimeLeft(exam.duration * 60);
 
             // Auto start or resume the exam
@@ -139,8 +153,9 @@ function ExamWarRoomContent() {
                 // Restore existing answers
                 if (r.data.existingAnswers && r.data.existingAnswers.length > 0) {
                     const restored: Record<string, Answer> = {};
+                    const existingAnswers = r.data.existingAnswers as PersistedAttemptAnswer[];
                     mapped.forEach(q => {
-                        const ea = (r.data!.existingAnswers as any[]).find((a: any) => a.questionId === q.id);
+                        const ea = existingAnswers.find((answer) => answer.questionId === q.id);
                         if (ea) {
                             restored[q.id] = {
                                 optionId: ea.selectedOptionId,
@@ -201,14 +216,26 @@ function ExamWarRoomContent() {
         // Compute results
         const topicMap = new Map<string, { correct: number; total: number }>();
         let correctCount = 0;
+        let actualScore = 0;
+        let wrongAttemptedCount = 0;
+        let guessedWrongCount = 0;
         questions.forEach(q => {
             const a = answers[q.id];
             const isCorrect = a?.optionId ? (q.options.find(o => o.id === a.optionId)?.isCorrect ?? false) : false;
-            if (isCorrect) correctCount++;
+            if (isCorrect) {
+                correctCount++;
+                actualScore += q.marks;
+            } else if (a?.optionId) {
+                wrongAttemptedCount += 1;
+                if (a.confidence === "guess") {
+                    guessedWrongCount += 1;
+                }
+            }
             const key = q.topic ?? q.subject ?? "General";
             const e = topicMap.get(key) ?? { correct: 0, total: 0 };
             topicMap.set(key, { correct: e.correct + (isCorrect ? 1 : 0), total: e.total + 1 });
         });
+        const skippedCount = questions.length - correctCount - wrongAttemptedCount;
         const xpGained = correctCount * 5 + (Math.round((correctCount / questions.length) * 100) >= 80 ? 20 : 0);
         const topicList = Array.from(topicMap.entries())
             .map(([topic, d]) => ({ topic, accuracy: Math.round((d.correct / d.total) * 100), correct: d.correct, total: d.total }))
@@ -238,7 +265,7 @@ function ExamWarRoomContent() {
         }
 
         setSolFilter("all"); // reset filter for new results
-        setResultData({ correct: correctCount, total: questions.length, xpGained, timeUsed, topicList });
+        setResultData({ correct: correctCount, total: questions.length, xpGained, timeUsed, actualScore, wrongAttemptedCount, guessedWrongCount, skippedCount, topicList });
         setPhase("results");
     }, [phase, questions, answers, mode, attemptId, studentId, examId]);
     
@@ -368,13 +395,19 @@ function ExamWarRoomContent() {
 
     // ── Results screen ─────────────────────────────────────────────────────────
     if (phase === "results" && resultData) {
-        const { correct, total, xpGained, timeUsed, topicList } = resultData;
+        const { correct, total, xpGained, timeUsed, actualScore, wrongAttemptedCount, guessedWrongCount, skippedCount, topicList } = resultData;
         const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
         const scoreColor = accuracy >= 80 ? "#22c55e" : accuracy >= 55 ? "#f59e0b" : "#ef4444";
         const weakTopics = topicList.filter(t => t.accuracy < 60);
         const reviewItems = questions.map(q => ({ ...q, answer: answers[q.id] }));
+        const negativeMarking = buildNegativeMarkingSnapshot({
+            actualScore,
+            wrongAttemptedCount,
+            riskyWrongCount: guessedWrongCount,
+            passingMarks: examPassingMarks,
+        });
         const filtered = solFilter === "all" ? reviewItems : solFilter === "wrong"
-            ? reviewItems.filter(item => !(item.answer?.optionId && (item.options.find(o => o.id === item.answer?.optionId)?.isCorrect)))
+            ? reviewItems.filter(item => item.answer?.optionId ? !(item.options.find(o => o.id === item.answer?.optionId)?.isCorrect) : false)
             : reviewItems.filter(item => item.answer?.optionId && item.options.find(o => o.id === item.answer?.optionId)?.isCorrect);
 
         return (
@@ -405,8 +438,8 @@ function ExamWarRoomContent() {
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {[
                                     { v: `${correct}/${total}`, l: "Correct" },
-                                    { v: total - correct, l: "Wrong" },
-                                    { v: notVisited, l: "Skipped" },
+                                    { v: wrongAttemptedCount, l: "Wrong" },
+                                    { v: skippedCount, l: "Skipped" },
                                     { v: `${Math.floor(timeUsed / 60)}m ${timeUsed % 60}s`, l: "Time" },
                                 ].map(s => (
                                     <div key={s.l} className="p-3 rounded-[16px] bg-white/5 border border-white/10 text-center shadow-inner">
@@ -421,6 +454,100 @@ function ExamWarRoomContent() {
                                     {correct === total && <span className="px-2 py-1 rounded-full bg-[#f2d295]/16 text-[#f2d295] text-xs font-bold">Perfect score</span>}
                                     {accuracy >= 80 && correct < total && <span className="px-2 py-1 rounded-full bg-[#8dbdaf]/16 text-[#bfe1d6] text-xs font-bold">High accuracy</span>}
                                 </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mx-auto max-w-5xl px-8">
+                    <div className="student-surface rounded-[28px] p-6 md:p-8">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                            <div className="space-y-2">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                    Negative Marking Simulator
+                                </div>
+                                <h2 className="font-outfit text-2xl font-bold tracking-tight text-[var(--student-text)]">
+                                    Practice the art of skipping
+                                </h2>
+                                <p className="text-sm leading-7 text-[var(--student-muted-strong)]">
+                                    Toggle the ICAI-style penalty to see how much low-conviction attempts cost. Guessed misses are called out separately so students can train when to hold back.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setNegativeMarkingEnabled(value => !value)}
+                                className={cn(
+                                    "inline-flex items-center rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    negativeMarkingEnabled
+                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                        : "border-[var(--student-border)] bg-white text-[var(--student-muted-strong)]",
+                                )}
+                            >
+                                {negativeMarkingEnabled ? "Penalty simulator on" : "Penalty simulator off"}
+                            </button>
+                        </div>
+
+                        <div className="mt-6 grid gap-4 md:grid-cols-3">
+                            {[
+                                {
+                                    label: "Raw Score",
+                                    value: `${actualScore}/${examTotalMarks}`,
+                                    helper: `${correct} correct · ${skippedCount} skipped`,
+                                },
+                                {
+                                    label: "Penalty Score",
+                                    value: `${negativeMarking.negativeMarkedScore}/${examTotalMarks}`,
+                                    helper: `${wrongAttemptedCount} wrong attempts cost ${negativeMarking.penaltyLoss} marks`,
+                                },
+                                {
+                                    label: guessedWrongCount > 0 ? "If You Skipped Guesses" : "If You Skipped Misses",
+                                    value: `${negativeMarking.skipRecoveryScore}/${examTotalMarks}`,
+                                    helper: guessedWrongCount > 0
+                                        ? `Skipping ${guessedWrongCount} guessed misses saves ${negativeMarking.recoveredMarks} marks`
+                                        : wrongAttemptedCount > 0
+                                            ? `Skipping all ${wrongAttemptedCount} wrong attempts saves ${negativeMarking.recoveredMarks} marks`
+                                            : "No risky attempts to recover",
+                                },
+                            ].map((item) => (
+                                <div key={item.label} className="rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                                        {item.label}
+                                    </div>
+                                    <div className="mt-3 text-2xl font-bold text-[var(--student-text)]">
+                                        {negativeMarkingEnabled || item.label === "Raw Score" ? item.value : `${actualScore}/${examTotalMarks}`}
+                                    </div>
+                                    <div className="mt-2 text-xs leading-6 text-[var(--student-muted-strong)]">
+                                        {item.helper}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className={cn(
+                            "mt-6 rounded-[24px] border p-5 text-sm leading-7",
+                            negativeMarkingEnabled
+                                ? "border-rose-200 bg-rose-50 text-rose-900"
+                                : "border-[var(--student-border)] bg-[var(--student-panel-muted)] text-[var(--student-text)]",
+                        )}>
+                            {wrongAttemptedCount > 0 ? (
+                                <>
+                                    {negativeMarkingEnabled
+                                        ? <>With the ICAI penalty turned on, this paper drops to <span className="font-bold">{negativeMarking.negativeMarkedScore}</span>.</>
+                                        : <>Turn on the penalty simulator to compare your raw score with the ICAI-adjusted score.</>}
+                                    {" "}
+                                    {guessedWrongCount > 0
+                                        ? <>If you had skipped these {guessedWrongCount} guessed misses, the same attempt lands at <span className="font-bold">{negativeMarking.skipRecoveryScore}</span>.</>
+                                        : <>If you had skipped the {wrongAttemptedCount} wrong attempts, you would have protected <span className="font-bold">{negativeMarking.recoveredMarks}</span> marks.</>}
+                                </>
+                            ) : (
+                                <>No penalty traps here. Every attempted answer was either correct or wisely skipped.</>
+                            )}
+                            {examPassingMarks > 0 && (
+                                <span className="block pt-3 text-[11px] font-bold uppercase tracking-widest">
+                                    Pass line: {examPassingMarks}
+                                    {negativeMarkingEnabled && (
+                                        <> · {negativeMarking.wouldPassUnderPenalty ? "still above pass line" : "falls below pass line"}</>
+                                    )}
+                                </span>
                             )}
                         </div>
                     </div>
@@ -468,7 +595,7 @@ function ExamWarRoomContent() {
                     <div className="student-surface rounded-[24px] p-6">
                         <h2 className="font-bold font-outfit text-[var(--student-text)] mb-4">Solution Review</h2>
                         <div className="flex gap-2 mb-5 flex-wrap">
-                            {([["all", `All (${questions.length})`], ["wrong", `Wrong (${questions.length - correct})`], ["correct", `Correct (${correct})`]] as const).map(([key, label]) => (
+                            {([["all", `All (${questions.length})`], ["wrong", `Wrong (${wrongAttemptedCount})`], ["correct", `Correct (${correct})`]] as const).map(([key, label]) => (
                                 <button key={key} onClick={() => setSolFilter(key as "all" | "wrong" | "correct")}
                                     className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all border",
                                         solFilter === key ? (key === "wrong" ? "border-rose-500 bg-rose-500 text-white" : key === "correct" ? "border-[var(--student-accent-strong)] bg-[var(--student-accent-strong)] text-white" : "student-tab-active") : "border-[var(--student-border)] bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-panel-solid)]")}>
@@ -538,6 +665,7 @@ function ExamWarRoomContent() {
     // ── NTA Exam UI ───────────────────────────────────────────────────────────
     const q = questions[current];
     const ans = answers[q.id] ?? { optionId: null, status: "not-visited" as AnswerStatus, startedAt: Date.now(), confidence: null };
+    const currentCaseBundle = getCaseStudyBundleMeta(questions, q.id);
 
     return (
         <div className={cn("student-theme min-h-screen flex flex-col", highContrast ? "bg-black text-white" : "student-shell text-[var(--student-text)]")}>
@@ -588,6 +716,21 @@ function ExamWarRoomContent() {
                     <button onClick={() => setHighContrast(h => !h)}
                         className={cn("w-10 h-6 rounded-full transition-all relative", highContrast ? "bg-white" : "bg-[var(--student-accent-strong)]/30")}>
                         <span className={cn("absolute top-0.5 w-5 h-5 rounded-full transition-all bg-white shadow", highContrast ? "left-4 bg-black" : "left-0.5")} />
+                    </button>
+                    <button
+                        onClick={() => setNegativeMarkingEnabled(value => !value)}
+                        className={cn(
+                            "rounded-lg border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all",
+                            negativeMarkingEnabled
+                                ? highContrast
+                                    ? "border-rose-300 bg-rose-500 text-black"
+                                    : "border-rose-200 bg-rose-50 text-rose-700"
+                                : highContrast
+                                    ? "border-gray-600 text-gray-200 hover:bg-gray-800"
+                                    : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]",
+                        )}
+                    >
+                        Neg. Marking {negativeMarkingEnabled ? "On" : "Off"}
                     </button>
                     {/* Pause (mock mode only) */}
                     {mode === "mock" && (
@@ -654,66 +797,134 @@ function ExamWarRoomContent() {
                             {q.difficulty}
                         </span>
                         {q.topic && <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]", highContrast ? "bg-gray-700 text-gray-200" : "bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)]")}>{q.topic}</span>}
+                        {currentCaseBundle && (
+                            <span className={cn("px-3 py-1 rounded-full font-bold text-[11px]", highContrast ? "bg-gray-700 text-amber-200" : "bg-amber-50 text-amber-700 border border-amber-200")}>
+                                Case {currentCaseBundle.position} of {currentCaseBundle.totalQuestions}
+                            </span>
+                        )}
                     </div>
 
                     {/* Question text + options */}
-                    <div className="px-8 py-8 flex-1">
-                        <div className={cn("mb-2 text-[10px] font-black uppercase tracking-widest", highContrast ? "text-gray-500" : "text-[var(--student-muted)]")}>QUESTION</div>
-                        <p className={cn("font-semibold leading-relaxed mb-8 select-none", fontClass, highContrast ? "text-white" : "text-[var(--student-text)]")}>{q.text}</p>
-
-                        <div className="space-y-3 mb-8">
-                            {q.options.map((opt, oi) => {
-                                const selected = ans.optionId === opt.id;
-                                const showCorrect = (mode === "practice" && showPracticeAnswer) || false;
-                                const isCorrectOpt = opt.isCorrect;
-                                return (
-                                    <button key={opt.id} onClick={() => !showPracticeAnswer && selectOption(opt.id)}
-                                        className={cn("w-full flex items-center gap-4 p-4 rounded-[20px] border text-left transition-all duration-300", fontClass,
-                                            showCorrect && isCorrectOpt ? "border-[#2f7d55] bg-[#e5f0e9] hover:shadow-md hover:-translate-y-0.5" :
-                                                showCorrect && selected && !isCorrectOpt ? "border-rose-400 bg-rose-50 hover:shadow-md hover:-translate-y-0.5" :
-                                                    selected ? highContrast ? "border-white bg-slate-800 text-white" : "border-[var(--student-accent-strong)] bg-[var(--student-accent-soft)] text-[var(--student-text)] shadow-md shadow-[rgba(31,92,80,0.10)] hover:-translate-y-0.5" :
-                                                        highContrast ? "border-slate-700 bg-slate-800 hover:border-slate-500 hover:-translate-y-0.5" :
-                                                            "border-[var(--student-border)] bg-[var(--student-panel-solid)] hover:border-[var(--student-accent-soft-strong)] hover:bg-[var(--student-panel-muted)] hover:-translate-y-0.5")}>
-                                        <span className={cn("flex items-center gap-4 select-none")}>
-                                            <span className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
-                                                showCorrect && isCorrectOpt ? "bg-[#2f7d55] text-white shadow-[rgba(47,125,85,0.2)]" :
-                                                    showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white shadow-rose-500/20" :
-                                                        selected ? highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white shadow-[rgba(31,92,80,0.2)]" : highContrast ? "bg-slate-700 text-slate-300" : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]")}>
-                                                {["A", "B", "C", "D", "E"][oi]}
-                                            </span>
-                                            <span className={highContrast ? "text-gray-200" : "text-[var(--student-text)]"}>{opt.text}</span>
+                    <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+                        {q.caseStudy && (
+                            <div className={cn("flex-1 p-8 overflow-y-auto border-r", highContrast ? "bg-gray-950 border-gray-700" : "bg-slate-50/30 border-[var(--student-border)]")}>
+                                <div className="mb-4 flex flex-wrap items-center gap-2">
+                                    <div className={cn("inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest", highContrast ? "bg-gray-800 text-gray-400" : "bg-slate-200 text-slate-500")}>Case Scenario</div>
+                                    {currentCaseBundle && (
+                                        <span className={cn("rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest", highContrast ? "bg-gray-800 text-amber-200" : "bg-amber-50 text-amber-700 border border-amber-200")}>
+                                            {currentCaseBundle.totalQuestions} linked MCQs
                                         </span>
-                                        {showCorrect && isCorrectOpt && <span className="ml-auto text-[#2f7d55] font-black shrink-0">Correct</span>}
-                                        {showCorrect && selected && !isCorrectOpt && <span className="ml-auto text-rose-500 font-black shrink-0">Wrong</span>}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Practice mode explanation */}
-                        {mode === "practice" && showPracticeAnswer && q.explanation && (
-                            <div className={cn("flex gap-3 p-4 rounded-2xl border mb-6", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-accent-soft)] border-[var(--student-accent-soft-strong)]")}>
-                                <span className={cn("shrink-0", highContrast ? "text-gray-300" : "text-[var(--student-accent-strong)]")}>i</span>
-                                <div>
-                                    <div className={cn("text-[10px] font-black uppercase tracking-widest mb-1", highContrast ? "text-gray-400" : "text-[var(--student-accent-strong)]")}>Explanation</div>
-                                    <p className={cn("text-sm leading-relaxed select-none", highContrast ? "text-gray-200" : "text-[var(--student-text)]")}>{q.explanation}</p>
+                                    )}
+                                </div>
+                                <h3 className={cn("text-xl font-black mb-4", highContrast ? "text-white" : "text-[var(--student-text)]")}>{q.caseStudy.title}</h3>
+                                <div className={cn("prose prose-sm max-w-none leading-relaxed select-none", fontClass, highContrast ? "text-gray-300" : "text-[var(--student-text)]")}>
+                                    {q.caseStudy.content.split('\n').map((para, pi) => para.trim() ? <p key={pi} className="mb-4">{para}</p> : null)}
                                 </div>
                             </div>
                         )}
-
-                        {/* Confidence tagging */}
-                        <div className="flex items-center gap-2 mt-2">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">Confidence:</span>
-                            {(["sure", "unsure", "guess"] as const).map(c => {
-                                const styles = { sure: "bg-green-50 text-green-600 border-green-200", unsure: "bg-amber-50 text-amber-600 border-amber-200", guess: "bg-rose-50 text-rose-600 border-rose-200" };
-                                const active = { sure: "bg-green-500 text-white border-green-500", unsure: "bg-amber-500 text-white border-amber-500", guess: "bg-rose-500 text-white border-rose-500" };
-                                return (
-                                    <button key={c} onClick={() => setConfidence(c)}
-                                        className={cn("px-3 py-1 rounded-full border font-bold text-[11px] transition-all capitalize", ans.confidence === c ? active[c] : styles[c])}>
-                                        {c === "sure" ? "🟢 Sure" : c === "unsure" ? "🟡 Unsure" : "🔴 Guess"}
-                                    </button>
-                                );
-                            })}
+                        
+                        <div className={cn("flex-1 p-8 overflow-y-auto", q.caseStudy ? "w-full md:w-1/2" : "w-full")}>
+                            {currentCaseBundle && (
+                                <div className={cn("mb-6 rounded-[24px] border p-5", highContrast ? "border-gray-700 bg-gray-900" : "border-amber-200 bg-amber-50/70")}>
+                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                        <div className="space-y-1">
+                                            <div className={cn("text-[10px] font-black uppercase tracking-widest", highContrast ? "text-amber-200" : "text-amber-700")}>
+                                                Integrated case bundle
+                                            </div>
+                                            <div className={cn("text-sm font-bold", highContrast ? "text-white" : "text-[var(--student-text)]")}>
+                                                Question {currentCaseBundle.position} of {currentCaseBundle.totalQuestions} tied to this scenario
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {currentCaseBundle.questionIds.map((questionId, index) => (
+                                                <button
+                                                    key={questionId}
+                                                    onClick={() => {
+                                                        const bundleIndex = questions.findIndex((question) => question.id === questionId);
+                                                        if (bundleIndex >= 0) {
+                                                            setCurrent(bundleIndex);
+                                                        }
+                                                    }}
+                                                    className={cn(
+                                                        "min-w-10 rounded-xl border px-3 py-2 text-[11px] font-black transition-all",
+                                                        questionId === q.id
+                                                            ? highContrast
+                                                                ? "border-white bg-white text-black"
+                                                                : "border-amber-500 bg-amber-500 text-white"
+                                                            : highContrast
+                                                                ? "border-gray-700 bg-gray-800 text-gray-200 hover:border-gray-500"
+                                                                : "border-amber-200 bg-white text-amber-700 hover:border-amber-400",
+                                                    )}
+                                                >
+                                                    Q{currentCaseBundle.questionNumbers[index]}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <div className={cn("mb-2 text-[10px] font-black uppercase tracking-widest", highContrast ? "text-gray-500" : "text-[var(--student-muted)]")}>QUESTION {q.no}</div>
+                            <p className={cn("font-semibold leading-relaxed mb-8 select-none", fontClass, highContrast ? "text-white" : "text-[var(--student-text)]")}>{q.text}</p>
+    
+                            <div className="space-y-3 mb-8">
+                                {q.options.map((opt, oi) => {
+                                    const selected = ans.optionId === opt.id;
+                                    const showCorrect = (mode === "practice" && showPracticeAnswer) || false;
+                                    const isCorrectOpt = opt.isCorrect;
+                                    return (
+                                        <button key={opt.id} onClick={() => !showPracticeAnswer && selectOption(opt.id)}
+                                            className={cn("w-full flex items-center gap-4 p-4 rounded-[20px] border text-left transition-all duration-300", fontClass,
+                                                showCorrect && isCorrectOpt ? "border-[#2f7d55] bg-[#e5f0e9] hover:shadow-md hover:-translate-y-0.5" :
+                                                    showCorrect && selected && !isCorrectOpt ? "border-rose-400 bg-rose-50 hover:shadow-md hover:-translate-y-0.5" :
+                                                        selected ? highContrast ? "border-white bg-slate-800 text-white" : "border-[var(--student-accent-strong)] bg-[var(--student-accent-soft)] text-[var(--student-text)] shadow-md shadow-[rgba(31,92,80,0.10)] hover:-translate-y-0.5" :
+                                                            highContrast ? "border-slate-700 bg-slate-800 hover:border-slate-500 hover:-translate-y-0.5" :
+                                                                "border-[var(--student-border)] bg-[var(--student-panel-solid)] hover:border-[var(--student-accent-soft-strong)] hover:bg-[var(--student-panel-muted)] hover:-translate-y-0.5")}>
+                                            <span className={cn("flex items-center gap-4 select-none")}>
+                                                <span className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
+                                                    showCorrect && isCorrectOpt ? "bg-[#2f7d55] text-white shadow-[rgba(47,125,85,0.2)]" :
+                                                        showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white shadow-rose-500/20" :
+                                                            selected ? highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white shadow-[rgba(31,92,80,0.2)]" : highContrast ? "bg-slate-700 text-slate-300" : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]")}>
+                                                    {["A", "B", "C", "D", "E"][oi]}
+                                                </span>
+                                                <span className={highContrast ? "text-gray-200" : "text-[var(--student-text)]"}>{opt.text}</span>
+                                            </span>
+                                            {showCorrect && isCorrectOpt && <span className="ml-auto text-[#2f7d55] font-black shrink-0">Correct</span>}
+                                            {showCorrect && selected && !isCorrectOpt && <span className="ml-auto text-rose-500 font-black shrink-0">Wrong</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+    
+                            {/* Practice mode explanation */}
+                            {mode === "practice" && showPracticeAnswer && q.explanation && (
+                                <div className={cn("flex gap-3 p-4 rounded-2xl border mb-6", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-accent-soft)] border-[var(--student-accent-soft-strong)]")}>
+                                    <span className={cn("shrink-0", highContrast ? "text-gray-300" : "text-[var(--student-accent-strong)]")}>i</span>
+                                    <div>
+                                        <div className={cn("text-[10px] font-black uppercase tracking-widest mb-1", highContrast ? "text-gray-400" : "text-[var(--student-accent-strong)]")}>Explanation</div>
+                                        <p className={cn("text-sm leading-relaxed select-none", highContrast ? "text-gray-200" : "text-[var(--student-text)]")}>{q.explanation}</p>
+                                    </div>
+                                </div>
+                            )}
+    
+                            {/* Confidence tagging */}
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">Confidence:</span>
+                                {(["sure", "unsure", "guess"] as const).map(c => {
+                                    const styles = { sure: "bg-green-50 text-green-600 border-green-200", unsure: "bg-amber-50 text-amber-600 border-amber-200", guess: "bg-rose-50 text-rose-600 border-rose-200" };
+                                    const active = { sure: "bg-green-500 text-white border-green-500", unsure: "bg-amber-500 text-white border-amber-500", guess: "bg-rose-500 text-white border-rose-500" };
+                                    return (
+                                        <button key={c} onClick={() => setConfidence(c)}
+                                            className={cn("px-3 py-1 rounded-full border font-bold text-[11px] transition-all capitalize", ans.confidence === c ? active[c] : styles[c])}>
+                                            {c === "sure" ? "🟢 Sure" : c === "unsure" ? "🟡 Unsure" : "🔴 Guess"}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {negativeMarkingEnabled && (
+                                <p className={cn("mt-3 text-[11px] font-bold uppercase tracking-widest", highContrast ? "text-rose-200" : "text-rose-600")}>
+                                    Guesses that miss will cost {ICAI_NEGATIVE_MARKING_PENALTY} marks in simulator mode.
+                                </p>
+                            )}
                         </div>
                     </div>
 
