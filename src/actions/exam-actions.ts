@@ -182,3 +182,38 @@ export async function saveExamProgress(
         return { success: false, message: getActionErrorMessage(error, "Failed to save progress.") };
     }
 }
+
+/**
+ * Updates the analytical 'Gap Tag' for an incorrect answer.
+ * Students can categorize errors as CONCEPTUAL, SILLY, or TIME.
+ */
+export async function updateStudentAnswerGapTag(
+    answerId: string,
+    gapTag: string | null
+): Promise<ActionResponse<void>> {
+    try {
+        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        
+        // Ownership check
+        const answer = await prisma.studentAnswer.findUnique({
+            where: { id: answerId },
+            include: { attempt: { select: { studentId: true } } }
+        });
+
+        if (!answer) return { success: false, message: "Answer not found." };
+        
+        if (user.role === "STUDENT" && answer.attempt.studentId !== user.id) {
+            return { success: false, message: "Unauthorized access: This answer does not belong to you." };
+        }
+
+        await (prisma.studentAnswer as any).update({
+            where: { id: answerId },
+            data: { gapTag }
+        });
+
+        return { success: true, data: undefined, message: "Error tag updated successfully." };
+    } catch (error) {
+        console.error("updateStudentAnswerGapTag error:", error);
+        return { success: false, message: "Failed to update gap tag." };
+    }
+}

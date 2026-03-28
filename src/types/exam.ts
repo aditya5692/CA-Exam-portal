@@ -6,7 +6,8 @@ export type ExamWithQuestions = Prisma.ExamGetPayload<{
             include: {
                 question: {
                     include: {
-                        options: true;
+                        options: true,
+                        caseStudy: true,
                     };
                 };
             };
@@ -27,7 +28,8 @@ export type AttemptWithResults = Prisma.ExamAttemptGetPayload<{
             include: {
                 question: {
                     include: {
-                        options: true;
+                        options: true,
+                        caseStudy: true,
                     };
                 };
                 selectedOption: true;
