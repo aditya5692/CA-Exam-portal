@@ -44,9 +44,14 @@ export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; m
         return { success: true, message: "OTP sent successfully (Mock)." };
     }
 
-    if (!MSG91_AUTH_KEY || !MSG91_OTP_TEMPLATE_ID) {
-        console.warn("Msg91 credentials not configured. OTP will not be sent.");
-        return { success: false, message: "SMS configuration missing." };
+    if (!MSG91_AUTH_KEY) {
+        console.warn("Msg91 Auth Key not configured. OTP services will not work.");
+        return { success: false, message: "SMS configuration missing (Auth Key)." };
+    }
+
+    if (!MSG91_OTP_TEMPLATE_ID) {
+        console.warn("Msg91 Template ID not configured. Fallback OTP will not be sent.");
+        return { success: false, message: "SMS configuration missing (Template ID)." };
     }
 
     try {
