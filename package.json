@@ -6,7 +6,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "node ./scripts/prepare-prisma.js",
     "predev": "npm run prisma:generate",
     "prebuild": "npm run prisma:generate",
     "dev": "next dev",

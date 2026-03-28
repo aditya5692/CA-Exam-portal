@@ -7,6 +7,7 @@ import {
     ChalkboardTeacher,
     GraduationCap,
     IdentificationBadge,
+    Phone,
     ShieldCheck,
     SignOut,
     Spinner
@@ -86,7 +87,15 @@ export default function LoginPage() {
         setShowWidget(true);
     }
 
-    async function handleWidgetSuccess(accessToken: string) {
+    async function handleWidgetSuccess(data: any) {
+        // The widget returns { message: "JWT_TOKEN", type: "success" } or just the token string
+        const accessToken = typeof data === 'string' ? data : data?.message;
+        
+        if (!accessToken) {
+            setErrorMessage("Verification succeeded but no access token was provided.");
+            return;
+        }
+
         setIsSubmitting(true);
         setShowWidget(false);
         const result = await verifyWidgetOtpAndLogin(accessToken);
@@ -250,51 +259,63 @@ export default function LoginPage() {
                         })}
                     </div>
 
-                    <form className="space-y-6" onSubmit={step === "phone" ? handleRequestOtp : handleVerifyOtp}>
-                        {step === "phone" ? (
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</label>
-                                <div className="relative group">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                        <IdentificationBadge size={20} weight="bold" />
-                                    </span>
-                                    <input
-                                        type="tel"
-                                        value={phone}
-                                        onChange={(event) => setPhone(event.target.value)}
-                                        placeholder="EX: 9876543210"
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        ) : (
+                    <form className="space-y-6" onSubmit={handleRequestOtp}>
+                        {!showWidget ? (
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Verification Code</label>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep("phone")}
-                                            className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:underline"
-                                        >
-                                            Change Phone
-                                        </button>
-                                    </div>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</label>
                                     <div className="relative group">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                            <ShieldCheck size={20} weight="bold" />
+                                            <Phone size={20} weight="bold" />
                                         </span>
                                         <input
-                                            type="text"
-                                            value={otp}
-                                            onChange={(event) => setOtp(event.target.value)}
-                                            placeholder="Enter OTP"
-                                            className="w-full tracking-[1.5em] text-center rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-lg font-bold text-slate-900 outline-none transition-all placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
+                                            type="tel"
+                                            value={phone}
+                                            onChange={(event) => setPhone(event.target.value)}
+                                            placeholder="EX: 9876543210"
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
                                             required
-                                            maxLength={6}
+                                            disabled={isSubmitting}
                                         />
                                     </div>
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
+                                >
+                                    {isSubmitting ? <Spinner className="animate-spin" size={20} weight="bold" /> : "Request OTP"}
+                                    {!isSubmitting && <ArrowRight size={20} weight="bold" />}
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="flex items-center gap-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-sm">
+                                        <Phone size={14} weight="bold" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="text-[9px] font-bold uppercase tracking-widest text-indigo-400 leading-none mb-1">Verifying Number</div>
+                                        <div className="text-xs font-bold text-slate-900 leading-none">+91 {phone}</div>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowWidget(false)}
+                                        className="text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 underline underline-offset-4"
+                                    >
+                                        Change
+                                    </button>
+                                </div>
+                                <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
+                                    <Msg91Widget
+                                        phoneNumber={normalizedPhone}
+                                        onSuccess={handleWidgetSuccess}
+                                        onFailure={(err) => {
+                                            setErrorMessage(typeof err === "string" ? err : "Verification failed. Please try again.");
+                                            setShowWidget(false);
+                                        }}
+                                        autoTrigger={true}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -305,14 +326,6 @@ export default function LoginPage() {
                             </div>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
-                        >
-                            {isSubmitting ? <Spinner className="animate-spin" size={20} weight="bold" /> : step === "phone" ? "Request OTP" : "Verify & Login"}
-                            {!isSubmitting && <ArrowRight size={20} weight="bold" />}
-                        </button>
 
                         {isLocalhost && !showWidget && (
                             <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-[10px] font-medium text-amber-700 leading-relaxed shadow-sm">
@@ -385,17 +398,6 @@ export default function LoginPage() {
                 </div>
             </div>
 
-            {showWidget && (
-                <Msg91Widget
-                    phoneNumber={normalizedPhone}
-                    onSuccess={handleWidgetSuccess}
-                    onFailure={(err) => {
-                        setErrorMessage(typeof err === "string" ? err : "Verification failed. Please try again.");
-                        setShowWidget(false);
-                    }}
-                    autoTrigger={true}
-                />
-            )}
         </div>
     );
 }

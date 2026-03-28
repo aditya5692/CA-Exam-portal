@@ -119,10 +119,14 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
 
         const result = await response.json();
         
+        console.log("MSG91 Widget Verification Response:", JSON.stringify(result, null, 2));
+        
         // MSG91 Verify Access Token API typical response:
         // { "status": "success", "data": { "mobile": "911234567890", ... } }
+        // OR { "type": "success", "mobile": "..." }
         if (result.status === "success" || result.type === "success") {
             const phone = result.data?.mobile || result.mobile;
+            console.log(`MSG91 Verification SUCCESS for phone: ${phone}`);
             return { 
                 success: true, 
                 message: "Verification successful.", 
@@ -130,6 +134,7 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
             };
         }
 
+        console.error(`MSG91 Verification FAILED: ${result.message || "Invalid or expired token."}`);
         return { success: false, message: result.message || "Invalid or expired token." };
     } catch (error) {
         console.error("Msg91 verifyWidgetToken error:", error);
