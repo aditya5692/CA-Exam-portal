@@ -35,6 +35,8 @@ function SignupFormContent() {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [role, setRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
+    const [department, setDepartment] = useState("");
     const [dob, setDob] = useState("");
     const [location, setLocation] = useState("");
     const [caLevel, setCaLevel] = useState<"foundation" | "ipc" | "final">("final");
@@ -47,7 +49,13 @@ function SignupFormContent() {
     useEffect(() => {
         const p = searchParams.get("phone");
         const v = searchParams.get("verified");
+        const r = searchParams.get("role")?.toUpperCase();
+        
         if (p) setPhone(p);
+        if (r === "TEACHER" || r === "STUDENT") {
+            setRole(r as any);
+        }
+        
         if (v === "true") {
             setStep("details");
             setOtp("VERIFIED");
@@ -85,12 +93,13 @@ function SignupFormContent() {
             fullName,
             email,
             password,
-            role: "STUDENT",
+            role,
+            department: role === "TEACHER" ? department : undefined,
             dob,
             location,
-            examTargetLevel: caLevel,
-            examTargetMonth: parseInt(attemptMonth),
-            examTargetYear: parseInt(attemptYear)
+            examTargetLevel: role === "STUDENT" ? caLevel : undefined,
+            examTargetMonth: role === "STUDENT" ? parseInt(attemptMonth) : undefined,
+            examTargetYear: role === "STUDENT" ? parseInt(attemptYear) : undefined
         });
 
         setIsSubmitting(false);
@@ -117,7 +126,7 @@ function SignupFormContent() {
                                 {step === "phone" ? "Join the Workspace" : step === "otp" ? "Verify Code" : "Almost There"}
                             </h2>
                             <p className="text-sm font-medium text-slate-400 mt-1">
-                                {step === "details" ? "Finalize your student profile" : "Start your prep journey today"}
+                                {step === "details" ? `Finalize your ${role.toLowerCase()} profile` : "Start your prep journey today"}
                             </p>
                         </div>
                         <Link href="/" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-widest leading-none">
@@ -189,6 +198,25 @@ function SignupFormContent() {
 
                         {step === "details" && (
                             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                {/* Role Selection Toggle */}
+                                <div className="p-1 bg-slate-100 rounded-lg flex w-full">
+                                    {(["STUDENT", "TEACHER"] as const).map((r) => (
+                                        <button
+                                            key={r}
+                                            type="button"
+                                            onClick={() => setRole(r)}
+                                            className={cn(
+                                                "flex-1 py-2 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all",
+                                                role === r 
+                                                    ? "bg-white text-slate-900 shadow-sm border border-slate-200" 
+                                                    : "text-slate-400 hover:text-slate-600"
+                                            )}
+                                        >
+                                            {r}
+                                        </button>
+                                    ))}
+                                </div>
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Full Name</label>
@@ -225,47 +253,61 @@ function SignupFormContent() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">CA Level</label>
-                                        <select
-                                            value={caLevel}
-                                            onChange={(e) => setCaLevel(e.target.value as any)}
-                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
-                                            required
-                                        >
-                                            <option value="foundation">Foundation</option>
-                                            <option value="ipc">Intermediate</option>
-                                            <option value="final">Final</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Attempt Target</label>
-                                        <div className="grid grid-cols-2 gap-2">
+                                {role === "STUDENT" ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">CA Level</label>
                                             <select
-                                                value={attemptMonth}
-                                                onChange={(e) => setAttemptMonth(e.target.value)}
+                                                value={caLevel}
+                                                onChange={(e) => setCaLevel(e.target.value as any)}
                                                 className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
                                                 required
                                             >
-                                                <option value="5">May</option>
-                                                <option value="11">Nov</option>
-                                                <option value="1">Jan</option>
-                                            </select>
-                                            <select
-                                                value={attemptYear}
-                                                onChange={(e) => setAttemptYear(e.target.value)}
-                                                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
-                                                required
-                                            >
-                                                {[2024, 2025, 2026, 2027].map(year => (
-                                                    <option key={year} value={year}>{year}</option>
-                                                ))}
+                                                <option value="foundation">Foundation</option>
+                                                <option value="ipc">Intermediate</option>
+                                                <option value="final">Final</option>
                                             </select>
                                         </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Attempt Target</label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <select
+                                                    value={attemptMonth}
+                                                    onChange={(e) => setAttemptMonth(e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
+                                                    required
+                                                >
+                                                    <option value="5">May</option>
+                                                    <option value="11">Nov</option>
+                                                    <option value="1">Jan</option>
+                                                </select>
+                                                <select
+                                                    value={attemptYear}
+                                                    onChange={(e) => setAttemptYear(e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
+                                                    required
+                                                >
+                                                    {[2024, 2025, 2026, 2027].map(year => (
+                                                        <option key={year} value={year}>{year}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Academic Department</label>
+                                        <input
+                                            type="text"
+                                            value={department}
+                                            onChange={(e) => setDepartment(e.target.value)}
+                                            placeholder="EX: Direct Tax, Audit, Financial Reporting"
+                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900"
+                                            required={role === "TEACHER"}
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Password</label>

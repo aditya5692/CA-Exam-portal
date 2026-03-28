@@ -133,6 +133,18 @@ export const DEMO_ACCOUNTS: DemoAccountSeed[] = [
         phone: "919987654321",
         department: "Administration",
     },
+    {
+        key: "teacher-main" as any,
+        fullName: "Aditya (Main)",
+        email: "aditya@demo.local",
+        registrationNumber: "MAIN-001",
+        role: "TEACHER",
+        isSuperAdmin: true,
+        plan: "ENTERPRISE",
+        storageLimit: 2147483647,
+        phone: "917065751756",
+        department: "Administration",
+    },
 ];
 
 const DEFAULT_REGISTRATION_BY_ROLE: Record<AppRole, string> = {

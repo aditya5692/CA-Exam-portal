@@ -95,41 +95,61 @@ export async function verifyOtpAndLogin(phone: string, otp: string): Promise<Act
 }
 
 /**
- * Verifies the MSG91 widget access token and logs in or redirects to registration.
+ * Verifies the MSG91 widget access token and handle the full login/registration flow.
  */
 export async function verifyWidgetOtpAndLogin(accessToken: string): Promise<ActionResponse<LoginResult | { needsRegistration: boolean }>> {
+    console.log("AuthAction: Starting verifyWidgetOtpAndLogin");
+    
     try {
+        // 1. Server-side Token Verification
         const verification = await verifyMsg91WidgetToken(accessToken);
         if (!verification.success || !verification.phone) {
+            console.error("AuthAction: MSG91 Verification Failed:", verification.message);
             return { success: false, message: verification.message };
         }
 
         const phone = verification.phone;
+        const normalizedPhone = normalizePhone(phone);
+        console.log(`AuthAction: Verified phone ${normalizedPhone}`);
+
+        // 2. Database Synchronization & User Lookup
         await ensureDemoAccounts();
         
-        const normalizedPhone = normalizePhone(phone);
-
-        // Logic to find user by phone and log them in
         const user = await prisma.user.findUnique({
             where: { phone: normalizedPhone },
         });
 
+        // 3. Conditional Branching (New vs Existing User)
         if (!user) {
-            return { success: true, data: { needsRegistration: true }, message: "OTP verified. Please complete your registration." };
+            console.log("AuthAction: User not found in database. Sign-up required.");
+            return { 
+                success: true, 
+                data: { needsRegistration: true }, 
+                message: "Phone verified. Please create your profile." 
+            };
         }
 
+        // 4. Update Persistence (Login Tracking)
+        console.log(`AuthAction: User ${user.registrationNumber} found. Finalizing login.`);
         await prisma.user.update({
             where: { id: user.id },
-            data: { loginCount: { increment: 1 } },
+            data: { 
+                loginCount: { increment: 1 },
+            },
         });
 
+        // 5. Session Establishment
         await setAuthSession(user);
+
+        // 6. Role-Based Routing
+        const redirectTo = getRoleRedirectPath(user.role as AppRole);
+        console.log(`AuthAction: Login complete. Redirecting to ${redirectTo}`);
 
         return {
             success: true,
             message: "Logged in successfully.",
             data: {
-                redirectTo: getRoleRedirectPath(user.role as AppRole), 
+                redirectTo, 
                 user: {
                     fullName: user.fullName,
                     role: user.role,
@@ -139,8 +159,11 @@ export async function verifyWidgetOtpAndLogin(accessToken: string): Promise<Acti
             }
         };
     } catch (error) {
-        console.error("verifyWidgetOtpAndLogin error:", error);
-        return { success: false, message: "Verification failed." };
+        console.error("AuthAction: Critical Failure in verifyWidgetOtpAndLogin:", error);
+        return { 
+            success: false, 
+            message: "A server error occurred during verification. Please contact support." 
+        };
     }
 }
 
@@ -174,29 +197,56 @@ export async function login(input: AuthLoginInput): Promise<ActionResponse<Login
 export async function verifyOtpAndRegister(formData: {
     phone: string;
     otp: string;
+    token?: string;
     fullName: string;
     email?: string;
     password?: string;
     role: "STUDENT" | "TEACHER";
+    department?: string;
     dob?: string;
     location?: string;
     examTargetLevel?: string;
     examTargetMonth?: number;
     examTargetYear?: number;
-}): Promise<ActionResponse<{ redirectTo: string }>> {
+}): Promise<ActionResponse<LoginResult>> {
+    console.log(`AuthAction: Registering user ${formData.phone} with OTP/Token`);
+    
     try {
-        const verification = await verifyMsg91Otp(formData.phone, formData.otp);
-        if (!verification.success) {
-            return { success: false, message: verification.message };
+        // 1. Verification Handshake
+        let verificationSuccess = false;
+        
+        if (formData.token && formData.otp === "VERIFIED") {
+            const verification = await verifyMsg91WidgetToken(formData.token);
+            if (verification.success && verification.phone) {
+                const normalizedIncoming = normalizePhone(formData.phone);
+                const normalizedVerified = normalizePhone(verification.phone);
+                
+                if (normalizedIncoming === normalizedVerified) {
+                    verificationSuccess = true;
+                    console.log("AuthAction: Token verification matched phone number.");
+                } else {
+                    console.error("AuthAction: Phone mismatch", { expected: normalizedIncoming, actual: normalizedVerified });
+                    return { success: false, message: "Security Check: Verified phone number does not match registration number." };
+                }
+            } else {
+                return { success: false, message: verification.message || "Session verification failed. Please try again." };
+            }
+        } else {
+            const verification = await verifyMsg91Otp(formData.phone, formData.otp);
+            verificationSuccess = verification.success;
+            if (!verificationSuccess) return { success: false, message: verification.message };
         }
 
+        const prefix = formData.role === "TEACHER" ? "TCH" : "STU";
+        
         const registered = await registerUserRecord({
             fullName: formData.fullName,
             email: formData.email,
             phone: formData.phone,
             password: formData.password,
             role: formData.role,
-            registrationNumber: `STU-${Date.now().toString().slice(-6)}`,
+            registrationNumber: `${prefix}-${Date.now().toString().slice(-6)}`,
+            department: formData.department,
             dob: formData.dob,
             location: formData.location,
             examTargetLevel: formData.examTargetLevel,
@@ -210,6 +260,12 @@ export async function verifyOtpAndRegister(formData: {
             message: "Account created successfully",
             data: {
                 redirectTo: registered.redirectTo,
+                user: {
+                    fullName: registered.user.fullName,
+                    role: registered.user.role,
+                    registrationNumber: registered.user.registrationNumber,
+                    phone: registered.user.phone,
+                }
             }
         };
     } catch (error: unknown) {
@@ -217,6 +273,7 @@ export async function verifyOtpAndRegister(formData: {
         return { success: false, message: getActionErrorMessage(error, "Failed to create account") };
     }
 }
+
 export async function register(formData: Record<string, string>): Promise<ActionResponse<{ redirectTo: string }>> {
     try {
         const registered = await registerUserRecord({

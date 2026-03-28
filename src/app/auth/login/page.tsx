@@ -39,15 +39,14 @@ const ROLE_META: Record<LoginRole, { title: string; description: string; icon: t
     }
 };
 
+type AuthState = "IDLE" | "VERIFYING" | "FINALIZING" | "SUCCESS";
+
 export default function LoginPage() {
     const router = useRouter();
     const [role, setRole] = useState<LoginRole>("student");
     const [phone, setPhone] = useState("");
-    const [otp, setOtp] = useState("");
-    const [step, setStep] = useState<"phone" | "otp">("phone");
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [authState, setAuthState] = useState<AuthState>("IDLE");
     const [errorMessage, setErrorMessage] = useState("");
-    const [showWidget, setShowWidget] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -70,82 +69,49 @@ export default function LoginPage() {
         return digits;
     }, [phone]);
 
-    async function handleRequestOtp(event: React.FormEvent) {
+    async function handleStartVerification(event: React.FormEvent) {
         event.preventDefault();
         if (!phone || phone.length < 10) {
-            setErrorMessage("Please enter a valid phone number.");
-            return;
-        }
-
-        setErrorMessage("");
-        
-        if (normalizedPhone.length < 11) {
             setErrorMessage("Please enter a valid 10-digit phone number.");
             return;
         }
 
-        setShowWidget(true);
-    }
-
-    async function handleWidgetSuccess(data: any) {
-        // The widget returns { message: "JWT_TOKEN", type: "success" } or just the token string
-        const accessToken = typeof data === 'string' ? data : data?.message;
-        
-        if (!accessToken) {
-            setErrorMessage("Verification succeeded but no access token was provided.");
-            return;
-        }
-
-        setIsSubmitting(true);
-        setShowWidget(false);
-        const result = await verifyWidgetOtpAndLogin(accessToken);
-        setIsSubmitting(false);
-
-        if (!result.success) {
-            setErrorMessage(result.message);
-            return;
-        }
-
-        if ('needsRegistration' in result.data! && result.data.needsRegistration) {
-            router.push(`/auth/signup?phone=${phone}&verified=true`);
-            return;
-        }
-
-        const loginData = result.data as any;
-        const redirectTo = loginData.redirectTo || (role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
-
-        router.push(redirectTo);
-        router.refresh();
-    }
-
-    async function handleVerifyOtp(event: React.FormEvent) {
-        event.preventDefault();
-        if (!otp || otp.length < 4) {
-             setErrorMessage("Please enter the OTP.");
-             return;
-        }
-
-        setIsSubmitting(true);
         setErrorMessage("");
+        setAuthState("VERIFYING");
+    }
 
-        const result = await verifyOtpAndLogin(phone, otp);
-        setIsSubmitting(false);
+    async function handleAuthSuccess(accessToken: string) {
+        setAuthState("FINALIZING");
+        console.log("LoginPage: Starting server-side verification...");
 
-        if (!result.success) {
-            setErrorMessage(result.message);
-            return;
+        try {
+            const result = await verifyWidgetOtpAndLogin(accessToken);
+            
+            if (!result.success) {
+                setErrorMessage(result.message);
+                setAuthState("VERIFYING"); // Allow retry
+                return;
+            }
+
+            setAuthState("SUCCESS");
+
+            if ('needsRegistration' in result.data! && result.data.needsRegistration) {
+                console.log("LoginPage: New user detected. Redirecting to signup.");
+                router.push(`/auth/signup?phone=${phone}&role=${role}&verified=true`);
+                return;
+            }
+
+            const loginData = result.data as any;
+            const redirectTo = loginData.redirectTo || (role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
+
+            console.log(`LoginPage: Login successful. Redirecting to ${redirectTo}`);
+            router.push(redirectTo);
+            router.refresh();
+        } catch (err) {
+            console.error("LoginPage: Finalization Error", err);
+            setErrorMessage("An unexpected error occurred during finalization.");
+            setAuthState("VERIFYING");
         }
-
-        if ('needsRegistration' in result.data! && result.data.needsRegistration) {
-            router.push(`/auth/signup?phone=${phone}&verified=true`);
-            return;
-        }
-
-        const loginData = result.data as any;
-        const redirectTo = loginData.redirectTo || (role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
-
-        router.push(redirectTo);
-        router.refresh();
     }
 
     return (
@@ -219,10 +185,10 @@ export default function LoginPage() {
                     <div className="mb-8 flex items-center justify-between">
                         <div>
                             <h2 className="font-outfit text-3xl font-bold text-slate-900 tracking-tight">
-                                {step === "phone" ? "Welcome Back" : "Verify OTP"}
+                                {authState === "IDLE" ? "Welcome Back" : "Security Check"}
                             </h2>
                             <p className="text-sm font-medium text-slate-400 mt-1">
-                                {step === "phone" ? "Identify yourself to continue" : `Code sent to ${phone}`}
+                                {authState === "IDLE" ? "Identify yourself to continue" : "Please complete the verification"}
                             </p>
                         </div>
                         <Link href="/" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-widest">
@@ -243,7 +209,7 @@ export default function LoginPage() {
                                 <button
                                     key={item.value}
                                     type="button"
-                                    disabled={step === "otp"}
+                                    disabled={authState !== "IDLE"}
                                     onClick={() => setRole(item.value)}
                                     className={cn(
                                         "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-xs font-bold transition-all",
@@ -259,138 +225,138 @@ export default function LoginPage() {
                         })}
                     </div>
 
-                    <form className="space-y-6" onSubmit={handleRequestOtp}>
-                        {!showWidget ? (
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</label>
-                                    <div className="relative group">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                            <Phone size={20} weight="bold" />
-                                        </span>
-                                        <input
-                                            type="tel"
-                                            value={phone}
-                                            onChange={(event) => setPhone(event.target.value)}
-                                            placeholder="EX: 9876543210"
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
-                                            required
-                                            disabled={isSubmitting}
-                                        />
+                    <div className="min-h-[300px] flex flex-col">
+                        {authState === "IDLE" ? (
+                            <form className="space-y-6" onSubmit={handleStartVerification}>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</label>
+                                        <div className="relative group">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
+                                                <Phone size={20} weight="bold" />
+                                            </span>
+                                            <input
+                                                type="tel"
+                                                value={phone}
+                                                onChange={(event) => setPhone(event.target.value)}
+                                                placeholder="EX: 9876543210"
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
+                                                required
+                                            />
+                                        </div>
                                     </div>
+                                    <button
+                                        type="submit"
+                                        className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
+                                    >
+                                        Request OTP
+                                        <ArrowRight size={20} weight="bold" />
+                                    </button>
                                 </div>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
-                                >
-                                    {isSubmitting ? <Spinner className="animate-spin" size={20} weight="bold" /> : "Request OTP"}
-                                    {!isSubmitting && <ArrowRight size={20} weight="bold" />}
-                                </button>
-                            </div>
-                        ) : (
+
+                                {isLocalhost && (
+                                    <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-[10px] font-medium text-amber-700 leading-relaxed shadow-sm">
+                                        <strong className="block mb-1 font-bold uppercase tracking-wider">Localhost Detected:</strong>
+                                        MSG91 verification often fails on <code className="bg-amber-100/50 px-1 rounded text-amber-900 font-bold">localhost</code>. 
+                                        Use <code className="bg-amber-100/50 px-1 rounded text-amber-900 font-bold">127.0.0.1:3000</code> for direct SDK testing.
+                                    </div>
+                                )}
+                            </form>
+                        ) : authState === "VERIFYING" ? (
                             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
                                 <div className="flex items-center gap-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-sm">
-                                        <Phone size={14} weight="bold" />
-                                    </div>
                                     <div className="flex-1">
                                         <div className="text-[9px] font-bold uppercase tracking-widest text-indigo-400 leading-none mb-1">Verifying Number</div>
                                         <div className="text-xs font-bold text-slate-900 leading-none">+91 {phone}</div>
                                     </div>
                                     <button 
                                         type="button"
-                                        onClick={() => setShowWidget(false)}
+                                        onClick={() => setAuthState("IDLE")}
                                         className="text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 underline underline-offset-4"
                                     >
                                         Change
                                     </button>
                                 </div>
-                                <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-                                    <Msg91Widget
-                                        phoneNumber={normalizedPhone}
-                                        onSuccess={handleWidgetSuccess}
-                                        onFailure={(err) => {
-                                            setErrorMessage(typeof err === "string" ? err : "Verification failed. Please try again.");
-                                            setShowWidget(false);
-                                        }}
-                                        autoTrigger={true}
-                                    />
+                                <Msg91Widget
+                                    phoneNumber={normalizedPhone}
+                                    onSuccess={handleAuthSuccess}
+                                    onFailure={(err) => {
+                                        setErrorMessage(err);
+                                        setAuthState("IDLE");
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center space-y-4 py-12 animate-in fade-in zoom-in duration-500">
+                                <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-xl shadow-slate-200">
+                                    <Spinner className="animate-spin" size={32} weight="bold" />
+                                </div>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-bold text-slate-900">Finalizing Session</h3>
+                                    <p className="text-xs font-medium text-slate-400 italic">Connecting to your secure workspace...</p>
                                 </div>
                             </div>
                         )}
 
                         {errorMessage && (
-                            <div className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 text-xs font-bold text-rose-600">
+                            <div className="mt-6 rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 text-xs font-bold text-rose-600 animate-in shake duration-300">
                                 {errorMessage}
                             </div>
                         )}
-
-
-                        {isLocalhost && !showWidget && (
-                            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-[10px] font-medium text-amber-700 leading-relaxed shadow-sm">
-                                <strong className="block mb-1 font-bold uppercase tracking-wider">Localhost Detected:</strong>
-                                MSG91 verification often fails on <code className="bg-amber-100/50 px-1 rounded text-amber-900 font-bold">localhost</code>. 
-                                <br />
-                                1. Try accessing via <code className="bg-amber-100/50 px-1 rounded text-amber-900 font-bold">127.0.0.1:3000</code>.
-                                <br />
-                                2. Or disable **"re-Captcha validation"** in your MSG91 Widget dashboard.
-                            </div>
-                        )}
-                    </form>
-
-                    {/* Demo Accounts List - Simplified */}
-                    <div className="mt-12 bg-slate-50 rounded-xl border border-slate-100 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Demo Accounts</h3>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Quick Access</span>
-                        </div>
-                        <div className="grid gap-2">
-                            {activeCards.map((account) => (
-                                <div
-                                    key={account.label}
-                                    onClick={() => {
-                                        setRole(account.role);
-                                        setPhone(account.registrationNumber);
-                                        setStep("phone");
-                                        setErrorMessage("");
-                                    }}
-                                    className="group flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-slate-200 p-3 rounded-lg hover:border-slate-900 cursor-pointer transition-colors"
-                                >
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{account.label}</div>
-                                        <div className="text-[10px] text-slate-400 font-medium">{account.registrationNumber}</div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            setIsSubmitting(true);
-                                            const res = await loginAsDemoUser(account.registrationNumber);
-                                            if (res.success && res.data && 'redirectTo' in res.data) {
-                                                router.push(res.data.redirectTo);
-                                            } else {
-                                                setErrorMessage(res.message || "Login failed.");
-                                                setIsSubmitting(false);
-                                            }
-                                        }}
-                                        className="mt-2 sm:mt-0 px-3 py-1.5 bg-slate-100 rounded text-[9px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
-                                    >
-                                        Login
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
                     </div>
+
+                    {/* Demo Accounts List */}
+                    {authState === "IDLE" && (
+                        <div className="mt-12 bg-slate-50 rounded-xl border border-slate-100 p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Quick Access</h3>
+                            </div>
+                            <div className="grid gap-2">
+                                {activeCards.map((account) => (
+                                    <div
+                                        key={account.label}
+                                        onClick={() => {
+                                            setRole(account.role);
+                                            setPhone(account.registrationNumber);
+                                            setErrorMessage("");
+                                        }}
+                                        className="group flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-slate-200 p-4 rounded-xl hover:border-slate-900 cursor-pointer transition-colors"
+                                    >
+                                        <div>
+                                            <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{account.label}</div>
+                                            <div className="text-[10px] text-slate-400 font-medium">{account.registrationNumber}</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                setAuthState("FINALIZING");
+                                                const res = await loginAsDemoUser(account.registrationNumber);
+                                                if (res.success && res.data && 'redirectTo' in res.data) {
+                                                    router.push(res.data.redirectTo);
+                                                } else {
+                                                    setErrorMessage(res.message || "Login failed.");
+                                                    setAuthState("IDLE");
+                                                }
+                                            }}
+                                            className="mt-2 sm:mt-0 px-4 py-2 bg-slate-100 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                                        >
+                                            Instant Login
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <p className="mt-8 text-center text-xs font-bold text-slate-400 tracking-tight">
                         Don't have an account?{" "}
-                        <Link href="/auth/signup" className="text-indigo-600 hover:underline">
+                        <Link href={`/auth/signup?role=${role}`} className="text-indigo-600 hover:underline">
                             Create for free
                         </Link>
                     </p>
 
-                    <div className="mt-8 pt-8 border-t border-slate-100 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-widest text-slate-300">
+                    <div className="mt-12 pt-8 border-t border-slate-100 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-widest text-slate-300">
                         <Link href="/privacy-policy" className="hover:text-slate-900 transition-colors">Privacy</Link>
                         <Link href="/terms-and-conditions" className="hover:text-slate-900 transition-colors">Terms</Link>
                         <Link href="/refund-policy" className="hover:text-slate-900 transition-colors">Refunds</Link>
