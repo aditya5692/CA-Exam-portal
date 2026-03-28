@@ -22,6 +22,7 @@ export type ExamDetailsRecord = Prisma.ExamGetPayload<{
                 question: {
                     include: {
                         options: true;
+                        caseStudy: true;
                     };
                 };
             };
@@ -54,6 +55,7 @@ export type AttemptResultsRecord = Prisma.ExamAttemptGetPayload<{
                         difficulty: true;
                         subject: true;
                         topic: true;
+                        caseStudy: true;
                         options: true;
                     };
                 };
