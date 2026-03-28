@@ -241,6 +241,64 @@ function ExamWarRoomContent() {
         setResultData({ correct: correctCount, total: questions.length, xpGained, timeUsed, topicList });
         setPhase("results");
     }, [phase, questions, answers, mode, attemptId, studentId, examId]);
+    
+    // ── Exam Integrity & Lockdown ─────────────────────────────────────────────
+    useEffect(() => {
+        if (phase !== "exam" || typeof window === "undefined") return;
+
+        // 1. Block Context Menu & Clipboard
+        const preventDefault = (e: Event) => e.preventDefault();
+        window.addEventListener("contextmenu", preventDefault);
+        window.addEventListener("copy", preventDefault);
+        window.addEventListener("cut", preventDefault);
+        window.addEventListener("paste", preventDefault);
+
+        // 2. Before Unload (Refresh/Close)
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = "";
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        // 3. Browser Back Button Lock
+        // Push a state so that the back button "pops" this dummy state first
+        window.history.pushState(null, "", window.location.href);
+        const handlePopState = () => {
+            // Re-push immediately
+            window.history.pushState(null, "", window.location.href);
+            // Alert user (Browser's confirm doesn't work well with popstate, but we can try)
+            alert("Navigation is locked during exams. Please complete the exam or use the 'Exit Test' button.");
+        };
+        window.addEventListener("popstate", handlePopState);
+
+        // 4. Multi-Window Detection (BroadcastChannel)
+        const lockdownId = examId || "anonymous-exam";
+        const channel = new BroadcastChannel(`exam-lock-${lockdownId}`);
+        
+        // Announce presence
+        channel.postMessage({ type: 'PING', timestamp: Date.now() });
+
+        channel.onmessage = (event) => {
+            if (event.data.type === 'PING') {
+                // Someone else just opened this exam
+                channel.postMessage({ type: 'PONG' });
+            } else if (event.data.type === 'PONG') {
+                // I just joined and someone was already here
+                alert("CRITICAL: This exam is already active in another window/tab. This session will be closed to maintain integrity.");
+                window.location.href = "/student/exams";
+            }
+        };
+
+        return () => {
+            window.removeEventListener("contextmenu", preventDefault);
+            window.removeEventListener("copy", preventDefault);
+            window.removeEventListener("cut", preventDefault);
+            window.removeEventListener("paste", preventDefault);
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+            window.removeEventListener("popstate", handlePopState);
+            channel.close();
+        };
+    }, [phase, examId]);
 
     // ── Answer interactions ────────────────────────────────────────────────────
     const selectOption = (optId: string) => {
@@ -566,7 +624,7 @@ function ExamWarRoomContent() {
             {/* Main layout */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Palette sidebar */}
-                <aside className={cn("w-52 shrink-0 flex flex-col border-r overflow-y-auto", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
+                <aside className={cn("w-52 shrink-0 flex flex-col border-r overflow-y-auto select-none", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
                     <div className={cn("px-4 py-3 font-bold text-sm border-b", highContrast ? "border-gray-700 text-white" : "border-[var(--student-border)] text-[var(--student-text)]")}>Question Palette</div>
                     <div className="px-3 py-3 grid grid-cols-4 gap-1.5">
                         {questions.map((qItem, i) => (
@@ -601,7 +659,7 @@ function ExamWarRoomContent() {
                     {/* Question text + options */}
                     <div className="px-8 py-8 flex-1">
                         <div className={cn("mb-2 text-[10px] font-black uppercase tracking-widest", highContrast ? "text-gray-500" : "text-[var(--student-muted)]")}>QUESTION</div>
-                        <p className={cn("font-semibold leading-relaxed mb-8", fontClass, highContrast ? "text-white" : "text-[var(--student-text)]")}>{q.text}</p>
+                        <p className={cn("font-semibold leading-relaxed mb-8 select-none", fontClass, highContrast ? "text-white" : "text-[var(--student-text)]")}>{q.text}</p>
 
                         <div className="space-y-3 mb-8">
                             {q.options.map((opt, oi) => {
@@ -616,13 +674,15 @@ function ExamWarRoomContent() {
                                                     selected ? highContrast ? "border-white bg-slate-800 text-white" : "border-[var(--student-accent-strong)] bg-[var(--student-accent-soft)] text-[var(--student-text)] shadow-md shadow-[rgba(31,92,80,0.10)] hover:-translate-y-0.5" :
                                                         highContrast ? "border-slate-700 bg-slate-800 hover:border-slate-500 hover:-translate-y-0.5" :
                                                             "border-[var(--student-border)] bg-[var(--student-panel-solid)] hover:border-[var(--student-accent-soft-strong)] hover:bg-[var(--student-panel-muted)] hover:-translate-y-0.5")}>
-                                        <span className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
-                                            showCorrect && isCorrectOpt ? "bg-[#2f7d55] text-white shadow-[rgba(47,125,85,0.2)]" :
-                                                showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white shadow-rose-500/20" :
-                                                    selected ? highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white shadow-[rgba(31,92,80,0.2)]" : highContrast ? "bg-slate-700 text-slate-300" : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]")}>
-                                            {["A", "B", "C", "D", "E"][oi]}
+                                        <span className={cn("flex items-center gap-4 select-none")}>
+                                            <span className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
+                                                showCorrect && isCorrectOpt ? "bg-[#2f7d55] text-white shadow-[rgba(47,125,85,0.2)]" :
+                                                    showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white shadow-rose-500/20" :
+                                                        selected ? highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white shadow-[rgba(31,92,80,0.2)]" : highContrast ? "bg-slate-700 text-slate-300" : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]")}>
+                                                {["A", "B", "C", "D", "E"][oi]}
+                                            </span>
+                                            <span className={highContrast ? "text-gray-200" : "text-[var(--student-text)]"}>{opt.text}</span>
                                         </span>
-                                        <span className={highContrast ? "text-gray-200" : "text-[var(--student-text)]"}>{opt.text}</span>
                                         {showCorrect && isCorrectOpt && <span className="ml-auto text-[#2f7d55] font-black shrink-0">Correct</span>}
                                         {showCorrect && selected && !isCorrectOpt && <span className="ml-auto text-rose-500 font-black shrink-0">Wrong</span>}
                                     </button>
@@ -636,7 +696,7 @@ function ExamWarRoomContent() {
                                 <span className={cn("shrink-0", highContrast ? "text-gray-300" : "text-[var(--student-accent-strong)]")}>i</span>
                                 <div>
                                     <div className={cn("text-[10px] font-black uppercase tracking-widest mb-1", highContrast ? "text-gray-400" : "text-[var(--student-accent-strong)]")}>Explanation</div>
-                                    <p className={cn("text-sm leading-relaxed", highContrast ? "text-gray-200" : "text-[var(--student-text)]")}>{q.explanation}</p>
+                                    <p className={cn("text-sm leading-relaxed select-none", highContrast ? "text-gray-200" : "text-[var(--student-text)]")}>{q.explanation}</p>
                                 </div>
                             </div>
                         )}
