@@ -102,6 +102,11 @@ export async function verifyWidgetOtpAndLogin(accessToken: string): Promise<Acti
     
     try {
         // 1. Server-side Token Verification
+        if (!process.env.MSG91_AUTH_KEY) {
+            console.error("FATAL: MSG91_AUTH_KEY is MISSING in backend environment! Verification will fail.");
+            return { success: false, message: "Server configuration error: Contact Administrator (Missing Auth Key)." };
+        }
+
         const verification = await verifyMsg91WidgetToken(accessToken);
         if (!verification.success || !verification.phone) {
             console.error("AuthAction: MSG91 Verification Failed:", verification.message);
