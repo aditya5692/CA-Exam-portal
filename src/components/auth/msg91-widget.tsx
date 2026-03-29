@@ -35,10 +35,11 @@ declare global {
             tokenAuth: string;
             identifier: string;
             exposeMethods: boolean;
-            container: string;
-            mode: "inline";
-            success: Msg91SuccessCallback;
-            failure: Msg91FailureCallback;
+            captchaRenderId: string;
+            container?: string;
+            mode?: "inline";
+            success?: Msg91SuccessCallback;
+            failure?: Msg91FailureCallback;
         }) => void;
         sendOtp?: (identifier: string, success?: Msg91SuccessCallback, failure?: Msg91FailureCallback) => void;
         verifyOtp?: (otp: string, success: Msg91SuccessCallback, failure: Msg91FailureCallback) => void;
@@ -188,22 +189,9 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
             tokenAuth: runtimeConfig.msg91TokenAuth,
             identifier: phoneNumber || "",
             exposeMethods: true,
+            captchaRenderId: "msg91-captcha-container",
             container: "msg91-otp-container",
             mode: "inline" as const,
-            success: (data: Msg91CallbackPayload) => {
-                const token = extractAccessToken(data);
-                console.log("MSG91 SDK: Verification Success", { hasToken: !!token });
-                
-                if (!wasSuccessCalled.current && token) {
-                    wasSuccessCalled.current = true;
-                    onSuccess(token);
-                }
-            },
-            failure: (error: Msg91ErrorPayload) => {
-                console.error("MSG91 SDK: Initialization/Verification Failure", error);
-                const msg = typeof error === 'string' ? error : (error?.message || "Verification failed");
-                onFailure(msg);
-            },
         };
 
         try {
@@ -298,8 +286,9 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
 
     return (
         <div className="w-full flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm space-y-6 relative overflow-hidden">
-            {/* SDK Anchor */}
+            {/* SDK Anchors */}
             <div id="msg91-otp-container" style={{ display: 'none' }}></div>
+            <div id="msg91-captcha-container" style={{ display: 'none' }}></div>
             
             <div className="text-center space-y-1">
                 <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Security Check</h4>

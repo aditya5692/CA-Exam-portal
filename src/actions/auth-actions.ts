@@ -133,6 +133,7 @@ async function finalizeVerifiedPhoneLogin(
     const user = await findUserByVerifiedPhone(normalizedPhone);
 
     if (!user) {
+        console.log(`AuthAction: [Signup Required] No account found for ${normalizedPhone}`);
         return {
             success: true,
             data: {
@@ -143,6 +144,8 @@ async function finalizeVerifiedPhoneLogin(
             message: "Phone verified. Please complete your registration.",
         };
     }
+
+    console.log(`AuthAction: [Login Success] Found user ${user.registrationNumber} for ${normalizedPhone}`);
 
     if (user.isBlocked) {
         return {
@@ -237,7 +240,7 @@ export async function verifyWidgetOtpAndLogin(
         const phone = verification.phone;
         const normalizedPhone = normalizePhone(phone);
         
-        if (!IS_PROD) console.log(`AuthAction: Verified phone ${normalizedPhone}`);
+        console.log(`AuthAction: [VerifyWidget] Initializing login for verified phone: ${normalizedPhone}`);
 
         return finalizeVerifiedPhoneLogin(normalizedPhone, normalizeRequestedRole(requestedRole));
     } catch (error) {
@@ -319,6 +322,7 @@ export async function verifyOtpAndRegister(formData: {
         const existingUser = await findUserByVerifiedPhone(normalizedPhone);
 
         if (existingUser) {
+            console.log(`AuthAction: [Register Bypass] User ${normalizedPhone} already exists. Signing in instead.`);
             if (existingUser.role !== formData.role) {
                 return buildRoleMismatchResponse(existingUser.role as AppRole, formData.role);
             }
@@ -347,6 +351,8 @@ export async function verifyOtpAndRegister(formData: {
                 },
             };
         }
+
+        console.log(`AuthAction: [Create User] Registering new ${formData.role} account for ${normalizedPhone}`);
 
         const prefix = formData.role === "TEACHER" ? "TCH" : "STU";
         

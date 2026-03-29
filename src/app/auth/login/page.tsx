@@ -8,7 +8,8 @@ import {
     GraduationCap,
     IdentificationBadge,
     Phone,
-    Spinner
+    Spinner,
+    CheckCircle
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
@@ -289,13 +290,14 @@ export default function LoginPage() {
                                 />
                             </div>
                         ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center space-y-4 py-12 animate-in fade-in zoom-in duration-500">
-                                <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-xl shadow-slate-200">
-                                    <Spinner className="animate-spin" size={32} weight="bold" />
+                            <div className="flex flex-col items-center justify-center space-y-4 py-12 animate-in fade-in duration-500">
+                                <div className="relative">
+                                    <div className="h-16 w-16 rounded-full border-4 border-slate-100 border-t-indigo-600 animate-spin" />
+                                    <CheckCircle className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-600" size={24} weight="fill" />
                                 </div>
                                 <div className="text-center">
-                                    <h3 className="text-lg font-bold text-slate-900">Finalizing Session</h3>
-                                    <p className="text-xs font-medium text-slate-400 italic">Connecting to your secure workspace...</p>
+                                    <h3 className="text-lg font-bold text-slate-900">Verified Successfully</h3>
+                                    <p className="text-xs font-medium text-slate-500 mt-1">Establishing your secure session...</p>
                                 </div>
                             </div>
                         )}

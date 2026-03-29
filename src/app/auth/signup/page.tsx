@@ -78,6 +78,7 @@ function SignupFormContent() {
     }
 
     function handleWidgetSuccess(accessToken: string) {
+        console.log("SignupPage: Widget verified successfully. Received token.");
         setMsg91Token(accessToken);
         window.sessionStorage.setItem("pending-msg91-token", accessToken);
         setErrorMessage("");
@@ -90,10 +91,12 @@ function SignupFormContent() {
 
     async function handleRegister(event: React.FormEvent) {
         event.preventDefault();
+        console.log("SignupPage: Starting registration for phone:", phone);
         setIsSubmitting(true);
         setErrorMessage("");
 
         if (!msg91Token) {
+            console.warn("SignupPage: Registration attempted without verified token.");
             setIsSubmitting(false);
             setErrorMessage("Please verify your phone number before creating the account.");
             setStep("verify");
@@ -114,6 +117,7 @@ function SignupFormContent() {
             examTargetYear: role === "STUDENT" ? parseInt(attemptYear) : undefined
         });
 
+        console.log("SignupPage: Registration server response received:", result.success ? "SUCCESS" : "FAILED", result.message);
         setIsSubmitting(false);
 
         if (!result.success) {
@@ -127,6 +131,7 @@ function SignupFormContent() {
         }
 
         clearPendingVerification();
+        console.log("SignupPage: Redirecting to:", result.data?.redirectTo || "/student/dashboard");
         window.location.assign(result.data?.redirectTo || "/student/dashboard");
     }
 
