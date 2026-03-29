@@ -20,7 +20,11 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build
+# 🚀 [Optimization] Limit memory for next build on 2GB RAM VPS
+# Disable linting and TS check during the build stage to save RAM
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=1536"
+RUN npx next build --no-lint
 
 FROM node:22.12.0-slim AS runner
 
