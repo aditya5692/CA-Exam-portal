@@ -26,8 +26,9 @@ COPY . .
 # 🚀 [Optimization] Limit memory for next build on 2GB RAM VPS
 # Disable linting and TS check during the build stage to save RAM
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS="--max-old-space-size=1024"
-RUN npx next build --no-lint
+ENV NODE_OPTIONS="--max-old-space-size=1280"
+# 🛠 [Build Optimization] Fresh build command
+RUN npx next build
 
 FROM base AS runner
 
@@ -44,6 +45,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+# 🛠 [Manual Dependency Injection] 
+# Because these are marked as 'external', Next.js standalone mode DOES NOT bundle them.
+# We must manually copy them from the builder to ensure database connectivity works.
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
