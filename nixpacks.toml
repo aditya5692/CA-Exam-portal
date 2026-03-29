@@ -1,5 +1,17 @@
 [variables]
-NIXPACKS_NODE_VERSION = "22"
+NIXPACKS_NODE_VERSION = "22.13.0"
 
 [phases.setup]
-nixPkgs = ["...", "nodejs_22"]
+nixPkgs = ["nodejs_22", "openssl"]
+
+[phases.install]
+cmds = [
+  "npm ci --no-audit --no-fund",
+  "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/ca_portal npm run prisma:generate"
+]
+
+[phases.build]
+cmds = ["npx next build"]
+
+[start]
+cmd = "npm run start"

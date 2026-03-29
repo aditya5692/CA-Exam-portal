@@ -35,8 +35,11 @@ export async function GET() {
     const requiredEnv = {
         jwt: Boolean(process.env.JWT_SECRET),
         msg91AuthKey: Boolean(process.env.MSG91_AUTH_KEY),
+        msg91OtpTemplateId: Boolean(process.env.MSG91_OTP_TEMPLATE_ID),
         msg91WidgetId: Boolean(process.env.NEXT_PUBLIC_MSG91_WIDGET_ID),
+        msg91TokenAuth: Boolean(process.env.NEXT_PUBLIC_MSG91_TOKEN_AUTH),
         razorpayKeyId: Boolean(process.env.RAZORPAY_KEY_ID),
+        razorpayPublicKeyId: Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
         razorpayKeySecret: Boolean(process.env.RAZORPAY_KEY_SECRET),
         razorpayWebhookSecret: Boolean(process.env.RAZORPAY_WEBHOOK_SECRET),
     };

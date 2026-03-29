@@ -1,43 +1,48 @@
-# 🐘 Database Connectivity Troubleshooting Guide
+# Database Connectivity Troubleshooting Guide
 
-If you are seeing "Connection Terminated" or "Connection Timeout" errors in your terminal, it is usually because your current network cannot reach the remote PostgreSQL server at `72.60.200.196` on port `5432`.
+If you are seeing "Connection Terminated" or "Connection Timeout" errors in your terminal, it is usually because your current network cannot reach the PostgreSQL host from your configured database URL.
 
 ## 1. Quick Reachability Test
 Run the following command in your terminal to check if the database port is open and reachable from your computer:
 
 ```powershell
 # PowerShell (Windows)
-Test-NetConnection -ComputerName 72.60.200.196 -Port 5432
+Test-NetConnection -ComputerName <your-db-host> -Port 5432
 ```
 
 - **TcpTestSucceeded: True**: Your network is fine. The issue might be authentication or server-side.
-- **TcpTestSucceeded: False**: Your network (ISP, Router, or Firewall) is blocking Port 5432.
+- **TcpTestSucceeded: False**: Your network, firewall, or ISP is blocking port `5432`.
 
 ## 2. Common Blockers
-- **Public Wi-Fi**: Many public hotspots (cafes, airports) block non-web ports like 5432.
-- **Company Firewalls**: Strict office networks often block outbound database connections.
-- **VPNs**: If the server is on a private cloud, you may need a specific VPN to be active.
-- **ISP Restrictions**: Some residential ISPs block standard database ports for security.
+- **Public Wi-Fi**: Many public hotspots block non-web ports such as `5432`.
+- **Company Firewalls**: Office networks often block outbound database connections.
+- **VPN Requirements**: Some servers are reachable only from a private network or VPN.
+- **ISP Restrictions**: Some residential ISPs block database ports by default.
 
 ## 3. Recommended Fixes
 
-### Scenario A: Remote Database Access is Required
-If you MUST use the production data:
-1. Try switching to a different network (e.g., mobile hotspot).
+### Scenario A: Remote Database Access Is Required
+If you must use the production data:
+
+1. Switch to a different network, such as a mobile hotspot.
 2. Ensure any required VPN is connected.
-3. Verify that your current Public IP is whitelisted on the server firewall.
+3. Verify that your current public IP is whitelisted on the server firewall.
 
-### Scenario B: General Development (Recommended)
-If you just need to work on the UI or business logic, use the local SQLite fallback:
+### Scenario B: General Development
+If you only need to work on UI or business logic, use the local SQLite fallback:
+
 1. Open your `.env` file.
-2. Uncomment the `LOCAL_DATABASE_URL` line:
-   ```env
-   LOCAL_DATABASE_URL=file:./dev.db
-   ```
-3. Restart your development server (`npm run dev`).
+2. Set a local file-based database URL:
 
-> [!TIP]
-> Using the local SQLite fallback is the most stable way to develop the frontend, as it guarantees zero latency and 100% uptime regardless of your network conditions.
+```env
+DATABASE_URL=file:./dev.db
+```
 
-## 4. Verifying Connections in Code
-The `src/lib/prisma/runtime.ts` file has been enhanced with proactive health checks. When starting `npm run dev`, check your terminal for the `❌ [PostgreSQL Pool Error]` header for automated diagnosis.
+3. Restart your development server with `npm run dev`.
+
+## 4. Verifying Connections In Code
+The runtime database selection logic lives in `src/lib/prisma/runtime.ts`. You can also verify the active connection with:
+
+```bash
+npm run db:check
+```

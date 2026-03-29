@@ -1,4 +1,5 @@
 ARG NODE_VERSION=22.13.0
+ARG PRISMA_GENERATE_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/ca_portal
 
 FROM node:${NODE_VERSION}-slim AS base
 
@@ -15,6 +16,7 @@ COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 COPY scripts ./scripts
 
+ENV DATABASE_URL=${PRISMA_GENERATE_DATABASE_URL}
 RUN npm ci --no-audit --no-fund
 RUN npm run prisma:generate
 
@@ -23,11 +25,9 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# 🚀 [Optimization] Limit memory for next build on 2GB RAM VPS
-# Disable linting and TS check during the build stage to save RAM
+# Build optimization for lower-memory VPS targets.
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=1280"
-# 🛠 [Build Optimization] Fresh build command
 RUN npx next build
 
 FROM base AS runner
@@ -39,22 +39,22 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Install curl for Dokploy/Swarm Health Checks
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# 🛠 [Manual Dependency Injection] 
-# Because these are marked as 'external', Next.js standalone mode DOES NOT bundle them.
-# We must manually copy them from the builder to ensure database connectivity works.
+# Manual runtime dependency injection for standalone mode.
 COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /app/node_modules/@prisma/adapter-pg ./node_modules/@prisma/adapter-pg
+COPY --from=builder /app/node_modules/@prisma/adapter-better-sqlite3 ./node_modules/@prisma/adapter-better-sqlite3
 COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/prisma ./prisma
+COPY --from=deps /app/prisma ./prisma
 
 EXPOSE 3000
 
-# Next.js standalone server entry point
 CMD ["node", "server.js"]

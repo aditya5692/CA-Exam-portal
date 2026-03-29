@@ -1,0 +1,166 @@
+name: Build And Deploy To Dokploy
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional image tag override"
+        required: false
+        default: "latest"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dokploy-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: docker.io
+  DEFAULT_IMAGE_NAME: ca-exam-portal
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.image.outputs.name }}
+      image_tags: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate registry secrets
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          test -n "$DOCKERHUB_USERNAME" || { echo "DOCKERHUB_USERNAME is required."; exit 1; }
+          test -n "$DOCKERHUB_TOKEN" || { echo "DOCKERHUB_TOKEN is required."; exit 1; }
+
+      - name: Resolve Docker image name
+        id: image
+        env:
+          DOCKERHUB_IMAGE_NAME: ${{ vars.DOCKERHUB_IMAGE_NAME }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DEFAULT_IMAGE_NAME: ${{ env.DEFAULT_IMAGE_NAME }}
+        run: |
+          if [ -n "$DOCKERHUB_IMAGE_NAME" ]; then
+            image_name="$DOCKERHUB_IMAGE_NAME"
+          else
+            image_name="$DOCKERHUB_USERNAME/$DEFAULT_IMAGE_NAME"
+          fi
+
+          echo "Using image: $image_name"
+          echo "name=$image_name" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+            type=ref,event=branch
+            type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_VERSION=22.13.0
+            PRISMA_GENERATE_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/ca_portal
+
+  deploy:
+    name: Trigger Dokploy Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    env:
+      DOKPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+
+    steps:
+      - name: Trigger Dokploy webhook
+        if: ${{ env.DOKPLOY_WEBHOOK_URL != '' }}
+        run: |
+          curl -fsS -X POST "$DOKPLOY_WEBHOOK_URL"
+
+      - name: Warn if webhook secret is missing
+        if: ${{ env.DOKPLOY_WEBHOOK_URL == '' }}
+        run: |
+          echo "DOKPLOY_WEBHOOK_URL is not set. Skipping webhook trigger."
+          echo "Dokploy can still deploy automatically if it is watching the image registry."
+
+      - name: Print deployment summary
+        run: |
+          echo "Docker image pushed for: ${{ needs.build.outputs.image_name }}"
+          echo "Tags:"
+          echo "${{ needs.build.outputs.image_tags }}"
+
+  health-check:
+    name: Verify Deployment
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - deploy
+    if: always() && needs.build.result == 'success'
+    env:
+      APP_HEALTHCHECK_URL: ${{ secrets.APP_HEALTHCHECK_URL }}
+
+    steps:
+      - name: Skip when no health check URL is configured
+        if: ${{ env.APP_HEALTHCHECK_URL == '' }}
+        run: |
+          echo "APP_HEALTHCHECK_URL is not set. Skipping post-deploy verification."
+          echo "Suggested value: https://your-domain.com/api/health/ready"
+
+      - name: Wait for rollout to start
+        if: ${{ env.APP_HEALTHCHECK_URL != '' }}
+        run: sleep 30
+
+      - name: Probe health endpoint
+        if: ${{ env.APP_HEALTHCHECK_URL != '' }}
+        run: |
+          for attempt in {1..10}; do
+            status="$(curl -sS -o /tmp/health-response.txt -w "%{http_code}" "$APP_HEALTHCHECK_URL" || echo "000")"
+            echo "Attempt $attempt/10 returned status: $status"
+
+            if [ "$status" = "200" ]; then
+              echo "Health check passed."
+              cat /tmp/health-response.txt || true
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 10 ]; then
+              sleep 15
+            fi
+          done
+
+          echo "Health check failed for $APP_HEALTHCHECK_URL"
+          exit 1

@@ -1,23 +1,25 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   output: "standalone",
-  serverExternalPackages: ["@prisma/client", "prisma", "better-sqlite3"],
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-pg",
+    "@prisma/adapter-better-sqlite3",
+    "better-sqlite3",
+    "pg",
+    "prisma",
+  ],
   turbopack: {
     root: path.resolve(__dirname),
     resolveAlias: {
       ".prisma/client/default": "./node_modules/.prisma/client/default.js",
     },
   },
-  // 🚀 [Optimization] Support for low-resource VPS (2GB RAM)
-  // These steps use heavy memory; assume quality checks were done locally.
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
-} as any;
+};
 
 export default nextConfig;

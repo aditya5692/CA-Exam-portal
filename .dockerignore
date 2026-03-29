@@ -19,8 +19,12 @@ lint-errors.txt
 lint-results.json
 tmp_*.mjs
 dev.db
+*.db
+prisma/*.db
 .env
 .env.local
 .next-dev.log
 .next-dev.err.log
 .next-dev-live.log
+diagnostics
+tmp

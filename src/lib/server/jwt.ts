@@ -1,7 +1,17 @@
 import { jwtVerify, SignJWT } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET || "modern-ca-portal-fallback-secret-123456";
-const encodedSecret = new TextEncoder().encode(JWT_SECRET);
+function getEncodedSecret() {
+    const configuredSecret = process.env.JWT_SECRET?.trim();
+    if (configuredSecret) {
+        return new TextEncoder().encode(configuredSecret);
+    }
+
+    if (process.env.NODE_ENV === "production") {
+        throw new Error("JWT_SECRET is not set.");
+    }
+
+    return new TextEncoder().encode("modern-ca-portal-dev-only-secret");
+}
 
 export type JWTPayload = {
     userId: string;
@@ -15,13 +25,13 @@ export async function signAccessToken(payload: JWTPayload) {
     return new SignJWT(payload)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("15m") // Short-lived access token
-        .sign(encodedSecret);
+        .setExpirationTime("15m")
+        .sign(getEncodedSecret());
 }
 
 export async function verifyAccessToken(token: string) {
     try {
-        const { payload } = await jwtVerify(token, encodedSecret);
+        const { payload } = await jwtVerify(token, getEncodedSecret());
         return payload;
     } catch {
         return null;
