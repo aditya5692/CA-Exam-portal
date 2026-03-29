@@ -11,7 +11,6 @@ import {
     Spinner
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +39,6 @@ const ROLE_META: Record<LoginRole, { title: string; description: string; icon: t
 type AuthState = "IDLE" | "VERIFYING" | "FINALIZING" | "SUCCESS";
 
 export default function LoginPage() {
-    const router = useRouter();
     const [role, setRole] = useState<LoginRole>("student");
     const [phone, setPhone] = useState("");
     const [authState, setAuthState] = useState<AuthState>("IDLE");
@@ -99,7 +97,7 @@ export default function LoginPage() {
             if ('needsRegistration' in result.data! && result.data.needsRegistration) {
                 window.sessionStorage.setItem("pending-msg91-token", accessToken);
                 console.log("LoginPage: New user detected. Redirecting to signup.");
-                router.push(`/auth/signup?phone=${phone}&role=${role}&verified=true`);
+                window.location.assign(`/auth/signup?phone=${encodeURIComponent(phone)}&role=${encodeURIComponent(role)}&verified=true`);
                 return;
             }
 
@@ -110,8 +108,7 @@ export default function LoginPage() {
                     : "/student/dashboard";
 
             console.log(`LoginPage: Login successful. Redirecting to ${redirectTo}`);
-            router.push(redirectTo);
-            router.refresh();
+            window.location.assign(redirectTo);
         } catch (err) {
             console.error("LoginPage: Finalization Error", err);
             setErrorMessage("An unexpected error occurred during finalization.");
@@ -338,7 +335,7 @@ export default function LoginPage() {
                                                 setAuthState("FINALIZING");
                                                 const res = await loginAsDemoUser(account.registrationNumber);
                                                 if (res.success && res.data && 'redirectTo' in res.data) {
-                                                    router.push(res.data.redirectTo);
+                                                    window.location.assign(res.data.redirectTo);
                                                 } else {
                                                     setErrorMessage(res.message || "Login failed.");
                                                     setAuthState("IDLE");

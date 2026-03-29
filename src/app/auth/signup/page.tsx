@@ -14,7 +14,7 @@ import {
     Spinner
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +25,6 @@ const SIGNUP_POINTS = [
 ];
 
 function SignupFormContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const searchPhone = searchParams.get("phone") ?? "";
     const searchRole = searchParams.get("role")?.toUpperCase();
@@ -128,8 +127,7 @@ function SignupFormContent() {
         }
 
         clearPendingVerification();
-        router.push(result.data?.redirectTo || "/student/dashboard");
-        router.refresh();
+        window.location.assign(result.data?.redirectTo || "/student/dashboard");
     }
 
     return (

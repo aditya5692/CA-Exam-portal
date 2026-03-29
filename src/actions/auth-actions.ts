@@ -73,6 +73,56 @@ function buildRoleMismatchResponse(
     };
 }
 
+function getPhoneLookupCandidates(phone: string) {
+    const normalizedPhone = normalizePhone(phone);
+    const candidates = new Set<string>([normalizedPhone]);
+
+    const digitsOnly = phone.replace(/\D/g, "");
+    if (digitsOnly.length === 10) {
+        candidates.add(digitsOnly);
+    } else if (normalizedPhone.length === 12 && normalizedPhone.startsWith("91")) {
+        candidates.add(normalizedPhone.slice(-10));
+    }
+
+    return Array.from(candidates);
+}
+
+async function findUserByVerifiedPhone(phone: string) {
+    const candidates = getPhoneLookupCandidates(phone);
+
+    return prisma.user.findFirst({
+        where: {
+            OR: candidates.map((candidate) => ({ phone: candidate })),
+        },
+    });
+}
+
+async function normalizeStoredUserPhone(userId: string, currentPhone: string | null, verifiedPhone: string) {
+    if (!currentPhone || currentPhone === verifiedPhone) {
+        return null;
+    }
+
+    try {
+        return await prisma.user.update({
+            where: { id: userId },
+            data: { phone: verifiedPhone },
+        });
+    } catch (error) {
+        console.warn("AuthAction: Unable to normalize stored user phone.", error);
+        return null;
+    }
+}
+
+function getSessionErrorMessage(error: unknown) {
+    if (error instanceof Error) {
+        if (error.message.includes("JWT_SECRET is not set")) {
+            return "Login could not be completed because the server auth secret is missing. Set JWT_SECRET in your environment and retry.";
+        }
+    }
+
+    return "An unexpected error occurred during verification. Please try again or contact support.";
+}
+
 async function finalizeVerifiedPhoneLogin(
     phone: string,
     requestedRole?: RequestedOtpRole,
@@ -80,9 +130,7 @@ async function finalizeVerifiedPhoneLogin(
     await ensureDemoAccounts();
 
     const normalizedPhone = normalizePhone(phone);
-    const user = await prisma.user.findUnique({
-        where: { phone: normalizedPhone },
-    });
+    const user = await findUserByVerifiedPhone(normalizedPhone);
 
     if (!user) {
         return {
@@ -112,18 +160,21 @@ async function finalizeVerifiedPhoneLogin(
         data: { loginCount: { increment: 1 } },
     });
 
-    await setAuthSession(updatedUser);
+    const normalizedUser = await normalizeStoredUserPhone(user.id, updatedUser.phone, normalizedPhone);
+    const sessionUser = normalizedUser ?? updatedUser;
+
+    await setAuthSession(sessionUser);
 
     return {
         success: true,
         message: "Logged in successfully.",
         data: {
-            redirectTo: getRoleRedirectPath(updatedUser.role as AppRole),
+            redirectTo: getRoleRedirectPath(sessionUser.role as AppRole),
             user: {
-                fullName: updatedUser.fullName,
-                role: updatedUser.role,
-                registrationNumber: updatedUser.registrationNumber,
-                phone: updatedUser.phone,
+                fullName: sessionUser.fullName,
+                role: sessionUser.role,
+                registrationNumber: sessionUser.registrationNumber,
+                phone: sessionUser.phone,
             },
         },
     };
@@ -193,7 +244,7 @@ export async function verifyWidgetOtpAndLogin(
         console.error("AuthAction: Critical Failure in verifyWidgetOtpAndLogin:", error);
         return { 
             success: false, 
-            message: "An unexpected error occurred during verification. Please try again or contact support." 
+            message: getSessionErrorMessage(error),
         };
     }
 }
@@ -265,9 +316,7 @@ export async function verifyOtpAndRegister(formData: {
             if (!verification.success) return { success: false, message: verification.message };
         }
 
-        const existingUser = await prisma.user.findUnique({
-            where: { phone: normalizedPhone },
-        });
+        const existingUser = await findUserByVerifiedPhone(normalizedPhone);
 
         if (existingUser) {
             if (existingUser.role !== formData.role) {
@@ -279,18 +328,21 @@ export async function verifyOtpAndRegister(formData: {
                 data: { loginCount: { increment: 1 } },
             });
 
-            await setAuthSession(updatedUser);
+            const normalizedUser = await normalizeStoredUserPhone(existingUser.id, updatedUser.phone, normalizedPhone);
+            const sessionUser = normalizedUser ?? updatedUser;
+
+            await setAuthSession(sessionUser);
 
             return {
                 success: true,
                 message: "Account already exists. Signed you in.",
                 data: {
-                    redirectTo: getRoleRedirectPath(updatedUser.role as AppRole),
+                    redirectTo: getRoleRedirectPath(sessionUser.role as AppRole),
                     user: {
-                        fullName: updatedUser.fullName,
-                        role: updatedUser.role,
-                        registrationNumber: updatedUser.registrationNumber,
-                        phone: updatedUser.phone,
+                        fullName: sessionUser.fullName,
+                        role: sessionUser.role,
+                        registrationNumber: sessionUser.registrationNumber,
+                        phone: sessionUser.phone,
                     },
                 },
             };
