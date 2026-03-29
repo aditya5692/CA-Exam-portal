@@ -4,9 +4,10 @@ import { PrismaClient } from "@prisma/client";
 import { Pool, type PoolConfig } from "pg";
 
 const DEFAULT_POOL_MAX = 10;
-const DEFAULT_DEVELOPMENT_CONNECT_TIMEOUT_MS = 10_000;
-const DEFAULT_PRODUCTION_CONNECT_TIMEOUT_MS = 30_000;
-const DEFAULT_IDLE_TIMEOUT_MS = 30_000;
+const DEFAULT_DEVELOPMENT_CONNECT_TIMEOUT_MS = 60_000; // Increased for remote DB latency
+const DEFAULT_PRODUCTION_CONNECT_TIMEOUT_MS = 60_000;
+const DEFAULT_IDLE_TIMEOUT_MS = 60_000;
+const DEFAULT_STATEMENT_TIMEOUT_MS = 30_000;
 const SUPPORTED_DATABASE_PROTOCOLS = new Set(["postgresql:", "postgres:", "file:"]);
 
 export type DatabaseRuntimeConfig = {
@@ -14,7 +15,7 @@ export type DatabaseRuntimeConfig = {
     sourceEnvKey: string;
     redactedDatabaseUrl: string;
     protocol: string;
-    poolConfig: PoolConfig;
+    poolConfig: PoolConfig & { statement_timeout?: number };
 };
 
 type EnvLike = Record<string, string | undefined>;
@@ -110,7 +111,7 @@ function parseDatabaseIntegerEnv(
     rawValue: string | undefined,
     fallback: number,
     name: string,
-    minimum = 1,
+    minimum = 0,
 ) {
     if (rawValue === undefined || rawValue.trim() === "") {
         return fallback;
@@ -192,7 +193,14 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
                 DEFAULT_IDLE_TIMEOUT_MS,
                 "DATABASE_IDLE_TIMEOUT_MS",
             ),
+            statement_timeout: parseDatabaseIntegerEnv(
+                env.DATABASE_STATEMENT_TIMEOUT_MS,
+                DEFAULT_STATEMENT_TIMEOUT_MS,
+                "DATABASE_STATEMENT_TIMEOUT_MS",
+            ),
             allowExitOnIdle: true,
+            // @ts-ignore - pg Pool config supports keepAlive in certain versions/types
+            keepAlive: true,
         },
     };
 }
@@ -202,10 +210,26 @@ export function createPostgresPool(config: DatabaseRuntimeConfig) {
     const pool = new Pool(config.poolConfig);
 
     pool.on("error", (error) => {
-        console.error("PostgreSQL pool error:", {
-            message: error.message,
-            databaseUrl: config.redactedDatabaseUrl,
-        });
+        const isTimeout = error.message.includes("timeout") || error.message.includes("terminated");
+        const ipMatch = config.databaseUrl.match(/@([^:/]+)/);
+        const targetIp = ipMatch ? ipMatch[1] : "the database";
+
+        console.error("\n" + "=".repeat(60));
+        console.error(`❌ [PostgreSQL Pool Error] ${isTimeout ? "CONNECTIVITY FAILURE" : "DATABASE ERROR"}`);
+        console.error(`- Message: ${error.message}`);
+        console.error(`- Target: ${targetIp} (Port: 5432)`);
+        
+        if (isTimeout) {
+            console.error("\nDIAGNOSIS:");
+            console.error("1. Port 5432 may be blocked by your local network, firewall, or ISP.");
+            console.error("2. You may need a VPN if the server is in a private network.");
+            console.error(`3. Confirm your public IP is whitelisted on the server at ${targetIp}.`);
+            console.error("4. Check if the database service is currently active at this address.");
+            console.error("\nLOCAL FALLBACK:");
+            console.error("If this is a local development issue, uncomment LOCAL_DATABASE_URL in .env");
+            console.error("to use the stable SQLite fallback.");
+        }
+        console.error("=".repeat(60) + "\n");
     });
 
     return pool;
@@ -227,6 +251,14 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
         const pool = createPostgresPool(config);
         const adapter = new PrismaPg(pool);
         const prisma = new PrismaClient({ adapter });
+
+        // Add a soft check for connection if in dev
+        if (env.NODE_ENV !== "production") {
+            // We don't block render, but we trigger a background check
+            pool.query("SELECT 1").catch(() => {
+                // Background check failed - errors handled by pool.on('error')
+            });
+        }
 
         return {
             prisma,
