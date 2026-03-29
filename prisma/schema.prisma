@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 generator client {
@@ -549,3 +549,7 @@ model StudentAccessCode {
   @@index([teacherId])
   @@index([email])
 }
+
+
+
+

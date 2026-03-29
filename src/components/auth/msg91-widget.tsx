@@ -1,5 +1,6 @@
 "use client";
 
+import { getDemoOtpEntryByPhone } from "@/lib/auth/demo-otp";
 import { useEffect, useCallback, useRef, useState } from "react";
 
 interface Msg91WidgetProps {
@@ -8,30 +9,95 @@ interface Msg91WidgetProps {
     phoneNumber?: string;
 }
 
+type Msg91CallbackPayload =
+    | string
+    | {
+        message?: unknown;
+        token?: unknown;
+        accessToken?: unknown;
+        access_token?: unknown;
+        jwt?: unknown;
+      };
+
+type Msg91ErrorPayload =
+    | string
+    | {
+        message?: string;
+      };
+
+type Msg91SuccessCallback = (data: Msg91CallbackPayload) => void;
+type Msg91FailureCallback = (error: Msg91ErrorPayload) => void;
+
 declare global {
     interface Window {
-        initSendOTP?: (config: any) => void;
-        verifyOtp?: (otp: string, success: (data: any) => void, failure: (error: any) => void) => void;
-        retryOtp?: (channel: string, success: (data: any) => void, failure: (error: any) => void) => void;
+        initSendOTP?: (config: {
+            widgetId: string;
+            tokenAuth: string;
+            identifier: string;
+            exposeMethods: boolean;
+            container: string;
+            mode: "inline";
+            success: Msg91SuccessCallback;
+            failure: Msg91FailureCallback;
+        }) => void;
+        sendOtp?: (identifier: string, success?: Msg91SuccessCallback, failure?: Msg91FailureCallback) => void;
+        verifyOtp?: (otp: string, success: Msg91SuccessCallback, failure: Msg91FailureCallback) => void;
+        retryOtp?: (channel: string | null, success: Msg91SuccessCallback, failure: Msg91FailureCallback) => void;
     }
+}
+
+function extractAccessToken(data: unknown) {
+    if (typeof data === "string") {
+        return data;
+    }
+
+    if (!data || typeof data !== "object") {
+        return "";
+    }
+
+    const payload = data as Record<string, unknown>;
+    const candidate =
+        payload.message ??
+        payload.token ??
+        payload.accessToken ??
+        payload.access_token ??
+        payload.jwt;
+
+    return typeof candidate === "string" ? candidate : "";
+}
+
+function extractErrorMessage(error: Msg91ErrorPayload, fallback: string) {
+    if (typeof error === "string") {
+        return error;
+    }
+
+    return error.message || fallback;
 }
 
 export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91WidgetProps) {
     const isInitialized = useRef(false);
     const wasSuccessCalled = useRef(false);
+    const otpRequestedForPhone = useRef<string | null>(null);
     const [otpValue, setOtpValue] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
     const [internalError, setInternalError] = useState<string | null>(null);
     const [runtimeConfig, setRuntimeConfig] = useState({
         msg91WidgetId: "",
         msg91TokenAuth: "",
     });
     const [isConfigLoading, setIsConfigLoading] = useState(true);
+    const demoEntry = process.env.NODE_ENV !== "production" && phoneNumber
+        ? getDemoOtpEntryByPhone(phoneNumber)
+        : undefined;
+    const hasDemoBypass = Boolean(demoEntry);
 
     useEffect(() => {
         wasSuccessCalled.current = false;
         isInitialized.current = false;
+        otpRequestedForPhone.current = null;
         setOtpValue("");
+        setIsSendingOtp(false);
         setInternalError(null);
     }, [phoneNumber]);
 
@@ -56,7 +122,7 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
                 });
             } catch (error) {
                 console.error("Failed to load MSG91 runtime config", error);
-                if (isMounted) {
+                if (isMounted && !hasDemoBypass) {
                     setInternalError("Unable to load MSG91 runtime configuration.");
                     onFailure("Unable to load MSG91 runtime configuration.");
                 }
@@ -72,12 +138,47 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
         return () => {
             isMounted = false;
         };
+    }, [hasDemoBypass, onFailure]);
+
+    const requestOtp = useCallback((identifier: string) => {
+        if (typeof window === "undefined" || !window.sendOtp) {
+            return;
+        }
+
+        if (otpRequestedForPhone.current === identifier) {
+            return;
+        }
+
+        setInternalError(null);
+        setIsSendingOtp(true);
+        otpRequestedForPhone.current = identifier;
+
+        window.sendOtp(
+            identifier,
+            () => {
+                setIsSendingOtp(false);
+                console.log("MSG91 SDK: OTP requested successfully");
+            },
+            (error: Msg91ErrorPayload) => {
+                otpRequestedForPhone.current = null;
+                setIsSendingOtp(false);
+                const message =
+                    typeof error === "string"
+                        ? error
+                        : error?.message || "Unable to send OTP to this number.";
+                setInternalError(message);
+                onFailure(message);
+            },
+        );
     }, [onFailure]);
 
     const initializeSDK = useCallback(() => {
         if (typeof window === "undefined" || !window.initSendOTP || isInitialized.current) return;
 
         if (!runtimeConfig.msg91WidgetId || !runtimeConfig.msg91TokenAuth) {
+            if (hasDemoBypass) {
+                return;
+            }
             onFailure("MSG91 configuration is missing (WIDGET_ID/TOKEN).");
             return;
         }
@@ -88,9 +189,9 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
             identifier: phoneNumber || "",
             exposeMethods: true,
             container: "msg91-otp-container",
-            mode: "inline",
-            success: (data: any) => {
-                const token = typeof data === 'string' ? data : data?.message;
+            mode: "inline" as const,
+            success: (data: Msg91CallbackPayload) => {
+                const token = extractAccessToken(data);
                 console.log("MSG91 SDK: Verification Success", { hasToken: !!token });
                 
                 if (!wasSuccessCalled.current && token) {
@@ -98,7 +199,7 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
                     onSuccess(token);
                 }
             },
-            failure: (error: any) => {
+            failure: (error: Msg91ErrorPayload) => {
                 console.error("MSG91 SDK: Initialization/Verification Failure", error);
                 const msg = typeof error === 'string' ? error : (error?.message || "Verification failed");
                 onFailure(msg);
@@ -109,14 +210,29 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
             window.initSendOTP(configuration);
             isInitialized.current = true;
             console.log("MSG91 SDK: Initialized successfully");
+            if (phoneNumber) {
+                requestOtp(phoneNumber);
+            }
         } catch (e) {
             console.error("MSG91 SDK: Exception during initSendOTP", e);
             onFailure("Failed to initialize verification engine.");
         }
-    }, [runtimeConfig.msg91WidgetId, runtimeConfig.msg91TokenAuth, phoneNumber, onSuccess, onFailure]);
+    }, [hasDemoBypass, runtimeConfig.msg91WidgetId, runtimeConfig.msg91TokenAuth, phoneNumber, onSuccess, onFailure, requestOtp]);
+
+    useEffect(() => {
+        if (!isInitialized.current || !phoneNumber) {
+            return;
+        }
+
+        requestOtp(phoneNumber);
+    }, [phoneNumber, requestOtp]);
 
     useEffect(() => {
         if (isConfigLoading) {
+            return;
+        }
+
+        if (hasDemoBypass) {
             return;
         }
 
@@ -128,7 +244,7 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
 
         const script = document.createElement("script");
         script.id = scriptId;
-        script.src = "https://control.msg91.com/app/assets/otp-provider/otp-provider.js";
+        script.src = "https://verify.msg91.com/otp-provider.js";
         script.async = true;
         script.onload = () => {
             if (window.initSendOTP) initializeSDK();
@@ -139,7 +255,7 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
         return () => {
             isInitialized.current = false;
         };
-    }, [initializeSDK, isConfigLoading, onFailure]);
+    }, [hasDemoBypass, initializeSDK, isConfigLoading, onFailure]);
 
     const handleManualVerify = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -148,18 +264,29 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
         setInternalError(null);
         setIsVerifying(true);
 
+        if (demoEntry && otpValue === demoEntry.otp) {
+            if (!wasSuccessCalled.current) {
+                wasSuccessCalled.current = true;
+                onSuccess(demoEntry.widgetToken);
+            }
+            setIsVerifying(false);
+            return;
+        }
+
         if (window.verifyOtp) {
             window.verifyOtp(otpValue, 
-                (data: any) => {
-                    const token = typeof data === 'string' ? data : data?.message;
+                (data: Msg91CallbackPayload) => {
+                    const token = extractAccessToken(data);
                     if (token && !wasSuccessCalled.current) {
                         wasSuccessCalled.current = true;
                         onSuccess(token);
+                    } else if (!token) {
+                        setInternalError("MSG91 did not return a usable access token.");
                     }
                     setIsVerifying(false);
                 },
-                (err: any) => {
-                    setInternalError(err?.message || "Invalid OTP. Please try again.");
+                (err: Msg91ErrorPayload) => {
+                    setInternalError(extractErrorMessage(err, "Invalid OTP. Please try again."));
                     setIsVerifying(false);
                 }
             );
@@ -203,10 +330,16 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
                     </div>
                 )}
 
+                {isSendingOtp && (
+                    <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600 text-center">
+                        Sending OTP...
+                    </div>
+                )}
+
                 <button
                     type="button"
                     onClick={() => handleManualVerify()}
-                    disabled={isConfigLoading || isVerifying || otpValue.length < 4}
+                    disabled={(!hasDemoBypass && isConfigLoading) || isVerifying || otpValue.length < 4}
                     className="w-full py-4 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-100 transition-all hover:bg-slate-900 hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 active:scale-95 flex items-center justify-center gap-3"
                 >
                     {isVerifying ? (
@@ -220,7 +353,7 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
             <div className="flex items-center justify-between w-full max-w-xs px-2 pt-2">
                 <button
                     type="button"
-                    onClick={() => window.retryOtp?.("sms", () => console.log("OTP Resent"), (e) => setInternalError(e?.message || "Resend failed"))}
+                    onClick={() => window.retryOtp?.(null, () => console.log("OTP Resent"), (e) => setInternalError(extractErrorMessage(e, "Resend failed")))}
                     className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
                 >
                     Resend SMS

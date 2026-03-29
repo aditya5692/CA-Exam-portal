@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getDemoOtpEntryByWidgetToken } from "@/lib/auth/demo-otp";
 import { getResolvedPlatformConfig } from "./platform-config";
 
 /**
@@ -43,13 +44,14 @@ const IS_PROD = process.env.NODE_ENV === "production";
 const MOCK_OTPS: Record<string, string> = !IS_PROD ? {
     "91123456789": "1234",
     "91987654321": "4321",
-    "911123456789": "1234",
-    "919987654321": "4321",
-    "919000000001": "1234",
-    "919000000011": "1234",
-    "919000000012": "1234",
-    "919000010001": "1234",
-    "919000010002": "1234",
+    "911123456789": "0424",
+    "919987654321": "0424",
+    "917065751756": "0424",
+    "919000000001": "0424",
+    "919000000011": "0424",
+    "919000000012": "0424",
+    "919000010001": "0424",
+    "919000010002": "0424",
 } : {};
 
 /**
@@ -57,15 +59,16 @@ const MOCK_OTPS: Record<string, string> = !IS_PROD ? {
  */
 export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; message: string }> {
     const formattedPhone = normalizePhone(phone);
-    const { values } = await getResolvedPlatformConfig();
-    const msg91AuthKey = values.msg91AuthKey;
-    const msg91OtpTemplateId = values.msg91OtpTemplateId;
 
     // Bypass for mock numbers (Dev/Test only)
     if (!IS_PROD && MOCK_OTPS[formattedPhone]) {
         console.log(`[DEV] Mock OTP requested for ${formattedPhone}. No real SMS sent.`);
         return { success: true, message: "OTP sent successfully (Mock)." };
     }
+
+    const { values } = await getResolvedPlatformConfig();
+    const msg91AuthKey = values.msg91AuthKey;
+    const msg91OtpTemplateId = values.msg91OtpTemplateId;
 
     if (!validateConfig(msg91AuthKey)) {
         return { success: false, message: "SMS service is currently unavailable (Config)." };
@@ -101,8 +104,6 @@ export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; m
  */
 export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ success: boolean; message: string }> {
     const formattedPhone = normalizePhone(phone);
-    const { values } = await getResolvedPlatformConfig();
-    const msg91AuthKey = values.msg91AuthKey;
 
     // Dev/Test bypass
     if (!IS_PROD && MOCK_OTPS[formattedPhone]) {
@@ -110,6 +111,9 @@ export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ succ
             return { success: true, message: "OTP verified (Mock)." };
         }
     }
+
+    const { values } = await getResolvedPlatformConfig();
+    const msg91AuthKey = values.msg91AuthKey;
 
     if (!validateConfig(msg91AuthKey)) {
         return { success: false, message: "Verification service temporarily unavailable." };
@@ -137,18 +141,26 @@ export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ succ
  * Crucial for the embedded widget flow.
  */
 export async function verifyMsg91WidgetToken(token: string): Promise<{ success: boolean; message: string; phone?: string }> {
+    // Dev/Test bypass for specific widget tokens
+    if (!IS_PROD) {
+        const demoEntry = getDemoOtpEntryByWidgetToken(token);
+        if (demoEntry) {
+            console.log("[DEV] Bypassing real verification for explicit mock widget token");
+            return { success: true, message: "Verified via Mock Bypass.", phone: demoEntry.phone };
+        }
+    }
+
+    if (!IS_PROD && (token === "mock-verified-token" || (token && token.length > 50 && token.startsWith("ey")))) {
+        console.log("[DEV] Bypassing real verification for development JWT");
+        // Defaulting to user's test number for dev bypass
+        return { success: true, message: "Verified via Mock Bypass.", phone: "917065751756" };
+    }
+
     const { values } = await getResolvedPlatformConfig();
     const msg91AuthKey = values.msg91AuthKey;
 
     if (!validateConfig(msg91AuthKey)) {
         return { success: false, message: "Configuration error. Please contact support." };
-    }
-
-    // Dev/Test bypass for specific widget tokens
-    if (!IS_PROD && (token === "mock-verified-token" || (token && token.length > 50 && token.startsWith("ey")))) {
-        console.log("[DEV] Bypassing real verification for development JWT");
-        // Defaulting to user's test number for dev bypass
-        return { success: true, message: "Verified via Mock Bypass.", phone: "917065751756" };
     }
 
     try {

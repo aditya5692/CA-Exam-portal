@@ -8,8 +8,10 @@ const env = {
 
 const testFiles = [
   resolve("tests/backend/action-utils.test.ts"),
+  resolve("tests/backend/auth-otp.test.ts"),
   resolve("tests/backend/batch-utils.test.ts"),
   resolve("tests/backend/exam-workflow.test.ts"),
+  resolve("tests/backend/msg91.test.ts"),
   resolve("tests/backend/plan-entitlements.test.ts"),
   resolve("tests/backend/platform-config.test.ts"),
   resolve("tests/backend/profile-validation.test.ts"),

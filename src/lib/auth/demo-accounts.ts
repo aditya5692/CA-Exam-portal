@@ -1,5 +1,6 @@
 import "server-only";
 
+import { normalizeDemoOtpPhone } from "@/lib/auth/demo-otp";
 import prisma from "@/lib/prisma/client";
 import type { User } from "@prisma/client";
 import { createHash,randomBytes,scryptSync,timingSafeEqual } from "crypto";
@@ -177,6 +178,8 @@ export function verifyPassword(password: string, storedHash: string | null | und
 }
 
 async function upsertDemoUser(seed: DemoAccountSeed): Promise<User> {
+  const normalizedPhone = seed.phone ? normalizeDemoOtpPhone(seed.phone) : null;
+
   return prisma.user.upsert({
     where: { registrationNumber: seed.registrationNumber },
     update: {
@@ -193,7 +196,7 @@ async function upsertDemoUser(seed: DemoAccountSeed): Promise<User> {
       preferredLanguage: seed.preferredLanguage ?? null,
       timezone: seed.timezone ?? null,
       bio: seed.bio ?? null,
-      phone: seed.phone ?? null,
+      phone: normalizedPhone,
       isSuperAdmin: seed.isSuperAdmin ?? false,
       passwordHash: createPasswordHash(DEMO_LOGIN_PASSWORD, seed.registrationNumber),
     },
@@ -211,7 +214,7 @@ async function upsertDemoUser(seed: DemoAccountSeed): Promise<User> {
             preferredLanguage: seed.preferredLanguage ?? null,
             timezone: seed.timezone ?? null,
             bio: seed.bio ?? null,
-            phone: seed.phone ?? null,
+            phone: normalizedPhone,
             isSuperAdmin: seed.isSuperAdmin ?? false,
             passwordHash: createPasswordHash(DEMO_LOGIN_PASSWORD, seed.registrationNumber),
         },
