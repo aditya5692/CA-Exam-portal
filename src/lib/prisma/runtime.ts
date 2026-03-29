@@ -45,55 +45,34 @@ function normalizeEnvString(rawValue: string | undefined) {
     return quoteWrapped ? trimmed.slice(1, -1).trim() : trimmed;
 }
 
-function getDatabaseUrlEnvKeys(env: EnvLike) {
-    const preferredKeys = env.NODE_ENV === "production"
-        ? [
-            "DOKPLOY_DATABASE_URL",
-            "POSTGRES_INTERNAL_URL",
-            "DATABASE_URL",
-            "POSTGRES_URL",
-            "POSTGRES_PRISMA_URL",
-            "POSTGRESQL_URL",
-            "DATABASE_URI",
-            "LOCAL_DATABASE_URL",
-            "POSTGRES_EXTERNAL_URL",
-        ]
-        : [
-            "LOCAL_DATABASE_URL",
-            "DATABASE_URL",
-            "POSTGRES_EXTERNAL_URL",
-            "DOKPLOY_DATABASE_URL",
-            "POSTGRES_INTERNAL_URL",
-            "POSTGRES_URL",
-            "POSTGRES_PRISMA_URL",
-            "POSTGRESQL_URL",
-            "DATABASE_URI",
-        ];
-
-    return [...new Set([...preferredKeys, ...SHARED_DATABASE_URL_ENV_KEYS])];
+function getDatabaseUrlEnvKeys() {
+    return [
+        "LOCAL_DATABASE_URL", // 💡 Priority 1: Direct Local Override
+        "DOKPLOY_DATABASE_URL", // 🔵 Priority 2: Dokploy Production (Internal)
+        "POSTGRES_INTERNAL_URL",
+        "DATABASE_URL", // 🔘 Priority 3: Standard Environment
+        "POSTGRES_URL",
+        "POSTGRES_PRISMA_URL",
+        "POSTGRESQL_URL",
+        "DATABASE_URI",
+        "POSTGRES_EXTERNAL_URL",
+    ];
 }
 
 function readDatabaseUrlFromEnv(env: EnvLike) {
-    const keysToCheck = getDatabaseUrlEnvKeys(env);
+    const keysToCheck = getDatabaseUrlEnvKeys();
 
-    // Phase 1: In development, prefer SQLite file: if present in any key
-    if (env.NODE_ENV !== "production") {
-        for (const key of keysToCheck) {
-            const value = normalizeEnvString(env[key]);
-            if (value && value.startsWith("file:")) {
-                const redacted = redactDatabaseUrl(value);
-                console.log(`[RuntimePrisma] Prioritizing SQLite via ${key}: ${redacted}`);
-                return { key, value };
-            }
-        }
-    }
-
-    // Phase 2: Standard first-match-priority
+    // Deterministic selection: First match wins
     for (const key of keysToCheck) {
         const value = normalizeEnvString(env[key]);
         if (value) {
             const redacted = redactDatabaseUrl(value);
-            console.log(`[RuntimePrisma] Using database URL from ${key}: ${redacted}`);
+            const isSqlite = value.startsWith("file:");
+            
+            console.log(`[RuntimePrisma] Selected ${key} (${isSqlite ? "SQLite" : "PostgreSQL"})`);
+            if (env.NODE_ENV !== "production") {
+                console.log(`[RuntimePrisma] Target: ${redacted}`);
+            }
             return { key, value };
         }
     }
@@ -169,12 +148,6 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
 
     const redacted = redactDatabaseUrl(databaseUrl);
 
-    // Runtime logging for connection source
-    console.log(`[RuntimePrisma] Connecting via ${sourceEnvKey} (${protocol})`);
-    if (env.NODE_ENV !== "production") {
-        console.log(`[RuntimePrisma] Target: ${redacted}`);
-    }
-
     return {
         databaseUrl,
         sourceEnvKey,
@@ -199,7 +172,6 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
                 "DATABASE_STATEMENT_TIMEOUT_MS",
             ),
             allowExitOnIdle: true,
-            // @ts-ignore - pg Pool config supports keepAlive in certain versions/types
             keepAlive: true,
         },
     };
@@ -239,8 +211,9 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
     const config = readDatabaseRuntimeConfig(env);
 
     try {
+        // If the build script set the schema to SQLite
         if (config.protocol === "file:") {
-            // Use the better-sqlite3 adapter for Prisma 7 compatibility
+            // Priority: Use the better-sqlite3 adapter for Prisma 7 standard compatibility
             const adapter = new PrismaBetterSqlite3({
                 url: config.databaseUrl.replace("file:", ""),
             });
@@ -248,17 +221,10 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
             return { prisma, config };
         }
 
+        // Standard PostgreSQL paths with pooling and connection resilience
         const pool = createPostgresPool(config);
         const adapter = new PrismaPg(pool);
         const prisma = new PrismaClient({ adapter });
-
-        // Add a soft check for connection if in dev
-        if (env.NODE_ENV !== "production") {
-            // We don't block render, but we trigger a background check
-            pool.query("SELECT 1").catch(() => {
-                // Background check failed - errors handled by pool.on('error')
-            });
-        }
 
         return {
             prisma,
@@ -267,26 +233,13 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
         };
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-
-        if (message.includes("is not compatible with the provider")) {
-            const isSqliteError = message.includes("provider sqlite");
-
-            console.error("\n" + "=".repeat(60));
-            console.error("❌ [PrismaRuntimeError] DATABASE ADAPTER MISMATCH");
-            console.error(`- Environment Context: ${env.NODE_ENV || "development"}`);
-            console.error(`- Selected Connection: ${config.sourceEnvKey} (${config.protocol})`);
-            console.error(`- Detected Mismatch: ${message}`);
-
-            if (isSqliteError && config.protocol !== "file:") {
-                console.error("\nDIAGNOSIS:");
-                console.error("The Prisma schema expects SQLite, but a Postgres URL was found.");
-                console.error("This usually happens if you have system variables like DOKPLOY_DATABASE_URL or POSTGRES_URL set.");
-                console.error("\nFIX:");
-                console.error("1. Check your .env file or system environment variables.");
-                console.error("2. Ensure only DATABASE_URL=file:./dev.db is set for local development.");
-            }
-            console.error("=".repeat(60) + "\n");
-        }
+        
+        console.error("\n" + "=".repeat(60));
+        console.error("❌ [PrismaRuntimeError] DATABASE INITIALIZATION FAILED");
+        console.error(`- Environment: ${env.NODE_ENV || "development"}`);
+        console.error(`- Source: ${config.sourceEnvKey} (${config.protocol})`);
+        console.error(`- Error: ${message}`);
+        console.error("=".repeat(60) + "\n");
 
         throw error;
     }
