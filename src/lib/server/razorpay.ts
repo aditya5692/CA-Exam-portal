@@ -68,6 +68,17 @@ const BILLING_PLANS: Record<string, BillingPlanDefinition> = {
 
 let razorpayInstanceCache: { keyId: string; keySecret: string; instance: Razorpay } | null = null;
 
+function safeCompareSignatures(expected: string, actual: string) {
+    const expectedBuffer = Buffer.from(expected, "hex");
+    const actualBuffer = Buffer.from(actual, "hex");
+
+    if (expectedBuffer.length === 0 || expectedBuffer.length !== actualBuffer.length) {
+        return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
+}
+
 export async function getRazorpayInstance(): Promise<Razorpay> {
     const { values } = await getResolvedPlatformConfig();
     const keyId = values.razorpayKeyId;
@@ -106,7 +117,7 @@ export async function verifyPaymentSignature(
         .update(`${razorpayOrderId}|${razorpayPaymentId}`)
         .digest("hex");
 
-    return generatedSignature === signature;
+    return safeCompareSignatures(generatedSignature, signature);
 }
 
 export async function verifyWebhookSignature(rawBody: string, signature: string): Promise<boolean> {
@@ -121,7 +132,28 @@ export async function verifyWebhookSignature(rawBody: string, signature: string)
         .update(rawBody)
         .digest("hex");
 
-    return expectedSignature === signature;
+    return safeCompareSignatures(expectedSignature, signature);
+}
+
+export type RazorpayPaymentDetails = {
+    id: string;
+    orderId: string | null;
+    amount: number;
+    currency: string;
+    status: string;
+};
+
+export async function fetchRazorpayPayment(paymentId: string): Promise<RazorpayPaymentDetails> {
+    const razorpay = await getRazorpayInstance();
+    const payment = await razorpay.payments.fetch(paymentId);
+
+    return {
+        id: String(payment.id ?? paymentId),
+        orderId: typeof payment.order_id === "string" ? payment.order_id : null,
+        amount: Number(payment.amount ?? 0),
+        currency: String(payment.currency ?? "INR").toUpperCase(),
+        status: String(payment.status ?? "").toLowerCase(),
+    };
 }
 
 export function getBillingPlanDefinition(planId: string) {

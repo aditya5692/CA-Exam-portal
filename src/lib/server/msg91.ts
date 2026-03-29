@@ -8,7 +8,7 @@ import { getResolvedPlatformConfig } from "./platform-config";
  */
 function validateConfig(msg91AuthKey: string | null) {
     if (!msg91AuthKey) {
-        const msg = "MSG91_AUTH_KEY is not configured in environment variables.";
+        const msg = "MSG91 auth key is not configured in runtime integrations or environment variables.";
         if (process.env.NODE_ENV === "production") throw new Error(msg);
         console.warn(msg);
         return false;
@@ -50,7 +50,6 @@ const MOCK_OTPS: Record<string, string> = !IS_PROD ? {
     "919000000012": "1234",
     "919000010001": "1234",
     "919000010002": "1234",
-    "917065751756": "0424",
 } : {};
 
 /**
@@ -153,14 +152,18 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
     }
 
     try {
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        };
+        if (msg91AuthKey) {
+            headers.authkey = msg91AuthKey;
+        }
+
         const response = await fetch(`https://api.msg91.com/api/v5/widget/verifyAccessToken`, {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
+            headers,
             body: JSON.stringify({ 
-                "authkey": msg91AuthKey,
                 "access-token": token 
             })
         });
@@ -168,11 +171,16 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
         const result = await response.json();
         
         if (result.status === "success" || result.type === "success") {
-            const phone = result.data?.mobile || result.mobile;
+            const phone =
+                result.data?.mobile ||
+                result.data?.identifier ||
+                result.mobile ||
+                result.identifier ||
+                result.phone;
             return { 
                 success: true, 
                 message: "Verification successful.", 
-                phone 
+                phone: phone ? normalizePhone(String(phone)) : undefined,
             };
         }
 

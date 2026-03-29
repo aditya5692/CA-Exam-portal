@@ -100,7 +100,7 @@ export function PlatformIntegrationsPanel({
                             <p className="max-w-3xl text-sm leading-7 text-[var(--student-muted-strong)]">
                                 Values saved here become the platform runtime source for login, signup, payment checkout,
                                 and health checks. Existing `.env` values are still used as fallback until you save them into
-                                the database once.
+                                the database once. Server-only secrets are encrypted before they are stored.
                             </p>
                         </div>
                     </div>
@@ -244,6 +244,7 @@ export function PlatformIntegrationsPanel({
                     <p className="max-w-3xl text-sm leading-7 text-[var(--student-muted-strong)]">
                         Saving here stores the current values into the application database. Once that row exists,
                         Dokploy no longer needs separate MSG91 and Razorpay runtime env entries for normal operation.
+                        Keep env fallbacks available for disaster recovery and rotate any exposed live credentials immediately.
                     </p>
                     <button
                         type="submit"

@@ -20,8 +20,9 @@ test("readDatabaseRuntimeConfig returns defaults for a PostgreSQL URL", () => {
 
   assert.equal(config.protocol, "postgresql:");
   assert.equal(config.poolConfig.max, 10);
-  assert.equal(config.poolConfig.connectionTimeoutMillis, 10_000);
-  assert.equal(config.poolConfig.idleTimeoutMillis, 30_000);
+  assert.equal(config.poolConfig.connectionTimeoutMillis, 60_000);
+  assert.equal(config.poolConfig.idleTimeoutMillis, 60_000);
+  assert.equal(config.poolConfig.statement_timeout, 30_000);
 });
 
 test("readDatabaseRuntimeConfig respects pool overrides", () => {

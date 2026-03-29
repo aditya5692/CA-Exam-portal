@@ -20,18 +20,6 @@ export type DatabaseRuntimeConfig = {
 
 type EnvLike = Record<string, string | undefined>;
 
-const SHARED_DATABASE_URL_ENV_KEYS = [
-    "DATABASE_URL",
-    "DOKPLOY_DATABASE_URL",
-    "LOCAL_DATABASE_URL",
-    "POSTGRES_INTERNAL_URL",
-    "POSTGRES_EXTERNAL_URL",
-    "POSTGRES_URL",
-    "POSTGRES_PRISMA_URL",
-    "POSTGRESQL_URL",
-    "DATABASE_URI",
-] as const;
-
 function normalizeEnvString(rawValue: string | undefined) {
     if (!rawValue) {
         return "";
@@ -155,7 +143,7 @@ export function readDatabaseRuntimeConfig(env: EnvLike = process.env): DatabaseR
         protocol,
         poolConfig: {
             connectionString: databaseUrl,
-            max: parseDatabaseIntegerEnv(env.DATABASE_POOL_MAX, DEFAULT_POOL_MAX, "DATABASE_POOL_MAX"),
+            max: parseDatabaseIntegerEnv(env.DATABASE_POOL_MAX, DEFAULT_POOL_MAX, "DATABASE_POOL_MAX", 1),
             connectionTimeoutMillis: parseDatabaseIntegerEnv(
                 env.DATABASE_CONNECT_TIMEOUT_MS,
                 getDefaultConnectTimeoutMs(env),
@@ -244,4 +232,3 @@ export function createRuntimePrismaClient(env: EnvLike = process.env) {
         throw error;
     }
 }
-

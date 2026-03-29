@@ -1,5 +1,6 @@
 import "server-only";
 
+import crypto from "node:crypto";
 import prisma from "@/lib/prisma/client";
 import type { PlatformConfig } from "@prisma/client";
 
@@ -34,6 +35,8 @@ export type PlatformConfigFieldStatus = PlatformConfigFieldDefinition & {
     isConfigured: boolean;
 };
 
+const ENCRYPTED_VALUE_PREFIX = "enc::v1::";
+
 export const PLATFORM_CONFIG_FIELDS: readonly PlatformConfigFieldDefinition[] = [
     {
         key: "msg91AuthKey",
@@ -65,7 +68,7 @@ export const PLATFORM_CONFIG_FIELDS: readonly PlatformConfigFieldDefinition[] = 
         envKeys: ["MSG91_OTP_TEMPLATE_ID"],
         isSecret: false,
         isPublicClientValue: false,
-        requiredForRuntime: true,
+        requiredForRuntime: false,
         inputType: "text",
     },
     {
@@ -139,10 +142,80 @@ export const PLATFORM_CONFIG_FIELDS: readonly PlatformConfigFieldDefinition[] = 
 const PLATFORM_CONFIG_KEY_SET = new Set<PlatformConfigKey>(
     PLATFORM_CONFIG_FIELDS.map((field) => field.key),
 );
+const PLATFORM_CONFIG_SECRET_KEY_SET = new Set<PlatformConfigKey>(
+    PLATFORM_CONFIG_FIELDS.filter((field) => field.isSecret).map((field) => field.key),
+);
 
 function normalizeOptionalString(value: string | null | undefined) {
     const normalized = value?.trim() ?? "";
     return normalized.length > 0 ? normalized : null;
+}
+
+function getPlatformConfigEncryptionKey() {
+    const secret =
+        normalizeOptionalString(process.env.PLATFORM_CONFIG_ENCRYPTION_KEY) ??
+        normalizeOptionalString(process.env.JWT_SECRET);
+
+    if (!secret) {
+        return null;
+    }
+
+    return crypto.createHash("sha256").update(secret).digest();
+}
+
+function encryptPlatformConfigSecret(value: string) {
+    const key = getPlatformConfigEncryptionKey();
+    if (!key) {
+        return value;
+    }
+
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+    const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+
+    return `${ENCRYPTED_VALUE_PREFIX}${iv.toString("base64url")}.${authTag.toString("base64url")}.${encrypted.toString("base64url")}`;
+}
+
+export function decryptPlatformConfigSecret(value: string | null | undefined) {
+    const normalized = normalizeOptionalString(value);
+    if (!normalized) {
+        return null;
+    }
+
+    if (!normalized.startsWith(ENCRYPTED_VALUE_PREFIX)) {
+        return normalized;
+    }
+
+    const key = getPlatformConfigEncryptionKey();
+    if (!key) {
+        return null;
+    }
+
+    const payload = normalized.slice(ENCRYPTED_VALUE_PREFIX.length);
+    const [ivPart, authTagPart, encryptedPart] = payload.split(".");
+
+    if (!ivPart || !authTagPart || !encryptedPart) {
+        return null;
+    }
+
+    try {
+        const decipher = crypto.createDecipheriv(
+            "aes-256-gcm",
+            key,
+            Buffer.from(ivPart, "base64url"),
+        );
+        decipher.setAuthTag(Buffer.from(authTagPart, "base64url"));
+
+        const decrypted = Buffer.concat([
+            decipher.update(Buffer.from(encryptedPart, "base64url")),
+            decipher.final(),
+        ]);
+
+        return normalizeOptionalString(decrypted.toString("utf8"));
+    } catch {
+        return null;
+    }
 }
 
 function readFirstEnvValue(envKeys: readonly string[]) {
@@ -166,7 +239,9 @@ function resolveFieldStatus(
     field: PlatformConfigFieldDefinition,
     storedConfig: PlatformConfig | null,
 ): PlatformConfigFieldStatus {
-    const databaseValue = normalizeOptionalString(storedConfig?.[field.key]);
+    const databaseValue = field.isSecret
+        ? decryptPlatformConfigSecret(storedConfig?.[field.key])
+        : normalizeOptionalString(storedConfig?.[field.key]);
     const envValue = readFirstEnvValue(field.envKeys);
     const resolvedValue = databaseValue ?? envValue ?? "";
     const source: PlatformConfigSource = databaseValue
@@ -249,4 +324,52 @@ export function sanitizePlatformConfigInput(
     return Object.fromEntries(
         entries.map(([key, value]) => [key, normalizeOptionalString(String(value ?? ""))]),
     ) as Partial<Record<PlatformConfigKey, string | null>>;
+}
+
+export function preparePlatformConfigForPersistence(
+    input: Partial<Record<PlatformConfigKey, string | null>>,
+) {
+    return Object.fromEntries(
+        Object.entries(input).map(([key, value]) => {
+            const normalizedValue = normalizeOptionalString(value);
+            if (!normalizedValue) {
+                return [key, null];
+            }
+
+            if (!PLATFORM_CONFIG_SECRET_KEY_SET.has(key as PlatformConfigKey)) {
+                return [key, normalizedValue];
+            }
+
+            return [key, encryptPlatformConfigSecret(normalizedValue)];
+        }),
+    ) as Partial<Record<PlatformConfigKey, string | null>>;
+}
+
+export function validatePlatformConfigInput(
+    input: Partial<Record<PlatformConfigKey, string | null>>,
+) {
+    const errors: string[] = [];
+    const widgetId = normalizeOptionalString(input.msg91WidgetId);
+    const tokenAuth = normalizeOptionalString(input.msg91TokenAuth);
+    const razorpayKeyId = normalizeOptionalString(input.razorpayKeyId);
+    const razorpayPlanBasic = normalizeOptionalString(input.razorpayPlanBasic);
+    const razorpayPlanPro = normalizeOptionalString(input.razorpayPlanPro);
+
+    if ((widgetId && !tokenAuth) || (!widgetId && tokenAuth)) {
+        errors.push("MSG91 Widget ID and Token Auth must be saved together.");
+    }
+
+    if (razorpayKeyId && !/^rzp_(test|live)_[A-Za-z0-9]+$/.test(razorpayKeyId)) {
+        errors.push("Razorpay Key ID must start with rzp_test_ or rzp_live_.");
+    }
+
+    if (razorpayPlanBasic && !/^plan_[A-Za-z0-9]+$/.test(razorpayPlanBasic)) {
+        errors.push("Student Basic Monthly Plan ID must start with plan_.");
+    }
+
+    if (razorpayPlanPro && !/^plan_[A-Za-z0-9]+$/.test(razorpayPlanPro)) {
+        errors.push("Student Pro Monthly Plan ID must start with plan_.");
+    }
+
+    return errors;
 }

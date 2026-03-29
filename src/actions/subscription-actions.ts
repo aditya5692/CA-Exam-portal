@@ -10,6 +10,7 @@ import {
 } from "@/lib/server/plan-entitlements";
 import {
     calculatePlanExpiry,
+    fetchRazorpayPayment,
     getBillingAmount,
     getBillingPlanDefinition,
     getBillingValidityMonths,
@@ -134,61 +135,92 @@ export async function verifyAndActivatePlan(payload: {
             return { success: false, message: "Payment verification failed. Please contact support." };
         }
 
-        if (!isPlanAllowedForUser(payload.planId, user.role)) {
-            return { success: false, message: "This plan is not available for your account role." };
+        const existingSubscription = await prisma.subscription.findFirst({
+            where: {
+                userId: user.id,
+                razorpayOrderId: payload.razorpayOrderId,
+            },
+            select: {
+                id: true,
+                plan: true,
+                role: true,
+                status: true,
+                amountPaise: true,
+                expiresAt: true,
+                currentPeriodEnd: true,
+                razorpayPlanId: true,
+                razorpayPaymentId: true,
+            },
+        });
+
+        if (!existingSubscription) {
+            return {
+                success: false,
+                message: "No pending subscription was found for this payment order.",
+            };
         }
 
-        const plan = getBillingPlanDefinition(payload.planId);
-        const amount = getBillingAmount(payload.planId, "annual");
-        const expiresAt = calculatePlanExpiry(
-            user.planExpiresAt,
-            getBillingValidityMonths(payload.planId, "annual"),
-        );
+        if (
+            existingSubscription.razorpayPlanId &&
+            existingSubscription.razorpayPlanId !== payload.planId
+        ) {
+            return {
+                success: false,
+                message: "Checkout session mismatch detected. Please retry from the pricing page.",
+            };
+        }
+
+        const gatewayPayment = await fetchRazorpayPayment(payload.razorpayPaymentId);
+
+        if (gatewayPayment.orderId !== payload.razorpayOrderId) {
+            return {
+                success: false,
+                message: "Payment verification failed because the order reference did not match.",
+            };
+        }
+
+        if (gatewayPayment.status !== "captured") {
+            return {
+                success: false,
+                message: "Payment is not captured yet. Please wait a moment and try again.",
+            };
+        }
+
+        if (gatewayPayment.amount !== existingSubscription.amountPaise) {
+            return {
+                success: false,
+                message: "Payment amount mismatch detected. Please contact support before retrying.",
+            };
+        }
+
+        if (gatewayPayment.currency !== "INR") {
+            return {
+                success: false,
+                message: "Unsupported payment currency detected for this checkout.",
+            };
+        }
+
+        const expiresAt = existingSubscription.currentPeriodEnd ?? existingSubscription.expiresAt;
 
         const updatedUser = await prisma.$transaction(async (tx) => {
-            const existingSubscription = await tx.subscription.findFirst({
-                where: { razorpayOrderId: payload.razorpayOrderId },
-                select: { id: true },
+            await tx.subscription.update({
+                where: { id: existingSubscription.id },
+                data: {
+                    status: "ACTIVE",
+                    amountPaise: existingSubscription.amountPaise,
+                    razorpayPaymentId: payload.razorpayPaymentId,
+                    razorpaySignature: payload.razorpaySignature,
+                    expiresAt,
+                    currentPeriodEnd: expiresAt,
+                    cancelAtPeriodEnd: false,
+                },
             });
 
-            if (existingSubscription) {
-                await tx.subscription.update({
-                    where: { id: existingSubscription.id },
-                    data: {
-                        plan: plan.appPlan,
-                        role: plan.role,
-                        status: "ACTIVE",
-                        amountPaise: amount,
-                        razorpayPaymentId: payload.razorpayPaymentId,
-                        razorpaySignature: payload.razorpaySignature,
-                        expiresAt,
-                        currentPeriodEnd: expiresAt,
-                        cancelAtPeriodEnd: false,
-                    },
-                });
-            } else {
-                await tx.subscription.create({
-                    data: {
-                        userId: user.id,
-                        plan: plan.appPlan,
-                        role: plan.role,
-                        status: "ACTIVE",
-                        amountPaise: amount,
-                        razorpayOrderId: payload.razorpayOrderId,
-                        razorpayPaymentId: payload.razorpayPaymentId,
-                        razorpaySignature: payload.razorpaySignature,
-                        razorpayPlanId: payload.planId,
-                        expiresAt,
-                        currentPeriodEnd: expiresAt,
-                    },
-                });
-            }
-
-            const entitlement = resolvePlanEntitlement(plan.appPlan, user.role);
+            const entitlement = resolvePlanEntitlement(existingSubscription.plan, existingSubscription.role);
             return tx.user.update({
                 where: { id: user.id },
                 data: {
-                    plan: plan.appPlan,
+                    plan: existingSubscription.plan,
                     planExpiresAt: expiresAt,
                     storageLimit: Math.max(user.storageLimit, entitlement.storageLimitFloor),
                 },

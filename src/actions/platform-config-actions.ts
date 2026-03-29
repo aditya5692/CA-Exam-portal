@@ -5,7 +5,9 @@ import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
     getResolvedPlatformConfigFields,
+    preparePlatformConfigForPersistence,
     sanitizePlatformConfigInput,
+    validatePlatformConfigInput,
 } from "@/lib/server/platform-config";
 import { revalidatePlatformConfigSurfaces } from "@/lib/server/revalidation";
 import type { ActionResponse } from "@/types/shared";
@@ -29,13 +31,23 @@ export async function savePlatformConfig(formData: FormData): Promise<ActionResp
             razorpayPlanBasic: formData.get("razorpayPlanBasic"),
             razorpayPlanPro: formData.get("razorpayPlanPro"),
         });
+        const validationErrors = validatePlatformConfigInput(values);
+
+        if (validationErrors.length > 0) {
+            return {
+                success: false,
+                message: validationErrors.join(" "),
+            };
+        }
+
+        const persistedValues = preparePlatformConfigForPersistence(values);
 
         await prisma.platformConfig.upsert({
             where: { singletonKey: "default" },
-            update: values,
+            update: persistedValues,
             create: {
                 singletonKey: "default",
-                ...values,
+                ...persistedValues,
             },
         });
 

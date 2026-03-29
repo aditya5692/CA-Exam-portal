@@ -14,6 +14,7 @@ Use the internal Dokploy database hostname inside the Dokploy app, not the publi
 DOKPLOY_DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@YOUR_DOKPLOY_DB_HOST:5432/DB_NAME
 JWT_SECRET=replace-with-a-long-random-secret
 AUTH_COOKIE_DOMAIN=.your-root-domain.com
+PLATFORM_CONFIG_ENCRYPTION_KEY=optional-dedicated-secret
 ```
 
 Razorpay and MSG91 values now support two modes:
@@ -26,8 +27,8 @@ Recommended bootstrap env keys:
 ```env
 MSG91_AUTH_KEY=...
 MSG91_WIDGET_ID=...
-MSG91_OTP_TEMPLATE_ID=...
 MSG91_TOKEN_AUTH=...
+MSG91_OTP_TEMPLATE_ID=...   # optional, only for fallback server OTP APIs
 RAZORPAY_KEY_ID=...
 RAZORPAY_KEY_SECRET=...
 RAZORPAY_WEBHOOK_SECRET=...
@@ -35,7 +36,7 @@ RAZORPAY_PLAN_BASIC=...
 RAZORPAY_PLAN_PRO=...
 ```
 
-Once an admin saves those values in the integrations panel, Dokploy no longer needs separate MSG91 and Razorpay runtime env entries for normal operation. Legacy `NEXT_PUBLIC_*` env names are still accepted as fallback if you already use them.
+Once an admin saves those values in the integrations panel, Dokploy no longer needs separate MSG91 and Razorpay runtime env entries for normal operation. Legacy `NEXT_PUBLIC_*` env names are still accepted as fallback if you already use them. Admin-saved server secrets are encrypted before they are stored in the database.
 
 ### Local Development
 
@@ -73,7 +74,7 @@ Dokploy health checks should use:
 ```
 
 `/api/health/live` only confirms the app is running.  
-`/api/health/ready` verifies required auth/payment runtime config plus database reachability and outbound reachability to MSG91 and Razorpay before traffic should be routed.
+`/api/health/ready` verifies required widget-auth/payment runtime config plus database reachability and outbound reachability to MSG91 and Razorpay before traffic should be routed.
 
 ## Database Sync on Deploy
 

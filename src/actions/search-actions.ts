@@ -11,7 +11,7 @@ export interface SearchResult {
     subtitle?: string;
     type: SearchResultType;
     href: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
 }
 
 type RankedSearchResult = SearchResult & {
@@ -90,10 +90,14 @@ function finalizeResults(results: RankedSearchResult[]) {
     return Array.from(deduped.values())
         .sort((left, right) => right.score - left.score || left.title.localeCompare(right.title))
         .slice(0, 14)
-        .map(({ score: _score, ...result }) => result);
+        .map((result) => {
+            const { score, ...searchResult } = result;
+            void score;
+            return searchResult;
+        });
 }
 
-function buildMaterialHref(role: "STUDENT" | "TEACHER" | "ADMIN", title: string) {
+function buildMaterialHref(role: string, title: string) {
     if (role === "TEACHER") {
         return `/teacher/free-resources?search=${encodeURIComponent(title)}`;
     }

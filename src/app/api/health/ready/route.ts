@@ -38,12 +38,14 @@ export async function GET() {
     const requiredConfig = {
         jwt: Boolean(process.env.JWT_SECRET),
         msg91AuthKey: Boolean(resolvedPlatformConfig.values.msg91AuthKey),
-        msg91OtpTemplateId: Boolean(resolvedPlatformConfig.values.msg91OtpTemplateId),
         msg91WidgetId: Boolean(resolvedPlatformConfig.values.msg91WidgetId),
         msg91TokenAuth: Boolean(resolvedPlatformConfig.values.msg91TokenAuth),
         razorpayKeyId: Boolean(resolvedPlatformConfig.values.razorpayKeyId),
         razorpayKeySecret: Boolean(resolvedPlatformConfig.values.razorpayKeySecret),
         razorpayWebhookSecret: Boolean(resolvedPlatformConfig.values.razorpayWebhookSecret),
+    };
+    const optionalConfig = {
+        msg91OtpTemplateId: Boolean(resolvedPlatformConfig.values.msg91OtpTemplateId),
     };
 
     const databaseProbe: ProbeResult = {
@@ -77,6 +79,7 @@ export async function GET() {
             status: ok ? "ready" : "degraded",
             checks: {
                 config: requiredConfig,
+                optionalConfig,
                 configSources: resolvedPlatformConfig.sources,
                 database: databaseProbe,
                 external: externalProbes,

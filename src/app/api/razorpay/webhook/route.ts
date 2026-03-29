@@ -90,6 +90,11 @@ export async function POST(req: Request) {
                 });
                 if (!subscription) break;
 
+                const amountMatches =
+                    typeof paymentEntity?.amount !== "number" ||
+                    paymentEntity.amount === subscription.amountPaise;
+                if (!amountMatches) break;
+
                 await prisma.$transaction(async (tx) => {
                     await tx.subscription.update({
                         where: { id: subscription.id },
