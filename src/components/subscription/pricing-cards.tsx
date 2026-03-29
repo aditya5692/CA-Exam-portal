@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Buildings, CaretRight, Check, Rocket, Sparkle } from "@phosphor-icons/react";
 import type { ElementType } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckoutModal } from "./checkout-modal";
 
 type PlanTier = "FREE" | "BASIC" | "PRO";
@@ -34,7 +34,6 @@ type CheckoutPlan = {
     price: string;
     type: "teacher" | "student";
     isRecurring?: boolean;
-    razorpayPlanId?: string;
 };
 
 const PLAN_RANKS: Record<PlanTier, number> = {
@@ -122,7 +121,6 @@ const STUDENT_PLANS: Plan[] = [
         name: "Basic",
         annualPrice: "Rs 199",
         monthlyPrice: "Rs 29",
-        razorpayMonthlyPlanId: process.env.NEXT_PUBLIC_RAZORPAY_PLAN_BASIC,
         description: "For consistent prep with better revision depth and stronger tracking.",
         icon: Buildings,
         type: "student",
@@ -141,7 +139,6 @@ const STUDENT_PLANS: Plan[] = [
         name: "Pro",
         annualPrice: "Rs 399",
         monthlyPrice: "Rs 49",
-        razorpayMonthlyPlanId: process.env.NEXT_PUBLIC_RAZORPAY_PLAN_PRO,
         description: "For high-intensity exam prep with full analytics and premium practice depth.",
         icon: Sparkle,
         highlight: true,
@@ -185,8 +182,60 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
     const [billingCycle, setBillingCycle] = useState<"annual" | "monthly">("annual");
     const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [publicConfig, setPublicConfig] = useState({
+        razorpayPlanBasic: "",
+        razorpayPlanPro: "",
+    });
 
-    const activePlans = view === "teacher" ? TEACHER_PLANS : STUDENT_PLANS;
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadRuntimeConfig() {
+            try {
+                const response = await fetch("/api/platform-config/public", {
+                    cache: "no-store",
+                });
+                const payload = await response.json();
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setPublicConfig({
+                    razorpayPlanBasic: payload.razorpayPlanBasic ?? "",
+                    razorpayPlanPro: payload.razorpayPlanPro ?? "",
+                });
+            } catch (error) {
+                console.error("Failed to load public platform config for pricing", error);
+            }
+        }
+
+        void loadRuntimeConfig();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const studentPlans = useMemo(() => STUDENT_PLANS.map((plan) => {
+        if (plan.id === "s-basic") {
+            return {
+                ...plan,
+                razorpayMonthlyPlanId: publicConfig.razorpayPlanBasic || undefined,
+            };
+        }
+
+        if (plan.id === "s-pro") {
+            return {
+                ...plan,
+                razorpayMonthlyPlanId: publicConfig.razorpayPlanPro || undefined,
+            };
+        }
+
+        return plan;
+    }), [publicConfig.razorpayPlanBasic, publicConfig.razorpayPlanPro]);
+
+    const activePlans = view === "teacher" ? TEACHER_PLANS : studentPlans;
     const supportsMonthlyBilling = useMemo(
         () => activePlans.every((plan) => plan.appPlan === "FREE" || (plan.monthlyPrice && plan.razorpayMonthlyPlanId)),
         [activePlans],
@@ -212,7 +261,6 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
             price: getPlanPrice(plan, selectedBillingCycle),
             type: plan.type,
             isRecurring: selectedBillingCycle === "monthly",
-            razorpayPlanId: plan.razorpayMonthlyPlanId,
         };
 
         setSelectedPlan(planToCheckout);
@@ -266,6 +314,12 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                             <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                                 Save 25%
                             </span>
+                        </div>
+                    )}
+
+                    {view === "student" && !supportsMonthlyBilling && (
+                        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-700">
+                            Monthly student plans will appear here once Razorpay recurring plan IDs are saved in admin integrations.
                         </div>
                     )}
                 </div>

@@ -31,6 +31,7 @@ type SaveState = "enabled" | "login" | "hidden";
 interface Props {
     initialCategory?: string;
     initialSubType?: string;
+    initialSearch?: string;
     daysToExam?: number;
     saveState?: SaveState;
     loginHref?: string;
@@ -42,6 +43,7 @@ interface Props {
 export function FreeResourcesDashboard({
     initialCategory = "All",
     initialSubType = "All",
+    initialSearch = "",
     daysToExam = 0,
     saveState = "hidden",
     loginHref = "/auth/login",
@@ -52,8 +54,8 @@ export function FreeResourcesDashboard({
     const pathname = usePathname();
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [activeSecondary, setActiveSecondary] = useState(initialSubType);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
     const [resources, setResources] = useState<PublicResource[]>([]);
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);

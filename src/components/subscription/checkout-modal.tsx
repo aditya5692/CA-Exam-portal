@@ -16,7 +16,6 @@ interface CheckoutModalProps {
         price: string;
         type: "teacher" | "student";
         isRecurring?: boolean;
-        razorpayPlanId?: string;
     } | null;
     isOpen: boolean;
     onClose: () => void;
@@ -94,10 +93,9 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
             }
 
             let razorpayData;
-            if (plan.isRecurring && plan.razorpayPlanId) {
+            if (plan.isRecurring) {
                 const res = await createRecurringSubscription({
                     planId: plan.id,
-                    razorpayPlanId: plan.razorpayPlanId,
                 });
                 if (!res.success) throw new Error(res.message);
                 razorpayData = res.data;

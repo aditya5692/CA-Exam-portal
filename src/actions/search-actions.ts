@@ -1,7 +1,7 @@
 "use server";
 
-import prisma from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
+import prisma from "@/lib/prisma/client";
 
 export type SearchResultType = "TEACHER" | "STUDENT" | "EXAM" | "MATERIAL" | "BATCH";
 
@@ -12,6 +12,93 @@ export interface SearchResult {
     type: SearchResultType;
     href: string;
     metadata?: any;
+}
+
+type RankedSearchResult = SearchResult & {
+    score: number;
+};
+
+function normalizeText(value: string | null | undefined) {
+    return value?.trim().toLowerCase() ?? "";
+}
+
+function tokenizeQuery(query: string) {
+    return query
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean);
+}
+
+function scoreFieldMatch(value: string | null | undefined, query: string, tokens: string[], weight: number) {
+    const normalizedValue = normalizeText(value);
+    if (!normalizedValue) {
+        return 0;
+    }
+
+    let score = 0;
+    if (normalizedValue === query) {
+        score += weight * 8;
+    } else if (normalizedValue.startsWith(query)) {
+        score += weight * 5;
+    } else if (normalizedValue.includes(query)) {
+        score += weight * 3;
+    }
+
+    for (const token of tokens) {
+        if (normalizedValue.includes(token)) {
+            score += weight;
+        }
+    }
+
+    return score;
+}
+
+function rankResult(
+    results: RankedSearchResult[],
+    result: SearchResult,
+    query: string,
+    tokens: string[],
+    fields: Array<{ value: string | null | undefined; weight: number }>,
+) {
+    const score = fields.reduce((total, field) => total + scoreFieldMatch(field.value, query, tokens, field.weight), 0);
+    if (score <= 0) {
+        return;
+    }
+
+    results.push({
+        ...result,
+        score,
+        metadata: {
+            ...(result.metadata ?? {}),
+            score,
+        },
+    });
+}
+
+function finalizeResults(results: RankedSearchResult[]) {
+    const deduped = new Map<string, RankedSearchResult>();
+
+    for (const result of results) {
+        const key = `${result.type}:${result.id}`;
+        const existing = deduped.get(key);
+        if (!existing || existing.score < result.score) {
+            deduped.set(key, result);
+        }
+    }
+
+    return Array.from(deduped.values())
+        .sort((left, right) => right.score - left.score || left.title.localeCompare(right.title))
+        .slice(0, 14)
+        .map(({ score: _score, ...result }) => result);
+}
+
+function buildMaterialHref(role: "STUDENT" | "TEACHER" | "ADMIN", title: string) {
+    if (role === "TEACHER") {
+        return `/teacher/free-resources?search=${encodeURIComponent(title)}`;
+    }
+
+    return `/student/free-resources?search=${encodeURIComponent(title)}`;
 }
 
 export async function performGlobalSearch(query: string): Promise<{ success: boolean; data: SearchResult[]; message?: string }> {
@@ -26,152 +113,373 @@ export async function performGlobalSearch(query: string): Promise<{ success: boo
         }
 
         const searchTerm = query.trim();
-        const results: SearchResult[] = [];
+        const normalizedQuery = searchTerm.toLowerCase();
+        const tokens = tokenizeQuery(searchTerm);
+        const results: RankedSearchResult[] = [];
 
         if (user.role === "STUDENT" || user.role === "ADMIN") {
-            // 1. Search Teachers
-            const teachers = await prisma.user.findMany({
-                where: {
-                    role: "TEACHER",
-                    isPublicProfile: true,
-                    OR: [
-                        { fullName: { contains: searchTerm } },
-                        { expertise: { contains: searchTerm } },
-                        { designation: { contains: searchTerm } },
-                    ],
-                },
-                take: 5,
-                select: { id: true, fullName: true, designation: true, expertise: true },
-            });
+            const [teachers, exams, materials, batches] = await Promise.all([
+                prisma.user.findMany({
+                    where: {
+                        role: "TEACHER",
+                        isPublicProfile: true,
+                        OR: [
+                            { fullName: { contains: searchTerm } },
+                            { email: { contains: searchTerm } },
+                            { expertise: { contains: searchTerm } },
+                            { designation: { contains: searchTerm } },
+                            { department: { contains: searchTerm } },
+                        ],
+                    },
+                    take: 12,
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                        designation: true,
+                        expertise: true,
+                        department: true,
+                    },
+                }),
+                prisma.exam.findMany({
+                    where: {
+                        status: "PUBLISHED",
+                        OR: [
+                            { title: { contains: searchTerm } },
+                            { description: { contains: searchTerm } },
+                            { subject: { contains: searchTerm } },
+                            { chapter: { contains: searchTerm } },
+                            { category: { contains: searchTerm } },
+                            { examType: { contains: searchTerm } },
+                            { teacher: { is: { fullName: { contains: searchTerm } } } },
+                        ],
+                    },
+                    take: 12,
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        subject: true,
+                        chapter: true,
+                        category: true,
+                        examType: true,
+                        teacher: { select: { fullName: true } },
+                    },
+                }),
+                prisma.studyMaterial.findMany({
+                    where: {
+                        isPublic: true,
+                        OR: [
+                            { title: { contains: searchTerm } },
+                            { description: { contains: searchTerm } },
+                            { category: { contains: searchTerm } },
+                            { subType: { contains: searchTerm } },
+                            { providerType: { contains: searchTerm } },
+                            { uploadedBy: { is: { fullName: { contains: searchTerm } } } },
+                        ],
+                    },
+                    take: 12,
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        category: true,
+                        subType: true,
+                        providerType: true,
+                        uploadedBy: { select: { fullName: true } },
+                    },
+                }),
+                prisma.batch.findMany({
+                    where: user.role === "STUDENT"
+                        ? {
+                            enrollments: { some: { studentId: user.id } },
+                            OR: [
+                                { name: { contains: searchTerm } },
+                                { uniqueJoinCode: { contains: searchTerm } },
+                                { teacher: { is: { fullName: { contains: searchTerm } } } },
+                            ],
+                        }
+                        : {
+                            OR: [
+                                { name: { contains: searchTerm } },
+                                { uniqueJoinCode: { contains: searchTerm } },
+                                { teacher: { is: { fullName: { contains: searchTerm } } } },
+                            ],
+                        },
+                    take: 10,
+                    select: {
+                        id: true,
+                        name: true,
+                        uniqueJoinCode: true,
+                        teacher: { select: { fullName: true } },
+                    },
+                }),
+            ]);
 
-            teachers.forEach((t) => {
-                results.push({
-                    id: t.id,
-                    title: t.fullName || "Unnamed Teacher",
-                    subtitle: t.designation || t.expertise || "Faculty",
+            teachers.forEach((teacher) => {
+                rankResult(results, {
+                    id: teacher.id,
+                    title: teacher.fullName || "Unnamed Teacher",
+                    subtitle: [teacher.designation, teacher.expertise, teacher.department].filter(Boolean).join(" • ") || teacher.email || "Faculty",
                     type: "TEACHER",
-                    href: `/student/teachers/${t.id}`,
-                });
+                    href: `/student/teachers/${teacher.id}`,
+                }, normalizedQuery, tokens, [
+                    { value: teacher.fullName, weight: 5 },
+                    { value: teacher.expertise, weight: 4 },
+                    { value: teacher.designation, weight: 3 },
+                    { value: teacher.department, weight: 2 },
+                    { value: teacher.email, weight: 2 },
+                ]);
             });
 
-            // 2. Search Exams
-            const exams = await prisma.exam.findMany({
-                where: {
-                    status: "PUBLISHED",
-                    OR: [
-                        { title: { contains: searchTerm } },
-                        { subject: { contains: searchTerm } },
-                    ],
-                },
-                take: 5,
-                select: { id: true, title: true, subject: true, category: true },
-            });
-
-            exams.forEach((e) => {
-                results.push({
-                    id: e.id,
-                    title: e.title,
-                    subtitle: `${e.category}${e.subject ? ` • ${e.subject}` : ""}`,
+            exams.forEach((exam) => {
+                rankResult(results, {
+                    id: exam.id,
+                    title: exam.title,
+                    subtitle: [exam.category, exam.subject, exam.chapter, exam.teacher.fullName].filter(Boolean).join(" • "),
                     type: "EXAM",
-                    href: `/exam/${e.id}`,
-                });
+                    href: `/exam/${exam.id}`,
+                }, normalizedQuery, tokens, [
+                    { value: exam.title, weight: 5 },
+                    { value: exam.subject, weight: 4 },
+                    { value: exam.chapter, weight: 3 },
+                    { value: exam.category, weight: 2 },
+                    { value: exam.examType, weight: 2 },
+                    { value: exam.description, weight: 2 },
+                    { value: exam.teacher.fullName, weight: 2 },
+                ]);
             });
 
-            // 3. Search Materials (Public)
-            const materials = await prisma.studyMaterial.findMany({
-                where: {
-                    isPublic: true,
-                    OR: [
-                        { title: { contains: searchTerm } },
-                        { description: { contains: searchTerm } },
-                        { category: { contains: searchTerm } },
-                    ],
-                },
-                take: 5,
-                select: { id: true, title: true, category: true, subType: true },
-            });
-
-            materials.forEach((m) => {
-                results.push({
-                    id: m.id,
-                    title: m.title,
-                    subtitle: `${m.category} • ${m.subType}`,
+            materials.forEach((material) => {
+                rankResult(results, {
+                    id: material.id,
+                    title: material.title,
+                    subtitle: [material.category, material.subType, material.uploadedBy.fullName].filter(Boolean).join(" • "),
                     type: "MATERIAL",
-                    href: `/student/free-resources?search=${encodeURIComponent(searchTerm)}`, 
-                });
+                    href: buildMaterialHref(user.role, material.title),
+                }, normalizedQuery, tokens, [
+                    { value: material.title, weight: 5 },
+                    { value: material.description, weight: 3 },
+                    { value: material.category, weight: 3 },
+                    { value: material.subType, weight: 2 },
+                    { value: material.providerType, weight: 2 },
+                    { value: material.uploadedBy.fullName, weight: 2 },
+                ]);
+            });
+
+            batches.forEach((batch) => {
+                rankResult(results, {
+                    id: batch.id,
+                    title: batch.name,
+                    subtitle: [batch.teacher.fullName, `Code ${batch.uniqueJoinCode}`].filter(Boolean).join(" • "),
+                    type: "BATCH",
+                    href: `/teacher/batches/${batch.id}`,
+                }, normalizedQuery, tokens, [
+                    { value: batch.name, weight: 5 },
+                    { value: batch.uniqueJoinCode, weight: 4 },
+                    { value: batch.teacher.fullName, weight: 2 },
+                ]);
             });
         }
 
         if (user.role === "TEACHER" || user.role === "ADMIN") {
-            // 1. Search Students
-            const students = await prisma.user.findMany({
-                where: {
-                    role: "STUDENT",
-                    OR: [
-                        { fullName: { contains: searchTerm } },
-                        { registrationNumber: { contains: searchTerm } },
-                        { phone: { contains: searchTerm } },
-                    ],
-                },
-                take: 10,
-                select: { id: true, fullName: true, registrationNumber: true, email: true },
-            });
+            const [students, batches, materials, exams] = await Promise.all([
+                prisma.user.findMany({
+                    where: {
+                        role: "STUDENT",
+                        OR: [
+                            { fullName: { contains: searchTerm } },
+                            { registrationNumber: { contains: searchTerm } },
+                            { phone: { contains: searchTerm } },
+                            { email: { contains: searchTerm } },
+                            { department: { contains: searchTerm } },
+                            { enrollments: { some: { batch: { name: { contains: searchTerm } } } } },
+                        ],
+                    },
+                    take: 12,
+                    select: {
+                        id: true,
+                        fullName: true,
+                        registrationNumber: true,
+                        email: true,
+                        phone: true,
+                        department: true,
+                        enrollments: {
+                            select: {
+                                batch: {
+                                    select: {
+                                        name: true,
+                                    },
+                                },
+                            },
+                            take: 3,
+                        },
+                    },
+                }),
+                prisma.batch.findMany({
+                    where: user.role === "TEACHER"
+                        ? {
+                            teacherId: user.id,
+                            OR: [
+                                { name: { contains: searchTerm } },
+                                { uniqueJoinCode: { contains: searchTerm } },
+                            ],
+                        }
+                        : {
+                            OR: [
+                                { name: { contains: searchTerm } },
+                                { uniqueJoinCode: { contains: searchTerm } },
+                                { teacher: { is: { fullName: { contains: searchTerm } } } },
+                            ],
+                        },
+                    take: 10,
+                    select: {
+                        id: true,
+                        name: true,
+                        uniqueJoinCode: true,
+                        teacher: { select: { fullName: true } },
+                    },
+                }),
+                prisma.studyMaterial.findMany({
+                    where: user.role === "TEACHER"
+                        ? {
+                            uploadedById: user.id,
+                            OR: [
+                                { title: { contains: searchTerm } },
+                                { description: { contains: searchTerm } },
+                                { category: { contains: searchTerm } },
+                                { subType: { contains: searchTerm } },
+                                { providerType: { contains: searchTerm } },
+                            ],
+                        }
+                        : {
+                            OR: [
+                                { title: { contains: searchTerm } },
+                                { description: { contains: searchTerm } },
+                                { category: { contains: searchTerm } },
+                                { subType: { contains: searchTerm } },
+                                { providerType: { contains: searchTerm } },
+                                { uploadedBy: { is: { fullName: { contains: searchTerm } } } },
+                            ],
+                        },
+                    take: 12,
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        category: true,
+                        subType: true,
+                        providerType: true,
+                        uploadedBy: { select: { fullName: true } },
+                    },
+                }),
+                prisma.exam.findMany({
+                    where: user.role === "TEACHER"
+                        ? {
+                            teacherId: user.id,
+                            OR: [
+                                { title: { contains: searchTerm } },
+                                { description: { contains: searchTerm } },
+                                { subject: { contains: searchTerm } },
+                                { chapter: { contains: searchTerm } },
+                                { category: { contains: searchTerm } },
+                            ],
+                        }
+                        : {
+                            OR: [
+                                { title: { contains: searchTerm } },
+                                { description: { contains: searchTerm } },
+                                { subject: { contains: searchTerm } },
+                                { chapter: { contains: searchTerm } },
+                                { category: { contains: searchTerm } },
+                                { teacher: { is: { fullName: { contains: searchTerm } } } },
+                            ],
+                        },
+                    take: 12,
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        subject: true,
+                        chapter: true,
+                        category: true,
+                        status: true,
+                        teacher: { select: { fullName: true } },
+                    },
+                }),
+            ]);
 
-            students.forEach((s) => {
-                results.push({
-                    id: s.id,
-                    title: s.fullName || "Unnamed Student",
-                    subtitle: s.registrationNumber || s.email || "Student",
+            students.forEach((student) => {
+                rankResult(results, {
+                    id: student.id,
+                    title: student.fullName || "Unnamed Student",
+                    subtitle: [
+                        student.registrationNumber,
+                        student.email,
+                        student.enrollments.map((enrollment) => enrollment.batch.name).join(", "),
+                    ].filter(Boolean).join(" • "),
                     type: "STUDENT",
-                    href: `/teacher/students?id=${s.id}&name=${encodeURIComponent(s.fullName || "Student")}`,
-                });
+                    href: `/teacher/students?id=${student.id}&name=${encodeURIComponent(student.fullName || "Student")}`,
+                }, normalizedQuery, tokens, [
+                    { value: student.fullName, weight: 5 },
+                    { value: student.registrationNumber, weight: 4 },
+                    { value: student.email, weight: 3 },
+                    { value: student.phone, weight: 3 },
+                    { value: student.department, weight: 2 },
+                    { value: student.enrollments.map((enrollment) => enrollment.batch.name).join(" "), weight: 2 },
+                ]);
             });
 
-            // 2. Search Teacher's Batches
-            const batches = await prisma.batch.findMany({
-                where: {
-                    teacherId: user.id,
-                    OR: [
-                        { name: { contains: searchTerm } },
-                        { uniqueJoinCode: { contains: searchTerm } },
-                    ],
-                },
-                take: 5,
-                select: { id: true, name: true, uniqueJoinCode: true },
-            });
-
-            batches.forEach((b) => {
-                results.push({
-                    id: b.id,
-                    title: b.name,
-                    subtitle: `Code: ${b.uniqueJoinCode}`,
+            batches.forEach((batch) => {
+                rankResult(results, {
+                    id: batch.id,
+                    title: batch.name,
+                    subtitle: [batch.teacher.fullName, `Code ${batch.uniqueJoinCode}`].filter(Boolean).join(" • "),
                     type: "BATCH",
-                    href: `/teacher/batches/${b.id}`,
-                });
+                    href: `/teacher/batches/${batch.id}`,
+                }, normalizedQuery, tokens, [
+                    { value: batch.name, weight: 5 },
+                    { value: batch.uniqueJoinCode, weight: 4 },
+                    { value: batch.teacher.fullName, weight: 2 },
+                ]);
             });
 
-            // 3. Search Teacher's Materials
-            const myMaterials = await prisma.studyMaterial.findMany({
-                where: {
-                    uploadedById: user.id,
-                    title: { contains: searchTerm },
-                },
-                take: 5,
-                select: { id: true, title: true, category: true },
-            });
-
-            myMaterials.forEach((m) => {
-                results.push({
-                    id: m.id,
-                    title: m.title,
-                    subtitle: `My Material • ${m.category}`,
+            materials.forEach((material) => {
+                rankResult(results, {
+                    id: material.id,
+                    title: material.title,
+                    subtitle: [material.category, material.subType, material.uploadedBy.fullName].filter(Boolean).join(" • "),
                     type: "MATERIAL",
-                    href: `/teacher/materials/${m.id}`,
-                });
+                    href: buildMaterialHref(user.role, material.title),
+                }, normalizedQuery, tokens, [
+                    { value: material.title, weight: 5 },
+                    { value: material.description, weight: 3 },
+                    { value: material.category, weight: 3 },
+                    { value: material.subType, weight: 2 },
+                    { value: material.providerType, weight: 2 },
+                    { value: material.uploadedBy.fullName, weight: 2 },
+                ]);
+            });
+
+            exams.forEach((exam) => {
+                rankResult(results, {
+                    id: exam.id,
+                    title: exam.title,
+                    subtitle: [exam.status, exam.subject, exam.chapter, exam.teacher.fullName].filter(Boolean).join(" • "),
+                    type: "EXAM",
+                    href: `/exam/${exam.id}`,
+                }, normalizedQuery, tokens, [
+                    { value: exam.title, weight: 5 },
+                    { value: exam.description, weight: 3 },
+                    { value: exam.subject, weight: 3 },
+                    { value: exam.chapter, weight: 2 },
+                    { value: exam.category, weight: 2 },
+                    { value: exam.teacher.fullName, weight: 2 },
+                ]);
             });
         }
 
-        return { success: true, data: results };
+        return { success: true, data: finalizeResults(results) };
     } catch (error) {
         console.error("Global search error:", error);
         return { success: false, data: [], message: "Internal server error" };

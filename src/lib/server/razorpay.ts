@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import Razorpay from "razorpay";
+import { getResolvedPlatformConfig } from "./platform-config";
 
 export type BillingCycle = "annual" | "monthly";
 export type BillingPlanRole = "STUDENT" | "TEACHER";
@@ -65,31 +66,39 @@ const BILLING_PLANS: Record<string, BillingPlanDefinition> = {
     },
 };
 
-let razorpayInstance: Razorpay | null = null;
+let razorpayInstanceCache: { keyId: string; keySecret: string; instance: Razorpay } | null = null;
 
-export function getRazorpayInstance(): Razorpay {
-    if (!razorpayInstance) {
-        const keyId = process.env.RAZORPAY_KEY_ID;
-        const keySecret = process.env.RAZORPAY_KEY_SECRET;
+export async function getRazorpayInstance(): Promise<Razorpay> {
+    const { values } = await getResolvedPlatformConfig();
+    const keyId = values.razorpayKeyId;
+    const keySecret = values.razorpayKeySecret;
 
-        if (!keyId || !keySecret) {
-            throw new Error(
-                "Razorpay credentials missing. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env",
-            );
-        }
-
-        razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    if (!keyId || !keySecret) {
+        throw new Error(
+            "Razorpay credentials are missing. Save Razorpay Key ID and Key Secret in admin integrations or provide env fallbacks.",
+        );
     }
 
-    return razorpayInstance;
+    if (
+        razorpayInstanceCache &&
+        razorpayInstanceCache.keyId === keyId &&
+        razorpayInstanceCache.keySecret === keySecret
+    ) {
+        return razorpayInstanceCache.instance;
+    }
+
+    const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    razorpayInstanceCache = { keyId, keySecret, instance };
+    return instance;
 }
 
-export function verifyPaymentSignature(
+export async function verifyPaymentSignature(
     razorpayOrderId: string,
     razorpayPaymentId: string,
     signature: string,
-): boolean {
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+): Promise<boolean> {
+    const { values } = await getResolvedPlatformConfig();
+    const keySecret = values.razorpayKeySecret;
     if (!keySecret) throw new Error("RAZORPAY_KEY_SECRET is not set.");
 
     const generatedSignature = crypto
@@ -100,8 +109,9 @@ export function verifyPaymentSignature(
     return generatedSignature === signature;
 }
 
-export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+export async function verifyWebhookSignature(rawBody: string, signature: string): Promise<boolean> {
+    const { values } = await getResolvedPlatformConfig();
+    const webhookSecret = values.razorpayWebhookSecret;
     if (!webhookSecret) {
         throw new Error("RAZORPAY_WEBHOOK_SECRET is not set.");
     }

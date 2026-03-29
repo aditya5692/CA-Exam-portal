@@ -1,14 +1,13 @@
 import "server-only";
 
-const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
-const MSG91_OTP_TEMPLATE_ID = process.env.MSG91_OTP_TEMPLATE_ID;
+import { getResolvedPlatformConfig } from "./platform-config";
 
 /**
  * Validates that the necessary MSG91 configuration is present.
  * In production, this will throw an error if keys are missing.
  */
-function validateConfig() {
-    if (!MSG91_AUTH_KEY) {
+function validateConfig(msg91AuthKey: string | null) {
+    if (!msg91AuthKey) {
         const msg = "MSG91_AUTH_KEY is not configured in environment variables.";
         if (process.env.NODE_ENV === "production") throw new Error(msg);
         console.warn(msg);
@@ -59,6 +58,9 @@ const MOCK_OTPS: Record<string, string> = !IS_PROD ? {
  */
 export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; message: string }> {
     const formattedPhone = normalizePhone(phone);
+    const { values } = await getResolvedPlatformConfig();
+    const msg91AuthKey = values.msg91AuthKey;
+    const msg91OtpTemplateId = values.msg91OtpTemplateId;
 
     // Bypass for mock numbers (Dev/Test only)
     if (!IS_PROD && MOCK_OTPS[formattedPhone]) {
@@ -66,18 +68,18 @@ export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; m
         return { success: true, message: "OTP sent successfully (Mock)." };
     }
 
-    if (!validateConfig()) {
+    if (!validateConfig(msg91AuthKey)) {
         return { success: false, message: "SMS service is currently unavailable (Config)." };
     }
 
-    if (!MSG91_OTP_TEMPLATE_ID) {
+    if (!msg91OtpTemplateId) {
         console.warn("MSG91_OTP_TEMPLATE_ID is missing.");
         return { success: false, message: "SMS configuration error (Template)." };
     }
 
     try {
         // Updated to api.msg91.com for standard production access
-        const response = await fetch(`https://api.msg91.com/api/v5/otp?template_id=${MSG91_OTP_TEMPLATE_ID}&mobile=${formattedPhone}&authkey=${MSG91_AUTH_KEY}`, {
+        const response = await fetch(`https://api.msg91.com/api/v5/otp?template_id=${msg91OtpTemplateId}&mobile=${formattedPhone}&authkey=${msg91AuthKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
         });
@@ -100,6 +102,8 @@ export async function sendMsg91Otp(phone: string): Promise<{ success: boolean; m
  */
 export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ success: boolean; message: string }> {
     const formattedPhone = normalizePhone(phone);
+    const { values } = await getResolvedPlatformConfig();
+    const msg91AuthKey = values.msg91AuthKey;
 
     // Dev/Test bypass
     if (!IS_PROD && MOCK_OTPS[formattedPhone]) {
@@ -108,12 +112,12 @@ export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ succ
         }
     }
 
-    if (!validateConfig()) {
+    if (!validateConfig(msg91AuthKey)) {
         return { success: false, message: "Verification service temporarily unavailable." };
     }
 
     try {
-        const response = await fetch(`https://api.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=${formattedPhone}&authkey=${MSG91_AUTH_KEY}`, {
+        const response = await fetch(`https://api.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=${formattedPhone}&authkey=${msg91AuthKey}`, {
             method: "GET",
         });
 
@@ -134,7 +138,10 @@ export async function verifyMsg91Otp(phone: string, otp: string): Promise<{ succ
  * Crucial for the embedded widget flow.
  */
 export async function verifyMsg91WidgetToken(token: string): Promise<{ success: boolean; message: string; phone?: string }> {
-    if (!validateConfig()) {
+    const { values } = await getResolvedPlatformConfig();
+    const msg91AuthKey = values.msg91AuthKey;
+
+    if (!validateConfig(msg91AuthKey)) {
         return { success: false, message: "Configuration error. Please contact support." };
     }
 
@@ -153,7 +160,7 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
                 "Accept": "application/json"
             },
             body: JSON.stringify({ 
-                "authkey": MSG91_AUTH_KEY,
+                "authkey": msg91AuthKey,
                 "access-token": token 
             })
         });

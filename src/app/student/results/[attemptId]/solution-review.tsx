@@ -1,10 +1,10 @@
 "use client";
+
 import { updateStudentAnswerGapTag } from "@/actions/exam-actions";
 import { cn } from "@/lib/utils";
 import { CheckCircle, Info, Timer, Warning, XCircle } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export interface SolutionAnswer {
@@ -29,259 +29,358 @@ export interface SolutionAnswer {
     };
 }
 
-type FilterTab = "all" | "wrong" | "correct";
+type FilterTab = "all" | "wrong" | "correct" | "skipped";
+
+function getStatusMeta(answer: SolutionAnswer) {
+    if (!answer.selectedOptionId) {
+        return {
+            label: "Not answered",
+            badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
+            cardClass: "border-amber-100",
+        };
+    }
+
+    if (answer.isCorrect) {
+        return {
+            label: "Correct",
+            badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
+            cardClass: "border-emerald-100",
+        };
+    }
+
+    return {
+        label: "Wrong",
+        badgeClass: "border-rose-200 bg-rose-50 text-rose-700",
+        cardClass: "border-rose-100",
+    };
+}
 
 export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
     const [filter, setFilter] = useState<FilterTab>("all");
+    const router = useRouter();
+
+    const numberedAnswers = useMemo(
+        () => answers.map((answer, index) => ({ answer, questionNumber: index + 1 })),
+        [answers],
+    );
 
     const counts = {
         all: answers.length,
-        wrong: answers.filter((a) => !a.isCorrect).length,
-        correct: answers.filter((a) => a.isCorrect).length,
+        wrong: answers.filter((answer) => answer.selectedOptionId && !answer.isCorrect).length,
+        correct: answers.filter((answer) => answer.isCorrect).length,
+        skipped: answers.filter((answer) => !answer.selectedOptionId).length,
     };
 
-    const displayed =
-        filter === "all" ? answers :
-            filter === "wrong" ? answers.filter((a) => !a.isCorrect) :
-                answers.filter((a) => a.isCorrect);
+    const displayed = numberedAnswers.filter(({ answer }) => {
+        if (filter === "wrong") {
+            return Boolean(answer.selectedOptionId) && !answer.isCorrect;
+        }
+
+        if (filter === "correct") {
+            return answer.isCorrect;
+        }
+
+        if (filter === "skipped") {
+            return !answer.selectedOptionId;
+        }
+
+        return true;
+    });
 
     const tabs: { key: FilterTab; label: string; active: string; inactive: string }[] = [
-        { key: "all", label: `All (${counts.all})`, active: "student-tab-active border-[var(--student-border)] text-[var(--student-accent-strong)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-panel-solid)]" },
-        { key: "wrong", label: `Wrong (${counts.wrong})`, active: "bg-[var(--student-destructive)] text-white border-[var(--student-destructive)] shadow-[0_12px_24px_rgba(220,38,38,0.18)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-destructive-soft)]" },
-        { key: "correct", label: `Correct (${counts.correct})`, active: "bg-[var(--student-accent-strong)] text-white border-[var(--student-accent-strong)] shadow-[0_12px_24px_rgba(31,92,80,0.18)]", inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-accent-soft)]" },
+        {
+            key: "all",
+            label: `All (${counts.all})`,
+            active: "student-tab-active border-[var(--student-border)] text-[var(--student-accent-strong)]",
+            inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-panel-solid)]",
+        },
+        {
+            key: "wrong",
+            label: `Wrong (${counts.wrong})`,
+            active: "bg-[var(--student-destructive)] text-white border-[var(--student-destructive)]",
+            inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-destructive-soft)]",
+        },
+        {
+            key: "correct",
+            label: `Correct (${counts.correct})`,
+            active: "bg-[var(--student-success)] text-white border-[var(--student-success)]",
+            inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-success-soft)]",
+        },
+        {
+            key: "skipped",
+            label: `Skipped (${counts.skipped})`,
+            active: "bg-[var(--student-support)] text-white border-[var(--student-support)]",
+            inactive: "bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-support-soft)]",
+        },
     ];
 
     const optionLetters = ["A", "B", "C", "D", "E"];
-    const router = useRouter();
 
-    const handleTagUpdate = async (answerId: string, tag: string | null) => {
-        const res = await updateStudentAnswerGapTag(answerId, tag);
-        if (res.success) {
-            toast.success("Error insight saved successfully.");
+    async function handleTagUpdate(answerId: string, tag: string | null) {
+        const result = await updateStudentAnswerGapTag(answerId, tag);
+        if (result.success) {
+            toast.success("Review tag saved.");
             router.refresh();
-        } else {
-            toast.error(res.message);
+            return;
         }
-    };
+
+        toast.error(result.message);
+    }
 
     return (
-        <div className="space-y-4">
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-                {tabs.map((t) => (
+        <div className="space-y-6">
+            <div className="space-y-4">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
+                    Question by question review
+                </div>
+                <h2 className="font-outfit text-2xl font-black tracking-tight text-[var(--student-text)]">
+                    Compare your marked option with the correct answer
+                </h2>
+                <p className="max-w-3xl text-sm leading-7 text-[var(--student-muted-strong)]">
+                    The review keeps the original question order intact so you can replay the attempt exactly as you saw it.
+                </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+                {tabs.map((tab) => (
                     <button
-                        key={t.key}
-                        onClick={() => setFilter(t.key)}
+                        key={tab.key}
+                        onClick={() => setFilter(tab.key)}
                         className={cn(
-                            "rounded-xl border px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95",
-                            filter === t.key ? t.active : `${t.inactive} border-[var(--student-border)]`
+                            "rounded-xl border px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95",
+                            filter === tab.key ? tab.active : `${tab.inactive} border-[var(--student-border)]`,
                         )}
                     >
-                        {t.label}
+                        {tab.label}
                     </button>
                 ))}
             </div>
 
             {displayed.length === 0 && (
-                <div className="student-surface rounded-2xl py-16 text-center">
-                    <div className="mb-2 text-4xl">{filter === "wrong" ? "Clear" : "Empty"}</div>
-                    <div className="font-bold text-[var(--student-muted-strong)]">
-                        {filter === "wrong" ? "No wrong answers in this set." : "Nothing to review in this filter."}
+                <div className="rounded-[28px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-14 text-center">
+                    <div className="text-lg font-black text-[var(--student-text)]">Nothing in this filter.</div>
+                    <div className="mt-2 text-sm text-[var(--student-muted-strong)]">
+                        Switch filters to review another set of questions.
                     </div>
                 </div>
             )}
 
-            {displayed.map((answer, idx) => (
-                <div
-                    key={answer.id}
-                    className={cn(
-                        "student-surface rounded-[28px] p-6 transition-all duration-300",
-                        !answer.isCorrect && "border-[var(--student-destructive-soft-strong)]"
-                    )}
-                >
-                    <div className="flex items-start gap-4">
-                        <div
+            <div className="space-y-5">
+                {displayed.map(({ answer, questionNumber }) => {
+                    const status = getStatusMeta(answer);
+
+                    return (
+                        <article
+                            id={`review-question-${questionNumber}`}
+                            key={answer.id}
                             className={cn(
-                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-sm font-bold shadow-inner",
-                                answer.isCorrect
-                                    ? "border-[var(--student-success-soft-strong,var(--student-border-strong))] bg-[var(--student-success-soft,var(--student-panel-muted))] text-[var(--student-success)]"
-                                    : "border-[var(--student-destructive-soft-strong)] bg-[var(--student-destructive-soft)] text-[var(--student-destructive)]"
+                                "scroll-mt-24 rounded-[28px] border bg-white p-6 shadow-sm",
+                                status.cardClass,
                             )}
                         >
-                            {idx + 1}
-                        </div>
-
-                        <div className="min-w-0 flex-1 space-y-4">
-                            <div className="flex flex-wrap items-center gap-3">
-                                {answer.question.topic && (
-                                    <span className="student-chip rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
-                                        {answer.question.topic}
-                                    </span>
-                                )}
-                                {answer.question.difficulty && (
-                                    <span
-                                        className={cn(
-                                            "rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
-                                            answer.question.difficulty === "EASY"
-                                                ? "border-[var(--student-success-soft-strong,var(--student-border-strong))] bg-[var(--student-success-soft,var(--student-panel-muted))] text-[var(--student-success)]"
-                                                : answer.question.difficulty === "HARD"
-                                                    ? "border-[var(--student-destructive-soft-strong)] bg-[var(--student-destructive-soft)] text-[var(--student-destructive)]"
-                                                    : "border-[var(--student-support-soft-strong)] bg-[var(--student-support-soft)] text-[var(--student-support)]"
-                                        )}
-                                    >
-                                        {answer.question.difficulty}
-                                    </span>
-                                )}
-                                {answer.timeSpent > 0 && (
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                                        Time: {answer.timeSpent}s
-                                    </span>
-                                )}
-                            </div>
-
-                            <p className="font-outfit text-lg font-bold leading-relaxed tracking-tight text-[var(--student-text)]">
-                                {answer.question.text}
-                            </p>
-
-                            {answer.question.caseStudy && (
-                                <div className="grid gap-4 rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-                                    <div className="min-w-0 space-y-3 rounded-[20px] border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-5">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="rounded-full bg-[var(--student-accent-soft)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--student-accent-strong)]">
-                                                Case Scenario
-                                            </span>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                                                Keep this passage in view while reviewing the linked MCQ
-                                            </span>
-                                        </div>
-                                        <div className="text-base font-bold text-[var(--student-text)]">
-                                            {answer.question.caseStudy.title}
-                                        </div>
-                                        <div className="max-h-64 overflow-y-auto pr-1 text-sm leading-7 text-[var(--student-text)]">
-                                            {answer.question.caseStudy.content.split("\n").map((paragraph, paragraphIndex) =>
-                                                paragraph.trim() ? (
-                                                    <p key={paragraphIndex} className="mb-3 last:mb-0">
-                                                        {paragraph}
-                                                    </p>
-                                                ) : null,
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center rounded-[20px] border border-dashed border-[var(--student-border)] bg-white/60 p-5 text-sm font-medium leading-7 text-[var(--student-muted-strong)]">
-                                        This question was part of an ICAI-style integrated case bundle, so the scenario stays attached during review as well.
-                                    </div>
+                            <div className="flex items-start gap-4">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] text-sm font-black text-[var(--student-text)]">
+                                    {questionNumber}
                                 </div>
-                            )}
 
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                {answer.question.options.map((opt, oi) => {
-                                    const isChosen = opt.id === answer.selectedOptionId;
-                                    const isCorrect = opt.isCorrect;
-
-                                    return (
-                                        <div
-                                            key={opt.id}
-                                            className={cn(
-                                                "flex items-center justify-between gap-3 rounded-xl border p-4 text-sm font-bold transition-all",
-                                                isCorrect
-                                                    ? "border-[var(--student-success-soft-strong,var(--student-border-strong))] bg-[var(--student-success-soft,var(--student-panel-muted))] text-[var(--student-success)] shadow-sm"
-                                                    : isChosen && !isCorrect
-                                                        ? "border-[var(--student-destructive-soft-strong)] bg-[var(--student-destructive-soft)] text-[var(--student-destructive)] shadow-sm"
-                                                        : "border-[var(--student-border)] bg-[var(--student-panel-solid)] text-[var(--student-muted-strong)]"
+                                <div className="min-w-0 flex-1 space-y-5">
+                                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className={cn(
+                                                "rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]",
+                                                status.badgeClass,
+                                            )}>
+                                                {status.label}
+                                            </span>
+                                            {answer.question.topic && (
+                                                <span className="rounded-full border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-muted-strong)]">
+                                                    {answer.question.topic}
+                                                </span>
                                             )}
-                                        >
-                                            <span className="flex items-center gap-3">
-                                                <span
+                                            {answer.question.difficulty && (
+                                                <span className="rounded-full border border-[var(--student-border)] bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-muted)]">
+                                                    {answer.question.difficulty}
+                                                </span>
+                                            )}
+                                            {answer.timeSpent > 0 && (
+                                                <span className="rounded-full border border-[var(--student-border)] bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-muted)]">
+                                                    Time {answer.timeSpent}s
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {answer.question.subject && (
+                                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
+                                                {answer.question.subject}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <p className="font-outfit text-lg font-black leading-relaxed tracking-tight text-[var(--student-text)]">
+                                        {answer.question.text}
+                                    </p>
+
+                                    {answer.question.caseStudy && (
+                                        <div className="rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
+                                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                                                <span className="rounded-full bg-[var(--student-accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-accent-strong)]">
+                                                    Case study
+                                                </span>
+                                                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-muted)]">
+                                                    {answer.question.caseStudy.title}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-3 text-sm leading-7 text-[var(--student-text)]">
+                                                {answer.question.caseStudy.content.split("\n").map((paragraph, index) =>
+                                                    paragraph.trim() ? <p key={index}>{paragraph}</p> : null,
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid gap-3 lg:grid-cols-2">
+                                        {answer.question.options.map((option, optionIndex) => {
+                                            const isChosen = option.id === answer.selectedOptionId;
+                                            const isCorrectOption = option.isCorrect;
+
+                                            return (
+                                                <div
+                                                    key={option.id}
                                                     className={cn(
-                                                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold shadow-sm",
-                                                        isCorrect
-                                                            ? "bg-[var(--student-success)] text-white"
+                                                        "rounded-2xl border p-4 transition-all",
+                                                        isCorrectOption
+                                                            ? "border-emerald-200 bg-emerald-50"
                                                             : isChosen
-                                                                ? "bg-[var(--student-destructive)] text-white"
-                                                                : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]"
+                                                                ? "border-rose-200 bg-rose-50"
+                                                                : "border-[var(--student-border)] bg-[var(--student-panel-solid)]",
                                                     )}
                                                 >
-                                                    {optionLetters[oi] ?? String.fromCharCode(65 + oi)}
-                                                </span>
-                                                {opt.text}
-                                            </span>
-                                            {isCorrect && <CheckCircle size={18} weight="fill" className="shrink-0 text-[var(--student-success)]" />}
-                                            {isChosen && !isCorrect && <XCircle size={18} weight="fill" className="shrink-0 text-[var(--student-destructive)]" />}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={cn(
+                                                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[10px] font-black",
+                                                            isCorrectOption
+                                                                ? "bg-emerald-600 text-white"
+                                                                : isChosen
+                                                                    ? "bg-rose-600 text-white"
+                                                                    : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]",
+                                                        )}>
+                                                            {optionLetters[optionIndex] ?? String.fromCharCode(65 + optionIndex)}
+                                                        </div>
 
-                            {answer.question.explanation && (
-                                <div className="rounded-2xl border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-5">
-                                    <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[var(--student-accent-strong)]">
-                                        Explanation
-                                    </div>
-                                    <p className="text-base font-medium leading-relaxed text-[var(--student-text)]">
-                                        {answer.question.explanation}
-                                    </p>
-                                </div>
-                            )}
+                                                        <div className="min-w-0 flex-1 space-y-3">
+                                                            <div className="text-sm font-semibold leading-6 text-[var(--student-text)]">
+                                                                {option.text}
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {isChosen && (
+                                                                    <span className={cn(
+                                                                        "rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em]",
+                                                                        isCorrectOption
+                                                                            ? "border-emerald-200 bg-white text-emerald-700"
+                                                                            : "border-rose-200 bg-white text-rose-700",
+                                                                    )}>
+                                                                        Your answer
+                                                                    </span>
+                                                                )}
+                                                                {isCorrectOption && (
+                                                                    <span className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-700">
+                                                                        Correct answer
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
 
-                            {/* Gap Tagging UI for Incorrect Answers */}
-                            {!answer.isCorrect && answer.selectedOptionId && (
-                                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                            Self-Diagnosis: Why was this incorrect?
-                                        </div>
-                                        {answer.gapTag && (
-                                            <button 
-                                                onClick={() => handleTagUpdate(answer.id, null)}
-                                                className="text-[10px] font-bold text-slate-400 hover:text-rose-500 uppercase tracking-widest"
-                                            >
-                                                Clear Tag
-                                            </button>
-                                        )}
+                                                        {isCorrectOption && (
+                                                            <CheckCircle size={18} weight="fill" className="shrink-0 text-emerald-600" />
+                                                        )}
+                                                        {isChosen && !isCorrectOption && (
+                                                            <XCircle size={18} weight="fill" className="shrink-0 text-rose-600" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {[
-                                            { id: "CONCEPTUAL", label: "Conceptual Error", icon: <Info size={14} weight="bold" />, color: "border-blue-200 bg-blue-50 text-blue-700 active:bg-blue-600", active: "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20" },
-                                            { id: "SILLY", label: "Silly Mistake", icon: <Warning size={14} weight="bold" />, color: "border-amber-200 bg-amber-50 text-amber-700 active:bg-amber-600", active: "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-500/20" },
-                                            { id: "TIME", label: "Time Pressure", icon: <Timer size={14} weight="bold" />, color: "border-rose-200 bg-rose-50 text-rose-700 active:bg-rose-600", active: "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/20" },
-                                        ].map((tag) => (
-                                            <button
-                                                key={tag.id}
-                                                onClick={() => handleTagUpdate(answer.id, tag.id)}
-                                                className={cn(
-                                                    "flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95",
-                                                    answer.gapTag === tag.id ? tag.active : `${tag.color} hover:shadow-sm`
+
+                                    {!answer.selectedOptionId && (
+                                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                                            You did not mark an option for this question.
+                                        </div>
+                                    )}
+
+                                    {answer.question.explanation && (
+                                        <div className="rounded-2xl border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-5">
+                                            <div className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-accent-strong)]">
+                                                Explanation
+                                            </div>
+                                            <p className="text-sm leading-7 text-[var(--student-text)]">
+                                                {answer.question.explanation}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {!answer.isCorrect && answer.selectedOptionId && (
+                                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                                    Why did this go wrong?
+                                                </div>
+                                                {answer.gapTag && (
+                                                    <button
+                                                        onClick={() => handleTagUpdate(answer.id, null)}
+                                                        className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 hover:text-rose-600"
+                                                    >
+                                                        Clear tag
+                                                    </button>
                                                 )}
-                                            >
-                                                {tag.icon} {tag.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                                            </div>
 
-                            {!answer.selectedOptionId && (
-                                <div className="rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                                    Not answered
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    {
+                                                        id: "CONCEPTUAL",
+                                                        label: "Conceptual error",
+                                                        icon: <Info size={14} weight="bold" />,
+                                                        inactive: "border-blue-200 bg-blue-50 text-blue-700",
+                                                        active: "border-blue-600 bg-blue-600 text-white",
+                                                    },
+                                                    {
+                                                        id: "SILLY",
+                                                        label: "Silly mistake",
+                                                        icon: <Warning size={14} weight="bold" />,
+                                                        inactive: "border-amber-200 bg-amber-50 text-amber-700",
+                                                        active: "border-amber-600 bg-amber-600 text-white",
+                                                    },
+                                                    {
+                                                        id: "TIME",
+                                                        label: "Time pressure",
+                                                        icon: <Timer size={14} weight="bold" />,
+                                                        inactive: "border-rose-200 bg-rose-50 text-rose-700",
+                                                        active: "border-rose-600 bg-rose-600 text-white",
+                                                    },
+                                                ].map((tag) => (
+                                                    <button
+                                                        key={tag.id}
+                                                        onClick={() => handleTagUpdate(answer.id, tag.id)}
+                                                        className={cn(
+                                                            "flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all active:scale-95",
+                                                            answer.gapTag === tag.id
+                                                                ? tag.active
+                                                                : `${tag.inactive} hover:shadow-sm`,
+                                                        )}
+                                                    >
+                                                        {tag.icon}
+                                                        {tag.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            ))}
-
-            <div className="flex gap-4 pt-8">
-                <Link
-                    href="/student/exams"
-                    className="student-button-primary flex-1 rounded-xl px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest transition-all"
-                >
-                    Start Next Exam
-                </Link>
-                <Link
-                    href="/student/analytics"
-                    className="student-button-secondary flex-1 rounded-xl px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest transition-all"
-                >
-                    View Analytics
-                </Link>
+                            </div>
+                        </article>
+                    );
+                })}
             </div>
         </div>
     );

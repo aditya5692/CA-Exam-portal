@@ -21,6 +21,7 @@ import { revalidatePlanSurfaces } from "@/lib/server/revalidation";
 import prisma from "@/lib/prisma/client";
 import type { CurrentPlanSummary } from "@/types/plan";
 import { ActionResponse } from "@/types/shared";
+import { getResolvedPlatformConfig } from "@/lib/server/platform-config";
 
 function isPlanAllowedForUser(planId: string, userRole: string) {
     const plan = getBillingPlanDefinition(planId);
@@ -64,7 +65,7 @@ export async function createRazorpayOrder(planId: string): Promise<ActionRespons
             getBillingValidityMonths(planId, "annual"),
         );
 
-        const razorpay = getRazorpayInstance();
+        const razorpay = await getRazorpayInstance();
         const order = await razorpay.orders.create({
             amount,
             currency: "INR",
@@ -90,13 +91,15 @@ export async function createRazorpayOrder(planId: string): Promise<ActionRespons
             },
         });
 
+        const runtimeConfig = await getResolvedPlatformConfig();
+
         return {
             success: true,
             data: {
                 orderId: order.id,
                 amount: order.amount as number,
                 currency: order.currency,
-                keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID ?? "",
+                keyId: runtimeConfig.values.razorpayKeyId ?? "",
                 userName: user.fullName || "Valued Learner",
                 userEmail: user.email || "",
                 userPhone: user.phone || "",
@@ -122,7 +125,7 @@ export async function verifyAndActivatePlan(payload: {
             return { success: false, message: "You must be logged in." };
         }
 
-        const isValid = verifyPaymentSignature(
+        const isValid = await verifyPaymentSignature(
             payload.razorpayOrderId,
             payload.razorpayPaymentId,
             payload.razorpaySignature,

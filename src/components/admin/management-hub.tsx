@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { 
     ChartBar, 
     IdentificationBadge, 
-    Monitor, 
+    PlugsConnected,
     Users, 
     Broadcast, 
     BookOpen,
@@ -18,16 +18,18 @@ interface ManagementHubProps {
     curationView: ReactNode;
     marketplaceView: ReactNode;
     subscriptionView: ReactNode;
+    integrationView: ReactNode;
     defaultTab?: string;
 }
 
 export function ManagementHub({ 
     statusView, 
     usersView, 
-    curationView, 
+    curationView,
     marketplaceView,
     subscriptionView,
-    defaultTab = "status"
+    integrationView,
+    defaultTab = "pulse"
 }: ManagementHubProps) {
     const [activeTab, setActiveTab] = useState(defaultTab);
 
@@ -37,6 +39,7 @@ export function ManagementHub({
         { id: "orchestration", label: "Batch Orchestrator", icon: Broadcast, color: "text-amber-500", bg: "bg-amber-50" },
         { id: "studio", label: "Content Studio", icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-50" },
         { id: "treasury", label: "Treasury (Billing)", icon: ChartBar, color: "text-indigo-500", bg: "bg-indigo-50" },
+        { id: "integrations", label: "Integrations", icon: PlugsConnected, color: "text-rose-500", bg: "bg-rose-50" },
     ];
 
     return (
@@ -106,6 +109,13 @@ export function ManagementHub({
                     <div className="animate-in fade-in zoom-in-95 duration-500">
                         <div className="student-surface rounded-[40px] p-6 lg:p-10">
                             {subscriptionView}
+                        </div>
+                    </div>
+                )}
+                {activeTab === "integrations" && (
+                    <div className="animate-in fade-in zoom-in-95 duration-500">
+                        <div className="student-surface rounded-[40px] p-6 lg:p-10">
+                            {integrationView}
                         </div>
                     </div>
                 )}

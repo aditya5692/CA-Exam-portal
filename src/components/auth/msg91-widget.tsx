@@ -19,12 +19,14 @@ declare global {
 export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91WidgetProps) {
     const isInitialized = useRef(false);
     const wasSuccessCalled = useRef(false);
-    const WIDGET_ID = process.env.NEXT_PUBLIC_MSG91_WIDGET_ID;
-    const TOKEN_AUTH = process.env.NEXT_PUBLIC_MSG91_TOKEN_AUTH;
-
     const [otpValue, setOtpValue] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
     const [internalError, setInternalError] = useState<string | null>(null);
+    const [runtimeConfig, setRuntimeConfig] = useState({
+        msg91WidgetId: "",
+        msg91TokenAuth: "",
+    });
+    const [isConfigLoading, setIsConfigLoading] = useState(true);
 
     useEffect(() => {
         wasSuccessCalled.current = false;
@@ -33,17 +35,56 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
         setInternalError(null);
     }, [phoneNumber]);
 
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadRuntimeConfig() {
+            try {
+                setIsConfigLoading(true);
+                const response = await fetch("/api/platform-config/public", {
+                    cache: "no-store",
+                });
+                const payload = await response.json();
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setRuntimeConfig({
+                    msg91WidgetId: payload.msg91WidgetId ?? "",
+                    msg91TokenAuth: payload.msg91TokenAuth ?? "",
+                });
+            } catch (error) {
+                console.error("Failed to load MSG91 runtime config", error);
+                if (isMounted) {
+                    setInternalError("Unable to load MSG91 runtime configuration.");
+                    onFailure("Unable to load MSG91 runtime configuration.");
+                }
+            } finally {
+                if (isMounted) {
+                    setIsConfigLoading(false);
+                }
+            }
+        }
+
+        void loadRuntimeConfig();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [onFailure]);
+
     const initializeSDK = useCallback(() => {
         if (typeof window === "undefined" || !window.initSendOTP || isInitialized.current) return;
 
-        if (!WIDGET_ID || !TOKEN_AUTH) {
+        if (!runtimeConfig.msg91WidgetId || !runtimeConfig.msg91TokenAuth) {
             onFailure("MSG91 configuration is missing (WIDGET_ID/TOKEN).");
             return;
         }
 
         const configuration = {
-            widgetId: WIDGET_ID,
-            tokenAuth: TOKEN_AUTH,
+            widgetId: runtimeConfig.msg91WidgetId,
+            tokenAuth: runtimeConfig.msg91TokenAuth,
             identifier: phoneNumber || "",
             exposeMethods: true,
             container: "msg91-otp-container",
@@ -72,9 +113,13 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
             console.error("MSG91 SDK: Exception during initSendOTP", e);
             onFailure("Failed to initialize verification engine.");
         }
-    }, [WIDGET_ID, TOKEN_AUTH, phoneNumber, onSuccess, onFailure]);
+    }, [runtimeConfig.msg91WidgetId, runtimeConfig.msg91TokenAuth, phoneNumber, onSuccess, onFailure]);
 
     useEffect(() => {
+        if (isConfigLoading) {
+            return;
+        }
+
         const scriptId = "msg91-widget-script";
         if (document.getElementById(scriptId)) {
             if (window.initSendOTP) initializeSDK();
@@ -94,7 +139,7 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
         return () => {
             isInitialized.current = false;
         };
-    }, [initializeSDK, onFailure]);
+    }, [initializeSDK, isConfigLoading, onFailure]);
 
     const handleManualVerify = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -152,10 +197,16 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
                     </div>
                 )}
 
+                {isConfigLoading && (
+                    <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-500 text-center">
+                        Loading verification channel...
+                    </div>
+                )}
+
                 <button
                     type="button"
                     onClick={() => handleManualVerify()}
-                    disabled={isVerifying || otpValue.length < 4}
+                    disabled={isConfigLoading || isVerifying || otpValue.length < 4}
                     className="w-full py-4 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-100 transition-all hover:bg-slate-900 hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 active:scale-95 flex items-center justify-center gap-3"
                 >
                     {isVerifying ? (

@@ -506,6 +506,22 @@ model Subscription {
   @@index([status])
 }
 
+model PlatformConfig {
+  id                    String   @id @default(cuid())
+  singletonKey          String   @unique @default("default")
+  msg91AuthKey          String?
+  msg91WidgetId         String?
+  msg91OtpTemplateId    String?
+  msg91TokenAuth        String?
+  razorpayKeyId         String?
+  razorpayKeySecret     String?
+  razorpayWebhookSecret String?
+  razorpayPlanBasic     String?
+  razorpayPlanPro       String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
 // Student Access Codes - Teacher to Student Map
 model StudentAccessCode {
   id        String   @id @default(cuid())
@@ -533,4 +549,3 @@ model StudentAccessCode {
   @@index([teacherId])
   @@index([email])
 }
-

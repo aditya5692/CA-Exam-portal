@@ -9,12 +9,12 @@ import {
     getRazorpayInstance,
 } from "@/lib/server/razorpay";
 import { resolvePlanEntitlement } from "@/lib/server/plan-entitlements";
+import { getResolvedPlatformConfig, getRazorpayRecurringPlanId } from "@/lib/server/platform-config";
 import { revalidatePlanSurfaces } from "@/lib/server/revalidation";
 import prisma from "@/lib/prisma/client";
 
 export async function createRecurringSubscription(input: {
     planId: string;
-    razorpayPlanId: string;
 }) {
     try {
         const user = await getCurrentUser();
@@ -33,9 +33,17 @@ export async function createRecurringSubscription(input: {
             };
         }
 
-        const razorpay = getRazorpayInstance();
+        const razorpayPlanId = await getRazorpayRecurringPlanId(input.planId);
+        if (!razorpayPlanId) {
+            return {
+                success: false,
+                message: "Monthly plan is not configured yet. Save the recurring Razorpay plan ID in admin integrations first.",
+            };
+        }
+
+        const razorpay = await getRazorpayInstance();
         const subscription = await razorpay.subscriptions.create({
-            plan_id: input.razorpayPlanId,
+            plan_id: razorpayPlanId,
             customer_notify: 1,
             total_count: 12,
             quantity: 1,
@@ -67,11 +75,13 @@ export async function createRecurringSubscription(input: {
             },
         });
 
+        const runtimeConfig = await getResolvedPlatformConfig();
+
         return {
             success: true,
             data: {
                 subscriptionId: subscription.id,
-                keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID ?? "",
+                keyId: runtimeConfig.values.razorpayKeyId ?? "",
                 userName: user.fullName || "Valued Student",
                 userEmail: user.email || "",
                 userPhone: user.phone || "",
@@ -102,7 +112,7 @@ export async function cancelRecurringSubscription(subscriptionId: string) {
             return { success: false, message: "Subscription not found." };
         }
 
-        const razorpay = getRazorpayInstance();
+        const razorpay = await getRazorpayInstance();
         await razorpay.subscriptions.cancel(subscriptionId, false);
 
         await prisma.subscription.update({

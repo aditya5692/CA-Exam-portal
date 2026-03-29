@@ -8,6 +8,8 @@ import { BatchOrchestrator } from "@/components/admin/batch-orchestrator";
 import { SubscriptionManager } from "@/components/teacher/subscription-manager";
 import { redirect } from "next/navigation";
 import { getSessionPayload } from "@/lib/auth/session";
+import { PlatformIntegrationsPanel } from "@/components/admin/platform-integrations-panel";
+import { getResolvedPlatformConfigFields } from "@/lib/server/platform-config";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,7 @@ export default async function AdminControlCenterPage({
         redirect("/auth/login");
     }
 
-    const [metricsResult, users, batches, exams, materials, teachers] = await Promise.all([
+    const [metricsResult, users, batches, exams, materials, teachers, integrationFields] = await Promise.all([
         getAdminMetrics(),
         prisma.user.findMany({
             orderBy: { createdAt: "desc" }
@@ -44,7 +46,8 @@ export default async function AdminControlCenterPage({
         prisma.user.findMany({
             where: { role: "TEACHER" },
             select: { id: true, fullName: true, email: true }
-        })
+        }),
+        getResolvedPlatformConfigFields(),
     ]);
 
     if (!metricsResult.success || !metricsResult.data) {
@@ -57,7 +60,8 @@ export default async function AdminControlCenterPage({
         identity: "identity",
         orchestration: "orchestration",
         studio: "studio",
-        treasury: "treasury"
+        treasury: "treasury",
+        integrations: "integrations",
     };
     
     const activeTab = tabMap[searchParams.tab || ""] || "pulse";
@@ -67,6 +71,7 @@ export default async function AdminControlCenterPage({
     const orchestratorView = <BatchOrchestrator batches={batches as any} teachers={teachers as any} />;
     const studioView = <ContentStudio exams={exams as any} materials={materials as any} />;
     const treasuryView = <SubscriptionManager />;
+    const integrationView = <PlatformIntegrationsPanel initialFields={integrationFields} />;
 
     return (
         <div className="mx-auto w-full max-w-[1600px] p-4 md:p-8 space-y-12">
@@ -76,6 +81,7 @@ export default async function AdminControlCenterPage({
                 curationView={orchestratorView}
                 marketplaceView={studioView}
                 subscriptionView={treasuryView}
+                integrationView={integrationView}
                 defaultTab={activeTab}
             />
         </div>

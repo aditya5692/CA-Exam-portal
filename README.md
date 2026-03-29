@@ -4,7 +4,7 @@ Next.js 16 + TypeScript + Prisma deployment for CA students and educators.
 
 ## Environment Setup
 
-Copy `.env.example` to `.env` and fill in the production values for your environment.
+Copy `.env.example` to `.env` and fill in the values needed to boot the app.
 
 ### Dokploy App Runtime
 
@@ -14,18 +14,28 @@ Use the internal Dokploy database hostname inside the Dokploy app, not the publi
 DOKPLOY_DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@YOUR_DOKPLOY_DB_HOST:5432/DB_NAME
 JWT_SECRET=replace-with-a-long-random-secret
 AUTH_COOKIE_DOMAIN=.your-root-domain.com
+```
+
+Razorpay and MSG91 values now support two modes:
+
+1. Bootstrap/fallback env values in `.env`
+2. Runtime values saved in `Admin > Control Center > Integrations`
+
+Recommended bootstrap env keys:
+
+```env
 MSG91_AUTH_KEY=...
 MSG91_WIDGET_ID=...
 MSG91_OTP_TEMPLATE_ID=...
-NEXT_PUBLIC_MSG91_WIDGET_ID=...
-NEXT_PUBLIC_MSG91_TOKEN_AUTH=...
+MSG91_TOKEN_AUTH=...
 RAZORPAY_KEY_ID=...
-NEXT_PUBLIC_RAZORPAY_KEY_ID=...
 RAZORPAY_KEY_SECRET=...
 RAZORPAY_WEBHOOK_SECRET=...
-NEXT_PUBLIC_RAZORPAY_PLAN_BASIC=...
-NEXT_PUBLIC_RAZORPAY_PLAN_PRO=...
+RAZORPAY_PLAN_BASIC=...
+RAZORPAY_PLAN_PRO=...
 ```
+
+Once an admin saves those values in the integrations panel, Dokploy no longer needs separate MSG91 and Razorpay runtime env entries for normal operation. Legacy `NEXT_PUBLIC_*` env names are still accepted as fallback if you already use them.
 
 ### Local Development
 
@@ -63,11 +73,15 @@ Dokploy health checks should use:
 ```
 
 `/api/health/live` only confirms the app is running.  
-`/api/health/ready` verifies required auth/payment env vars, including `MSG91_OTP_TEMPLATE_ID`, `NEXT_PUBLIC_MSG91_TOKEN_AUTH`, and `NEXT_PUBLIC_RAZORPAY_KEY_ID`, plus database reachability and outbound reachability to MSG91 and Razorpay before traffic should be routed.
+`/api/health/ready` verifies required auth/payment runtime config plus database reachability and outbound reachability to MSG91 and Razorpay before traffic should be routed.
+
+## Database Sync on Deploy
+
+This project currently uses `prisma db push` at container start in both Docker and Nixpacks paths so schema changes like new runtime config tables are applied automatically on boot.
 
 ## GitHub Actions Deploy
 
-This repo now includes `.github/workflows/deploy-dokploy.yml` to build the Docker image on every push to `master`, push it to Docker Hub, optionally trigger Dokploy via webhook, and optionally verify the live deployment with a health check.
+This repo includes `.github/workflows/deploy-dokploy.yml` to build the Docker image on every push to `master`, push it to Docker Hub, optionally trigger Dokploy via webhook, and optionally verify the live deployment with a health check.
 
 Configure these GitHub repository secrets before enabling it:
 

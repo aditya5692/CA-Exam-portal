@@ -88,3 +88,12 @@ export function revalidatePlanSurfaces() {
     revalidatePath("/student/plan");
     revalidatePath("/teacher/plan");
 }
+
+export function revalidatePlatformConfigSurfaces() {
+    revalidatePath("/admin/control-center");
+    revalidatePath("/auth/login");
+    revalidatePath("/auth/signup");
+    revalidatePath("/pricing");
+    revalidatePath("/student/plan");
+    revalidatePath("/teacher/plan");
+}

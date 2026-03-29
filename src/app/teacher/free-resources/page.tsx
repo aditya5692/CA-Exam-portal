@@ -7,6 +7,7 @@ export default async function TeacherFreeResourcesPage({
 }) {
     const params = await searchParams;
     const initialSubType = typeof params.type === 'string' ? params.type : "All";
+    const initialSearch = typeof params.search === "string" ? params.search : "";
 
     return (
         <div className="p-6 max-w-[1280px] mx-auto animate-in fade-in duration-500">
@@ -15,6 +16,7 @@ export default async function TeacherFreeResourcesPage({
                 mode="TEACHER"
                 defaultView="GRID"
                 initialSubType={initialSubType}
+                initialSearch={initialSearch}
             />
         </div>
     );

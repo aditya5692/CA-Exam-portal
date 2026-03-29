@@ -70,7 +70,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Missing Razorpay signature." }, { status: 401 });
         }
 
-        if (!verifyWebhookSignature(rawBody, signature)) {
+        if (!(await verifyWebhookSignature(rawBody, signature))) {
             return NextResponse.json({ message: "Invalid Razorpay signature." }, { status: 400 });
         }
 

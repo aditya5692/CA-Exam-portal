@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma/client";
+import { getResolvedPlatformConfig } from "@/lib/server/platform-config";
 import { NextResponse } from "next/server";
 
 type ProbeResult = {
@@ -32,16 +33,17 @@ async function probeUrl(name: string, url: string): Promise<ProbeResult> {
 }
 
 export async function GET() {
-    const requiredEnv = {
+    const resolvedPlatformConfig = await getResolvedPlatformConfig();
+
+    const requiredConfig = {
         jwt: Boolean(process.env.JWT_SECRET),
-        msg91AuthKey: Boolean(process.env.MSG91_AUTH_KEY),
-        msg91OtpTemplateId: Boolean(process.env.MSG91_OTP_TEMPLATE_ID),
-        msg91WidgetId: Boolean(process.env.NEXT_PUBLIC_MSG91_WIDGET_ID),
-        msg91TokenAuth: Boolean(process.env.NEXT_PUBLIC_MSG91_TOKEN_AUTH),
-        razorpayKeyId: Boolean(process.env.RAZORPAY_KEY_ID),
-        razorpayPublicKeyId: Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
-        razorpayKeySecret: Boolean(process.env.RAZORPAY_KEY_SECRET),
-        razorpayWebhookSecret: Boolean(process.env.RAZORPAY_WEBHOOK_SECRET),
+        msg91AuthKey: Boolean(resolvedPlatformConfig.values.msg91AuthKey),
+        msg91OtpTemplateId: Boolean(resolvedPlatformConfig.values.msg91OtpTemplateId),
+        msg91WidgetId: Boolean(resolvedPlatformConfig.values.msg91WidgetId),
+        msg91TokenAuth: Boolean(resolvedPlatformConfig.values.msg91TokenAuth),
+        razorpayKeyId: Boolean(resolvedPlatformConfig.values.razorpayKeyId),
+        razorpayKeySecret: Boolean(resolvedPlatformConfig.values.razorpayKeySecret),
+        razorpayWebhookSecret: Boolean(resolvedPlatformConfig.values.razorpayWebhookSecret),
     };
 
     const databaseProbe: ProbeResult = {
@@ -61,12 +63,12 @@ export async function GET() {
         probeUrl("razorpay", "https://api.razorpay.com"),
     ]);
 
-    const missingEnv = Object.entries(requiredEnv)
+    const missingConfig = Object.entries(requiredConfig)
         .filter(([, present]) => !present)
         .map(([name]) => name);
 
     const ok =
-        missingEnv.length === 0 &&
+        missingConfig.length === 0 &&
         databaseProbe.ok &&
         externalProbes.every((probe) => probe.ok);
 
@@ -74,11 +76,12 @@ export async function GET() {
         {
             status: ok ? "ready" : "degraded",
             checks: {
-                env: requiredEnv,
+                config: requiredConfig,
+                configSources: resolvedPlatformConfig.sources,
                 database: databaseProbe,
                 external: externalProbes,
             },
-            missingEnv,
+            missingConfig,
             timestamp: new Date().toISOString(),
         },
         { status: ok ? 200 : 503 },
