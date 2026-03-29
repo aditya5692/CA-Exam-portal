@@ -49,9 +49,11 @@ COPY --from=builder /app/.next/static ./.next/static
 
 # Manual runtime dependency injection for standalone mode.
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/scripts ./scripts
 COPY --from=deps /app/prisma ./prisma
 
 EXPOSE 3000
 
 # 🏁 Startup command: Push DB schema changes then start the server
-CMD ["sh", "-c", "./node_modules/.bin/prisma db push && node server.js"]
+# 🏁 Startup command: Sync schema, push DB changes, then start the server
+CMD ["sh", "-c", "node ./scripts/prepare-prisma.js && ./node_modules/.bin/prisma db push && node server.js"]
