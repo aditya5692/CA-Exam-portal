@@ -54,6 +54,5 @@ COPY --from=deps /app/prisma ./prisma
 
 EXPOSE 3000
 
-# 🏁 Startup command: Push DB schema changes then start the server
-# 🏁 Startup command: Sync schema, push DB changes, then start the server
-CMD ["sh", "-c", "node ./scripts/prepare-prisma.js && ./node_modules/.bin/prisma db push && node server.js"]
+# 🏁 Startup command: Sync schema to Postgres, push changes, then start
+CMD ["sh", "-c", "node ./scripts/prepare-prisma.js && ./node_modules/.bin/prisma db push --accept-data-loss && node server.js"]
