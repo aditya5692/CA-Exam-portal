@@ -88,7 +88,7 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
         msg91TokenAuth: "",
     });
     const [isConfigLoading, setIsConfigLoading] = useState(true);
-    const demoEntry = process.env.NODE_ENV !== "production" && phoneNumber
+    const demoEntry = phoneNumber
         ? getDemoOtpEntryByPhone(phoneNumber)
         : undefined;
     const hasDemoBypass = Boolean(demoEntry);
@@ -178,9 +178,10 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
 
         if (!runtimeConfig.msg91WidgetId || !runtimeConfig.msg91TokenAuth) {
             if (hasDemoBypass) {
+                console.log("MSG91 SDK: Config missing but skipping for demo bypass.");
                 return;
             }
-            onFailure("MSG91 configuration is missing (WIDGET_ID/TOKEN).");
+            onFailure("MSG91 configuration missing. Please update in Admin Control Center.");
             return;
         }
 
