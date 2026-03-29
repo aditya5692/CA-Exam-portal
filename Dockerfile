@@ -53,8 +53,10 @@ COPY --from=builder /app/node_modules/@prisma/adapter-pg ./node_modules/@prisma/
 COPY --from=builder /app/node_modules/@prisma/adapter-better-sqlite3 ./node_modules/@prisma/adapter-better-sqlite3
 COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 COPY --from=deps /app/prisma ./prisma
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push && node server.js"]
+# 🏁 Startup command: Push DB schema changes then start the server
+CMD ["sh", "-c", "./node_modules/.bin/prisma db push && node server.js"]
