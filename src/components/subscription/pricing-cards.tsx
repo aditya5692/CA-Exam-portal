@@ -374,13 +374,13 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                                     <plan.icon size={24} weight="bold" />
                                 </div>
 
-                                <h3 className="font-outfit text-xl font-bold text-slate-900">{plan.name}</h3>
+                                <h3 className="font-lexend text-xl font-bold text-slate-950">{plan.name}</h3>
                                 <p className="mt-1 text-xs font-bold uppercase tracking-tight text-slate-500">
                                     Tier: {plan.appPlan}
                                 </p>
 
                                 <div className="mt-6 flex items-baseline gap-1">
-                                    <span className="font-outfit text-4xl font-bold tracking-tight text-slate-900">
+                                    <span className="font-lexend text-4xl font-bold tracking-tight text-slate-950">
                                         {displayedPrice}
                                     </span>
                                     {priceSuffix && (
@@ -428,7 +428,7 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                                     isDisabled
                                         ? "cursor-not-allowed border border-slate-100 bg-slate-50 text-slate-400"
                                         : plan.highlight
-                                            ? "bg-slate-900 text-white shadow-sm hover:bg-emerald-600"
+                                            ? "bg-[#0f2cbd] text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700"
                                             : "border border-slate-200 bg-white text-slate-900 hover:bg-slate-50",
                                 )}
                             >

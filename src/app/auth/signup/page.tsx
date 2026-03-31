@@ -18,6 +18,13 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { cn } from "@/lib/utils";
 
+import { Lexend } from "next/font/google";
+
+const lexend = Lexend({
+    subsets: ["latin"],
+    display: "swap",
+});
+
 const SIGNUP_POINTS = [
     "Start with full-length mock access and a cleaner exam rhythm.",
     "Keep revision material, PYQs, and progress in one place.",
@@ -136,64 +143,79 @@ function SignupFormContent() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 flex items-center justify-center p-6 sm:p-12">
+        <div className={cn(lexend.className, "min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900 flex flex-col items-center justify-center p-6 sm:p-12")}>
             
-            <div className="relative w-full max-w-6xl grid lg:grid-cols-[1.2fr_0.8fr] gap-0 bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
-                
-                {/* Right side form (Light) */}
-                <div className="p-8 sm:p-12 flex flex-col justify-center order-2 lg:order-1 border-r border-slate-100">
-                    <div className="mb-8 flex items-center justify-between">
-                        <div>
-                            <h2 className="font-outfit text-3xl font-bold text-slate-900 tracking-tight">
-                                {step === "phone" ? "Join the Workspace" : step === "verify" ? "Verify Number" : "Almost There"}
-                            </h2>
-                            <p className="text-sm font-medium text-slate-400 mt-1">
-                                {step === "details" ? `Finalize your ${role.toLowerCase()} profile` : "Start your prep journey today"}
-                            </p>
-                        </div>
-                        <Link href="/" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-widest leading-none">
-                            Home
-                        </Link>
+            <div className="mb-10 flex flex-col items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                <Link href="/" className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-[#0f2cbd] text-white shadow-2xl shadow-blue-600/30 active:scale-95 transition-transform">
+                    <GraduationCap size={28} weight="bold" />
+                </Link>
+                <div className="text-center">
+                    <h1 className="text-xl font-extrabold tracking-tighter text-slate-950 italic">Financly</h1>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#0f2cbd]/60">CA Test Series</p>
+                </div>
+            </div>
+
+            <div className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-[0_40px_100px_-20px_rgba(15,44,189,0.06)] overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-1000">
+                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/30 to-transparent pointer-events-none"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(15,44,189,0.02),transparent)] pointer-events-none"></div>
+
+                <div className="p-8 sm:p-14 flex flex-col items-stretch">
+                    <div className="mb-10 space-y-3 text-center">
+                        <h2 className="text-2xl font-extrabold text-slate-950 tracking-tighter">
+                            {step === "phone" ? "Create Workspace" : step === "verify" ? "Security Check" : "Finalize Profile"}
+                        </h2>
+                        <p className="text-[13px] font-medium text-slate-500">
+                            {step === "details" ? `Identify yourself as a ${role.toLowerCase()} to stay aligned.` : "Join the high-integrity prep ecosystem."}
+                        </p>
                     </div>
 
-                    <div className="mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-start gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm border border-indigo-50">
+                    <div className="mb-12 p-6 bg-[#0f2cbd]/5 rounded-3xl border border-[#0f2cbd]/10 flex items-start gap-5 shadow-sm">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0f2cbd] shadow-sm border border-[#0f2cbd]/10">
                             <Sparkle size={20} weight="fill" />
                         </div>
                         <div>
-                            <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-widest">Free Onboarding</h4>
-                            <p className="mt-1 text-xs font-medium leading-relaxed text-indigo-700/80">
-                                Your free account includes mock access and progress tracking. Upgrade only when you need deeper analytics.
+                            <h4 className="text-[10px] font-extrabold text-[#0f2cbd] uppercase tracking-[0.3em]">Flagship Onboarding</h4>
+                            <p className="mt-1.5 text-xs font-semibold leading-relaxed text-slate-600 opacity-90">
+                                Your free account includes unlimited mock simulation and archive access. Upgrade only for advanced subject analytics.
                             </p>
                         </div>
                     </div>
 
-                    <form className="space-y-6" onSubmit={step === "phone" ? handleStartVerification : step === "verify" ? handleVerificationSubmit : handleRegister}>
+                    <form className="space-y-8" onSubmit={step === "phone" ? handleStartVerification : step === "verify" ? handleVerificationSubmit : handleRegister}>
                         {step === "phone" && (
-                            <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</label>
-                                <div className="relative group">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                        <DeviceMobile size={20} weight="bold" />
-                                    </span>
-                                    <input
-                                        type="tel"
-                                        value={phone}
-                                        onChange={(event) => setPhone(event.target.value)}
-                                        placeholder="EX: 9876543210"
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900 focus:bg-white"
-                                        required
-                                    />
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Verification Number</label>
+                                    <div className="relative group">
+                                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                            <DeviceMobile size={22} weight="bold" />
+                                        </span>
+                                        <input
+                                            type="tel"
+                                            value={phone}
+                                            onChange={(event) => setPhone(event.target.value)}
+                                            placeholder="Enter 10-digit number"
+                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-5 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                            required
+                                        />
+                                    </div>
                                 </div>
+                                <button
+                                    type="submit"
+                                    className="brand-button-primary w-full !py-4.5 shadow-[0_25px_60px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
+                                >
+                                    <span>Proceed to Verification</span>
+                                    <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-1" />
+                                </button>
                             </div>
                         )}
 
                         {step === "verify" && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/50 px-5 py-4 shadow-sm">
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Verified Channel</p>
-                                        <p className="mt-1 text-xs font-bold text-slate-900">+91 {phone.replace(/\D/g, "").slice(-10)}</p>
+                                        <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#0f2cbd]">Active Channel</p>
+                                        <p className="mt-1 text-sm font-bold text-slate-900">+91 {phone.replace(/\D/g, "").slice(-10)}</p>
                                     </div>
                                     <button
                                         type="button"
@@ -201,9 +223,9 @@ function SignupFormContent() {
                                             clearPendingVerification();
                                             setStep("phone");
                                         }}
-                                        className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:underline"
+                                        className="px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-widest text-[#0f2cbd] hover:text-rose-600 transition-colors border border-blue-200 bg-white"
                                     >
-                                        Change Phone
+                                        Change
                                     </button>
                                 </div>
 
@@ -219,56 +241,56 @@ function SignupFormContent() {
                         )}
 
                         {step === "details" && (
-                            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                {/* Role Selection Toggle */}
-                                <div className="p-1 bg-slate-100 rounded-lg flex w-full">
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                {/* Role Selection - Industrial Toggle */}
+                                <div className="p-1.5 bg-slate-100 rounded-2xl flex w-full shadow-inner border border-slate-200/50">
                                     {(["STUDENT", "TEACHER"] as const).map((r) => (
                                         <button
                                             key={r}
                                             type="button"
                                             onClick={() => setRole(r)}
                                             className={cn(
-                                                "flex-1 py-2 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all",
+                                                "flex-1 py-3 px-6 rounded-xl text-[11px] font-extrabold uppercase tracking-widest transition-all",
                                                 role === r 
-                                                    ? "bg-white text-slate-900 shadow-sm border border-slate-200" 
+                                                    ? "bg-white text-[#0f2cbd] shadow-md shadow-black/5" 
                                                     : "text-slate-400 hover:text-slate-600"
                                             )}
                                         >
-                                            {r}
+                                            {r} Portal
                                         </button>
                                     ))}
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Full Name</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Identity Name</label>
                                         <div className="relative group">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                                <User size={18} weight="bold" />
+                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                                <User size={20} weight="bold" />
                                             </span>
                                             <input
                                                 type="text"
                                                 value={fullName}
                                                 onChange={(event) => setFullName(event.target.value)}
-                                                placeholder="Aditya S"
-                                                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-bold text-slate-900 outline-none transition-all focus:border-slate-900"
+                                                placeholder="Full Name"
+                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white"
                                                 required
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Email</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Email Node</label>
                                         <div className="relative group">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                                <Envelope size={18} weight="bold" />
+                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                                <Envelope size={20} weight="bold" />
                                             </span>
                                             <input
                                                 type="email"
                                                 value={email}
                                                 onChange={(event) => setEmail(event.target.value)}
-                                                placeholder="name@email.com"
-                                                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-bold text-slate-900 outline-none transition-all focus:border-slate-900"
+                                                placeholder="Professional Email"
+                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white"
                                                 required
                                             />
                                         </div>
@@ -276,28 +298,28 @@ function SignupFormContent() {
                                 </div>
 
                                 {role === "STUDENT" ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">CA Level</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Aspirant Level</label>
                                             <select
                                                 value={caLevel}
                                                 onChange={(e) => setCaLevel(e.target.value as "foundation" | "ipc" | "final")}
-                                                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
+                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm"
                                                 required
                                             >
-                                                <option value="foundation">Foundation</option>
-                                                <option value="ipc">Intermediate</option>
-                                                <option value="final">Final</option>
+                                                <option value="foundation">CA Foundation</option>
+                                                <option value="ipc">CA Intermediate</option>
+                                                <option value="final">CA Final</option>
                                             </select>
                                         </div>
 
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Attempt Target</label>
-                                            <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Attempt Target</label>
+                                            <div className="grid grid-cols-2 gap-3">
                                                 <select
                                                     value={attemptMonth}
                                                     onChange={(e) => setAttemptMonth(e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
+                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm"
                                                     required
                                                 >
                                                     <option value="5">May</option>
@@ -307,7 +329,7 @@ function SignupFormContent() {
                                                 <select
                                                     value={attemptYear}
                                                     onChange={(e) => setAttemptYear(e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900 cursor-pointer appearance-none"
+                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm"
                                                     required
                                                 >
                                                     {[2024, 2025, 2026, 2027].map(year => (
@@ -318,31 +340,31 @@ function SignupFormContent() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Academic Department</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Academic Department</label>
                                         <input
                                             type="text"
                                             value={department}
                                             onChange={(e) => setDepartment(e.target.value)}
-                                            placeholder="EX: Direct Tax, Audit, Financial Reporting"
-                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-slate-900"
+                                            placeholder="Direct Tax, Audit, Financial Reporting, etc."
+                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-5 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white transition-all shadow-sm"
                                             required={role === "TEACHER"}
                                         />
                                     </div>
                                 )}
 
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Password</label>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Secure Password</label>
                                     <div className="relative group">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
-                                            <Lock size={18} weight="bold" />
+                                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                            <Lock size={20} weight="bold" />
                                         </span>
                                         <input
                                             type="password"
                                             value={password}
                                             onChange={(event) => setPassword(event.target.value)}
-                                            placeholder="Min 8 characters"
-                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-bold text-slate-900 outline-none transition-all focus:border-slate-900"
+                                            placeholder="Minimum 8 characters"
+                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white"
                                             required
                                         />
                                     </div>
@@ -351,7 +373,8 @@ function SignupFormContent() {
                         )}
 
                         {errorMessage && (
-                            <div className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 text-xs font-bold text-rose-600">
+                            <div className="rounded-2xl bg-rose-50 border border-rose-100 p-5 text-xs font-bold text-rose-600 animate-in shake duration-300 flex items-center gap-3 shadow-sm">
+                                <div className="size-2 rounded-full bg-rose-600 animate-pulse"></div>
                                 {errorMessage}
                             </div>
                         )}
@@ -360,72 +383,37 @@ function SignupFormContent() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
+                                className="brand-button-primary w-full !py-5 !text-base shadow-[0_25px_60px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
                             >
                                 {isSubmitting ? (
-                                    <Spinner className="animate-spin" size={20} weight="bold" />
+                                    <Spinner className="animate-spin" size={24} weight="bold" />
                                 ) : (
                                     <>
-                                        {step === "phone" ? "Verify Phone" : "Create Account"}
-                                        <ArrowRight size={20} weight="bold" />
+                                        <span>{step === "phone" ? "Secure My Access" : "Establish Profile Node"}</span>
+                                        <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-1" />
                                     </>
                                 )}
                             </button>
                         )}
                     </form>
 
-                    <p className="mt-8 text-center text-xs font-bold text-slate-400 tracking-tight">
+                    <p className="mt-12 text-center text-xs font-bold text-slate-400 tracking-tight">
                         Already have an account?{" "}
-                        <Link href="/auth/login" className="text-indigo-600 hover:underline">
-                            Sign in
+                        <Link href="/auth/login" className="text-[#0f2cbd] hover:underline underline-offset-4 decoration-blue-100 font-extrabold decoration-4">
+                            Sign in to workspace
                         </Link>
                     </p>
 
-                    <div className="mt-8 pt-8 border-t border-slate-100 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-widest text-slate-300">
-                        <Link href="/privacy-policy" className="hover:text-slate-900 transition-colors">Privacy</Link>
-                        <Link href="/terms-and-conditions" className="hover:text-slate-900 transition-colors">Terms</Link>
-                        <Link href="/refund-policy" className="hover:text-slate-900 transition-colors">Refunds</Link>
+                    <div className="mt-16 pt-8 border-t border-slate-100 flex flex-wrap justify-center gap-x-8 gap-y-3 text-[9px] font-extrabold uppercase tracking-[0.2em] text-slate-300">
+                        <Link href="/privacy-policy" className="hover:text-slate-950 transition-colors">Privacy Infrastructure</Link>
+                        <Link href="/terms-and-conditions" className="hover:text-slate-950 transition-colors">Terms of Prep</Link>
+                        <Link href="/refund-policy" className="hover:text-slate-950 transition-colors">Reliability Hub</Link>
                     </div>
                 </div>
-
-                {/* Left side panel (Dark) */}
-                <div className="hidden lg:flex flex-col justify-between bg-slate-900 p-12 text-white order-2">
-                    <div className="space-y-12">
-                        <Link href="/" className="inline-flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-900 shadow-lg">
-                                <GraduationCap size={22} weight="bold" />
-                            </div>
-                            <div>
-                                <div className="font-outfit text-xl font-bold tracking-tight text-white leading-none">Financly</div>
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mt-1">CA Exam Workspace</div>
-                            </div>
-                        </Link>
-
-                        <div className="space-y-6">
-                            <h2 className="font-outfit text-4xl font-bold leading-tight tracking-tight text-white">
-                                Built for <span className="text-emerald-400">disciplined</span> preparation.
-                            </h2>
-                            <p className="text-base font-medium text-white/60 leading-relaxed">
-                                Join thousands of aspirants who use our unified platform to reduce exam anxiety and improve attempt discipline.
-                            </p>
-                        </div>
-
-                        <div className="space-y-4">
-                            {SIGNUP_POINTS.map((point, index) => (
-                                <div key={index} className="flex items-start gap-4 p-4 rounded-xl border border-white/5 bg-white/5">
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-slate-900">
-                                        <CheckCircle size={18} weight="bold" />
-                                    </div>
-                                    <p className="text-sm font-medium text-white/70 leading-relaxed">{point}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="pt-8 border-t border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/20">
-                        Secure Registration · AES-256
-                    </div>
-                </div>
+            </div>
+            
+            <div className="mt-12 text-center opacity-30 pointer-events-none px-6">
+                <div className="text-[10px] font-extrabold uppercase tracking-[0.3em] text-slate-400 italic">Flagship Onboarding Architecture v2.0</div>
             </div>
         </div>
     );

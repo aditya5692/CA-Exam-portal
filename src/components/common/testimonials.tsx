@@ -34,7 +34,7 @@ const TESTIMONIALS = [
 
 export function Testimonials() {
     return (
-        <section className="bg-[var(--landing-bg)] px-6 py-24 sm:px-12 border-t border-[var(--landing-border)]">
+        <section className="bg-[var(--landing-bg)] px-6 py-20 sm:px-12">
             <div className="mx-auto max-w-7xl">
                 <div className="mb-16 space-y-4 text-center">
                     <div className="flex items-center justify-center gap-2">

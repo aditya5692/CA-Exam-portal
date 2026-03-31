@@ -477,7 +477,7 @@ export default function StudentVaultPage() {
                         </div>
                         <div className="flex-1 bg-slate-100 p-4 relative" onContextMenu={(event) => event.preventDefault()}>
                             <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg]">
-                                <span className="text-6xl font-bold text-slate-950 uppercase tracking-widest">CA EXAM PORTAL</span>
+                                <span className="text-6xl font-bold text-slate-950 uppercase tracking-widest">FINANCLY</span>
                             </div>
                             {viewFileUrl.endsWith(".pdf") ? (
                                 <iframe src={`${viewFileUrl}#toolbar=0`} title="Secure Document Viewer" className="w-full h-full rounded-lg shadow-sm bg-white" />

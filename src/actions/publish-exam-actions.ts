@@ -8,6 +8,7 @@ import {
   publishExamQuestions,
 } from "@/lib/server/exam-publishing";
 import { revalidateExamSurfaces } from "@/lib/server/revalidation";
+import prisma from "@/lib/prisma/client";
 import type {
   BatchOption,
   PublishExamInput,
@@ -77,6 +78,53 @@ export async function getStudentVisibleExams(
         return {
             success: false,
             message: getActionErrorMessage(err, "Failed to fetch exams."),
+        };
+    }
+}
+
+/**
+ * Fetches all publicly available (global) exams.
+ */
+export async function getPublicMockExams(): Promise<ActionResponse<StudentVisibleExam[]>> {
+    try {
+        const exams = await prisma.exam.findMany({
+            where: {
+                status: "PUBLISHED",
+                batchId: null,
+            },
+            include: {
+                teacher: { select: { fullName: true, email: true } },
+                _count: { select: { questions: true, attempts: true } },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+
+        const data: StudentVisibleExam[] = exams.map((exam: any) => ({
+            id: exam.id,
+            title: exam.title,
+            duration: exam.duration,
+            totalMarks: exam.totalMarks,
+            category: exam.category,
+            subject: exam.subject ?? "General",
+            chapter: exam.chapter ?? "General",
+            batchName: null,
+            teacherName: exam.teacher.fullName ?? exam.teacher.email ?? "Teacher",
+            questionCount: exam._count.questions,
+            attemptCount: exam._count.attempts,
+            examType: exam.examType,
+            attempt: null, // No attempt context for public view
+        }));
+
+        return {
+            success: true,
+            data,
+        };
+    } catch (err) {
+        console.error("getPublicMockExams error:", err);
+        const { getActionErrorMessage } = await import("@/lib/server/action-utils");
+        return {
+            success: false,
+            message: getActionErrorMessage(err, "Failed to fetch public exams."),
         };
     }
 }

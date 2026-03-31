@@ -113,6 +113,33 @@ export async function createSharedTeacherMaterial(input: SharedTeacherMaterialIn
                     }
                 });
             }
+
+            // Grant explicit access to all students currently in these batches
+            const studentsInBatches = await tx.enrollment.findMany({
+                where: { batchId: { in: validatedBatchIds } },
+                select: { studentId: true }
+            });
+
+            const uniqueStudentIds = Array.from(new Set(studentsInBatches.map(s => s.studentId)));
+            
+            for (const studentId of uniqueStudentIds) {
+                await tx.materialAccess.upsert({
+                    where: {
+                        studentId_materialId: {
+                            studentId,
+                            materialId: material.id,
+                        },
+                    },
+                    update: {
+                        accessType: "BATCH_SHARE",
+                    },
+                    create: {
+                        studentId,
+                        materialId: material.id,
+                        accessType: "BATCH_SHARE",
+                    },
+                });
+            }
         }
 
         // 2. Link to Specific Students (Static Access)

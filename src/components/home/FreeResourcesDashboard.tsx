@@ -154,34 +154,34 @@ export function FreeResourcesDashboard({
     };
 
     return (
-        <div className="w-full space-y-6 pb-12 font-outfit">
+        <div className="w-full space-y-8 pb-20">
             
-            {/* Slim Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-                <div className="flex items-baseline gap-3">
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            {/* Slim Header - High Clarity */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-8">
+                <div className="space-y-1">
+                    <h2 className="text-3xl font-extrabold text-slate-950 tracking-tight">
                         {mode === "TEACHER" ? "Resource Inventory" : "Study Library"}
-                    </h1>
-                    <span className="text-slate-400 text-sm font-medium">({resources.length} items)</span>
+                    </h2>
+                    <p className="text-slate-500 text-sm font-medium">Over {resources.length} verified CA practice assets.</p>
                 </div>
                 {daysToExam > 0 && (
-                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[10px] uppercase tracking-wider border border-blue-100">
-                        <Calendar size={14} weight="bold" />
-                        {daysToExam} Days to Attempt
+                     <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-bold text-[11px] uppercase tracking-wider border border-blue-100 shadow-sm">
+                        <Calendar size={16} weight="bold" />
+                        Next Attempt: {daysToExam} Days Remaining
                     </div>
                 )}
             </div>
 
-            {/* Compact Toolbar & Filters */}
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
+            {/* Compact Toolbar & Filters - Brand Aligned */}
+            <div className="flex flex-col lg:flex-row lg:items-center gap-6 glass-surface p-3 rounded-2xl border-slate-200 shadow-sm">
                 <div className="relative flex-grow">
-                    <MagnifyingGlass size={16} weight="bold" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <MagnifyingGlass size={18} weight="bold" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search materials..."
+                        placeholder="Search for subjects, topics, or papers..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium placeholder:text-slate-300 focus:border-blue-500 outline-none transition-all"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-0 outline-none transition-all"
                     />
                 </div>
 
@@ -193,14 +193,16 @@ export function FreeResourcesDashboard({
                     
                     <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
-                    <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide no-scrollbar">
                         {dynamicCategories.map((cat) => (
                             <button
                                 key={cat}
                                 onClick={() => setActiveCategory(cat)}
                                 className={cn(
-                                    "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border whitespace-nowrap",
-                                    activeCategory === cat ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                                    "px-4 py-2 rounded-xl text-[10px] font-extrabold transition-all border whitespace-nowrap uppercase tracking-widest",
+                                    activeCategory === cat 
+                                        ? "bg-slate-950 text-white border-slate-950 shadow-md translate-y-[-1px]" 
+                                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
                                 )}
                             >
                                 {cat}
@@ -210,14 +212,16 @@ export function FreeResourcesDashboard({
 
                     <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
-                    <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide no-scrollbar">
                         {CONTENT_TYPES.map((type) => (
                             <button
                                 key={type}
                                 onClick={() => handleSecondaryChange(type)}
                                 className={cn(
-                                    "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border whitespace-nowrap",
-                                    activeSecondary === type ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                                    "px-4 py-2 rounded-xl text-[10px] font-extrabold transition-all border whitespace-nowrap uppercase tracking-widest",
+                                    activeSecondary === type 
+                                        ? "bg-blue-600 text-white border-blue-600 shadow-md translate-y-[-1px]" 
+                                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
                                 )}
                             >
                                 {type}
@@ -235,73 +239,78 @@ export function FreeResourcesDashboard({
                         <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Updating Library Registry...</p>
                     </div>
                 ) : resources.length === 0 ? (
-                    <div className="py-16 text-center bg-slate-50/50 rounded-xl border border-slate-100">
-                        <Funnel size={32} weight="bold" className="mx-auto text-slate-300 mb-3" />
-                        <h3 className="text-sm font-bold text-slate-900">No matches found</h3>
-                        <p className="text-slate-400 text-xs mt-1">Adjust your search or filters.</p>
-                        <button
+                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
+                        <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-300">
+                            <FilePdf size={40} weight="thin" />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-slate-900 tracking-tight">No resources found</h3>
+                            <p className="text-slate-500 text-sm max-w-xs mx-auto font-medium">
+                                Our high-integrity database hasn't archived any matches for this filter yet. Try a different category.
+                            </p>
+                        </div>
+                        <button 
                             onClick={() => { setActiveCategory("All"); setActiveSecondary("All"); }}
-                            className="mt-4 px-4 py-1.5 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all"
+                            className="px-6 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold shadow-lg shadow-slate-900/10 hover:bg-blue-600 transition-all"
                         >
-                            Reset
+                            Reset Filters
                         </button>
                     </div>
                 ) : viewMode === "GRID" ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                         {resources.map((res) => {
                             const { icon, bg } = getIcon(res.subType);
                             const isSaved = canSave && visibleSavedIds.has(res.id);
                             return (
-                                <div key={res.id} className="group flex flex-col h-full bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", bg)}>
-                                            {icon}
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            {saveState !== "hidden" && (
-                                                <button
-                                                    onClick={(e) => handleToggleSave(res.id, e)}
-                                                    className={cn(
-                                                        "p-1.5 rounded-lg transition-all",
-                                                        isSaved ? "text-blue-600" : "text-slate-300 hover:text-blue-600"
-                                                    )}
-                                                >
-                                                    <BookmarkSimple size={18} weight={isSaved ? "fill" : "bold"} />
-                                                </button>
-                                            )}
-                                            {mode === "TEACHER" && (
-                                                <button onClick={() => handleDelete(res.id)} className="p-1.5 text-slate-300 hover:text-rose-600"><Trash size={18} weight="bold" /></button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-grow">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase">{res.category}</span>
-                                        </div>
-                                        <h3 className="text-sm font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
-                                            {res.title}
-                                        </h3>
-                                    </div>
-
-                                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-slate-900 leading-none">{res.downloads}</span>
-                                                <span className="text-[8px] font-bold text-slate-400 uppercase mt-0.5">Saves</span>
+                                <div key={res.id} className="premium-card group flex flex-col h-full border-slate-200">
+                                    <div className="p-4 flex-grow space-y-3">
+                                        <div className="flex items-start justify-between">
+                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", bg)}>
+                                                {icon}
                                             </div>
-                                            <div className="h-4 w-px bg-slate-100" />
                                             <div className="flex items-center gap-1">
-                                                <Star size={10} weight="fill" className="text-amber-500" />
-                                                <span className="text-xs font-bold text-slate-900">{(res.rating || 4.5).toFixed(1)}</span>
+                                                {saveState !== "hidden" && (
+                                                    <button
+                                                        onClick={(e) => handleToggleSave(res.id, e)}
+                                                        className={cn(
+                                                            "size-8 rounded-lg flex items-center justify-center transition-all",
+                                                            isSaved ? "bg-blue-50 text-blue-600" : "text-slate-300 hover:text-blue-600 hover:bg-slate-50"
+                                                        )}
+                                                    >
+                                                        <BookmarkSimple size={18} weight={isSaved ? "fill" : "bold"} />
+                                                    </button>
+                                                )}
+                                                {mode === "TEACHER" && (
+                                                    <button onClick={() => handleDelete(res.id)} className="size-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50"><Trash size={18} weight="bold" /></button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <span className="text-[9px] font-extrabold text-blue-600 uppercase tracking-[0.15em]">{res.category}</span>
+                                            <h3 className="text-sm font-bold text-slate-950 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[2.5rem]">
+                                                {res.title}
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 pt-0 flex flex-col gap-3">
+                                        <div className="flex items-center justify-between py-2 border-y border-slate-100">
+                                            <div className="flex items-center gap-1">
+                                                <Eye size={12} weight="bold" className="text-slate-400" />
+                                                <span className="text-[10px] font-extrabold text-slate-900">{res.downloads.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Star size={12} weight="fill" className="text-amber-500" />
+                                                <span className="text-[10px] font-extrabold text-slate-900">{(res.rating || 4.5).toFixed(1)}</span>
                                             </div>
                                         </div>
 
                                         <button
                                             onClick={() => handleDownload(res.id, res.fileUrl)}
-                                            className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-blue-600 transition-all flex items-center gap-1.5"
+                                            className="group/btn flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-slate-900 text-white text-xs font-bold transition-all hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/10 active:scale-95"
                                         >
-                                            ACCESS <Eye size={14} weight="bold" />
+                                            Access Material
                                         </button>
                                     </div>
                                 </div>
@@ -309,48 +318,59 @@ export function FreeResourcesDashboard({
                         })}
                     </div>
                 ) : (
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-100">
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Material</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Syllabus</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Format</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Saves</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                    <th className="px-6 py-5 text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Material & Subject</th>
+                                    <th className="px-6 py-5 text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Syllabus Level</th>
+                                    <th className="px-6 py-5 text-[11px] font-extrabold text-slate-500 uppercase tracking-widest text-center">Format</th>
+                                    <th className="px-6 py-5 text-[11px] font-extrabold text-slate-500 uppercase tracking-widest text-center">Engagement</th>
+                                    <th className="px-6 py-5 text-[11px] font-extrabold text-slate-500 uppercase tracking-widest text-right">Action</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
+                            <tbody className="divide-y divide-slate-100">
                                 {resources.map((res) => {
                                     const { icon } = getIcon(res.subType);
                                     return (
-                                        <tr key={res.id} className="group hover:bg-slate-50 transition-colors">
-                                            <td className="px-4 py-2.5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded bg-slate-50 flex items-center justify-center text-blue-600">
+                                        <tr key={res.id} className="group hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-blue-600 shadow-sm border border-slate-100 transition-transform group-hover:scale-110">
                                                         {icon}
                                                     </div>
                                                     <div>
-                                                        <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{res.title}</div>
+                                                        <div className="text-sm font-bold text-slate-950 group-hover:text-blue-600 transition-colors leading-tight">{res.title}</div>
+                                                        <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Ref: {res.id.slice(0, 8)}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                                                {res.category}
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-extrabold text-slate-600 uppercase tracking-widest">
+                                                    {res.category}
+                                                </span>
                                             </td>
-                                            <td className="px-4 py-2.5">
-                                                <span className="text-slate-400 text-[9px] font-black uppercase">
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="text-slate-500 text-[10px] font-black uppercase tracking-tighter">
                                                     {res.subType}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-2.5 text-center text-xs font-bold text-slate-700">
-                                                {res.downloads.toLocaleString()}
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-sm font-extrabold text-slate-900">{res.downloads.toLocaleString()}</span>
+                                                    <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest leading-none mt-1">Access</span>
+                                                </div>
                                             </td>
-                                            <td className="px-4 py-2.5">
-                                                <div className="flex items-center justify-end gap-1.5">
-                                                    <button onClick={() => handleDownload(res.id, res.fileUrl)} className="p-1.5 text-slate-400 hover:text-blue-600 transition-all"><Eye size={16} weight="bold" /></button>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => handleDownload(res.id, res.fileUrl)} 
+                                                        className="size-9 rounded-xl flex items-center justify-center bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-600 hover:shadow-md transition-all"
+                                                    >
+                                                        <Eye size={18} weight="bold" />
+                                                    </button>
                                                     {mode === "TEACHER" && (
-                                                        <button onClick={() => handleDelete(res.id)} className="p-1.5 text-slate-400 hover:text-rose-600"><Trash size={16} weight="bold" /></button>
+                                                        <button onClick={() => handleDelete(res.id)} className="size-9 rounded-xl flex items-center justify-center bg-white border border-slate-200 text-slate-300 hover:text-rose-600 hover:border-rose-600 hover:shadow-md transition-all"><Trash size={18} weight="bold" /></button>
                                                     )}
                                                 </div>
                                             </td>

@@ -6,8 +6,8 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CA Exam Portal - Modern Edition",
-  description: "A premium testing experience for CA students.",
+  title: "Financly - CA test series",
+  description: "India's highest-integrity mock test series and study vault for CA aspirants.",
 };
 
 export default function RootLayout({

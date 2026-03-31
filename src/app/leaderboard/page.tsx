@@ -16,7 +16,7 @@ type LeaderboardStudent = {
 };
 
 export const metadata = {
-    title: "Global Leaderboard | CA Exam Portal",
+    title: "Global Leaderboard | Financly",
     description: "Global student rankings based on learning XP.",
 };
 

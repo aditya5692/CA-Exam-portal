@@ -39,13 +39,12 @@ function sanitizeSchemaName(value) {
   return value.replace(/[^a-zA-Z0-9_]/g, "_");
 }
 
-function buildIntegrationDatabaseUrl(sourceUrl, schemaName) {
-  const url = new URL(sourceUrl);
-  url.searchParams.set("schema", schemaName);
-  return url.toString();
-}
-
 async function canPrepareIntegrationSchema(databaseUrl, schemaName) {
+  if (databaseUrl.startsWith("file:")) {
+    console.log(`[IntegrationTest] SQLite detected: using file-based database for isolation.`);
+    return true;
+  }
+
   const pool = new Pool({
     connectionString: databaseUrl,
     max: 1,
@@ -65,6 +64,12 @@ async function canPrepareIntegrationSchema(databaseUrl, schemaName) {
 }
 
 async function dropIntegrationSchema(databaseUrl, schemaName) {
+  if (databaseUrl.startsWith("file:")) {
+    // For SQLite, we might want to delete the temp file, 
+    // but the runner will handle clean-ups or we can leave it for debugging.
+    return;
+  }
+
   const pool = new Pool({
     connectionString: databaseUrl,
     max: 1,
@@ -95,20 +100,30 @@ function runCommand(command, args, env) {
 loadEnvFile(resolve(".env"));
 loadEnvFile(resolve(".env.local"));
 
-const sourceDatabaseUrl = process.env.INTEGRATION_DATABASE_URL || process.env.DATABASE_URL;
+// 💡 Priority: LOCAL_DATABASE_URL > DATABASE_URL for local tests
+const sourceDatabaseUrl = process.env.LOCAL_DATABASE_URL || process.env.DATABASE_URL;
+
 if (!sourceDatabaseUrl) {
-  console.warn("Skipping integration tests: INTEGRATION_DATABASE_URL or DATABASE_URL is not configured.");
+  console.warn("Skipping integration tests: LOCAL_DATABASE_URL or DATABASE_URL is not configured.");
   process.exit(0);
 }
 
+const isSqlite = sourceDatabaseUrl.startsWith("file:");
 const schemaName = sanitizeSchemaName(`integration_${Date.now()}_${randomUUID().slice(0, 8)}`);
-const integrationDatabaseUrl = buildIntegrationDatabaseUrl(sourceDatabaseUrl, schemaName);
+
+// For SQLite, create a unique test database file to prevent collision
+const integrationDatabaseUrl = isSqlite 
+  ? `file:./tests/.tmp/integration_${Date.now()}.db`
+  : buildIntegrationDatabaseUrl(sourceDatabaseUrl, schemaName);
+
 const env = {
   ...process.env,
   NODE_ENV: "test",
   DATABASE_URL: integrationDatabaseUrl,
-  INTEGRATION_DATABASE_URL: integrationDatabaseUrl,
+  // Ensure the provider is forced to match the URL protocol
+  PRISMA_GENERATE_DATASOURCE_URL: integrationDatabaseUrl,
 };
+
 const testFiles = [
   resolve("tests/integration/integration-flows.test.ts"),
 ];
@@ -120,6 +135,18 @@ if (!(await canPrepareIntegrationSchema(sourceDatabaseUrl, schemaName))) {
 }
 
 try {
+  // If SQLite, we need to ensure the directory exists
+  if (isSqlite) {
+    const dbPath = resolve(integrationDatabaseUrl.replace("file:", ""));
+    const dbDir = resolve(dbPath, "..");
+    if (!existsSync(dbDir)) {
+      const fs = await import("node:fs");
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+  }
+
+  console.log(`🚀 [IntegrationTest] Initializing database: ${integrationDatabaseUrl}`);
+  
   const prismaExitCode = runCommand(
     process.execPath,
     [resolve("node_modules/prisma/build/index.js"), "db", "push"],
@@ -150,6 +177,16 @@ try {
     console.error(`Failed to drop integration schema "${schemaName}": ${message}`);
     exitCode = exitCode || 1;
   });
+
+  // Clean up SQLite test files
+  if (isSqlite && exitCode === 0) {
+    const dbPath = resolve(integrationDatabaseUrl.replace("file:", ""));
+    const fs = await import("node:fs");
+    if (existsSync(dbPath)) fs.unlinkSync(dbPath);
+    if (existsSync(`${dbPath}-journal`)) fs.unlinkSync(`${dbPath}-journal`);
+    if (existsSync(`${dbPath}-shm`)) fs.unlinkSync(`${dbPath}-shm`);
+    if (existsSync(`${dbPath}-wal`)) fs.unlinkSync(`${dbPath}-wal`);
+  }
 }
 
 process.exit(exitCode);
