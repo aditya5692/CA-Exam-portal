@@ -7,7 +7,23 @@ import { deletePersonalMaterial, getMyVaultMaterials, uploadPersonalMaterial } f
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
-import { Bookmark, BookOpen, Clock, Download, FileText, Flame, Folder as FolderIcon, Lock, ShieldCheck, Star, Trash2, Unlock, Upload, Users, X } from "lucide-react";
+import { 
+    Bookmark, 
+    BookOpen, 
+    Clock, 
+    DownloadSimple, 
+    FileText, 
+    Flame, 
+    Folder, 
+    Lock, 
+    ShieldCheck, 
+    Star, 
+    Trash, 
+    LockOpen, 
+    UploadSimple, 
+    Users, 
+    X,
+} from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
 type VaultMaterial = {
@@ -119,7 +135,6 @@ export default function StudentVaultPage() {
         setIsUploading(false);
         if (res.success) {
             await loadData();
-            alert("Upload successful.");
         } else {
             alert(res.message || "Upload failed.");
         }
@@ -161,7 +176,7 @@ export default function StudentVaultPage() {
     const usagePercent = storageLimit > 0 ? Math.min(100, (storageUsed / storageLimit) * 100) : 0;
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500 font-outfit">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto space-y-6 animate-in fade-in duration-500 font-outfit">
             <StudentPageHeader
                 eyebrow={isAdminView ? "Admin protocol" : "Scholarly assets"}
                 title={isAdminView ? "Materials" : "Study"}
@@ -172,113 +187,93 @@ export default function StudentVaultPage() {
                 daysToExam={isAdminView ? 0 : daysToExam}
             />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="flex items-center gap-3">
                     {isAdminView && (
-                        <div className="student-chip-accent inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest">
-                            <ShieldCheck size={18} /> Admin View
+                        <div className="student-chip-accent inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
+                            <ShieldCheck size={16} weight="bold" /> Admin
                         </div>
                     )}
-                    <div className="flex rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1.5 shadow-inner">
+                    <div className="flex rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1 shadow-sm">
                         <button
                             onClick={() => setActiveTab("MY_NOTES")}
                             className={cn(
-                                "px-6 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-200 flex items-center gap-2",
-                                activeTab === "MY_NOTES" ? "student-tab-active" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
+                                "px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2",
+                                activeTab === "MY_NOTES" ? "bg-white text-[var(--student-accent-strong)] shadow-sm" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
                             )}
                         >
-                            <FolderIcon size={16} /> {isAdminView ? "Student Files" : "Personal Notes"}
+                            <Folder size={16} weight={activeTab === "MY_NOTES" ? "fill" : "bold"} /> 
+                            {isAdminView ? "Students" : "Vault"}
                         </button>
                         <button
                             onClick={() => setActiveTab("EDUCATOR")}
                             className={cn(
-                                "px-6 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-200 flex items-center gap-2",
-                                activeTab === "EDUCATOR" ? "student-tab-active" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
+                                "px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2",
+                                activeTab === "EDUCATOR" ? "bg-white text-[var(--student-accent-strong)] shadow-sm" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
                             )}
                         >
-                            <Lock size={16} /> {isAdminView ? "Shared Resources" : "Educator Files"}
+                            <LockOpen size={16} weight={activeTab === "EDUCATOR" ? "fill" : "bold"} /> 
+                            {isAdminView ? "Faculty" : "Shared"}
                         </button>
                     </div>
+
+                    {/* Compact Live Storage Widget */}
+                    {activeTab === "MY_NOTES" && (
+                        <div className="hidden sm:flex items-center gap-4 px-4 py-1.5 bg-white border border-[var(--student-border)] rounded-xl shadow-sm">
+                            <div className="space-y-0.5">
+                                <div className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-60">Storage</div>
+                                <div className="text-[10px] font-black text-slate-900">{formatBytes(storageUsed)} <span className="text-slate-400 font-bold">/ {formatBytes(storageLimit)}</span></div>
+                            </div>
+                            <div className="w-16 h-1 rounded-full bg-slate-100 overflow-hidden">
+                                <div 
+                                    className={cn(
+                                        "h-full transition-all duration-1000",
+                                        usagePercent > 90 ? "bg-rose-500" : "bg-[var(--student-accent-strong)]"
+                                    )}
+                                    style={{ width: `${usagePercent}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {!isAdminView && activeTab === "MY_NOTES" && (
+                        <label className="student-button-primary cursor-pointer !rounded-xl px-6 py-2.5 flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10">
+                            {isUploading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <UploadSimple size={18} weight="bold" />}
+                            <span className="font-black text-[10px] uppercase tracking-widest">{isUploading ? "Syncing..." : "Upload Asset"}</span>
+                            <input type="file" className="hidden" onChange={handleUpload} accept=".pdf,.png,.jpg,.jpeg" disabled={isUploading} />
+                        </label>
+                    )}
                 </div>
             </div>
 
             {activeTab === "MY_NOTES" && (
                 <div className="space-y-6">
-                    <div className="student-surface rounded-2xl p-8">
-                        <div className="flex justify-between items-end mb-5 gap-4">
-                            <div className="space-y-1">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-80">{isAdminView ? `Total Student Storage (${managedStudentsCount})` : "Personal Storage"}</span>
-                                <p className="font-outfit text-3xl font-bold tracking-tight text-[var(--student-text)]">
-                                    {formatBytes(storageUsed)} <span className="ml-2 font-sans text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-70">Used</span>
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <span className="student-chip-accent rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
-                                    Limit: {formatBytes(storageLimit)}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--student-panel-muted)] shadow-inner">
-                            <div
-                                className={`h-full rounded-full transition-all duration-1000 ease-out ${usagePercent > 90 ? "bg-rose-500" : "bg-[var(--student-accent)]"}`}
-                                style={{ width: `${usagePercent}%` }}
-                            />
-                        </div>
-                        {!isAdminView && usagePercent > 80 && (
-                            <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mt-4 flex items-center gap-2">
-                                <Clock className="w-4 h-4" /> Storage limit almost reached. Upgrade to Pro for more space.
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-                        <div>
-                            <h2 className="text-2xl font-bold text-slate-950 font-outfit tracking-tight">{isAdminView ? "Document Index" : "Materials"}</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-70">Manage your study files</p>
-                        </div>
-                        {!isAdminView && (
-                            <label className="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-slate-900/10 border border-slate-900">
-                                {isUploading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Upload size={18} />}
-                                {isUploading ? "Uploading..." : "Upload File"}
-                                <input type="file" className="hidden" onChange={handleUpload} accept=".pdf,.png,.jpg,.jpeg" disabled={isUploading} />
-                            </label>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {materials.length === 0 ? (
-                            <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-slate-100 shadow-sm">
-                                <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
-                                    <BookOpen className="w-8 h-8 text-slate-400" />
+                            <div className="col-span-full py-16 text-center student-surface border-dashed rounded-2xl px-6">
+                                <div className="w-16 h-16 rounded-2xl bg-[var(--student-panel-muted)] flex items-center justify-center mx-auto mb-6 shadow-inner border border-[var(--student-border)] text-[var(--student-muted)]">
+                                    <BookOpen className="w-8 h-8 opacity-40" weight="bold" />
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800 font-outfit tracking-tight uppercase">Empty</h3>
-                                <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2 opacity-70">
-                                    {isAdminView ? "No files have been added yet." : "Upload your first study material to get started."}
-                                </p>
+                                <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase">Archive Empty</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">{isAdminView ? "No files found." : "Upload your first note."}</p>
                             </div>
                         ) : (
                             materials.map((material) => (
-                                <div key={material.id} className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden flex flex-col h-full">
+                                <div key={material.id} className="group student-surface relative flex flex-col rounded-2xl p-5 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-lg">
                                     {material.isTrending && (
-                                        <div className="absolute top-4 left-4 z-10">
-                                            <span className="bg-amber-50 border border-amber-100 text-amber-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                                                <Flame className="w-3.5 h-3.5 fill-current" /> Trending
-                                            </span>
+                                        <div className="absolute top-4 right-4 z-10">
+                                            <div className="bg-amber-500 text-white p-1.5 rounded-lg shadow-lg">
+                                                <Flame size={12} weight="fill" />
+                                            </div>
                                         </div>
                                     )}
-                                    <div className="flex items-start justify-between gap-4 mb-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl border border-slate-100 shadow-inner group-hover:bg-indigo-50 group-hover:text-indigo-500/80 transition-all duration-300">
-                                                <FileText className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <span className="text-[10px] font-bold text-indigo-500/80 uppercase tracking-widest bg-indigo-50/50 px-2.5 py-1 rounded-full border border-indigo-100/50">{material.subType}</span>
-                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 ml-1 opacity-70">
-                                                    {formatBytes(material.sizeInBytes)}
-                                                </div>
-                                            </div>
+                                    <div className="flex items-start justify-between gap-3 mb-6">
+                                        <div className="w-12 h-12 flex items-center justify-center bg-[var(--student-panel-muted)] text-[var(--student-muted)] rounded-xl border border-[var(--student-border)] shadow-inner group-hover:bg-[var(--student-accent-soft)] group-hover:text-[var(--student-accent-strong)] transition-colors">
+                                            <FileText className="w-6 h-6" weight="bold" />
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-1.5 pointer-events-auto">
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
@@ -286,14 +281,11 @@ export default function StudentVaultPage() {
                                                     handleToggleSave(material.id, "MATERIAL");
                                                 }}
                                                 className={cn(
-                                                    "rounded-xl p-2.5 transition-all active:scale-95 border",
-                                                    savedIds.has(material.id)
-                                                        ? "bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-900/10"
-                                                        : "bg-slate-50 border-slate-100 text-slate-400 hover:text-indigo-500 hover:bg-white hover:border-indigo-100"
+                                                    "rounded-lg p-2 transition-all active:scale-90 border",
+                                                    savedIds.has(material.id) ? "student-button-primary text-white" : "bg-white border-slate-100 text-slate-400 hover:text-[var(--student-accent-strong)]"
                                                 )}
-                                                title={savedIds.has(material.id) ? "Saved" : "Save for later"}
                                             >
-                                                <Bookmark className={cn("w-4 h-4", savedIds.has(material.id) && "fill-current")} />
+                                                <Bookmark size={14} weight={savedIds.has(material.id) ? "fill" : "bold"} />
                                             </button>
                                             <button
                                                 type="button"
@@ -301,34 +293,32 @@ export default function StudentVaultPage() {
                                                     e.stopPropagation();
                                                     void handleDelete(material.id);
                                                 }}
-                                                className="rounded-xl bg-slate-50 p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-100 hover:border-rose-100 active:scale-95"
-                                                title="Delete asset"
+                                                className="rounded-lg bg-white p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-100 active:scale-90"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash size={14} weight="bold" />
                                             </button>
                                         </div>
                                     </div>
 
-                                    <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
-                                        <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
+                                    <button className="text-left w-full block group-hover:text-[var(--student-accent-strong)] transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
+                                        <div className="text-[9px] font-black text-[var(--student-accent-strong)] uppercase tracking-widest opacity-80 mb-1">{material.subType}</div>
+                                        <h3 className="font-black text-slate-900 text-[15px] leading-tight line-clamp-2 min-h-[40px] tracking-tight mb-2 uppercase">
                                             {material.title}
                                         </h3>
-                                        {material.description && (
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 line-clamp-1 opacity-60">{material.description}</p>
-                                        )}
+                                        <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{formatBytes(material.sizeInBytes)}</div>
                                     </button>
 
-                                    <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-50">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                <Download className="w-3.5 h-3.5 text-indigo-500" /> {material.downloads > 1000 ? (material.downloads / 1000).toFixed(1) + 'k' : material.downloads}
+                                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                <DownloadSimple size={12} weight="bold" className="text-indigo-400" /> {material.downloads}
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {material.rating?.toFixed(1) || "5.0"}
+                                            <div className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                <Star size={12} weight="fill" className="text-amber-400" /> {material.rating?.toFixed(1) || "5.0"}
                                             </div>
                                         </div>
-                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                                            {new Date(material.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        <span className="text-[9px] font-black text-slate-200 uppercase tracking-widest">
+                                            {new Date(material.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </span>
                                     </div>
                                 </div>
@@ -340,19 +330,13 @@ export default function StudentVaultPage() {
 
             {activeTab === "EDUCATOR" && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900 p-8 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group">
-                        <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400 shrink-0">
-                            <Lock size={28} />
+                    <div className="bg-slate-950 p-8 rounded-2xl flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden border border-white/5">
+                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--student-accent)] shrink-0">
+                            <Lock size={24} weight="fill" />
                         </div>
-                        <div className="flex-1 space-y-2 text-center md:text-left">
-                            <h2 className="text-2xl font-bold text-white font-outfit tracking-tight">
-                                {isAdminView ? "Educator Materials" : "Educator Resources"}
-                            </h2>
-                            <p className="text-slate-400 font-medium max-w-2xl leading-relaxed text-sm opacity-80 mt-1">
-                                {isAdminView
-                                    ? "These and high-value materials are managed directly by educators."
-                                    : "Premium resources shared by your faculty. These do not count towards your personal storage limit."}
-                            </p>
+                        <div className="flex-1 space-y-1 text-center sm:text-left relative z-10">
+                            <h2 className="text-xl font-black text-white tracking-tight uppercase">Verified Educator Vault</h2>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-60">Sovereign Resources • System-Verified</p>
                         </div>
                     </div>
 
@@ -361,101 +345,73 @@ export default function StudentVaultPage() {
                         if (educators.length <= 1) return null;
 
                         return (
-                            <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                            <div className="flex gap-2 overflow-x-auto pb-4 px-1 no-scrollbar">
                                 <button
                                     onClick={() => setSelectedEducator("ALL")}
-                                    className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === "ALL" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                                    className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", selectedEducator === "ALL" ? "student-button-primary text-white" : "bg-white text-slate-400 border border-slate-100 shadow-sm")}
                                 >
-                                    All Educators
+                                    Global
                                 </button>
                                 {educators.map(ed => (
                                     <button
                                         key={ed}
                                         onClick={() => setSelectedEducator(ed)}
-                                        className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === ed ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                                        className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", selectedEducator === ed ? "student-button-primary text-white" : "bg-white text-slate-400 border border-slate-100 shadow-sm")}
                                     >
-                                        {ed}
+                                        {ed.split(' ')[0]}
                                     </button>
                                 ))}
                             </div>
                         );
                     })()}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {sharedMaterials.filter(m => selectedEducator === "ALL" || (m.uploadedBy?.fullName || "Expert") === selectedEducator).length === 0 ? (
-                            <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700">
-                                {isAdminView ? "No educator materials have been distributed yet." : "No educator materials shared with you yet."}
-                            </div>
+                            <div className="col-span-full py-16 text-center student-surface border-dashed rounded-2xl text-[10px] font-black text-slate-300 uppercase tracking-widest">Null Index</div>
                         ) : (
                             sharedMaterials
                                 .filter(m => selectedEducator === "ALL" || (m.uploadedBy?.fullName || "Expert") === selectedEducator)
                                 .map((material) => (
-                                    <div key={material.id} className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
-                                        {material.isTrending && (
-                                            <div className="absolute top-4 left-4 z-10">
-                                                <span className="bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                                                    <Flame className="w-3.5 h-3.5 fill-current" /> Trending
-                                                </span>
+                                    <div key={material.id} className="group student-surface relative flex flex-col rounded-2xl p-5 transition-all duration-300 hover:border-indigo-200">
+                                        <div className="flex items-start justify-between mb-6">
+                                            <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
+                                                {material.isProtected ? <Lock size={20} weight="fill" /> : <LockOpen size={20} weight="bold" />}
                                             </div>
-                                        )}
-
-                                        <div className="flex items-start justify-between relative z-10 mb-6 gap-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500/80 rounded-xl">
-                                                    {material.isProtected ? <Lock className="w-6 h-6" /> : <Unlock className="w-6 h-6" />}
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-indigo-500/80 uppercase tracking-widest">{material.subType}</span>
-                                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Study Material</div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex flex-col items-end gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleToggleSave(material.id, "MATERIAL");
-                                                    }}
-                                                    className={cn(
-                                                        "rounded-xl p-2.5 transition-all shadow-sm border active:scale-95",
-                                                        savedIds.has(material.id)
-                                                            ? "bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-900/10"
-                                                            : "bg-white border-slate-100 text-slate-400 hover:text-indigo-500 hover:border-indigo-100"
-                                                    )}
-                                                    title={savedIds.has(material.id) ? "Saved" : "Save for later"}
-                                                >
-                                                    <Bookmark className={cn("w-4 h-4", savedIds.has(material.id) && "fill-current")} />
-                                                </button>
-                                                {isAdminView && (
-                                                    <div className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-500/80">
-                                                        <Users className="w-3 h-3" /> {material.accessedBy?.length || 0}
-                                                    </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleSave(material.id, "MATERIAL");
+                                                }}
+                                                className={cn(
+                                                    "rounded-lg p-2 transition-all border shadow-sm",
+                                                    savedIds.has(material.id) ? "student-button-primary text-white" : "bg-white border-slate-100 text-slate-400 hover:text-indigo-600"
                                                 )}
-                                            </div>
+                                            >
+                                                <Bookmark size={14} weight={savedIds.has(material.id) ? "fill" : "bold"} />
+                                            </button>
                                         </div>
 
-                                        <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
-                                            <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
+                                        <button className="text-left w-full block group-hover:text-indigo-600 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
+                                            <div className="text-[9px] font-black text-indigo-600 uppercase tracking-widest opacity-80 mb-1">{material.subType}</div>
+                                            <h3 className="font-black text-slate-900 text-[15px] leading-tight line-clamp-2 min-h-[40px] tracking-tight uppercase">
                                                 {material.title}
                                             </h3>
-                                            {material.description && (
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 line-clamp-2 min-h-[32px] opacity-60">{material.description}</p>
-                                            )}
+                                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Professor {material.uploadedBy?.fullName?.split(' ')[1] || "Faculty"}</div>
                                         </button>
 
-                                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-50">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                    <Download className="w-3.5 h-3.5 text-indigo-400" /> {material.downloads > 1000 ? (material.downloads / 1000).toFixed(1) + 'k' : material.downloads}
+                                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                    <DownloadSimple size={12} weight="bold" /> {material.downloads}
                                                 </div>
-                                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {material.rating?.toFixed(1) || "5.0"}
+                                                <div className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                    <Star size={12} weight="fill" className="text-amber-400" /> {material.rating?.toFixed(1) || "5.0"}
                                                 </div>
                                             </div>
-                                            <span className="text-[10px] font-bold text-indigo-400 bg-indigo-50/50 px-2 py-0.5 rounded-full border border-indigo-100/50">
-                                                By {material.uploadedBy?.fullName?.split(' ')[1] || "Expert"}
-                                            </span>
+                                            <div className="p-1 px-2.5 rounded-lg bg-indigo-50 text-indigo-600">
+                                                <ShieldCheck size={14} weight="bold" />
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -465,28 +421,40 @@ export default function StudentVaultPage() {
             )}
 
             {viewFileUrl && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-5xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-                            <h3 className="font-bold flex items-center gap-2 text-slate-800 font-outfit tracking-tight">
-                                <FileText size={18} className="text-indigo-600" /> Document Viewer
-                            </h3>
-                            <button onClick={() => setViewFileUrl(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400 hover:text-slate-900">
-                                <X size={20} />
+                <div className="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 lg:p-10 animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-6xl h-full rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 border border-white/20">
+                        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-lg">
+                                    <FileText size={20} weight="bold" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <h3 className="font-black text-slate-900 tracking-tight text-base uppercase">Secure Asset Stream</h3>
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">System Verified</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setViewFileUrl(null)} className="p-2.5 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all duration-300 text-slate-300 active:scale-90">
+                                <X size={20} weight="bold" />
                             </button>
                         </div>
-                        <div className="flex-1 bg-slate-100 p-4 relative" onContextMenu={(event) => event.preventDefault()}>
-                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg]">
-                                <span className="text-6xl font-bold text-slate-950 uppercase tracking-widest">FINANCLY</span>
+                        <div className="flex-1 bg-slate-200/30 p-4 relative overflow-hidden" onContextMenu={(event) => event.preventDefault()}>
+                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-25deg] select-none">
+                                <span className="text-[8rem] font-black text-slate-900 tracking-[0.2em]">FINANCLY</span>
                             </div>
+                            
                             {viewFileUrl.endsWith(".pdf") ? (
-                                <iframe src={`${viewFileUrl}#toolbar=0`} title="Secure Document Viewer" className="w-full h-full rounded-lg shadow-sm bg-white" />
+                                <iframe src={`${viewFileUrl}#toolbar=0`} title="Secure Document Viewer" className="w-full h-full rounded-xl shadow-lg bg-white relative z-10 border border-white" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center">
+                                <div className="w-full h-full flex items-center justify-center relative z-10">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={viewFileUrl} alt="Document" className="max-w-full max-h-full object-contain rounded-lg shadow-sm" style={{ pointerEvents: "none" }} />
+                                    <img src={viewFileUrl} alt="Document" className="max-w-full max-h-full object-contain rounded-xl shadow-lg" style={{ pointerEvents: "none" }} />
                                 </div>
                             )}
+                        </div>
+                        <div className="p-4 bg-white border-t border-slate-50 flex justify-center">
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest">
+                                <ShieldCheck size={14} weight="fill" className="text-emerald-400" /> Secure
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -7,7 +7,7 @@ import { TutorialCards } from "@/components/student/dashboard/tutorial-cards";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
-import { resolvePlanEntitlement, resolvePublicPlanTier } from "@/lib/server/plan-entitlements";
+
 import {
     getStudentCACategory,
     resolveStudentExamTarget,
@@ -19,7 +19,7 @@ import type { AppRole } from "@/lib/auth/demo-accounts";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import type { StudentVisibleExam } from "@/types/publish-exam";
-import { BookOpen, ChartLineUp, Clock, FilePdf, FileText, List, Medal, Play, Sparkle, Target, Trophy, ChalkboardTeacher, CaretRight, ShieldCheck, CreditCard, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { BookOpen, ChartLineUp, Clock, FilePdf, FileText, List, Medal, Play, Sparkle, Target, Trophy, ChalkboardTeacher, CaretRight, Users } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
@@ -145,12 +145,7 @@ export default async function StudentDashboardPage() {
     }
 
     const validUser = user; // Type guard helper for TS
-    const planEntitlement = resolvePlanEntitlement(user.plan, user.role);
-    const currentPlanTier = resolvePublicPlanTier(user.plan);
-    const isPaidPlan = planEntitlement.isPremium;
-    const planName = planEntitlement.displayName;
-    const expiresAt = user.planExpiresAt;
-    const daysLeft = expiresAt ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
+
 
     try {
         const examTarget = resolveStudentExamTarget(user);
@@ -308,7 +303,7 @@ export default async function StudentDashboardPage() {
             category: resource.category,
             type: resource.subType,
         }));
-        
+
         if (educatorsResult && educatorsResult.success) {
             myEducators = educatorsResult.data || [];
         }
@@ -357,368 +352,284 @@ export default async function StudentDashboardPage() {
             )}
 
             {/* Top 4 Metrics Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1 relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-1 relative">
                 {/* Decorative gradients for the row */}
-                <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[var(--student-accent-soft)] via-transparent to-[var(--student-support-soft)] blur-3xl" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[var(--student-accent-soft)] via-transparent to-[var(--student-support-soft)] blur-3xl opacity-50" />
 
                 {/* MCQ Progress */}
-                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_20px_36px_rgba(55,48,38,0.08)]">
-                    <div className="flex items-start justify-between mb-6 px-8 pt-8">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
+                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-xl">
+                    <div className="flex items-start justify-between mb-6 px-5 pt-8">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                             Practice Coverage
                         </span>
                         <div className="student-icon-tile flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300">
                             <ChartLineUp size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="mb-3 flex items-end gap-2 px-8">
-                        <div className="font-outfit text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{totalQuestionsAttempted.toLocaleString()}</div>
+                    <div className="mb-3 flex items-end gap-2 px-5">
+                        <div className="font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{totalQuestionsAttempted.toLocaleString()}</div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between px-8 pb-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                        <span className="text-[var(--student-accent-strong)]">{practiceCoverageLabel}</span>
+                    <div className="mt-3 flex items-center justify-between px-5 pb-8 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
+                        <span className="text-[var(--student-accent-strong)]">{mcqProgressPct}% Progress</span>
                     </div>
-                    {/* Progress Bar */}
                     <div className="absolute bottom-0 left-0 right-0 h-1.5 overflow-hidden bg-[var(--student-panel-muted)]">
                         <div className="h-full bg-[var(--student-accent)] transition-all duration-1000 ease-out" style={{ width: `${Math.min(mcqProgressPct, 100)}%` }}></div>
                     </div>
                 </div>
 
                 {/* Total Study Time */}
-                <div className="student-surface group relative flex min-h-[160px] flex-col justify-between rounded-2xl p-8 transition-all duration-300 hover:border-[var(--student-support-soft-strong)] hover:shadow-[0_20px_36px_rgba(55,48,38,0.08)]">
-                    <div className="flex items-start justify-between mb-4">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                            Total Study Time
+                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center rounded-2xl p-6 transition-all duration-300 hover:shadow-xl">
+                    <div className="flex items-start justify-between mb-6">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
+                            Focus Time
                         </span>
-                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300">
+                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl">
                             <Clock size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="mb-3 mt-2 font-outfit text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{studyHoursLabel}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                        Focused Learning
-                    </div>
+                    <div className="mb-3 font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight">{studyHoursLabel}</div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)]">Learning Engine Active</div>
                 </div>
 
                 {/* Total MCQ Score */}
-                <div className="student-surface group relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-8 transition-all duration-300 hover:border-[var(--student-success-soft-strong)] hover:shadow-[0_20px_36px_rgba(55,48,38,0.08)]">
-                    <div className="flex items-start justify-between mb-4 relative z-10">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                            Points Earned
+                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-xl">
+                    <div className="flex items-start justify-between mb-6 relative z-10">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
+                            Unit Experience
                         </span>
-                        <div className="student-icon-tile-success flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300">
+                        <div className="student-icon-tile-success flex h-10 w-10 items-center justify-center rounded-xl">
                             <Target size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="relative z-10 mb-3 mt-2 font-outfit text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{totalMCQScore.toLocaleString()} <span className="text-sm font-bold tracking-tight text-[var(--student-success)]">XP</span></div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                        {scoreLabel}
-                    </div>
+                    <div className="relative z-10 mb-3 font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight">{totalMCQScore.toLocaleString()} <span className="text-sm font-black tracking-tight text-[var(--student-success)]">XP</span></div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[var(--student-success-strong)]">{avgAccuracy}% Accuracy</div>
                 </div>
 
                 {/* Current Ranking */}
-                <div className="student-surface-dark group relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-8 transition-all duration-300 hover:shadow-[0_28px_44px_rgba(24,31,34,0.18)]">
+                <div className="student-surface-dark group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl">
                     <div className="flex items-start justify-between relative z-10">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-ink-muted)]">
-                            Global Rank
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-ink-muted)] opacity-60">
+                            Global Position
                         </span>
-                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300">
+                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl">
                             <Medal size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="relative z-10 mb-3 mt-2 font-outfit text-4xl font-bold leading-none tracking-tight">#{currentRank > 0 ? currentRank : '-'} <span className="pl-1 text-xs font-bold uppercase tracking-widest opacity-40">RANK</span></div>
-                    <div className="relative z-10 text-[10px] font-bold uppercase tracking-widest text-[var(--student-support)]">
-                        {rankLabel}
+                    <div className="relative z-10 mb-3 font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight">#{currentRank > 0 ? currentRank : '-'} <span className="pl-1 text-xs font-black uppercase tracking-widest opacity-40">INDEX</span></div>
+                    <div className="relative z-10 text-[10px] font-black uppercase tracking-widest text-[var(--student-support)] opacity-80">
+                        Top {Math.max(1, 100 - percentile)}% Rank
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="grid lg:grid-cols-3 gap-8 pt-4">
-                {/* Left Column: Educators & Update Feeds */}
-                <div className="lg:col-span-2 space-y-10">
-                    
-                    {/* My Educators Horizontal List */}
-                    {myEducators.length > 0 && (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-[var(--student-text)]">
-                                        <ChalkboardTeacher size={20} className="text-[var(--student-muted)]" weight="bold" />
-                                        My Educators
-                                    </h2>
-                                    <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Quick access to your faculties</p>
-                                </div>
+            {/* Main Content Area - Balanced 2-Column Grid */}
+            <div className="grid lg:grid-cols-2 gap-8 pt-4">
+                <div className="space-y-8">
+                    {/* My Educators */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                                <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                                    <ChalkboardTeacher size={20} className="text-[var(--student-muted)]" weight="bold" />
+                                    My Educators
+                                </h2>
+                                <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">Quick access to faculties</p>
                             </div>
-                            
-                            <div className="flex overflow-x-auto gap-4 pb-4 custom-scrollbar snap-x">
-                                {myEducators.map(ed => (
-                                    <Link key={ed.id} href={`/student/educator/${ed.id}`} className="snap-start shrink-0 w-[260px] student-surface group relative flex flex-col justify-between overflow-hidden rounded-2xl p-5 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_16px_32px_rgba(79,70,229,0.08)]">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg shadow-inner">
-                                                {ed.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                                                <CaretRight size={14} weight="bold" />
-                                            </div>
+                        </div>
+
+                        {myEducators.length === 0 ? (
+                            <div className="student-surface rounded-2xl p-12 text-center bg-gray-50/30 border-dashed border-gray-200">
+                                <Users size={32} className="mx-auto mb-4 text-gray-300" weight="bold" />
+                                <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">Join a batch to unlock faculties</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {myEducators.slice(0, 2).map(ed => (
+                                    <Link key={ed.id} href={`/student/educator/${ed.id}`} className="student-surface group relative flex items-center gap-5 p-6 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-lg">
+                                        <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-lg shrink-0 uppercase">
+                                            {ed.name.charAt(0)}
                                         </div>
-                                        <div>
-                                            <h3 className="font-outfit text-lg font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{ed.name}</h3>
-                                            <div className="flex flex-wrap gap-1 mt-2">
-                                                {ed.subjects.length > 0 ? ed.subjects.slice(0, 2).map((s, i) => (
-                                                    <span key={i} className="text-[9px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100/50 truncate max-w-[100px]">{s}</span>
-                                                )) : (
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 px-2.5 py-1 rounded truncate">General Faculty</span>
-                                                )}
-                                                {ed.subjects.length > 2 && <span className="text-[9px] font-black tracking-widest text-slate-500 bg-slate-100 px-1.5 py-1 rounded">+{ed.subjects.length - 2}</span>}
-                                            </div>
+                                        <div className="min-w-0">
+                                            <h3 className="font-outfit text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{ed.name}</h3>
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-indigo-500 opacity-80 truncate">{ed.subjects[0] || "Faculty"}</div>
                                         </div>
+                                        <CaretRight size={14} weight="bold" className="ml-auto text-slate-300 group-hover:text-indigo-600 transition-colors" />
                                     </Link>
                                 ))}
                             </div>
-                        </div>
-                    )}
-
-                    {/* Treasury Portal (Subscription Control) */}
-                    <div className="space-y-6">
-                        <div className="space-y-1 mb-2">
-                            <h2 className="flex items-center gap-3 uppercase font-outfit font-bold text-[var(--student-text)]">
-                                <ShieldCheck size={20} className="text-[var(--student-muted)]" weight="bold" />
-                                Treasury Oversight
-                            </h2>
-                            <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Financial & Access Instrumentation</p>
-                        </div>
-
-                        <div className="student-surface group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-[0_20px_40px_rgba(16,185,129,0.08)]">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
-                            
-                            <div className="relative flex justify-between items-start mb-6">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-outfit text-xl font-black text-slate-900 tracking-tight">{planName}</h3>
-                                        {isPaidPlan && (
-                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 font-black uppercase tracking-widest border border-emerald-200">{currentPlanTier}</span>
-                                        )}
-                                    </div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Governance Active</p>
-                                </div>
-                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                    <CreditCard size={20} weight="bold" />
-                                </div>
-                            </div>
-
-                            <div className="relative space-y-4 mb-6">
-                                <div className="flex justify-between items-end">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan Validity</span>
-                                    <span className="text-sm font-black text-slate-800">{isPaidPlan ? `${daysLeft} Days Remaining` : "Perpetual Free"}</span>
-                                </div>
-                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                    <div 
-                                        className={cn("h-full transition-all duration-1000", isPaidPlan ? "bg-emerald-500" : "bg-slate-300")} 
-                                        style={{ width: isPaidPlan ? `${Math.min(100, (daysLeft / 365) * 100)}%` : "100%" }} 
-                                    />
-                                </div>
-                            </div>
-
-                            <Link 
-                                href="/pricing"
-                                className="relative flex items-center justify-center gap-3 w-full py-3.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95 group"
-                            >
-                                {isPaidPlan ? "Manage Subscription" : "Compare Plans"}
-                                <ArrowRight size={14} weight="bold" className="group-hover:translate-x-1 transition-transform" />
-                            </Link>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between mb-2">
-                        <div className="space-y-1">
-                            <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-[var(--student-text)]">
-                                <FileText size={20} className="text-[var(--student-muted)]" weight="bold" />
-                                Latest Announcements
-                            </h2>
-                            <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Stay updated with the latest news</p>
-                        </div>
-                        <Link href="/student/updates" className="student-button-secondary rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 active:scale-95">View All</Link>
-                    </div>
-
-                    <div className="space-y-4">
-                        {announcements.length === 0 ? (
-                            <div className="student-surface rounded-2xl border-2 border-dashed border-[var(--student-border)] p-12 text-center">
-                                <FileText size={40} className="mx-auto mb-4 text-[var(--student-border-strong)] opacity-30" />
-                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">No active announcements</h3>
-                            </div>
-                        ) : (
-                            announcements.map((feed) => (
-                                <div key={feed.id} className="student-surface group relative flex gap-5 overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
-                                    <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300">
-                                        <FileText size={20} weight="fill" />
-                                    </div>
-                                    <div className="flex-1 min-w-0 relative z-10">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                                                <span className="text-[var(--student-accent-strong)]">{feed.tag}</span> <span className="px-2 opacity-30">/</span> {feed.date}
-                                            </div>
-                                        </div>
-                                        <h3 className="mb-2 font-outfit text-lg font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
-                                            {feed.title}
-                                        </h3>
-                                        <p className="mb-5 max-w-xl line-clamp-1 font-sans text-sm font-medium text-[var(--student-muted)] opacity-90">
-                                            {feed.description}
-                                        </p>
-                                        <div className="flex items-center gap-4">
-                                            <Link href="/student/updates" className="student-button-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 active:scale-95">
-                                                <Play size={14} weight="fill" />
-                                                Read More
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
                         )}
                     </div>
-                </div>
-            </div>
 
-                {/* Right Column: Rankings */}
-                <div className="space-y-6">
-                    <div className="space-y-1 mb-2">
-                        <h2 className="flex items-center gap-3 uppercase font-outfit font-bold text-[var(--student-text)]">
+                    {/* Announcements */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="space-y-1">
+                                <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                                    <FileText size={20} className="text-[var(--student-muted)]" weight="bold" />
+                                    Latest Announcements
+                                </h2>
+                                <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">Stay updated via faculty feeds</p>
+                            </div>
+                            <Link href="/student/updates" className="text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)] hover:underline">View All</Link>
+                        </div>
+
+                        <div className="space-y-4">
+                            {announcements.length === 0 ? (
+                                <div className="student-surface rounded-2xl p-16 text-center border-dashed">
+                                    <FileText size={40} className="mx-auto mb-4 text-slate-200" />
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Null Feed Index</p>
+                                </div>
+                            ) : (
+                                announcements.map((feed) => (
+                                    <div key={feed.id} className="student-surface group relative flex gap-6 overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-lg">
+                                        <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300">
+                                            <FileText size={20} weight="fill" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] mb-2">
+                                                {feed.tag} <span className="px-1 opacity-20">|</span> {feed.date}
+                                            </div>
+                                            <h3 className="mb-2 font-outfit text-lg font-bold text-slate-900 group-hover:text-[var(--student-accent-strong)] truncate leading-tight">
+                                                {feed.title}
+                                            </h3>
+                                            <p className="text-sm font-medium text-slate-400 line-clamp-1">{feed.description}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Peer & High Priority Sections */}
+                <div className="space-y-8">
+                    <div className="space-y-1">
+                        <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
                             <Trophy size={20} className="text-[var(--student-muted)]" weight="bold" />
-                            Peer Leaderboard
+                            Global Leaderboard
                         </h2>
-                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)]">Your standing among peers</p>
+                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">Your standing in the elite cohort</p>
                     </div>
 
-                    <div className="student-surface rounded-2xl p-5">
+                    <div className="student-surface rounded-2xl p-6 shadow-sm border-[var(--student-border)]">
                         {leaderboard.length === 0 ? (
-                            <div className="py-20 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-light)]">
-                                No Peer Data
-                            </div>
+                            <div className="py-24 text-center text-[11px] font-black uppercase tracking-widest text-slate-300">Synchronizing Data...</div>
                         ) : (
                             <div className="space-y-2">
                                 {leaderboard.map((item, i) => (
                                     <div key={i} className={cn(
-                                        "flex items-center justify-between p-4 rounded-2xl transition-all duration-300",
-                                        item.isMe ? "bg-[var(--student-accent-strong)] text-white shadow-[0_20px_30px_rgba(31,92,80,0.18)]" : "hover:bg-white/80"
+                                        "flex items-center justify-between p-4 rounded-xl transition-all duration-300",
+                                        item.isMe ? "bg-[var(--student-accent-strong)] text-white shadow-lg" : "hover:bg-slate-50 border border-transparent hover:border-slate-100"
                                     )}>
                                         <div className="flex items-center gap-4">
-                                            <div className={cn("w-5 text-center text-xs font-bold", item.isMe ? "text-[rgba(220,235,230,0.82)]" : "text-[var(--student-muted)]")}>
+                                            <div className={cn("w-5 text-center text-[11px] font-black", item.isMe ? "text-white/60" : "text-slate-300")}>
                                                 {item.rank}
                                             </div>
-                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold uppercase shadow-sm border",
-                                                item.isMe ? "bg-white/10 border-white/10 text-white" : "bg-white border-[var(--student-border)] text-[var(--student-muted)]")}>
+                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-black uppercase border",
+                                                item.isMe ? "bg-white/10 border-white/20 text-white" : "bg-white border-slate-100 text-slate-400")}>
                                                 {item.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <div className={cn("mb-0.5 font-outfit text-sm font-bold leading-tight tracking-tight", item.isMe ? "text-white" : "text-[var(--student-text)]")}>
-                                                    {item.name}
+                                                <div className={cn("text-sm font-bold tracking-tight", item.isMe ? "text-white" : "text-slate-900")}>
+                                                    {item.isMe ? "You" : item.name.split(' ')[0]}
                                                 </div>
-                                                <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-white/70" : "text-[var(--student-muted)]")}>
+                                                <div className={cn("text-[9px] font-black uppercase tracking-widest", item.isMe ? "text-white/50" : "text-slate-400")}>
                                                     LVL {Math.floor(1 + Math.sqrt(item.score / 50))}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className={cn("mb-0.5 font-outfit text-sm font-bold leading-tight tracking-tight", item.isMe ? "text-white" : "text-[var(--student-text)]")}>{item.score.toLocaleString()}</div>
-                                            <div className={cn("text-[10px] font-bold uppercase tracking-widest", item.isMe ? "text-white/70" : "text-[var(--student-accent-strong)]")}>Unit XP</div>
+                                        <div className={cn("text-right font-outfit text-sm font-bold", item.isMe ? "text-white" : "text-indigo-600")}>
+                                            {item.score.toLocaleString()} <span className="text-[9px] opacity-60 ml-0.5 whitespace-nowrap">XP</span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
+                        <Link href="/leaderboard" className="block w-full mt-6 py-3.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] text-center hover:bg-slate-800 transition-all active:scale-[0.98]">Full Directory Index</Link>
+                    </div>
 
-                        <Link href="/leaderboard"
-                            className="student-button-secondary mt-6 block w-full rounded-xl py-3.5 text-center text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]">
-                            View Detailed Ranking
-                        </Link>
+                    {/* Quick Resources / Tips */}
+                    <div className="student-surface rounded-2xl p-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden group">
+                        <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                        <div className="relative z-10 space-y-4">
+                            <Sparkle size={24} weight="fill" className="text-indigo-200" />
+                            <h3 className="text-lg font-black uppercase tracking-widest leading-tight">Momentum Daily</h3>
+                            <p className="text-sm leading-relaxed text-indigo-100 font-medium opacity-90">Maximize your focus sessions by reviewing "Professor Files" first thing in the morning.</p>
+                            <Link href="/student/free-resources" className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-white hover:translate-x-1 transition-transform pt-2">
+                                View Productivity Tips <CaretRight size={12} weight="bold" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Free Resource Library Section */}
-            <div className="pt-8">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="space-y-1">
-                        <h2 className="flex items-center gap-3 uppercase font-outfit font-bold text-[var(--student-text)]">
-                            <BookOpen size={20} className="text-[var(--student-muted)]" weight="bold" />
-                            Free Resources
-                        </h2>
-                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">Helpful study materials</p>
-                    </div>
-                    <Link href="/student/free-resources" className="student-button-secondary rounded-xl px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 active:scale-95">Explore All</Link>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {freeResources.length === 0 ? (
-                        <div className="student-surface lg:col-span-4 rounded-2xl border-2 border-dashed border-[var(--student-border)] p-12 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-light)]">
-                            No resources available yet
+            {/* Bottom Global Sections */}
+            <div className="pt-10 space-y-16">
+                {/* Resource Section */}
+                <div className="space-y-8">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                                <BookOpen size={20} className="text-[var(--student-muted)]" weight="bold" />
+                                Resource Library
+                            </h2>
+                            <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">System verified study materials</p>
                         </div>
-                    ) : freeResources.map((res) => (
-                        <Link href="/student/free-resources" key={res.id}
-                            className="student-surface group relative flex min-h-[140px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
-                            <div className="flex items-start justify-between mb-4 relative z-10">
-                                <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300">
-                                    <FilePdf size={18} weight="fill" />
-                                </div>
-                                <span className="student-chip rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
-                                    {res.type}
-                                </span>
-                            </div>
-                            <div className="z-10 relative">
-                                <h4 className="mb-2 line-clamp-2 font-outfit text-base font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
-                                    {res.title}
-                                </h4>
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                                    {res.category}
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-
-            <div className="pt-10">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="space-y-1">
-                        <h2 className="flex items-center gap-3 uppercase font-outfit font-bold text-[var(--student-text)]">
-                            <Sparkle size={20} className="text-[var(--student-muted)]" weight="bold" />
-                            Recommended Exams
-                        </h2>
-                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">Top practice modules for you</p>
+                        <Link href="/student/free-resources" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline">Explore Collection</Link>
                     </div>
-                    <Link href="/student/exams" className="student-button-secondary rounded-xl px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 active:scale-95">View More</Link>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {freeResources.length === 0 ? (
+                            <div className="lg:col-span-4 py-16 text-center border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-300">No Archives Found</div>
+                        ) : freeResources.map((res) => (
+                            <Link href="/student/free-resources" key={res.id} className="student-surface group p-6 rounded-2xl transition-all hover:shadow-lg">
+                                <div className="flex items-start justify-between mb-5">
+                                    <div className="student-icon-tile h-10 w-10 rounded-xl flex items-center justify-center">
+                                        <FilePdf size={20} weight="fill" />
+                                    </div>
+                                    <span className="text-[9px] font-black uppercase tracking-widest bg-slate-50 px-2.5 py-1.5 rounded text-slate-400">{res.type}</span>
+                                </div>
+                                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 uppercase leading-tight mb-2 transition-colors">{res.title}</h4>
+                                <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">{res.category}</div>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {topPracticeExams.length === 0 ? (
-                        <div className="student-surface lg:col-span-4 rounded-2xl border-2 border-dashed border-[var(--student-border)] p-12 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-light)]">
-                            No exams available yet
+                {/* Exams Section */}
+                <div className="space-y-8">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                                <List size={20} className="text-[var(--student-muted)]" weight="bold" />
+                                War Room Access
+                            </h2>
+                            <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">High-priority practice modules</p>
                         </div>
-                    ) : topPracticeExams.map((exam) => {
-                        return (
-                            <Link href={`/exam/war-room?examId=${exam.id}`} key={exam.id}
-                                className="student-surface group relative flex min-h-[140px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
-                                <div className="flex items-start justify-between mb-4 relative z-10">
-                                    <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300">
-                                        <List size={18} weight="fill" />
+                        <Link href="/student/exams" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline">Join Simulation</Link>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {topPracticeExams.length === 0 ? (
+                            <div className="lg:col-span-4 py-16 text-center border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-300">Modules Offline</div>
+                        ) : topPracticeExams.map((exam) => (
+                            <Link href={`/exam/war-room?examId=${exam.id}`} key={exam.id} className="student-surface group p-6 rounded-2xl transition-all hover:shadow-lg border-l-4 border-l-indigo-500">
+                                <div className="flex items-start justify-between mb-5">
+                                    <div className="student-icon-tile h-10 w-10 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-600">
+                                        <Play size={18} weight="fill" />
                                     </div>
-                                    <div className="h-2 w-2 rounded-full bg-[var(--student-success)]" />
+                                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                                 </div>
-                                <div className="z-10 relative">
-                                    <h4 className="mb-2 line-clamp-1 font-outfit text-base font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
-                                        {exam.title}
-                                    </h4>
-                                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
-                                        <span>{exam.questions} Questions</span>
-                                        <span className="opacity-30">•</span>
-                                        <span className="text-[var(--student-muted-strong)]">{exam.category}</span>
-                                    </div>
+                                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 uppercase leading-tight mb-2 transition-colors">{exam.title}</h4>
+                                <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                    <span>{exam.questions} Questions</span>
+                                    <span className="text-indigo-600">{exam.category}</span>
                                 </div>
                             </Link>
-                        );
-                    })}
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
+
+

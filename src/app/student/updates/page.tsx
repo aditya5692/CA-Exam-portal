@@ -5,11 +5,25 @@ import { getStudentProfile } from "@/actions/profile-actions";
 import { StudentPageHeader } from "@/components/student/shared/page-header";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
-import { Plus, ShieldCheck, X } from "@phosphor-icons/react";
+import { 
+    Plus, 
+    ShieldCheck, 
+    X, 
+    Funnel, 
+    CheckSquareOffset, 
+    Bookmark, 
+    DownloadSimple, 
+    CaretDown,
+    BookOpen,
+    Article,
+    Trophy,
+    TrendUp,
+    Bell,
+    CalendarCheck,
+    ArrowRight
+} from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
-// ── Types ──────────────────────────────────────────────────────────────────────
 
 type UpdateCategory = "STUDY MATERIAL" | "STATUTORY UPDATE" | "MOCK ASSESSMENT" | "ANNOUNCEMENT" | "PRACTICE Q&A" | "REGULATORY NEWS";
 
@@ -27,29 +41,18 @@ type FeedItem = {
     link?: string;
 };
 
-// ── Page Component ─────────────────────────────────────────────────────────────
-
 export default function StudentUpdatesPage() {
     const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
     const [isAdminView, setIsAdminView] = useState(false);
-    const [selectedSubject, setSelectedSubject] = useState("All Updates");
+    const [selectedCategory, setSelectedCategory] = useState("All Updates");
     const [visibleCount, setVisibleCount] = useState(6);
     const [daysToExam, setDaysToExam] = useState(0);
     const router = useRouter();
-
-    // Join Batch State
-    const [showJoinModal, setShowJoinModal] = useState(false);
-    const [joinCode, setJoinCode] = useState("");
-    const [isJoining, setIsJoining] = useState(false);
-    const [joinError, setJoinError] = useState("");
-    const [joinSuccess, setJoinSuccess] = useState("");
-    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const loadFeed = useCallback(async () => {
         const res = await getStudentFeed();
         if (!res.success) return;
 
-        // Fetch profile for daysToExam and batch status
         const profileRes = await getStudentProfile();
         if (profileRes.success && profileRes.data) {
             setDaysToExam(resolveStudentExamTarget(profileRes.data).daysToExam);
@@ -97,29 +100,6 @@ export default function StudentUpdatesPage() {
         };
     }, [loadFeed]);
 
-    const handleJoin = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setIsJoining(true);
-        setJoinError("");
-        setJoinSuccess("");
-        const formData = new FormData();
-        formData.append("code", joinCode);
-        const res = await joinBatch(formData);
-        setIsJoining(false);
-        if (res.success) {
-            setJoinSuccess(`Successfully joined "${res.data.batchName}".`);
-            setJoinCode("");
-            loadFeed();
-            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-            closeTimerRef.current = setTimeout(() => {
-                setShowJoinModal(false);
-                setJoinSuccess("");
-            }, 2000);
-        } else {
-            setJoinError(res.message || "Something went wrong.");
-        }
-    };
-
     const markAllAsRead = () => {
         setFeedItems(prev => prev.map(item => ({ ...item, isUnread: false })));
     };
@@ -139,7 +119,6 @@ export default function StudentUpdatesPage() {
         return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
     };
 
-    // Grouping logic with pagination
     const displayedItems = feedItems.slice(0, visibleCount);
     const groupedUpdates = displayedItems.reduce((acc, item) => {
         if (!acc[item.subject]) acc[item.subject] = [];
@@ -147,61 +126,53 @@ export default function StudentUpdatesPage() {
         return acc;
     }, {} as Record<string, FeedItem[]>);
 
-    const dynamicFilterOptions = ["All Updates", ...Array.from(new Set(feedItems.map(item => item.subject)))];
-
+    const categoryTabs = ["All Updates", ...Array.from(new Set(feedItems.map(item => item.subject)))];
     const hasMore = visibleCount < feedItems.length;
 
     return (
-        <div className="max-w-6xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000 font-outfit space-y-12">
+        <div className="max-w-[1400px] mx-auto pb-20 font-outfit space-y-12">
             <StudentPageHeader
                 className="px-4"
                 eyebrow="Academy intelligence"
-                title="Academy"
-                accent="Updates"
+                title="Academy Updates"
                 description="Focused news and regulatory changes for your curriculum."
+                daysToExam={daysToExam}
                 aside={
-                    <div className="mb-1 flex flex-wrap items-center gap-3">
-                        {daysToExam > 0 && (
-                            <div className="student-chip inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[11px] font-semibold">
-                                <span className="h-2 w-2 rounded-full bg-[var(--student-support)]" />
-                                Next milestone in {daysToExam} days
-                            </div>
-                        )}
-                        <button className="student-button-secondary flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
-                            <span className="material-symbols-outlined text-lg">filter_alt</span>
-                            Filter View
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button className="student-button-secondary flex items-center gap-2 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm">
+                            <Funnel size={18} weight="bold" />
+                            Global Filter
                         </button>
                         <button
                             onClick={markAllAsRead}
-                            className="student-button-primary flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
+                            className="student-button-primary flex items-center gap-2 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10"
                         >
-                            <span className="material-symbols-outlined text-lg">done_all</span>
+                            <CheckSquareOffset size={18} weight="bold" />
                             Mark All Read
                         </button>
                         {!isAdminView && (
                             <button
                                 onClick={() => router.push("/student/redeem")}
-                                className="student-chip-accent flex items-center gap-2 rounded-xl px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
+                                className="student-chip-accent flex items-center gap-2 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
                             >
-                                <Plus size={16} weight="bold" />
-                                Redeem batch code
+                                <Plus size={18} weight="bold" />
+                                Redeem batch
                             </button>
                         )}
                     </div>
                 }
             />
 
-            {/* Sub-nav filtering */}
             <nav className="flex items-center gap-3 mb-10 overflow-x-auto px-4 pb-2 no-scrollbar">
-                {dynamicFilterOptions.map(sub => (
+                {categoryTabs.map(sub => (
                     <button
                         key={sub}
-                        onClick={() => setSelectedSubject(sub)}
+                        onClick={() => setSelectedCategory(sub)}
                         className={cn(
-                            "rounded-full border px-5 py-2 text-xs font-bold whitespace-nowrap transition-all shadow-sm",
-                            selectedSubject === sub
-                                ? "student-tab-active"
-                                : "bg-white border-[var(--student-border)] text-[var(--student-muted)] hover:border-[var(--student-border-strong)]"
+                            "rounded-xl border px-6 py-2.5 text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm",
+                            selectedCategory === sub
+                                ? "bg-[var(--student-accent-strong)] text-white border-[var(--student-accent-strong)]"
+                                : "bg-white border-[var(--student-border)] text-[var(--student-muted)] hover:border-[var(--student-accent-soft-strong)] hover:text-[var(--student-accent-strong)]"
                         )}
                     >
                         {sub}
@@ -209,90 +180,87 @@ export default function StudentUpdatesPage() {
                 ))}
             </nav>
 
-            {/* Updates Container with Scroll Capability if needed */}
-            <div className="space-y-12 px-2 max-h-[2000px] overflow-visible">
+            <div className="space-y-10 px-4">
                 {Object.entries(groupedUpdates)
-                    .filter(([sub]) => selectedSubject === "All Updates" || selectedSubject === sub)
+                    .filter(([sub]) => selectedCategory === "All Updates" || selectedCategory === sub)
                     .map(([subject, items]) => {
                         const unreadCount = items.filter(i => i.isUnread).length;
                         const subjectSettings = {
-                            "Financial Reporting": { color: "indigo", icon: "play_circle" },
-                            "Indirect Tax": { color: "purple", icon: "book" },
-                            "Corporate Laws": { color: "blue", icon: "article" },
-                            "Audit & Assurance": { color: "emerald", icon: "security_update_good" },
-                            "Strategic Management": { color: "orange", icon: "trending_up" }
-                        }[subject] || { color: "slate", icon: "notifications" };
+                            "Financial Reporting": { color: "indigo", icon: <TrendUp size={20} weight="bold" /> },
+                            "Indirect Tax": { color: "purple", icon: <BookOpen size={20} weight="bold" /> },
+                            "Corporate Laws": { color: "blue", icon: <Article size={20} weight="bold" /> },
+                            "Audit & Assurance": { color: "emerald", icon: <ShieldCheck size={20} weight="bold" /> },
+                            "Strategic Management": { color: "orange", icon: <Trophy size={20} weight="bold" /> }
+                        }[subject] || { color: "slate", icon: <Bell size={20} weight="bold" /> };
 
                         return (
-                            <section key={subject} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
-                                {/* Subject Card Header */}
-                                <div className="p-5 flex items-center justify-between border-b border-slate-50 group hover:bg-slate-50/50 transition-colors">
-                                    <div className="flex items-center gap-4">
+                            <section key={subject} className="student-surface group overflow-hidden rounded-2xl border-[var(--student-border)] shadow-sm transition-all hover:shadow-lg">
+                                <div className="p-6 flex items-center justify-between border-b border-[var(--student-border)] transition-colors hover:bg-[var(--student-panel-muted)]">
+                                    <div className="flex items-center gap-5">
                                         <div className={cn(
-                                            "h-10 w-10 rounded-lg flex items-center justify-center text-white shadow-lg",
+                                            "h-11 w-11 rounded-xl flex items-center justify-center text-white shadow-xl",
                                             subjectSettings.color === "indigo" ? "bg-indigo-600 shadow-indigo-100" :
                                                 subjectSettings.color === "purple" ? "bg-purple-600 shadow-purple-100" :
                                                     subjectSettings.color === "blue" ? "bg-blue-600 shadow-blue-100" :
                                                         "bg-emerald-600 shadow-emerald-100"
                                         )}>
-                                            <span className="material-symbols-outlined">{subjectSettings.icon}</span>
+                                            {subjectSettings.icon}
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">{subject}</h2>
-                                            {unreadCount > 0 && (
-                                                <span className={cn(
-                                                    "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                                                    subjectSettings.color === "indigo" ? "bg-indigo-50 text-indigo-600" : "bg-purple-50 text-purple-600"
-                                                )}>
-                                                    {unreadCount} New
-                                                </span>
-                                            )}
+                                        <div className="flex flex-col gap-0.5">
+                                            <div className="flex items-center gap-3">
+                                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">{subject}</h2>
+                                                {unreadCount > 0 && (
+                                                    <span className="px-2.5 py-0.5 rounded-full bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] text-[10px] font-black uppercase tracking-widest">
+                                                        {unreadCount} New
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-60">System Synchronized Channel</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => markSubjectAsRead(subject)}
-                                        className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest hover:underline active:scale-95 transition-all"
+                                        className="text-[10px] font-black text-slate-400 hover:text-[var(--student-accent-strong)] uppercase tracking-widest transition-all px-4 py-2 hover:bg-white rounded-lg border border-transparent hover:border-[var(--student-border)]"
                                     >
-                                        Mark Read
+                                        Mark Index Read
                                     </button>
                                 </div>
 
-                                {/* Updates List */}
-                                <div className="divide-y divide-slate-50">
+                                <div className="divide-y divide-[var(--student-border)]">
                                     {items.map(item => (
-                                        <div key={item.id} className="p-6 flex gap-6 group/item hover:bg-slate-50/30 transition-colors">
-                                            {/* Unread Indicator dot */}
-                                            <div className="pt-2">
+                                        <div key={item.id} className="p-8 flex gap-8 group/item transition-all hover:bg-[var(--student-panel-muted)]/40 relative">
+                                            <div className="pt-3 shrink-0">
                                                 <div className={cn(
-                                                    "h-2 w-2 rounded-full",
-                                                    item.isUnread ? "bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]" : "bg-slate-200"
+                                                    "h-2.5 w-2.5 rounded-full",
+                                                    item.isUnread ? "bg-[var(--student-accent-strong)] shadow-[0_0_12px_rgba(var(--student-accent-rgb),0.5)]" : "bg-slate-200"
                                                 )} />
                                             </div>
 
-                                            <div className="flex-1 space-y-2">
+                                            <div className="flex-1 min-w-0 space-y-3">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.category}</span>
-                                                    <span className="text-[11px] font-medium text-slate-400">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] font-black text-[var(--student-accent-strong)] uppercase tracking-widest">{item.category}</span>
+                                                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{item.teacherName}</span>
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
                                                         {item.scheduledFor ? `Scheduled: ${item.scheduledFor}` : formatRelativeDate(item.createdAt)}
                                                     </span>
                                                 </div>
-                                                <h3 className="text-lg font-bold text-slate-900 font-outfit leading-tight group-hover/item:text-indigo-600 transition-colors">
+                                                <h3 className="text-xl font-bold text-slate-900 font-outfit leading-tight group-hover/item:text-[var(--student-accent-strong)] transition-colors">
                                                     {item.title}
                                                 </h3>
-                                                <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                                                <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-4xl">
                                                     {item.description}
                                                 </p>
                                             </div>
 
-                                            {/* Action Icons as per screenshot */}
-                                            <div className="flex items-center gap-5 pt-1 self-start">
-                                                <button className="text-slate-300 hover:text-indigo-600 transition-colors active:scale-90">
-                                                    <span className="material-symbols-outlined text-[20px]">bookmark</span>
+                                            <div className="flex flex-col gap-3 pt-1 shrink-0">
+                                                <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-[var(--student-border)] text-slate-400 hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)] transition-all shadow-sm active:scale-90">
+                                                    <Bookmark size={20} weight="bold" />
                                                 </button>
-                                                <button className="text-slate-300 hover:text-indigo-600 transition-colors active:scale-90">
-                                                    <span className="material-symbols-outlined text-[24px]">
-                                                        {item.category === "MOCK ASSESSMENT" ? "calendar_today" : "download"}
-                                                    </span>
+                                                <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-[var(--student-border)] text-slate-400 hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)] transition-all shadow-sm active:scale-90">
+                                                    {item.category === "MOCK ASSESSMENT" ? <CalendarCheck size={20} weight="bold" /> : <DownloadSimple size={20} weight="bold" />}
                                                 </button>
                                             </div>
                                         </div>
@@ -303,20 +271,17 @@ export default function StudentUpdatesPage() {
                     })}
             </div>
 
-            {/* Older Updates Dropdown Button */}
             {hasMore && (
                 <div className="mt-16 flex justify-center">
                     <button
                         onClick={() => setVisibleCount(p => p + 6)}
-                        className="flex items-center gap-2 px-8 py-3 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest shadow-sm hover:border-slate-300 hover:text-slate-600 transition-all active:scale-95 group"
+                        className="flex items-center gap-3 px-10 py-4 bg-white border border-[var(--student-border)] rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest shadow-sm hover:border-slate-400 hover:text-slate-900 transition-all active:scale-95 group"
                     >
-                        Older Updates
-                        <span className="material-symbols-outlined transition-transform group-hover:translate-y-0.5">expand_more</span>
+                        Load Older Feed Index
+                        <CaretDown size={18} weight="bold" className="transition-transform group-hover:translate-y-1" />
                     </button>
                 </div>
             )}
-
-
         </div>
     );
 }

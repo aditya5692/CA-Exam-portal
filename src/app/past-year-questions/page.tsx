@@ -3,6 +3,7 @@ import { Navbar } from "@/components/common/navbar";
 import { FreeResourcesDashboard } from "@/components/home/FreeResourcesDashboard";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Lexend } from "next/font/google";
+import { redirect } from "next/navigation";
 
 const lexend = Lexend({
     subsets: ["latin"],
@@ -11,6 +12,10 @@ const lexend = Lexend({
 
 export default async function PastYearQuestionsPage() {
     const user = await getCurrentUser();
+
+    if (user?.role === "STUDENT") {
+        redirect("/student/past-year-questions");
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">

@@ -113,12 +113,12 @@ export default function DashboardOverview() {
             </div>
 
             {/* Top 4 Metrics Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1 relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 px-1 relative">
                 {/* Decorative gradients */}
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/20 via-transparent to-purple-50/20 blur-3xl -z-10" />
 
                 {STATS.map((stat) => (
-                    <div key={stat.label} className="bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm rounded-[24px] p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-indigo-100/50 group flex flex-col justify-between min-h-[140px]">
+                    <div key={stat.label} className="bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm rounded-[24px] p-5 xl:p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-indigo-100/50 group flex flex-col justify-between min-h-[140px]">
                         <div className="flex items-start justify-between mb-4">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
                                 {stat.label}
@@ -127,7 +127,7 @@ export default function DashboardOverview() {
                                 <stat.icon size={20} weight="bold" />
                             </div>
                         </div>
-                        <div className="text-3xl font-bold text-slate-900 leading-none mt-2 tracking-tight font-outfit mb-3">{stat.value}</div>
+                        <div className="text-2xl xl:text-3xl font-bold text-slate-900 leading-none mt-2 tracking-tight font-outfit mb-3">{stat.value}</div>
                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
                             {stat.trend !== 0 ? (
                                 <span className="text-emerald-500 flex items-center gap-1">+{stat.trend}% <TrendUp size={12} weight="bold" /></span>
@@ -140,7 +140,7 @@ export default function DashboardOverview() {
             </div>
 
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-1">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 px-1">
                 {QUICK_ACTIONS.map((action) => (
                     <Link href={action.href} key={action.label} className={cn(
                         "flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-95 group",
@@ -156,7 +156,7 @@ export default function DashboardOverview() {
             </div>
 
             {/* Main Content Area */}
-            <div className="grid lg:grid-cols-3 gap-8 pt-4">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pt-4">
                 {/* Left Column: Chart & Announcements */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Performance Chart */}
@@ -345,7 +345,7 @@ export default function DashboardOverview() {
                     <Link href="/teacher/materials" className="px-5 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-950 hover:text-white transition-all duration-200 border border-slate-100 shadow-sm active:scale-95">Manage Library</Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 px-1">
                     {data.recentMaterials.length === 0 ? (
                         <div className="lg:col-span-4 p-12 text-center text-slate-300 bg-white rounded-[32px] border-2 border-slate-100 border-dashed uppercase tracking-widest text-[10px] font-bold shadow-sm">
                             No materials uploaded yet

@@ -30,7 +30,7 @@ export function StudentPageHeader({
     const sideContent = aside ?? milestone;
 
     return (
-        <div 
+        <div
             className={cn("flex flex-col gap-6 md:flex-row md:items-end md:justify-between transition-all duration-300 tuner-heading-container", className)}
         >
             <div className="space-y-4">

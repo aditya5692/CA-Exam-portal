@@ -31,7 +31,7 @@
 :root {
   --font-lexend: "Lexend", system-ui, sans-serif;
   --font-sans: "Lexend", system-ui, sans-serif;
-  
+
   /* Brand Tokens - The Source of Truth */
   --brand-navy: #0f172a;
   --brand-blue: #0f2cbd;
@@ -156,7 +156,8 @@
 @layer components {
   .student-theme {
     /* Theme context marker - variables now live in :root for stability */
-    pointer-events: auto; /* Dummy property to avoid empty ruleset warning */
+    pointer-events: auto;
+    /* Dummy property to avoid empty ruleset warning */
   }
 
   .student-shell {

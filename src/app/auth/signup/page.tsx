@@ -3,6 +3,13 @@
 import { verifyOtpAndRegister } from "@/actions/auth-actions";
 import Msg91Widget from "@/components/auth/msg91-widget";
 import { 
+    getGlobalLeaderboard, 
+    LeaderboardEntry 
+} from "@/actions/leaderboard-actions";
+import { 
+    getPublicMockExams 
+} from "@/actions/publish-exam-actions";
+import { 
     ArrowRight, 
     CheckCircle, 
     DeviceMobile, 
@@ -11,11 +18,16 @@ import {
     Lock, 
     Sparkle, 
     User,
-    Spinner
+    Spinner,
+    TrendUp,
+    Users,
+    CaretRight,
+    Certificate,
+    Lightbulb
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import { Lexend } from "next/font/google";
@@ -62,6 +74,28 @@ function SignupFormContent() {
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+
+    const [trendingExams, setTrendingExams] = useState<any[]>([]);
+    const [topAspirants, setTopAspirants] = useState<LeaderboardEntry[]>([]);
+    const [isDataLoading, setIsDataLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadPulseData() {
+            try {
+                const [examsRes, leaderboardRes] = await Promise.all([
+                    getPublicMockExams(),
+                    getGlobalLeaderboard(3)
+                ]);
+                if (examsRes.success && examsRes.data) setTrendingExams(examsRes.data.slice(0, 3));
+                if (leaderboardRes.success && leaderboardRes.data) setTopAspirants(leaderboardRes.data);
+            } catch (err) {
+                console.error("Pulse: Data fetch failed", err);
+            } finally {
+                setIsDataLoading(false);
+            }
+        }
+        void loadPulseData();
+    }, []);
 
     function clearPendingVerification() {
         setMsg91Token("");
@@ -143,33 +177,142 @@ function SignupFormContent() {
     }
 
     return (
-        <div className={cn(lexend.className, "min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900 flex flex-col items-center justify-center p-6 sm:p-12")}>
+        <div className={cn(lexend.className, "min-h-screen bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900 lg:grid lg:grid-cols-[1.1fr_1fr]")}>
             
-            <div className="mb-10 flex flex-col items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
-                <Link href="/" className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-[#0f2cbd] text-white shadow-2xl shadow-blue-600/30 active:scale-95 transition-transform">
-                    <GraduationCap size={28} weight="bold" />
-                </Link>
-                <div className="text-center">
-                    <h1 className="text-xl font-extrabold tracking-tighter text-slate-950 italic">Financly</h1>
-                    <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#0f2cbd]/60">CA Test Series</p>
+            {/* PULSE SIDEBAR - INDUSTRIAL VALUE PROPOSITION */}
+            <div className="relative hidden lg:flex flex-col bg-[#020617] p-12 xl:p-20 overflow-hidden isolate">
+                {/* Modern Abstract Graphics */}
+                <div className="absolute top-[-10%] left-[-10%] h-[40%] w-[40%] rounded-full bg-blue-600/10 blur-[120px] pointer-events-none -z-10" />
+                <div className="absolute bottom-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none -z-10" />
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
+
+                <div className="mb-16">
+                    <Link href="/" className="flex items-center gap-4 group">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-900/20 group-hover:scale-105 transition-transform">
+                            <GraduationCap size={28} weight="bold" />
+                        </div>
+                        <div>
+                            <div className="text-xl font-extrabold text-white tracking-tight italic">Financly</div>
+                            <div className="text-[9px] font-bold uppercase tracking-[0.4em] text-blue-400">Flagship Intelligence</div>
+                        </div>
+                    </Link>
+                </div>
+
+                <div className="flex-1 space-y-12 max-w-lg">
+                    <div className="space-y-4">
+                        <h2 className="text-4xl xl:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
+                            Claim your <span className="text-blue-500">free workspace</span> today.
+                        </h2>
+                        <p className="text-slate-400 font-medium leading-relaxed max-w-sm">
+                            Join 12,000+ CA aspirants achieving their attempt goals through 
+                            data-driven simulation and archive intelligence.
+                        </p>
+                    </div>
+
+                    <div className="space-y-8">
+                        {/* Real-time Data Section: Trending Simulations */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between text-blue-400">
+                                <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest">
+                                    <TrendUp size={16} weight="bold" /> Trending Simulations
+                                </div>
+                                <div className="h-px flex-1 mx-4 bg-white/5" />
+                                <div className="text-[10px] font-bold uppercase tracking-widest opacity-50">Live</div>
+                            </div>
+                            
+                            <div className="grid gap-3">
+                                {isDataLoading ? (
+                                    [1, 2].map(i => (
+                                        <div key={i} className="h-16 rounded-2xl bg-white/5 animate-pulse" />
+                                    ))
+                                ) : (
+                                    trendingExams.map((exam) => (
+                                        <div key={exam.id} className="group flex items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 p-4 rounded-2xl transition-all cursor-default">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400">
+                                                    < Sparkle size={20} weight="bold" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs font-extrabold text-white tracking-tight">{exam.title}</div>
+                                                    <div className="text-[9px] text-slate-500 font-bold uppercase mt-1">
+                                                        {exam.attemptCount} Active Attempts This Week
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <CaretRight size={14} className="text-slate-700 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Social Proof Section: Global Aspirants */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between text-emerald-400">
+                                <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest">
+                                    <Users size={16} weight="bold" /> Global Aspirants
+                                </div>
+                                <div className="h-px flex-1 mx-4 bg-white/5" />
+                            </div>
+
+                            <div className="flex -space-x-3 overflow-hidden p-1">
+                                {topAspirants.map((asp, i) => (
+                                    <div key={asp.studentId} className={cn(
+                                        "inline-block h-10 w-10 rounded-xl ring-4 ring-[#020617] bg-white/10 flex items-center justify-center text-[11px] font-extrabold text-white border border-white/10",
+                                        i === 0 && "bg-blue-600 border-blue-400",
+                                        i === 1 && "bg-emerald-600 border-emerald-400",
+                                        i === 2 && "bg-amber-600 border-amber-400"
+                                    )}>
+                                        {asp.fullName.charAt(0)}
+                                    </div>
+                                ))}
+                                <div className="h-10 w-10 rounded-xl ring-4 ring-[#020617] bg-white/5 border border-white/5 flex items-center justify-center text-[9px] font-bold text-slate-500">
+                                    +12k
+                                </div>
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-loose">
+                                Average cohort accuracy: <span className="text-emerald-400">74%</span> • 
+                                Peer goal streak: <span className="text-amber-400">8 days</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-auto pt-10 flex items-center gap-8 text-[9px] font-extrabold uppercase tracking-[0.2em] text-slate-600">
+                    <div className="flex items-center gap-2">
+                        <Certificate size={16} weight="bold" className="text-blue-500" /> Authorized Prep
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Lightbulb size={16} weight="bold" className="text-amber-500" /> AI Insights
+                    </div>
                 </div>
             </div>
 
-            <div className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-[0_40px_100px_-20px_rgba(15,44,189,0.06)] overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-1000">
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/30 to-transparent pointer-events-none"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(15,44,189,0.02),transparent)] pointer-events-none"></div>
+            {/* INDUSTRIAL PORTAL */}
+            <div className="relative flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 xl:p-32 bg-white overflow-y-auto">
+                
+                {/* Mobile Header Branding */}
+                <div className="lg:hidden mb-12 flex flex-col items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <Link href="/" className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-[#0f2cbd] text-white shadow-2xl shadow-blue-600/30">
+                        <GraduationCap size={28} weight="bold" />
+                    </Link>
+                    <div className="text-center">
+                        <h1 className="text-xl font-extrabold tracking-tighter text-slate-950 italic">Financly</h1>
+                        <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#0f2cbd]/60">CA Test Series</p>
+                    </div>
+                </div>
 
-                <div className="p-8 sm:p-14 flex flex-col items-stretch">
-                    <div className="mb-10 space-y-3 text-center">
-                        <h2 className="text-2xl font-extrabold text-slate-950 tracking-tighter">
+                <div className="w-full max-w-lg animate-in fade-in zoom-in-95 duration-1000">
+                    <div className="mb-10 space-y-3">
+                        <h2 className="text-3xl font-extrabold text-slate-950 tracking-tighter">
                             {step === "phone" ? "Create Workspace" : step === "verify" ? "Security Check" : "Finalize Profile"}
                         </h2>
-                        <p className="text-[13px] font-medium text-slate-500">
+                        <p className="text-sm font-medium text-slate-500">
                             {step === "details" ? `Identify yourself as a ${role.toLowerCase()} to stay aligned.` : "Join the high-integrity prep ecosystem."}
                         </p>
                     </div>
 
-                    <div className="mb-12 p-6 bg-[#0f2cbd]/5 rounded-3xl border border-[#0f2cbd]/10 flex items-start gap-5 shadow-sm">
+                    <div className="mb-10 p-6 bg-[#0f2cbd]/5 rounded-3xl border border-[#0f2cbd]/10 flex items-start gap-5 shadow-sm">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0f2cbd] shadow-sm border border-[#0f2cbd]/10">
                             <Sparkle size={20} weight="fill" />
                         </div>
@@ -243,14 +386,14 @@ function SignupFormContent() {
                         {step === "details" && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 {/* Role Selection - Industrial Toggle */}
-                                <div className="p-1.5 bg-slate-100 rounded-2xl flex w-full shadow-inner border border-slate-200/50">
+                                <div className="p-1.5 bg-slate-100 rounded-3xl flex w-full shadow-inner border border-slate-200/50">
                                     {(["STUDENT", "TEACHER"] as const).map((r) => (
                                         <button
                                             key={r}
                                             type="button"
                                             onClick={() => setRole(r)}
                                             className={cn(
-                                                "flex-1 py-3 px-6 rounded-xl text-[11px] font-extrabold uppercase tracking-widest transition-all",
+                                                "flex-1 py-3.5 px-6 rounded-2xl text-[11px] font-extrabold uppercase tracking-widest transition-all",
                                                 role === r 
                                                     ? "bg-white text-[#0f2cbd] shadow-md shadow-black/5" 
                                                     : "text-slate-400 hover:text-slate-600"
@@ -273,7 +416,7 @@ function SignupFormContent() {
                                                 value={fullName}
                                                 onChange={(event) => setFullName(event.target.value)}
                                                 placeholder="Full Name"
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white"
+                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
                                                 required
                                             />
                                         </div>
@@ -290,7 +433,7 @@ function SignupFormContent() {
                                                 value={email}
                                                 onChange={(event) => setEmail(event.target.value)}
                                                 placeholder="Professional Email"
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white"
+                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
                                                 required
                                             />
                                         </div>
@@ -304,7 +447,7 @@ function SignupFormContent() {
                                             <select
                                                 value={caLevel}
                                                 onChange={(e) => setCaLevel(e.target.value as "foundation" | "ipc" | "final")}
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm"
+                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
                                                 required
                                             >
                                                 <option value="foundation">CA Foundation</option>
@@ -319,7 +462,7 @@ function SignupFormContent() {
                                                 <select
                                                     value={attemptMonth}
                                                     onChange={(e) => setAttemptMonth(e.target.value)}
-                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm"
+                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
                                                     required
                                                 >
                                                     <option value="5">May</option>
@@ -329,7 +472,7 @@ function SignupFormContent() {
                                                 <select
                                                     value={attemptYear}
                                                     onChange={(e) => setAttemptYear(e.target.value)}
-                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm"
+                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
                                                     required
                                                 >
                                                     {[2024, 2025, 2026, 2027].map(year => (
@@ -347,7 +490,7 @@ function SignupFormContent() {
                                             value={department}
                                             onChange={(e) => setDepartment(e.target.value)}
                                             placeholder="Direct Tax, Audit, Financial Reporting, etc."
-                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-5 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white transition-all shadow-sm"
+                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-5 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white transition-all shadow-sm focus:ring-4 focus:ring-blue-100/50"
                                             required={role === "TEACHER"}
                                         />
                                     </div>
@@ -364,7 +507,7 @@ function SignupFormContent() {
                                             value={password}
                                             onChange={(event) => setPassword(event.target.value)}
                                             placeholder="Minimum 8 characters"
-                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white"
+                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
                                             required
                                         />
                                     </div>
@@ -383,7 +526,7 @@ function SignupFormContent() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="brand-button-primary w-full !py-5 !text-base shadow-[0_25px_60px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
+                                className="brand-button-primary w-full !py-5 !text-base shadow-[0_25px_60_px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
                             >
                                 {isSubmitting ? (
                                     <Spinner className="animate-spin" size={24} weight="bold" />
@@ -404,17 +547,16 @@ function SignupFormContent() {
                         </Link>
                     </p>
 
-                    <div className="mt-16 pt-8 border-t border-slate-100 flex flex-wrap justify-center gap-x-8 gap-y-3 text-[9px] font-extrabold uppercase tracking-[0.2em] text-slate-300">
-                        <Link href="/privacy-policy" className="hover:text-slate-950 transition-colors">Privacy Infrastructure</Link>
-                        <Link href="/terms-and-conditions" className="hover:text-slate-950 transition-colors">Terms of Prep</Link>
-                        <Link href="/refund-policy" className="hover:text-slate-950 transition-colors">Reliability Hub</Link>
+                    <div className="mt-12 pt-12 border-t border-slate-100 flex flex-wrap justify-between gap-4 text-[9px] font-extrabold uppercase tracking-[0.2em] text-slate-300">
+                        <div className="flex gap-6">
+                            <Link href="/privacy-policy" className="hover:text-slate-950 transition-colors">Security Infrastructure</Link>
+                            <Link href="/terms-and-conditions" className="hover:text-slate-950 transition-colors">Terms of Prep</Link>
+                        </div>
+                        <div className="text-slate-400">© 2026 Financly</div>
                     </div>
                 </div>
             </div>
             
-            <div className="mt-12 text-center opacity-30 pointer-events-none px-6">
-                <div className="text-[10px] font-extrabold uppercase tracking-[0.3em] text-slate-400 italic">Flagship Onboarding Architecture v2.0</div>
-            </div>
         </div>
     );
 }
