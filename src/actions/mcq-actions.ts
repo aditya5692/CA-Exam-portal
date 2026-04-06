@@ -166,7 +166,7 @@ export async function getMyDraftMCQs(ownerId?: string): Promise<ActionResponse<D
  */
 export async function confirmAndImportMCQs(ownerId?: string): Promise<ActionResponse<{ imported: number }>> {
     try {
-        const teacher = await getMockTeacher();
+        const teacher = await requireMCQTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "share");
 
         const targetTeacherId = isAdminUser(teacher)
