@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import type { AdminMetricsData } from "@/types/admin";
 import { ActionResponse } from "@/types/shared";
@@ -10,7 +10,7 @@ import { ActionResponse } from "@/types/shared";
  */
 export async function getAdminMetrics(): Promise<ActionResponse<AdminMetricsData>> {
     try {
-        await getCurrentUserOrDemoUser("ADMIN", ["ADMIN"]);
+        await requireAuth("ADMIN");
 
         const [
             studentCount,

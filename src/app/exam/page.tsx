@@ -14,14 +14,15 @@ const lexend = Lexend({
 export default async function PublicExamsPage({
     searchParams
 }: {
-    searchParams: { [key: string]: string | string[] | undefined }
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+    const resolvedSearchParams = await searchParams;
     const session = await getSessionPayload();
     const examsRes = await getPublicMockExams();
     let exams = examsRes.data ?? [];
 
-    const filter = typeof searchParams.filter === 'string' ? searchParams.filter : 'all';
-    const sort = typeof searchParams.sort === 'string' ? searchParams.sort : 'newest';
+    const filter = typeof resolvedSearchParams.filter === 'string' ? resolvedSearchParams.filter : 'all';
+    const sort = typeof resolvedSearchParams.sort === 'string' ? resolvedSearchParams.sort : 'newest';
 
     // Apply Filters
     if (filter === 'practice') {

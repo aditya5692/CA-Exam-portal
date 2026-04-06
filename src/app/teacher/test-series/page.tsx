@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { cn } from "@/lib/utils";
 import {
@@ -22,7 +22,7 @@ import Link from "next/link";
 import { TestSeriesTable } from "@/components/teacher/test-series-table";
 
 export default async function TeacherExamsPage() {
-    const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+    const teacher = await requireAuth(["TEACHER", "ADMIN"]);
 
     const examsRaw = await prisma.exam.findMany({
         where: teacher.role === "ADMIN"

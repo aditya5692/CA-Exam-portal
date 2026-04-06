@@ -1,7 +1,7 @@
 "use server";
 
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
@@ -29,9 +29,10 @@ import type {
 } from "@/types/educator";
 import { ActionResponse } from "@/types/shared";
 import { Prisma,type StudyMaterial } from "@prisma/client";
+import { educatorMaterialSchema, educatorPyqSchema } from "@/lib/validations/resource-schemas";
 
-async function getOrCreateMockTeacher() {
-    return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+async function requireTeacher() {
+    return requireAuth(["TEACHER", "ADMIN"]);
 }
 
 /**
@@ -45,15 +46,27 @@ export async function publishMaterial(
         const file = formData.get("file");
         const studentEmailsStr = String(formData.get("studentEmails") ?? "");
         const batchIdsStr = String(formData.get("batchIds") ?? "");
+
         if (!file || !(file instanceof File)) {
             throw new Error("No file provided or invalid file format.");
         }
-        const title = String(formData.get("title") ?? file.name ?? "").trim();
-        const category = String(formData.get("category") ?? "GENERAL").trim();
-        const subType = String(formData.get("subType") ?? "PDF").trim();
-        const isProtected = formData.get("isProtected") === "true";
-        const isPublic = formData.get("isPublic") === "true";
-        const teacher = await getOrCreateMockTeacher();
+
+        const rawData = {
+          title: formData.get("title") ?? file.name,
+          category: formData.get("category") ?? "GENERAL",
+          subType: formData.get("subType") ?? "PDF",
+          isProtected: formData.get("isProtected"),
+          isPublic: formData.get("isPublic"),
+        };
+
+        const validated = educatorMaterialSchema.safeParse(rawData);
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const { title, category, subType, isProtected, isPublic } = validated.data;
+
+        const teacher = await requireTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "share");
         const ownerId = await resolveManagedEducatorId(
             teacher,
@@ -88,7 +101,7 @@ export async function publishMaterial(
  */
 export async function getTeacherBatchesForMaterials(): Promise<ActionResponse<{ id: string, name: string, studentCount: number }[]>> {
     try {
-        const teacher = await getOrCreateMockTeacher();
+        const teacher = await requireTeacher();
         const batches = await prisma.batch.findMany({
             where: isAdminUser(teacher) ? undefined : { teacherId: teacher.id },
             select: {
@@ -119,7 +132,7 @@ type TeacherMaterialsData = {
  */
 export async function getTeacherMaterials(): Promise<ActionResponse<TeacherMaterialsData>> {
     try {
-        const teacher = await getOrCreateMockTeacher();
+        const teacher = await requireTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "read");
 
         const isAdminView = isAdminUser(teacher);
@@ -162,7 +175,7 @@ export async function getTeacherMaterials(): Promise<ActionResponse<TeacherMater
  */
 export async function getStudentSharedMaterials(studentId?: string): Promise<ActionResponse<{ materials: StudyMaterial[], isAdminView: boolean }>> {
     try {
-        const viewer = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const viewer = await requireAuth(["STUDENT", "TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(viewer.id, "STUDENT_MATERIALS", "read");
 
         if (studentId) {
@@ -280,7 +293,7 @@ export async function getStudentSharedMaterials(studentId?: string): Promise<Act
  */
 export async function getTeacherResources(subType?: string): Promise<ActionResponse<Prisma.StudyMaterialGetPayload<Record<string, never>>[]>> {
     try {
-        const teacher = await getOrCreateMockTeacher();
+        const teacher = await requireTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "read");
 
         const resources = await prisma.studyMaterial.findMany({
@@ -305,24 +318,38 @@ export async function uploadPYQ(formData: FormData): Promise<ActionResponse<Pris
     let savedFileUrl: string | null = null;
     try {
         const file = formData.get("file");
-        const title = String(formData.get("title") ?? "").trim();
-        const category = String(formData.get("category") ?? "").trim();
-        const description = String(formData.get("description") ?? "").trim();
+        
         if (!file || !(file instanceof File)) {
             throw new Error("No file provided or invalid file format.");
         }
-        const teacher = await getOrCreateMockTeacher();
+
+        const rawData = {
+          title: formData.get("title") ?? file.name,
+          category: formData.get("category"),
+          description: formData.get("description"),
+        };
+
+        const validated = educatorPyqSchema.safeParse(rawData);
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const { title, category, description } = validated.data;
+
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "create");
+        
         const savedFile = await saveUploadedFile(file, ["pyqs"], "pdf");
         savedFileUrl = savedFile.fileUrl;
+        
         const material = await createOwnedStudyMaterial({
             title: title || file.name,
-            description,
+            description: description ?? "",
             fileUrl: savedFile.fileUrl,
             fileType: file.type || "application/pdf",
             sizeInBytes: file.size,
             isPublic: true,
-            category,
+            category: category,
             subType: "PYQ",
             providerType: "TEACHER",
             uploadedById: teacher.id,
@@ -340,7 +367,7 @@ export async function uploadPYQ(formData: FormData): Promise<ActionResponse<Pris
  */
 export async function deletePYQ(id: string): Promise<ActionResponse<void>> {
     try {
-        const teacher = await getOrCreateMockTeacher();
+        const teacher = await requireTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_MATERIALS", "delete");
         const normalizedId = id.trim();
         if (!normalizedId) {
@@ -367,7 +394,7 @@ export async function deletePYQ(id: string): Promise<ActionResponse<void>> {
  */
 export async function getTeacherOverview(): Promise<ActionResponse<TeacherOverviewData>> {
     try {
-        const teacher = await getOrCreateMockTeacher();
+        const teacher = await requireTeacher();
         const teacherId = teacher.id;
 
         // 1. Get stats

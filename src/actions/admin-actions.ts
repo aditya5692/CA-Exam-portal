@@ -2,7 +2,7 @@
 
 import { createPasswordHash,type AppRole } from "@/lib/auth/demo-accounts";
 import { FEATURE_DEFINITIONS,type FeatureKey } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
@@ -25,6 +25,7 @@ import { removeSavedFileByUrl } from "@/lib/server/storage-utils";
 import { deleteStudyMaterialWithAccessCleanup } from "@/lib/server/study-material-service";
 import { ActionResponse } from "@/types/shared";
 import { Prisma } from "@prisma/client";
+import { adminUserSchema, adminBatchSchema } from "@/lib/validations/admin-schemas";
 
 const ALLOWED_ROLES: AppRole[] = ["ADMIN", "TEACHER", "STUDENT"];
 const ALLOWED_FEATURE_KEYS = new Set(FEATURE_DEFINITIONS.map((feature) => feature.key));
@@ -44,7 +45,21 @@ export async function getAdminUserDetail(userId: string): Promise<ActionResponse
     const [user, materialAccess, allMaterials] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
-        include: { featureOverrides: true }
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: true,
+          registrationNumber: true,
+          department: true,
+          plan: true,
+          isBlocked: true,
+          blockedReason: true,
+          createdAt: true,
+          storageUsed: true,
+          storageLimit: true,
+          featureOverrides: true,
+        }
       }),
       prisma.materialAccess.findMany({
         where: { studentId: userId },
@@ -103,7 +118,7 @@ function readBooleanField(input: FormDataEntryValue | null) {
 }
 
 async function requireAdmin() {
-  return getCurrentUserOrDemoUser("ADMIN");
+  return requireAuth("ADMIN");
 }
 
 async function ensureTeacherOrAdminUser(teacherId: string) {
@@ -117,26 +132,34 @@ export async function createAdminManagedUser(formData: FormData): Promise<Action
   try {
     await requireAdmin();
 
-    const fullName = String(formData.get("fullName") ?? "").trim();
-    const role = normalizeRole(String(formData.get("role") ?? ""));
-    const email = normalizeEmail(formData.get("email"));
-    const registrationNumber = normalizeRegistration(formData.get("registrationNumber"));
-    const department = String(formData.get("department") ?? "").trim() || null;
-    const password = String(formData.get("password") ?? "").trim();
+    const rawData = {
+      fullName: formData.get("fullName"),
+      role: formData.get("role"),
+      email: formData.get("email") || null,
+      registrationNumber: formData.get("registrationNumber"),
+      department: formData.get("department") || null,
+      password: formData.get("password"),
+      phone: formData.get("phone"),
+    };
 
-    if (!fullName) throw new Error("Full name is required.");
-    if (!registrationNumber) throw new Error("Registration number is required.");
+    const validated = adminUserSchema.safeParse(rawData);
+    if (!validated.success) {
+        return { success: false, message: validated.error.issues[0].message };
+    }
+
+    const { fullName, role, email, registrationNumber, department, phone, password } = validated.data;
     if (!password) throw new Error("Password is required.");
 
-    await assertManagedUserIdentityAvailability(email, registrationNumber);
+    await assertManagedUserIdentityAvailability(email || null, registrationNumber);
 
     await prisma.user.create({
       data: {
-        fullName,
-        role,
-        email,
-        registrationNumber,
-        department,
+        fullName: fullName,
+        registrationNumber: registrationNumber,
+        email: email || null,
+        role: role,
+        department: department || null,
+        phone: phone || null,
         passwordHash: createPasswordHash(password, registrationNumber),
       },
     });
@@ -159,6 +182,24 @@ export async function updateAdminManagedUser(formData: FormData): Promise<Action
     const userId = String(formData.get("userId") ?? "").trim();
     if (!userId) throw new Error("User id is required.");
 
+    const rawData = {
+      fullName: formData.get("fullName"),
+      role: formData.get("role"),
+      email: formData.get("email") || null,
+      registrationNumber: formData.get("registrationNumber"),
+      department: formData.get("department") || null,
+      plan: formData.get("plan") || "FREE",
+      password: formData.get("password") || undefined,
+      phone: formData.get("phone"),
+    };
+
+    const validated = adminUserSchema.safeParse(rawData);
+    if (!validated.success) {
+        return { success: false, message: validated.error.issues[0].message };
+    }
+
+    const { fullName, role, email, registrationNumber, department, phone, plan, password } = validated.data;
+
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -169,43 +210,40 @@ export async function updateAdminManagedUser(formData: FormData): Promise<Action
     });
     if (!existingUser) throw new Error("User not found.");
 
-    const fullName = String(formData.get("fullName") ?? "").trim();
-    const role = normalizeRole(String(formData.get("role") ?? ""));
-    const email = normalizeEmail(formData.get("email"));
-    const registrationNumber = normalizeRegistration(formData.get("registrationNumber"));
-    const department = String(formData.get("department") ?? "").trim() || null;
-    const plan = String(formData.get("plan") ?? "").trim().toUpperCase() || "FREE";
-    const password = String(formData.get("password") ?? "").trim();
-
     if (userId === admin.id && role !== "ADMIN") {
       throw new Error("You cannot remove admin access from the currently logged-in admin.");
     }
 
-    await assertManagedUserIdentityAvailability(email, registrationNumber, userId);
-
-    const data: Prisma.UserUpdateInput = {
-      fullName,
-      role,
-      email,
-      registrationNumber,
-      department,
-      plan,
-    };
-
-    if (password) {
-      const seed =
-        registrationNumber ??
-        existingUser.registrationNumber ??
-        email ??
-        existingUser.email ??
-        existingUser.id;
-      data.passwordHash = createPasswordHash(password, seed);
-    }
+    await assertManagedUserIdentityAvailability(email || null, registrationNumber, userId);
 
     await prisma.user.update({
       where: { id: userId },
-      data,
+      data: {
+        fullName: fullName,
+        email: email || null,
+        role: role,
+        registrationNumber,
+        department: department || null,
+        phone: phone || null,
+        plan: plan,
+      },
     });
+
+    if (password) {
+      const seed =
+        registrationNumber ||
+        existingUser.registrationNumber ||
+        email ||
+        existingUser.email ||
+        existingUser.id;
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          passwordHash: createPasswordHash(password, seed),
+        },
+      });
+    }
 
     revalidateAdminSurfaces();
     return { success: true, message: "User updated successfully.", data: undefined };
@@ -356,19 +394,24 @@ export async function createAdminManagedBatch(formData: FormData): Promise<Actio
   try {
     await requireAdmin();
 
-    const name = String(formData.get("name") ?? "").trim();
-    const teacherId = String(formData.get("teacherId") ?? "").trim();
-    const uniqueJoinCodeInput = String(formData.get("uniqueJoinCode") ?? "").trim();
+    const rawData = {
+      name: formData.get("name"),
+      teacherId: formData.get("teacherId"),
+      uniqueJoinCode: formData.get("uniqueJoinCode") || undefined,
+    };
 
-    if (!name) throw new Error("Batch name is required.");
-    if (!teacherId) throw new Error("Teacher is required.");
+    const validated = adminBatchSchema.safeParse(rawData);
+    if (!validated.success) {
+        return { success: false, message: validated.error.issues[0].message };
+    }
 
+    const { name, teacherId, uniqueJoinCode } = validated.data;
     await ensureTeacherOrAdminUser(teacherId);
 
     await createManagedBatch({
       name,
       teacherId,
-      uniqueJoinCodeInput,
+      uniqueJoinCodeInput: uniqueJoinCode,
     });
 
     revalidateAdminSurfaces();
@@ -387,14 +430,20 @@ export async function updateAdminManagedBatch(formData: FormData): Promise<Actio
     await requireAdmin();
 
     const batchId = String(formData.get("batchId") ?? "").trim();
-    const name = String(formData.get("name") ?? "").trim();
-    const teacherId = String(formData.get("teacherId") ?? "").trim();
-    const uniqueJoinCode = String(formData.get("uniqueJoinCode") ?? "").trim();
-
     if (!batchId) throw new Error("Batch id is required.");
-    if (!name) throw new Error("Batch name is required.");
-    if (!teacherId) throw new Error("Teacher is required.");
-    if (!uniqueJoinCode) throw new Error("Join code is required.");
+
+    const rawData = {
+      name: formData.get("name"),
+      teacherId: formData.get("teacherId"),
+      uniqueJoinCode: formData.get("uniqueJoinCode"),
+    };
+
+    const validated = adminBatchSchema.safeParse(rawData);
+    if (!validated.success) {
+        return { success: false, message: validated.error.issues[0].message };
+    }
+
+    const { name, teacherId, uniqueJoinCode } = validated.data;
 
     await ensureBatchRecord(batchId);
     await ensureTeacherOrAdminUser(teacherId);
@@ -403,7 +452,7 @@ export async function updateAdminManagedBatch(formData: FormData): Promise<Actio
       batchId,
       name,
       teacherId,
-      uniqueJoinCode,
+      uniqueJoinCode: uniqueJoinCode ?? "",
     });
 
     revalidateAdminSurfaces();

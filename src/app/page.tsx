@@ -18,9 +18,14 @@ import {
     Trophy,
     Target
 } from "@phosphor-icons/react/dist/ssr";
-import { Lexend } from "next/font/google";
+import { Lexend, Outfit } from "next/font/google";
 
 const lexend = Lexend({
+    subsets: ["latin"],
+    display: "swap",
+});
+
+const outfit = Outfit({
     subsets: ["latin"],
     display: "swap",
 });
@@ -78,7 +83,7 @@ export default async function Home() {
 
                             <div className="space-y-6">
                                 <h1 className="text-4xl lg:text-6xl font-extrabold text-slate-950 tracking-tighter leading-[0.95]">
-                                    Specialized 
+                                    Specialized
                                     <span className="text-blue-600 block mt-2 underline decoration-blue-100 decoration-8 underline-offset-[12px]">CA Test Series.</span>
                                 </h1>
                                 <p className="max-w-xl text-xl text-slate-600 leading-relaxed font-medium">
@@ -149,9 +154,9 @@ export default async function Home() {
                                         <div className="h-48 rounded-2xl bg-white/[0.02] border border-white/5 p-6 relative overflow-hidden group/chart">
                                             <div className="h-full w-full flex items-end justify-between gap-2">
                                                 {[40, 70, 45, 90, 65, 80, 55, 95].map((h, i) => (
-                                                    <div 
-                                                        key={i} 
-                                                        style={{ height: `${h}%` }} 
+                                                    <div
+                                                        key={i}
+                                                        style={{ height: `${h}%` }}
                                                         className="w-full bg-gradient-to-t from-[#0f2cbd]/40 to-blue-400 group-hover/chart:translate-y-[-10%] transition-transform duration-500 rounded-t-lg"
                                                     ></div>
                                                 ))}
@@ -165,26 +170,26 @@ export default async function Home() {
                     </div>
                 </section>
 
-                {/* NEW: Platform Momentum Strip - Numeric Proof */}
-                <section className="py-8 bg-white border-b border-slate-200 shadow-sm relative z-20">
-                    <div className="max-w-7xl mx-auto px-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-16">
-                            <div className="space-y-1">
-                                <div className="text-3xl font-extrabold text-slate-950 tracking-tighter italic">12.5M+</div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">MCQs Attempted</div>
-                            </div>
-                            <div className="space-y-1">
-                                <div className="text-3xl font-extrabold text-slate-950 tracking-tighter italic">98.2%</div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Accuracy Tracked</div>
-                            </div>
-                            <div className="space-y-1">
-                                <div className="text-3xl font-extrabold text-slate-950 tracking-tighter italic">450k+</div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Aspirants Joined</div>
-                            </div>
-                            <div className="space-y-1">
-                                <div className="text-3xl font-extrabold text-[#0f2cbd] tracking-tighter italic">Rank 1</div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Study Platform</div>
-                            </div>
+                {/* PLATFORM MOMENTUM STRIP - DARK PREMIUM MATCHING IMAGE */}
+                <section className="py-16 bg-[#0B1222] text-white relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.5),transparent)]" />
+                    <div className="max-w-7xl mx-auto px-6 relative z-10">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center pointer-events-none">
+                            {[
+                                { val: "12.5M+", lbl: "MCQS ATTEMPTED" },
+                                { val: "98.2%", lbl: "ACCURACY TRACKED" },
+                                { val: "450k+", lbl: "ASPIRANTS JOINED" },
+                                { val: "Rank 1", lbl: "STUDY WORKSPACE" },
+                            ].map((s, i) => (
+                                <div key={i} className="space-y-3">
+                                    <div className={cn(outfit.className, "text-4xl md:text-5xl lg:text-7xl font-black italic tracking-tighter text-white")}>
+                                        {s.val}
+                                    </div>
+                                    <div className="text-[10px] md:text-xs font-black text-blue-500 uppercase tracking-[0.2em]">
+                                        {s.lbl}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>
@@ -193,7 +198,7 @@ export default async function Home() {
                 <section className="py-24 bg-slate-50 relative overflow-hidden">
                     <div className="max-w-7xl mx-auto px-6 space-y-24">
                         <div className="max-w-3xl space-y-6">
-                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0f2cbd]/5 border border-[#0f2cbd]/10 text-[#0f2cbd] text-[10px] font-bold uppercase tracking-widest">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0f2cbd]/5 border border-[#0f2cbd]/10 text-[#0f2cbd] text-[10px] font-bold uppercase tracking-widest">
                                 The Engineering behind the Prep
                             </div>
                             <h2 className="text-4xl lg:text-6xl font-extrabold text-slate-950 tracking-tight leading-tight">
@@ -247,21 +252,21 @@ export default async function Home() {
                     <div className="mx-auto max-w-7xl rounded-[3rem] bg-white border border-slate-200 p-10 lg:p-20 text-center relative shadow-[0_40px_100px_-20px_rgba(15,44,189,0.05)] overflow-hidden">
                         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/50 to-transparent"></div>
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(15,44,189,0.03),transparent)]"></div>
-                        
+
                         <div className="relative z-10 space-y-12 max-w-4xl mx-auto">
                             <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-100/50 px-6 py-2 text-xs font-extrabold text-emerald-600 uppercase tracking-widest shadow-sm">
                                 <Target size={16} weight="bold" />
                                 Build momentum first.
                             </div>
-                            
+
                             <h2 className="text-4xl lg:text-7xl font-extrabold text-slate-950 tracking-tighter leading-[0.95]">
                                 Ready to accelerate your <span className="text-blue-600 block sm:inline italic">CA Prep?</span>
                             </h2>
-                            
+
                             <p className="text-xl lg:text-2xl text-slate-600 font-medium font-lexend leading-relaxed">
                                 Join the high-integrity workspace where discipline meets performance. Claim your access to Financly today.
                             </p>
-                            
+
                             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-6">
                                 <Link
                                     href="/auth/signup"

@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
   getAdaptiveQuestionInsights,
@@ -64,7 +64,7 @@ export async function getMyStudyRecommendations(
     limit = 6,
 ): Promise<ActionResponse<StudentStudyRecommendations>> {
     try {
-        const student = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const student = await requireAuth(["STUDENT", "ADMIN"]);
         return {
             success: true,
             data: await getStudentStudyRecommendations(student.id, limit),

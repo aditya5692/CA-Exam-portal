@@ -1,7 +1,7 @@
 import "server-only";
 
 import prisma from "@/lib/prisma/client";
-import { getCurrentUserOrDemoUser } from "./session";
+import { requireAuth } from "./session";
 import type { AppRole } from "./demo-accounts";
 import { 
   FeatureKey, 
@@ -25,7 +25,7 @@ export async function getCurrentUserFeatureMatrix(
   seedRole: AppRole,
   allowedRoles?: AppRole | AppRole[]
 ) {
-  const currentUser = await getCurrentUserOrDemoUser(seedRole, allowedRoles);
+  const currentUser = await requireAuth(allowedRoles ?? seedRole);
   const fullUser = await getUserWithFeatureOverrides(currentUser.id);
   const user = fullUser ?? { ...currentUser, featureOverrides: [] };
 

@@ -5,10 +5,11 @@ import EducatorPortalClient from "./client";
 
 export const dynamic = "force-dynamic";
 
-export default async function EducatorPortalPage({ params }: { params: { teacherId: string } }) {
+export default async function EducatorPortalPage({ params }: { params: Promise<{ teacherId: string }> }) {
+    const resolvedParams = await params;
     await getCurrentUser(["STUDENT", "ADMIN"]);
 
-    const res = await getEducatorPortalData(params.teacherId);
+    const res = await getEducatorPortalData(resolvedParams.teacherId);
 
     if (!res.success || !res.data) {
         return notFound();

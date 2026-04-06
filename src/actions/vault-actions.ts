@@ -1,7 +1,7 @@
 "use server";
 
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage,withSerializableTransaction } from "@/lib/server/action-utils";
 import { revalidateMaterialSurfaces } from "@/lib/server/revalidation";
@@ -17,8 +17,8 @@ import {
 import { ActionResponse } from "@/types/shared";
 import { Prisma } from "@prisma/client";
 
-async function getOrCreateMockUser() {
-    return getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+export async function requireVaultUser() {
+    return requireAuth(["STUDENT", "ADMIN"]);
 }
 
 function isAdminUser(user: { role: string }) {
@@ -51,7 +51,7 @@ export async function uploadPersonalMaterial(formData: FormData): Promise<Action
         const file = formData.get("file") as File | null;
         if (!file || !(file instanceof File)) throw new Error("No file provided");
 
-        const user = await getOrCreateMockUser();
+        const user = await requireVaultUser();
         await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "create");
 
         if (isAdminUser(user)) {
@@ -103,7 +103,7 @@ type VaultMaterialsData = {
  */
 export async function getMyVaultMaterials(): Promise<ActionResponse<VaultMaterialsData>> {
     try {
-        const user = await getOrCreateMockUser();
+        const user = await requireVaultUser();
         await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "read");
 
         if (isAdminUser(user)) {
@@ -186,7 +186,7 @@ export async function deletePersonalMaterial(materialId: string): Promise<Action
     let removedFileUrl: string | null = null;
 
     try {
-        const user = await getOrCreateMockUser();
+        const user = await requireVaultUser();
         await assertUserCanAccessFeature(user.id, "STUDENT_MATERIALS", "delete");
         const normalizedMaterialId = materialId.trim();
         if (!normalizedMaterialId) {

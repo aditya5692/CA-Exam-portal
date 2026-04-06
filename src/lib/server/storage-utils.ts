@@ -6,6 +6,9 @@ import { mkdir,unlink,writeFile } from "fs/promises";
 import { join } from "path";
 import { clampNumber } from "./action-utils";
 
+const ALLOWED_EXTENSIONS = new Set(["pdf", "jpg", "jpeg", "png", "csv", "docx", "pptx", "txt"]);
+const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB default limit
+
 function getNormalizedUploadExtension(fileName: string, fallbackExtension: string) {
     const segments = fileName.trim().split(".");
     const rawExtension = segments.length > 1 ? segments.at(-1) ?? "" : "";
@@ -19,10 +22,32 @@ export async function saveUploadedFile(
     subdirectories: string[],
     fallbackExtension: string,
 ) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+        throw new Error(`File size exceeds the maximum limit of ${MAX_FILE_SIZE_BYTES / (1024 * 1024)}MB.`);
+    }
+
+    const fileExtension = getNormalizedUploadExtension(file.name, fallbackExtension);
+    if (!ALLOWED_EXTENSIONS.has(fileExtension)) {
+        throw new Error(`File extension .${fileExtension} is not allowed.`);
+    }
+
+    // Basic MIME type validation
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+    const isCsv = file.type === "text/csv" || file.name.endsWith(".csv");
+    const isDoc = file.type.includes("word") || file.type.includes("officedocument");
+    
+    if (!isImage && !isPdf && !isCsv && !isDoc && file.type !== "text/plain") {
+         // If it's none of the above, we should be cautious
+         // But we'll allow it if the extension is in our allowlist and not obviously scripty
+         if (["html", "js", "sh", "exe", "php"].includes(fileExtension)) {
+             throw new Error("Malicious file type detected.");
+         }
+    }
+
     const uploadDir = join(process.cwd(), "public", "uploads", ...subdirectories);
     await mkdir(uploadDir, { recursive: true });
 
-    const fileExtension = getNormalizedUploadExtension(file.name, fallbackExtension);
     const fileName = `${randomUUID()}.${fileExtension}`;
     const filePath = join(uploadDir, fileName);
     const bytes = await file.arrayBuffer();

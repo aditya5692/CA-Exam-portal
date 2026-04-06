@@ -16,8 +16,8 @@ import {
 } from "@/lib/server/auth-management";
 import { ActionResponse } from "@/types/shared";
 import prisma from "@/lib/prisma/client";
-
 import { sendMsg91Otp, verifyMsg91Otp, verifyMsg91WidgetToken, normalizePhone } from "@/lib/server/msg91";
+import { loginSchema, requestOtpSchema, verifyOtpSchema, registrationSchema } from "@/lib/validations/auth-schemas";
 
 type RequestedOtpRole = "STUDENT" | "TEACHER";
 
@@ -188,7 +188,12 @@ async function finalizeVerifiedPhoneLogin(
  */
 export async function requestOtp(phone: string): Promise<ActionResponse<void>> {
     try {
-        const result = await sendMsg91Otp(phone);
+        const validated = requestOtpSchema.safeParse({ phone });
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const result = await sendMsg91Otp(validated.data.phone);
         if (result.success) {
             return { success: true, data: undefined, message: result.message };
         }
@@ -208,12 +213,17 @@ export async function verifyOtpAndLogin(
     requestedRole?: RequestedOtpRole,
 ): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
     try {
-        const verification = await verifyMsg91Otp(phone, otp);
+        const validated = verifyOtpSchema.safeParse({ phone, otp });
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const verification = await verifyMsg91Otp(validated.data.phone, validated.data.otp);
         if (!verification.success) {
             return { success: false, message: verification.message };
         }
 
-        return finalizeVerifiedPhoneLogin(phone, normalizeRequestedRole(requestedRole));
+        return finalizeVerifiedPhoneLogin(validated.data.phone, normalizeRequestedRole(requestedRole));
     } catch {
         return { success: false, message: "Verification failed." };
     }
@@ -257,7 +267,12 @@ export async function verifyWidgetOtpAndLogin(
  */
 export async function login(input: AuthLoginInput): Promise<ActionResponse<LoginResult>> {
     try {
-        const authenticated = await authenticateUserRecord(input);
+        const validated = loginSchema.safeParse(input);
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const authenticated = await authenticateUserRecord(validated.data as AuthLoginInput);
         await setAuthSession(authenticated.user);
 
         return {
@@ -297,6 +312,11 @@ export async function verifyOtpAndRegister(formData: {
     console.log(`AuthAction: Registering user ${formData.phone} with OTP/Token`);
     
     try {
+        const validatedForm = registrationSchema.safeParse(formData);
+        if (!validatedForm.success && !formData.token) {
+             return { success: false, message: validatedForm.error.issues[0].message };
+        }
+
         // 1. Verification Handshake
         const normalizedPhone = normalizePhone(formData.phone);
 

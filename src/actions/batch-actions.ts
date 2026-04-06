@@ -1,7 +1,7 @@
 "use server";
 
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser, syncCurrentAuthSession } from "@/lib/auth/session";
+import { syncCurrentAuthSession } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
@@ -22,6 +22,13 @@ import {
 import { revalidateBatchSurfaces, revalidateProfileSurfaces } from "@/lib/server/revalidation";
 import { ActionResponse } from "@/types/shared";
 import { Prisma } from "@prisma/client";
+import { requireAuth } from "@/lib/auth/session";
+import { 
+  createBatchSchema, 
+  updateBatchSchema, 
+  announcementSchema, 
+  joinBatchSchema 
+} from "@/lib/validations/batch-schemas";
 
 type BatchRecord = Prisma.BatchGetPayload<Record<string, never>>;
 type AnnouncementRecord = Prisma.AnnouncementGetPayload<Record<string, never>>;
@@ -212,24 +219,29 @@ export type MyEducator = {
     subjects: string[];
 };
 
-export async function getOrCreateMockTeacherB() {
-    return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
-}
+// Removed getOrCreateMockTeacherB and getOrCreateMockStudentB in favor of requireAuth
 
 /**
  * Creates a new training batch.
  */
 export async function createBatch(formData: FormData): Promise<ActionResponse<BatchRecord>> {
     try {
-        const name = String(formData.get("name") ?? "").trim();
-        if (!name) throw new Error("Batch name is required.");
+        const validated = createBatchSchema.safeParse({
+            name: formData.get("name"),
+            teacherId: formData.get("teacherId"),
+        });
 
-        const teacher = await getOrCreateMockTeacherB();
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const { name } = validated.data;
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "create");
 
         const ownerId = await resolveManagedEducatorId(
             teacher,
-            String(formData.get("teacherId") ?? "").trim() || null,
+            validated.data.teacherId || null,
         );
 
         const batch = await createManagedBatch({
@@ -249,7 +261,7 @@ export async function createBatch(formData: FormData): Promise<ActionResponse<Ba
  */
 export async function getTeacherBatches(): Promise<ActionResponse<TeacherBatchesData>> {
     try {
-        const teacher = await getOrCreateMockTeacherB();
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "read");
 
         const isAdminView = isAdminUser(teacher);
@@ -297,14 +309,19 @@ export async function getTeacherBatches(): Promise<ActionResponse<TeacherBatches
  */
 export async function postAnnouncement(formData: FormData): Promise<ActionResponse<PostAnnouncementData>> {
     try {
-        const content = String(formData.get("content") ?? "").trim();
-        const sendToAll = formData.get("sendToAll") === "true";
-        const selectedBatchIds = Array.from(new Set(
-            formData.getAll("batchIds").map((value) => String(value).trim()).filter(Boolean),
-        ));
-        if (!content) throw new Error("Update content is required.");
+        const validated = announcementSchema.safeParse({
+            content: formData.get("content"),
+            batchIds: formData.getAll("batchIds"),
+            sendToAll: formData.get("sendToAll"),
+        });
 
-        const teacher = await getOrCreateMockTeacherB();
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const { content, sendToAll, batchIds: selectedBatchIds } = validated.data;
+
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_UPDATES", "share");
 
         const isAdminView = isAdminUser(teacher);
@@ -375,11 +392,18 @@ export async function postAnnouncement(formData: FormData): Promise<ActionRespon
  */
 export async function updateBatch(formData: FormData): Promise<ActionResponse<BatchRecord>> {
     try {
-        const batchId = String(formData.get("batchId") ?? "").trim();
-        const name = String(formData.get("name") ?? "").trim();
-        if (!batchId || !name) throw new Error("Batch name is required.");
+        const validated = updateBatchSchema.safeParse({
+            batchId: formData.get("batchId"),
+            name: formData.get("name"),
+            teacherId: formData.get("teacherId"),
+        });
 
-        const teacher = await getOrCreateMockTeacherB();
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const { batchId, name } = validated.data;
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "update");
 
         const existingBatch = await ensureScopedBatchRecord(teacher, batchId);
@@ -412,7 +436,7 @@ export async function deleteBatch(formData: FormData): Promise<ActionResponse<vo
         const batchId = String(formData.get("batchId") ?? "").trim();
         if (!batchId) throw new Error("Batch id is required.");
 
-        const teacher = await getOrCreateMockTeacherB();
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_BATCHES", "delete");
 
         const existingBatch = await ensureScopedBatchRecord(teacher, batchId);
@@ -436,7 +460,7 @@ export async function deleteBatch(formData: FormData): Promise<ActionResponse<vo
  */
 export async function getTeacherUpdates(): Promise<ActionResponse<TeacherUpdatesData>> {
     try {
-        const teacher = await getOrCreateMockTeacherB();
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_UPDATES", "read");
 
         const isAdminView = isAdminUser(teacher);
@@ -478,7 +502,7 @@ export async function getTeacherUpdates(): Promise<ActionResponse<TeacherUpdates
  */
 export async function getTeacherStudents(): Promise<ActionResponse<TeacherStudentsData>> {
     try {
-        const teacher = await getOrCreateMockTeacherB();
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "read");
 
         const isAdminView = isAdminUser(teacher);
@@ -564,8 +588,8 @@ export async function getTeacherStudents(): Promise<ActionResponse<TeacherStuden
     }
 }
 
-export async function getOrCreateMockStudentB() {
-    return getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+export async function getStudentProfileForInvitation() {
+    return requireAuth(["STUDENT", "ADMIN"]);
 }
 
 /**
@@ -573,10 +597,16 @@ export async function getOrCreateMockStudentB() {
  */
 export async function joinBatch(formData: FormData): Promise<ActionResponse<JoinBatchData>> {
     try {
-        const code = normalizeJoinCode(String(formData.get("code") ?? ""));
-        if (!code) throw new Error("Please enter a join code.");
+        const validated = joinBatchSchema.safeParse({
+            code: formData.get("code"),
+        });
 
-        const student = await getOrCreateMockStudentB();
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const { code } = validated.data;
+        const student = await requireAuth(["STUDENT"]);
         await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "create");
 
         if (isAdminUser(student)) {
@@ -613,7 +643,7 @@ export async function removeStudentFromBatch(studentId: string, batchId: string)
             throw new Error("Student and batch are required.");
         }
 
-        const teacher = await getOrCreateMockTeacherB();
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "delete");
 
         const batch = await ensureScopedBatchRecord(
@@ -636,7 +666,7 @@ export async function removeStudentFromBatch(studentId: string, batchId: string)
  */
 export async function getStudentPerformanceSummary(studentId: string): Promise<ActionResponse<StudentPerformanceSummaryData>> {
     try {
-        const teacher = await getOrCreateMockTeacherB();
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         await assertUserCanAccessFeature(teacher.id, "TEACHER_STUDENTS", "read");
 
         if (!isAdminUser(teacher)) {
@@ -711,7 +741,7 @@ export async function getStudentPerformanceSummary(studentId: string): Promise<A
  */
 export async function getStudentFeed(): Promise<ActionResponse<StudentFeedData>> {
     try {
-        const student = await getOrCreateMockStudentB();
+        const student = await requireAuth(["STUDENT"]);
         await assertUserCanAccessFeature(student.id, "STUDENT_UPDATES", "read");
 
         const isAdminView = isAdminUser(student);
@@ -800,7 +830,7 @@ export async function verifyBatchCode(code: string): Promise<ActionResponse<{ na
  */
 export async function getMyEducators(): Promise<ActionResponse<MyEducator[]>> {
     try {
-        const student = await getOrCreateMockStudentB();
+        const student = await requireAuth(["STUDENT"]);
         
         const [enrollments, accessCodes] = await Promise.all([
             prisma.enrollment.findMany({

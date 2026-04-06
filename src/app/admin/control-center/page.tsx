@@ -16,8 +16,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminControlCenterPage({
     searchParams
 }: {
-    searchParams: { tab?: string }
+    searchParams: Promise<{ tab?: string }>
 }) {
+    const resolvedSearchParams = await searchParams;
     const session = await getSessionPayload();
     if (!session || (session.role !== "ADMIN" && !session.isSuperAdmin)) {
         redirect("/auth/login");
@@ -64,7 +65,7 @@ export default async function AdminControlCenterPage({
         integrations: "integrations",
     };
     
-    const activeTab = tabMap[searchParams.tab || ""] || "pulse";
+    const activeTab = tabMap[resolvedSearchParams.tab || ""] || "pulse";
 
     const statusView = <StatusView metrics={metricsResult.data} />;
     const usersView = <AdminDirectory initialUsers={users} />;

@@ -1,7 +1,7 @@
 "use server";
 
 import { getActionErrorMessage } from "@/lib/server/action-utils";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { ActionResponse } from "@/types/shared";
 import { StudentAccessCode } from "@prisma/client";
@@ -16,7 +16,7 @@ function generateRandomCode(prefix = "BATCH") {
  */
 export async function getTeacherStudents(batchId?: string): Promise<ActionResponse<StudentAccessCode[]>> {
   try {
-    const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+    const user = await requireAuth(["TEACHER", "ADMIN"]);
     const students = await prisma.studentAccessCode.findMany({
       where: { 
         teacherId: user.id,
@@ -42,7 +42,7 @@ export async function createStudentAccess(data: {
   batchId?: string;
 }): Promise<ActionResponse<StudentAccessCode>> {
   try {
-    const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+    const user = await requireAuth(["TEACHER", "ADMIN"]);
     
     const existing = await prisma.studentAccessCode.findFirst({
         where: { teacherId: user.id, email: data.email }
@@ -76,7 +76,7 @@ export async function bulkCreateStudentAccess(studentsData: {
   subject?: string;
 }[], batchId?: string): Promise<ActionResponse<{ count: number }>> {
   try {
-    const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+    const user = await requireAuth(["TEACHER", "ADMIN"]);
     
     // Fetch existing emails to avoid duplicates
     const existing = await prisma.studentAccessCode.findMany({
@@ -117,7 +117,7 @@ export async function bulkCreateStudentAccess(studentsData: {
  */
 export async function verifyAccessCode(code: string): Promise<ActionResponse<StudentAccessCode | { joined: true; batchName: string }>> {
   try {
-    const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT"]);
+    const user = await requireAuth(["STUDENT"]);
 
     // --- Path 1: Individual StudentAccessCode ---
     const accessCode = await prisma.studentAccessCode.findUnique({
@@ -190,7 +190,7 @@ export async function verifyAccessCode(code: string): Promise<ActionResponse<Stu
  */
 export async function sendCodesViaMailchimp(ids: string[]): Promise<ActionResponse<{ sent: number }>> {
   try {
-    const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+    const user = await requireAuth(["TEACHER", "ADMIN"]);
     
     const students = await prisma.studentAccessCode.findMany({
       where: { 

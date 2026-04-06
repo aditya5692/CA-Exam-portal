@@ -4,7 +4,7 @@ import {
   type FeatureCapability,
   type FeatureKey,
 } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -27,7 +27,7 @@ export async function FeatureRouteGate({
   homeHref,
   homeLabel = "Return to dashboard",
 }: FeatureRouteGateProps) {
-  const currentUser = await getCurrentUserOrDemoUser(seedRole, allowedRoles);
+  const currentUser = await requireAuth(allowedRoles ?? seedRole);
   let hasAccess = false;
   let errorMessage = "";
 

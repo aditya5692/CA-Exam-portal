@@ -1,7 +1,7 @@
 "use server";
 
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage,withSerializableTransaction } from "@/lib/server/action-utils";
 import {
@@ -15,8 +15,8 @@ import { Prisma } from "@prisma/client";
 
 const MCQ_PRICE_PER_QUESTION = 5;
 
-async function getMockTeacher() {
-    return getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+export async function requireMCQTeacher() {
+    return requireAuth(["TEACHER", "ADMIN"]);
 }
 
 async function parseQuestionsFromFileAI(
@@ -51,7 +51,7 @@ export async function analyzePdfForMCQs(formData: FormData): Promise<ActionRespo
         if (!file || !(file instanceof File)) throw new Error("No file provided.");
         if (file.size <= 0) throw new Error("Uploaded file is empty.");
 
-        const teacher = await getMockTeacher();
+        const teacher = await requireMCQTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "create");
 
         const targetTeacherId = isAdminUser(teacher)
@@ -117,7 +117,7 @@ type DraftMCQsData = {
  */
 export async function getMyDraftMCQs(ownerId?: string): Promise<ActionResponse<DraftMCQsData>> {
     try {
-        const teacher = await getMockTeacher();
+        const teacher = await requireMCQTeacher();
         await assertUserCanAccessFeature(teacher.id, "TEACHER_QUESTION_BANK", "read");
 
         const isAdminView = isAdminUser(teacher);

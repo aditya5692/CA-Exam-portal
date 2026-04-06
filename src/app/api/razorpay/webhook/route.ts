@@ -1,5 +1,6 @@
 import { resolvePlanEntitlement } from "@/lib/server/plan-entitlements";
 import { verifyWebhookSignature } from "@/lib/server/razorpay";
+import { revalidatePlanSurfaces } from "@/lib/server/revalidation";
 import prisma from "@/lib/prisma/client";
 import { NextResponse } from "next/server";
 
@@ -75,27 +76,53 @@ export async function POST(req: Request) {
         }
 
         const event = JSON.parse(rawBody);
+        const eventId = event.id as string;
         const eventType = event.event as string;
+
+        if (!eventId) {
+            return NextResponse.json({ message: "Missing event ID." }, { status: 400 });
+        }
+
+        // Idempotency: Check if we already processed this event
+        const existingEvent = await (prisma as any).webhookEvent.findUnique({
+            where: { eventId: eventId },
+        });
+
+        if (existingEvent) {
+            console.log(`[Webhook] Event ${eventId} already processed (idempotent).`);
+            return NextResponse.json({ status: "ok", handled: "idempotent" });
+        }
+
         const payload = event.payload as Record<string, RazorpayPayloadEntity>;
         const subscriptionEntity = payload?.subscription?.entity as RazorpaySubscriptionEntity | undefined;
         const paymentEntity = payload?.payment?.entity as RazorpayPaymentEntity | undefined;
 
-        switch (eventType) {
-            case "payment.captured": {
-                const orderId = paymentEntity?.order_id;
-                if (!orderId) break;
+        await prisma.$transaction(async (tx) => {
+            // Mark event as processed within the transaction
+            await (tx as any).webhookEvent.create({
+                data: {
+                    eventId: eventId,
+                    type: "razorpay",
+                    eventName: eventType,
+                    payload: event,
+                },
+            });
 
-                const subscription = await prisma.subscription.findFirst({
-                    where: { razorpayOrderId: orderId },
-                });
-                if (!subscription) break;
+            switch (eventType) {
+                case "payment.captured": {
+                    const orderId = paymentEntity?.order_id;
+                    if (!orderId) break;
 
-                const amountMatches =
-                    typeof paymentEntity?.amount !== "number" ||
-                    paymentEntity.amount === subscription.amountPaise;
-                if (!amountMatches) break;
+                    const subscription = await tx.subscription.findFirst({
+                        where: { razorpayOrderId: orderId },
+                    });
+                    if (!subscription) break;
 
-                await prisma.$transaction(async (tx) => {
+                    const amountMatches =
+                        typeof paymentEntity?.amount !== "number" ||
+                        paymentEntity.amount === subscription.amountPaise;
+                    if (!amountMatches) break;
+
                     await tx.subscription.update({
                         where: { id: subscription.id },
                         data: {
@@ -114,26 +141,24 @@ export async function POST(req: Request) {
                         role: subscription.role,
                         expiresAt: subscription.currentPeriodEnd ?? subscription.expiresAt,
                     });
-                });
-                break;
-            }
+                    break;
+                }
 
-            case "payment.failed": {
-                const subscription = paymentEntity?.subscription_id
-                    ? await prisma.subscription.findFirst({
-                        where: { razorpaySubscriptionId: paymentEntity.subscription_id },
-                    })
-                    : paymentEntity?.order_id
-                        ? await prisma.subscription.findFirst({
-                            where: { razorpayOrderId: paymentEntity.order_id },
+                case "payment.failed": {
+                    const subscription = paymentEntity?.subscription_id
+                        ? await tx.subscription.findFirst({
+                            where: { razorpaySubscriptionId: paymentEntity.subscription_id },
                         })
-                        : null;
+                        : paymentEntity?.order_id
+                            ? await tx.subscription.findFirst({
+                                where: { razorpayOrderId: paymentEntity.order_id },
+                            })
+                            : null;
 
-                if (!subscription) break;
+                    if (!subscription) break;
 
-                const expiry = subscription.currentPeriodEnd ?? subscription.expiresAt;
+                    const expiry = subscription.currentPeriodEnd ?? subscription.expiresAt;
 
-                await prisma.$transaction(async (tx) => {
                     await tx.subscription.update({
                         where: { id: subscription.id },
                         data: {
@@ -155,26 +180,24 @@ export async function POST(req: Request) {
                     } else {
                         await downgradeUserToFree(tx, subscription.userId);
                     }
-                });
-                break;
-            }
+                    break;
+                }
 
-            case "subscription.authenticated":
-            case "subscription.activated":
-            case "subscription.charged": {
-                const subscriptionId = subscriptionEntity?.id;
-                if (!subscriptionId) break;
+                case "subscription.authenticated":
+                case "subscription.activated":
+                case "subscription.charged": {
+                    const subscriptionId = subscriptionEntity?.id;
+                    if (!subscriptionId) break;
 
-                const subscription = await prisma.subscription.findFirst({
-                    where: { razorpaySubscriptionId: subscriptionId },
-                });
-                if (!subscription) break;
+                    const subscription = await tx.subscription.findFirst({
+                        where: { razorpaySubscriptionId: subscriptionId },
+                    });
+                    if (!subscription) break;
 
-                const currentPeriodEnd = fromUnixTimestamp(
-                    subscriptionEntity?.current_end ?? subscriptionEntity?.end_at,
-                ) ?? subscription.currentPeriodEnd ?? subscription.expiresAt;
+                    const currentPeriodEnd = fromUnixTimestamp(
+                        subscriptionEntity?.current_end ?? subscriptionEntity?.end_at,
+                    ) ?? subscription.currentPeriodEnd ?? subscription.expiresAt;
 
-                await prisma.$transaction(async (tx) => {
                     await tx.subscription.update({
                         where: { id: subscription.id },
                         data: {
@@ -193,26 +216,24 @@ export async function POST(req: Request) {
                         role: subscription.role,
                         expiresAt: currentPeriodEnd,
                     });
-                });
-                break;
-            }
+                    break;
+                }
 
-            case "subscription.cancelled":
-            case "subscription.completed": {
-                const subscriptionId = subscriptionEntity?.id;
-                if (!subscriptionId) break;
+                case "subscription.cancelled":
+                case "subscription.completed": {
+                    const subscriptionId = subscriptionEntity?.id;
+                    if (!subscriptionId) break;
 
-                const subscription = await prisma.subscription.findFirst({
-                    where: { razorpaySubscriptionId: subscriptionId },
-                });
-                if (!subscription) break;
+                    const subscription = await tx.subscription.findFirst({
+                        where: { razorpaySubscriptionId: subscriptionId },
+                    });
+                    if (!subscription) break;
 
-                const currentPeriodEnd = fromUnixTimestamp(
-                    subscriptionEntity?.current_end ?? subscriptionEntity?.end_at,
-                ) ?? subscription.currentPeriodEnd ?? subscription.expiresAt;
-                const retainAccessUntilPeriodEnd = currentPeriodEnd > new Date();
+                    const currentPeriodEnd = fromUnixTimestamp(
+                        subscriptionEntity?.current_end ?? subscriptionEntity?.end_at,
+                    ) ?? subscription.currentPeriodEnd ?? subscription.expiresAt;
+                    const retainAccessUntilPeriodEnd = currentPeriodEnd > new Date();
 
-                await prisma.$transaction(async (tx) => {
                     await tx.subscription.update({
                         where: { id: subscription.id },
                         data: {
@@ -233,12 +254,17 @@ export async function POST(req: Request) {
                     } else {
                         await downgradeUserToFree(tx, subscription.userId);
                     }
-                });
-                break;
-            }
+                    break;
+                }
 
-            default:
-                break;
+                default:
+                    break;
+            }
+        });
+
+        // Trigger cache revalidation if relevant events occurred
+        if (eventType.startsWith("subscription.") || eventType === "payment.captured") {
+            revalidatePlanSurfaces();
         }
 
         return NextResponse.json({ status: "ok" });

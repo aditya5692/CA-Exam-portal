@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
   listStudentVisibleExams,
@@ -24,7 +24,7 @@ export async function publishExamFromQuestions(
     input: PublishExamInput
 ): Promise<ActionResponse<PublishExamResultData>> {
     try {
-        const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
         const publishedExam = await publishExamQuestions(teacher, input);
 
         revalidateExamSurfaces();
@@ -46,7 +46,7 @@ export async function publishExamFromQuestions(
  */
 export async function getTeacherBatchOptions(): Promise<ActionResponse<BatchOption[]>> {
     try {
-        const teacher = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
 
         return {
             success: true,
@@ -67,7 +67,7 @@ export async function getStudentVisibleExams(
     caLevel: "foundation" | "ipc" | "final"
 ): Promise<ActionResponse<StudentVisibleExam[]>> {
     try {
-        const student = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT"]);
+        const student = await requireAuth(["STUDENT"]);
 
         return {
             success: true,

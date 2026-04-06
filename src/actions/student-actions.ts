@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { CA_FINAL_CONTENT,CA_FOUNDATION_CONTENT,CA_INTER_CONTENT } from "@/lib/constants/chapters";
 import prisma from "@/lib/prisma/client";
 import {
@@ -27,7 +27,7 @@ import { revalidatePath } from "next/cache";
  */
 export async function getStudentHistory(): Promise<ActionResponse<StudentHistoryData>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
 
         // 1. Learning profile
         const learningProfile = await prisma.studentLearningProfile.findUnique({
@@ -261,7 +261,7 @@ async function calculateErrorDistribution(studentId: string) {
  */
 export async function startMyExamAttempt(examId: string): Promise<ActionResponse<{ attemptId: string, studentId: string }>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT"]);
+        const user = await requireAuth(["STUDENT"]);
         const attempt = await startExamAttemptRecord(examId, user.id, { enforceVisibility: true });
 
         return { success: true, data: { attemptId: attempt.id, studentId: user.id } };
@@ -277,7 +277,7 @@ export async function toggleSavedItem(resourceId: string, type: "MATERIAL" | "EX
     let currentUserId = "";
 
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
         currentUserId = user.id;
         const normalizedResourceId = resourceId.trim();
         if (!normalizedResourceId) {
@@ -364,7 +364,7 @@ export async function toggleSavedItem(resourceId: string, type: "MATERIAL" | "EX
  */
 export async function getSavedItems(): Promise<ActionResponse<{ materials: UnifiedMaterial[], exams: UnifiedExam[] }>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
 
         const savedItems = await prisma.savedItem.findMany({
             where: { studentId: user.id },
@@ -436,7 +436,7 @@ export async function getSavedItems(): Promise<ActionResponse<{ materials: Unifi
 
 export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
 
         // 1. Fetch Learning Profile for Stats and Goal
         const profile = await prisma.studentLearningProfile.findUnique({
@@ -600,7 +600,7 @@ export async function getExamHubData(): Promise<ActionResponse<ExamHubData>> {
  */
 export async function updateStudentLevel(level: "foundation" | "ipc" | "final"): Promise<ActionResponse<undefined>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
         const existingTarget = resolveStudentExamTarget(user);
         const newTarget = buildStudentExamTargetLabel(
             level,

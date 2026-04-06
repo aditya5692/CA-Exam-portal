@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
@@ -13,7 +13,7 @@ import { revalidatePlatformConfigSurfaces } from "@/lib/server/revalidation";
 import type { ActionResponse } from "@/types/shared";
 
 async function requireAdmin() {
-    return getCurrentUserOrDemoUser("ADMIN");
+    return requireAuth("ADMIN");
 }
 
 export async function savePlatformConfig(formData: FormData): Promise<ActionResponse<void>> {

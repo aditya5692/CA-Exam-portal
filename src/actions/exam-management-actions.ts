@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import { revalidateAdminSurfaces, revalidateExamSurfaces } from "@/lib/server/revalidation";
@@ -17,7 +17,7 @@ export async function deleteExams(examIds: string[]): Promise<ActionResponse<voi
             return { success: false, message: "No exams specified for deletion." };
         }
 
-        const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const user = await requireAuth(["TEACHER", "ADMIN"]);
 
         // If user is a teacher (not admin), verify they own all exams being deleted
         if (user.role !== "ADMIN") {

@@ -21,6 +21,10 @@ const REFRESH_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 let demoAccountsPromise: Promise<unknown> | null = null;
 
 async function ensureDemoAccountsReady() {
+    if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_LOGIN !== "true") {
+        return; // Do not ensure demo accounts in production unless explicitly allowed
+    }
+
     if (!demoAccountsPromise) {
         demoAccountsPromise = ensureDemoAccounts().catch((error) => {
             demoAccountsPromise = null;
@@ -248,18 +252,25 @@ function roleMatches(user: User, role?: AppRole | AppRole[]) {
     return user.role === role;
 }
 
-export async function getCurrentUserOrDemoUser(
-    role: AppRole,
-    allowedRoles?: AppRole | AppRole[]
-) {
-    const sessionUser = await getCurrentUser(allowedRoles ?? role);
-    if (sessionUser) return sessionUser;
-
-    await ensureDemoAccountsReady();
-    const demoUser = await getDefaultDemoUser(role);
-    if (!demoUser) {
-        throw new Error(`No ${role.toLowerCase()} account is available.`);
+/**
+ * Strictly requires a session payload. Throws an error or redirects if not found.
+ * Use this in server actions that perform sensitive mutations.
+ */
+export async function requireSession(): Promise<SessionPayload> {
+    const session = await getSessionPayload();
+    if (!session) {
+        throw new Error("Authentication required.");
     }
+    return session;
+}
 
-    return demoUser;
+/**
+ * Strictly requires a fully hydrated user record with specific roles.
+ */
+export async function requireAuth(role?: AppRole | AppRole[]): Promise<User> {
+    const user = await getCurrentUser(role);
+    if (!user) {
+        throw new Error("Unauthorized access.");
+    }
+    return user;
 }

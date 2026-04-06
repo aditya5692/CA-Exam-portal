@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma/client";
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { revalidatePath } from "next/cache";
 import type { ParsedQuestion } from "@/types/publish-exam";
 import { ActionResponse } from "@/types/shared";
@@ -11,7 +11,7 @@ import { ActionResponse } from "@/types/shared";
  */
 export async function getVaultQuestions(): Promise<ActionResponse<any[]>> {
     try {
-        const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const user = await requireAuth(["TEACHER", "ADMIN"]);
         const questions = await prisma.question.findMany({
             where: { teacherId: user.id },
             include: { options: true },
@@ -31,7 +31,7 @@ export async function getVaultQuestions(): Promise<ActionResponse<any[]>> {
  */
 export async function saveQuestionsToVault(questions: ParsedQuestion[]): Promise<ActionResponse<void>> {
     try {
-        const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const user = await requireAuth(["TEACHER", "ADMIN"]);
 
         // Use a transaction for bulk creation
         await prisma.$transaction(
@@ -68,7 +68,7 @@ export async function saveQuestionsToVault(questions: ParsedQuestion[]): Promise
  */
 export async function deleteVaultQuestion(id: string): Promise<ActionResponse<void>> {
     try {
-        const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const user = await requireAuth(["TEACHER", "ADMIN"]);
 
         // Verify ownership
         const question = await prisma.question.findUnique({
@@ -95,7 +95,7 @@ export async function deleteVaultQuestion(id: string): Promise<ActionResponse<vo
  */
 export async function updateVaultQuestion(id: string, data: Partial<ParsedQuestion>): Promise<ActionResponse<void>> {
     try {
-        const user = await getCurrentUserOrDemoUser("TEACHER", ["TEACHER", "ADMIN"]);
+        const user = await requireAuth(["TEACHER", "ADMIN"]);
 
         const question = await prisma.question.findUnique({
             where: { id },

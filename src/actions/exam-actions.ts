@@ -14,7 +14,7 @@ import type { AttemptWithResults,ExamWithQuestions } from "@/types/exam";
 import { ActionResponse } from "@/types/shared";
 import type { ExamAttempt } from "@prisma/client";
 
-import { getCurrentUserOrDemoUser } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 
 /**
@@ -23,7 +23,7 @@ import prisma from "@/lib/prisma/client";
  */
 export async function getExamDetails(examId: string): Promise<ActionResponse<ExamWithQuestions>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN", "TEACHER"]);
+        const user = await requireAuth(["STUDENT", "ADMIN", "TEACHER"]);
         
         // Hard visibility check for students
         if (user.role === "STUDENT") {
@@ -69,7 +69,7 @@ export async function submitExamAttempt(
     answers: SubmittedExamAnswerInput[]
 ): Promise<ActionResponse<ExamAttempt>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
         
         // Ownership check for students
         if (user.role === "STUDENT") {
@@ -98,7 +98,7 @@ export async function submitExamAttempt(
  */
 export async function getExamResults(attemptId: string): Promise<ActionResponse<AttemptWithResults>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN", "TEACHER"]);
+        const user = await requireAuth(["STUDENT", "ADMIN", "TEACHER"]);
         
         // Ownership check for students (Staff/Admins can see all)
         if (user.role === "STUDENT") {
@@ -135,7 +135,7 @@ export async function startMyExamAttempt(
     existingAnswers: any[]
 }>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT"]);
+        const user = await requireAuth(["STUDENT"]);
         const attempt = await startExamAttemptRecord(examId, user.id, { enforceVisibility: true, mode });
 
         return { 
@@ -162,7 +162,7 @@ export async function saveExamProgress(
     answers: SubmittedExamAnswerInput[]
 ): Promise<ActionResponse<undefined>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
         
         // Ownership check
         if (user.role === "STUDENT") {
@@ -192,7 +192,7 @@ export async function updateStudentAnswerGapTag(
     gapTag: string | null
 ): Promise<ActionResponse<void>> {
     try {
-        const user = await getCurrentUserOrDemoUser("STUDENT", ["STUDENT", "ADMIN"]);
+        const user = await requireAuth(["STUDENT", "ADMIN"]);
         
         // Ownership check
         const answer = await prisma.studentAnswer.findUnique({

@@ -1,12 +1,7 @@
 "use server";
 
 import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
-import { getCurrentUserOrDemoUser,syncCurrentAuthSession } from "@/lib/auth/session";
-import {
-    ProfileValidationError,
-    type ProfileRole,
-    validateProfileInput,
-} from "@/lib/profile-validation";
+import { requireAuth, syncCurrentAuthSession } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 import { normalizeStudentExamTargetInput } from "@/lib/student-level";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
@@ -15,14 +10,14 @@ import { revalidateProfileSurfaces } from "@/lib/server/revalidation";
 import type { UserProfile } from "@/types/profile";
 import { ActionResponse } from "@/types/shared";
 import type { Prisma } from "@prisma/client";
+import { profileSchema } from "@/lib/validations/profile-schemas";
 
-async function getOrCreateProfile(role: ProfileRole) {
-    return getCurrentUserOrDemoUser(role, [role, "ADMIN"]);
-}
+export type ProfileRole = "TEACHER" | "STUDENT";
+
 
 async function getProfile(role: ProfileRole): Promise<ActionResponse<UserProfile>> {
     try {
-        const user = await getOrCreateProfile(role);
+        const user = await requireAuth([role, "ADMIN"]);
         await assertUserCanAccessFeature(user.id, role === "TEACHER" ? "TEACHER_PROFILE" : "STUDENT_PROFILE", "read");
         return {
             success: true,
@@ -36,17 +31,25 @@ async function getProfile(role: ProfileRole): Promise<ActionResponse<UserProfile
 
 async function updateProfile(role: ProfileRole, formData: FormData): Promise<ActionResponse<UserProfile>> {
     try {
-        const user = await getOrCreateProfile(role);
+        const user = await requireAuth([role, "ADMIN"]);
         await assertUserCanAccessFeature(user.id, role === "TEACHER" ? "TEACHER_PROFILE" : "STUDENT_PROFILE", "update");
 
-        const validatedInput = validateProfileInput(role, formData);
+        const rawData = Object.fromEntries(formData.entries());
+        const validated = profileSchema.safeParse(rawData);
+        
+        if (!validated.success) {
+            return { success: false, message: validated.error.issues[0].message };
+        }
+
+        const validatedInput = validated.data;
+
         const normalizedExamTarget = role === "STUDENT"
             ? normalizeStudentExamTargetInput({
-                examTarget: validatedInput.examTarget,
-                caLevel: validatedInput.caLevel,
-                examTargetMonth: validatedInput.examTargetMonth,
-                examTargetYear: validatedInput.examTargetYear,
-                department: validatedInput.department,
+                examTarget: validatedInput.examTarget ?? null,
+                caLevel: validatedInput.caLevel ?? null,
+                examTargetMonth: validatedInput.examTargetMonth ?? null,
+                examTargetYear: validatedInput.examTargetYear ?? null,
+                department: validatedInput.department ?? null,
             })
             : null;
 
@@ -60,84 +63,37 @@ async function updateProfile(role: ProfileRole, formData: FormData): Promise<Act
             });
 
             if (duplicateEmail) {
-                throw new ProfileValidationError({
-                    email: "A profile with this email already exists.",
-                });
-            }
-        }
-
-        if (validatedInput.registrationNumber) {
-            const duplicateRegistration = await prisma.user.findFirst({
-                where: {
-                    registrationNumber: validatedInput.registrationNumber,
-                    id: { not: user.id },
-                },
-                select: { id: true },
-            });
-
-            if (duplicateRegistration) {
-                throw new ProfileValidationError({
-                    registrationNumber: "A profile with this registration number already exists.",
-                });
-            }
-        }
-
-        if (validatedInput.phone) {
-            const duplicatePhone = await prisma.user.findFirst({
-                where: {
-                    phone: validatedInput.phone,
-                    id: { not: user.id },
-                },
-                select: { id: true },
-            });
-
-            if (duplicatePhone) {
-                throw new ProfileValidationError({
-                    phone: "A profile with this phone number already exists.",
-                });
-            }
-        }
-
-        if (role === "STUDENT" && validatedInput.batch) {
-            const batchExists = await prisma.batch.findUnique({
-                where: { uniqueJoinCode: validatedInput.batch.trim().toUpperCase() },
-                select: { id: true },
-            });
-
-            if (!batchExists) {
-                throw new ProfileValidationError({
-                    batch: "The provided batch code is invalid. Please verify and try again.",
-                });
+                return { success: false, message: "A profile with this email already exists." };
             }
         }
 
         const data: Prisma.UserUpdateInput = {
             fullName: validatedInput.fullName,
-            email: validatedInput.email,
-            registrationNumber: validatedInput.registrationNumber,
-            department: validatedInput.department,
-            phone: validatedInput.phone,
-            preferredLanguage: validatedInput.preferredLanguage,
-            timezone: validatedInput.timezone,
-            bio: validatedInput.bio,
-            designation: role === "TEACHER" ? validatedInput.designation : null,
-            expertise: role === "TEACHER" ? validatedInput.expertise : null,
-            examTarget: role === "STUDENT" ? normalizedExamTarget?.examTarget ?? null : null,
-            examTargetLevel: role === "STUDENT" ? normalizedExamTarget?.examTargetLevel ?? null : null,
-            examTargetMonth: role === "STUDENT" ? normalizedExamTarget?.examTargetMonth ?? null : null,
-            examTargetYear: role === "STUDENT" ? normalizedExamTarget?.examTargetYear ?? null : null,
+            email: validatedInput.email || null,
+            registrationNumber: validatedInput.registrationNumber || null,
+            department: validatedInput.department || null,
+            phone: validatedInput.phone || null,
+            preferredLanguage: validatedInput.preferredLanguage || null,
+            timezone: validatedInput.timezone || null,
+            bio: validatedInput.bio || null,
+            designation: role === "TEACHER" ? (validatedInput.designation || null) : null,
+            expertise: role === "TEACHER" ? (validatedInput.expertise || null) : null,
+            examTarget: role === "STUDENT" ? (normalizedExamTarget?.examTarget ?? null) : null,
+            examTargetLevel: role === "STUDENT" ? (normalizedExamTarget?.examTargetLevel ?? null) : null,
+            examTargetMonth: role === "STUDENT" ? (normalizedExamTarget?.examTargetMonth ?? null) : null,
+            examTargetYear: role === "STUDENT" ? (normalizedExamTarget?.examTargetYear ?? null) : null,
             isPublicProfile: role === "TEACHER" ? validatedInput.isPublicProfile : true,
-            batch: validatedInput.batch,
-            dob: validatedInput.dob,
-            location: validatedInput.location,
-            firm: validatedInput.firm,
-            firmRole: validatedInput.firmRole,
-            articleshipYear: validatedInput.articleshipYear,
-            articleshipTotal: validatedInput.articleshipTotal,
+            batch: validatedInput.batch || null,
+            dob: validatedInput.dob || null,
+            location: validatedInput.location || null,
+            firm: validatedInput.firm || null,
+            firmRole: validatedInput.firmRole || null,
+            articleshipYear: validatedInput.articleshipYear ?? null,
+            articleshipTotal: validatedInput.articleshipTotal ?? null,
             foundationCleared: validatedInput.foundationCleared,
             intermediateCleared: validatedInput.intermediateCleared,
             finalCleared: validatedInput.finalCleared,
-            resumeUrl: validatedInput.resumeUrl,
+            resumeUrl: validatedInput.resumeUrl || null,
         };
 
         const updatedProfile = await prisma.user.update({
@@ -162,16 +118,8 @@ async function updateProfile(role: ProfileRole, formData: FormData): Promise<Act
         await syncCurrentAuthSession(updatedProfile);
         revalidateProfileSurfaces(role);
         return { success: true, data: updatedProfile };
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error(`updateProfile (${role}) failed:`, error);
-        if (error instanceof ProfileValidationError) {
-            return {
-                success: false,
-                message: error.message,
-                fieldErrors: error.fieldErrors,
-            };
-        }
-
         return {
             success: false,
             message: getActionErrorMessage(error, "Failed to update profile.")
