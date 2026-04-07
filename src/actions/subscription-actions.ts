@@ -170,6 +170,16 @@ export async function verifyAndActivatePlan(payload: {
             };
         }
 
+        // ── Idempotency guard ────────────────────────────────────────────────
+        // The webhook may have already activated the plan before the client
+        // redirect fires. If so, just sync the session and return success.
+        if (existingSubscription.status === "ACTIVE" && existingSubscription.razorpayPaymentId) {
+            const latestUser = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+            await syncCurrentAuthSession(latestUser);
+            revalidatePlanSurfaces();
+            return { success: true, data: undefined };
+        }
+
         const gatewayPayment = await fetchRazorpayPayment(payload.razorpayPaymentId);
 
         if (gatewayPayment.orderId !== payload.razorpayOrderId) {
