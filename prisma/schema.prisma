@@ -550,6 +550,18 @@ model StudentAccessCode {
   @@index([email])
 }
 
+model WebhookEvent {
+    id        String   @id @default(cuid())
+    eventId   String   @unique // Provider's event ID (e.g. Razorpay event.id)
+    type      String   // Provider type (e.g. "razorpay")
+    eventName String?  // Specific event name (e.g. "payment.captured")
+    status    String   @default("PROCESSED") // PROCESSED, FAILED
+    payload   Json?    // Raw event payload for audit trail
+    createdAt DateTime @default(now())
+
+    @@index([eventId])
+}
+
 
 
 
