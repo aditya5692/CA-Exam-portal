@@ -150,9 +150,9 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
         }
     }
 
-    if (!IS_PROD && (token === "mock-verified-token" || (token && token.length > 50 && token.startsWith("ey")))) {
-        console.log("[DEV] Bypassing real verification for development JWT");
-        // Defaulting to user's test number for dev bypass
+    // Explicit single-value mock token for dev testing only — NOT a broad pattern
+    if (!IS_PROD && token === "mock-verified-token") {
+        console.log("[DEV] Bypassing real verification for dev mock-verified-token");
         return { success: true, message: "Verified via Mock Bypass.", phone: "917065751756" };
     }
 
