@@ -16,6 +16,7 @@ import type { ExamAttempt } from "@prisma/client";
 
 import { requireAuth } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
+import { getExamQuestionBenchmarks, type BenchmarkMap } from "@/lib/server/peer-benchmarking";
 
 /**
  * Fetches the full details of an exam, including its questions and options.
@@ -215,5 +216,21 @@ export async function updateStudentAnswerGapTag(
     } catch (error) {
         console.error("updateStudentAnswerGapTag error:", error);
         return { success: false, message: "Failed to update gap tag." };
+    }
+}
+
+/**
+ * Fetches peer speed benchmarks for all questions in a given exam.
+ * Used on the results page to show "You took X seconds. Avg is Y seconds."
+ * Only students/admins who can see the exam may fetch this.
+ */
+export async function getExamPeerBenchmarks(examId: string): Promise<ActionResponse<BenchmarkMap>> {
+    try {
+        await requireAuth(["STUDENT", "ADMIN", "TEACHER"]);
+        const benchmarks = await getExamQuestionBenchmarks(examId);
+        return { success: true, data: benchmarks };
+    } catch (error) {
+        console.error("getExamPeerBenchmarks error:", error);
+        return { success: false, message: "Failed to fetch benchmarks.", data: {} };
     }
 }

@@ -2,10 +2,19 @@
 
 import { updateStudentAnswerGapTag } from "@/actions/exam-actions";
 import { cn } from "@/lib/utils";
-import { CheckCircle, Info, Timer, Warning, XCircle } from "@phosphor-icons/react";
+import { CheckCircle, Info, Timer, Warning, XCircle, ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import type { BenchmarkMap } from "@/lib/server/peer-benchmarking";
+
+function fmtSeconds(seconds: number): string {
+    if (seconds <= 0) return "—";
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m === 0) return `${s}s`;
+    return `${m}m ${s}s`;
+}
 
 export interface SolutionAnswer {
     id: string;
@@ -55,7 +64,7 @@ function getStatusMeta(answer: SolutionAnswer) {
     };
 }
 
-export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
+export function SolutionReview({ answers, benchmarks = {} }: { answers: SolutionAnswer[]; benchmarks?: BenchmarkMap }) {
     const [filter, setFilter] = useState<FilterTab>("all");
     const router = useRouter();
 
@@ -202,11 +211,37 @@ export function SolutionReview({ answers }: { answers: SolutionAnswer[] }) {
                                                     {answer.question.difficulty}
                                                 </span>
                                             )}
-                                            {answer.timeSpent > 0 && (
-                                                <span className="rounded-full border border-[var(--student-border)] bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-muted)]">
-                                                    Time {answer.timeSpent}s
-                                                </span>
-                                            )}
+                                            {answer.timeSpent > 0 && (() => {
+                                                const bm = benchmarks[answer.questionId];
+                                                const yourTime = answer.timeSpent;
+                                                // Per-question peer chip
+                                                if (!bm || bm.respondents < 2) {
+                                                    // Only show your time
+                                                    return (
+                                                        <span className="rounded-full border border-[var(--student-border)] bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-muted)]">
+                                                            <Timer size={11} className="inline mb-0.5 mr-1" />{fmtSeconds(yourTime)}
+                                                        </span>
+                                                    );
+                                                }
+                                                const peerAvg = bm.avgTimePassing ?? bm.avgTimeAll;
+                                                const diff = Math.round(((yourTime - peerAvg) / peerAvg) * 100);
+                                                const isFaster = diff < -5;
+                                                const isSlower = diff > 10;
+                                                return (
+                                                    <>
+                                                        <span className="rounded-full border border-[var(--student-border)] bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-muted)]">
+                                                            <Timer size={11} className="inline mb-0.5 mr-1" />You: {fmtSeconds(yourTime)}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]",
+                                                            isFaster ? "border-emerald-200 bg-emerald-50 text-emerald-700" : isSlower ? "border-rose-200 bg-rose-50 text-rose-700" : "border-amber-200 bg-amber-50 text-amber-700"
+                                                        )}>
+                                                            {isFaster ? <ArrowLeft size={11} className="inline mb-0.5 mr-0.5" /> : isSlower ? <ArrowRight size={11} className="inline mb-0.5 mr-0.5" /> : null}
+                                                            Avg: {fmtSeconds(peerAvg)}{isFaster ? ` · ${Math.abs(diff)}% faster` : isSlower ? ` · ${diff}% slower` : " · On pace"}
+                                                        </span>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
 
                                         {answer.question.subject && (

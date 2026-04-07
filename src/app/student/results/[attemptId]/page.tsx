@@ -1,4 +1,5 @@
-import { getExamResults } from "@/actions/exam-actions";
+import { getExamResults, getExamPeerBenchmarks } from "@/actions/exam-actions";
+import { computeAttemptSpeedSummary, formatSeconds } from "@/lib/server/peer-benchmarking";
 import { cn } from "@/lib/utils";
 import {
     ArrowLeft,
@@ -7,31 +8,121 @@ import {
     MinusCircle,
     Target,
     XCircle,
+    Timer,
+    TrendUp,
+    TrendDown,
+    Minus,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { SolutionReview, type SolutionAnswer } from "./solution-review";
+import type { BenchmarkMap } from "@/lib/server/peer-benchmarking";
 
 interface ResultsPageProps {
     params: Promise<{ attemptId: string }>;
 }
 
 function formatDuration(startTime: Date, endTime: Date | null) {
-    if (!endTime) {
-        return "-";
-    }
-
+    if (!endTime) return "-";
     const totalSeconds = Math.max(
         0,
         Math.floor((new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000),
     );
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-
-    if (minutes === 0) {
-        return `${seconds}s`;
-    }
-
+    if (minutes === 0) return `${seconds}s`;
     return `${minutes}m ${seconds}s`;
+}
+
+/* Peer speed comparison panel */
+function SpeedBenchmarkPanel({
+    yourAvgTime,
+    peerAvgTime,
+    passingAvgTime,
+    percentDiff,
+    respondents,
+}: {
+    yourAvgTime: number;
+    peerAvgTime: number;
+    passingAvgTime: number | null;
+    percentDiff: number | null;
+    respondents: number;
+}) {
+    const isFaster = percentDiff !== null && percentDiff < 0;
+    const isSlower = percentDiff !== null && percentDiff > 0;
+    const isEqual = percentDiff !== null && percentDiff === 0;
+
+    const speedLabel = isFaster
+        ? `${Math.abs(percentDiff!)}% faster than passing average`
+        : isSlower
+        ? `${percentDiff}% slower than passing average`
+        : isEqual
+        ? "Right at the passing pace"
+        : "Not enough peer data yet";
+
+    const speedColor = isFaster
+        ? "text-emerald-700"
+        : isSlower
+        ? "text-rose-700"
+        : "text-amber-700";
+
+    const speedBg = isFaster
+        ? "bg-emerald-50 border-emerald-200"
+        : isSlower
+        ? "bg-rose-50 border-rose-200"
+        : "bg-amber-50 border-amber-200";
+
+    const SpeedIcon = isFaster ? TrendUp : isSlower ? TrendDown : Minus;
+
+    return (
+        <div className={cn("rounded-[28px] border p-6 shadow-sm", speedBg)}>
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
+                    <Timer size={16} weight="fill" />
+                    Speed vs Peers
+                </div>
+                {respondents > 0 && (
+                    <span className="text-[10px] font-semibold text-[var(--student-muted)]">
+                        {respondents} student{respondents !== 1 ? "s" : ""} compared
+                    </span>
+                )}
+            </div>
+
+            {/* Your time vs peer time */}
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--student-muted)]">Your pace</div>
+                    <div className="mt-1 text-3xl font-black tracking-tight text-[var(--student-text)]">{formatSeconds(yourAvgTime)}</div>
+                    <div className="mt-0.5 text-xs font-semibold text-[var(--student-muted-strong)]">avg per question</div>
+                </div>
+                {peerAvgTime > 0 && (
+                    <div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--student-muted)]">All students</div>
+                        <div className="mt-1 text-3xl font-black tracking-tight text-[var(--student-text)]">{formatSeconds(peerAvgTime)}</div>
+                        <div className="mt-0.5 text-xs font-semibold text-[var(--student-muted-strong)]">avg per question</div>
+                    </div>
+                )}
+                {passingAvgTime != null && (
+                    <div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--student-muted)]">Passing students</div>
+                        <div className="mt-1 text-3xl font-black tracking-tight text-[var(--student-text)]">{formatSeconds(passingAvgTime)}</div>
+                        <div className="mt-0.5 text-xs font-semibold text-[var(--student-muted-strong)]">avg per question</div>
+                    </div>
+                )}
+            </div>
+
+            {/* Verdict */}
+            <div className={cn("mt-5 flex items-center gap-2 rounded-2xl border px-4 py-3", speedBg)}>
+                <SpeedIcon size={18} weight="fill" className={speedColor} />
+                <span className={cn("text-sm font-black", speedColor)}>{speedLabel}</span>
+            </div>
+
+            {respondents === 0 && (
+                <p className="mt-3 text-xs font-semibold text-[var(--student-muted)]">
+                    Be one of the first to complete this exam! Peer benchmarks will appear as more students attempt it.
+                </p>
+            )}
+        </div>
+    );
 }
 
 export default async function ResultsPage({ params }: ResultsPageProps) {
@@ -55,6 +146,9 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         );
     }
 
+    // Fetch peer benchmarks (non-blocking — gracefully empty if no data)
+    const { data: benchmarks = {} } = await getExamPeerBenchmarks(attempt.examId);
+
     const answers = attempt.answers as unknown as SolutionAnswer[];
     const totalQuestions = answers.length;
     const correctCount = answers.filter((answer) => answer.isCorrect).length;
@@ -75,6 +169,18 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     const passed = attempt.exam.passingMarks > 0
         ? attempt.score >= attempt.exam.passingMarks
         : accuracy >= 50;
+
+    // Speed benchmark summary
+    const speedSummary = computeAttemptSpeedSummary(
+        answers.map((a) => ({ questionId: a.questionId, timeSpent: a.timeSpent })),
+        benchmarks as BenchmarkMap,
+    );
+
+    // Count how many benchmark data points exist
+    const benchmarkRespondents = Object.values(benchmarks as BenchmarkMap).reduce(
+        (max, bm) => Math.max(max, bm.respondents),
+        0,
+    );
 
     const questionStatuses = answers.map((answer, index) => ({
         number: index + 1,
@@ -129,6 +235,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                         </div>
                     </div>
 
+                    {/* Score Summary Cards */}
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                         {[
                             {
@@ -179,11 +286,22 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                             </div>
                         ))}
                     </div>
+
+                    {/* Peer Speed Benchmark Panel — always show, gracefully handles no data */}
+                    {speedSummary.yourAvgTime > 0 && (
+                        <SpeedBenchmarkPanel
+                            yourAvgTime={speedSummary.yourAvgTime}
+                            peerAvgTime={speedSummary.peerAvgTime}
+                            passingAvgTime={speedSummary.passingAvgTime}
+                            percentDiff={speedSummary.percentDiff}
+                            respondents={benchmarkRespondents}
+                        />
+                    )}
                 </div>
 
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
                     <div className="min-w-0 rounded-[32px] border border-[var(--student-border)] bg-white p-5 md:p-8">
-                        <SolutionReview answers={answers} />
+                        <SolutionReview answers={answers} benchmarks={benchmarks as BenchmarkMap} />
                     </div>
 
                     <aside className="space-y-5 lg:sticky lg:top-6">
@@ -215,7 +333,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                                     <div className="flex items-start justify-between gap-4">
                                         <span>Chapter</span>
                                         <span className="text-right font-semibold text-[var(--student-text)]">
-                                            {attempt.exam.chapter || "Mixed"}
+                                            {(attempt.exam as any).chapter || "Mixed"}
                                         </span>
                                     </div>
                                     <div className="flex items-start justify-between gap-4">
