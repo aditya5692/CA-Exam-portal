@@ -2,7 +2,9 @@
 
 import { refreshTokenAction } from "@/actions/auth-token-actions";
 import {
-    List
+    List,
+    ChartPieSlice,
+    Scroll
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -121,6 +123,37 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                         {/* Action Suite */}
                         <div className="flex items-center gap-1 md:gap-2">
                             <NotificationBell />
+
+                            {/* ICAI ABC Analysis Link */}
+                            <Link
+                                href="/student/abc-analysis"
+                                title="ICAI ABC Analysis"
+                                className={cn(
+                                    "hidden items-center gap-1.5 rounded-xl border border-[var(--student-border)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all sm:flex",
+                                    pathname === "/student/abc-analysis"
+                                        ? "bg-[var(--student-accent-strong)] text-white shadow-md border-[var(--student-accent-strong)]"
+                                        : "bg-[var(--student-panel)]/80 text-[var(--student-muted-strong)] hover:bg-white hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)]"
+                                )}
+                            >
+                                <ChartPieSlice size={16} weight="fill" />
+                                <span className="hidden lg:inline">ABC Analysis</span>
+                            </Link>
+
+                            {/* Latest Amendments Link */}
+                            <Link
+                                href="/student/amendments"
+                                title="Latest Amendments"
+                                className={cn(
+                                    "hidden items-center gap-1.5 rounded-xl border border-[var(--student-border)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all sm:flex",
+                                    pathname === "/student/amendments"
+                                        ? "bg-[var(--student-accent-strong)] text-white shadow-md border-[var(--student-accent-strong)]"
+                                        : "bg-[var(--student-panel)]/80 text-[var(--student-muted-strong)] hover:bg-white hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)]"
+                                )}
+                            >
+                                <Scroll size={16} weight="fill" />
+                                <span className="hidden lg:inline">Amendments</span>
+                            </Link>
+
                             {/* White Background Toggle */}
                             <button
                                 onClick={toggleBackground}
