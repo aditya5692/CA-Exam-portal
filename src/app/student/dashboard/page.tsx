@@ -19,7 +19,7 @@ import type { AppRole } from "@/lib/auth/demo-accounts";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import type { StudentVisibleExam } from "@/types/publish-exam";
-import { BookOpen, ChartLineUp, Clock, FilePdf, FileText, List, Medal, Play, Sparkle, Target, Trophy, ChalkboardTeacher, CaretRight, Users } from "@phosphor-icons/react/dist/ssr";
+import { BookOpen, ChartLineUp, Clock, FilePdf, FileText, List, Medal, Play, Sparkle, Target, Trophy, ChalkboardTeacher, CaretRight, Users, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
@@ -134,6 +134,8 @@ export default async function StudentDashboardPage() {
     let freeResources: DashboardResource[] = [];
     let latestProgress: ResumeCardProgress = null;
     let myEducators: MyEducator[] = [];
+    let dailyTargets: any[] = [];
+    let abcTracker = { a: 80, b: 20, c: 5 }; // Mock data for now, would aggregate dynamically
 
     const user = await getCurrentUser();
     if (!user) {
@@ -207,10 +209,17 @@ export default async function StudentDashboardPage() {
                 ],
                 take: 4,
             }).catch(() => [] as DashboardResourceRecord[]),
-            getMyEducators()
+            getMyEducators(),
+            prisma.dailyTargetQueue.findMany({
+                where: { studentId: validUser.id, isCompleted: false },
+                include: { mcq: { include: { subject: true } } },
+                orderBy: { priority: "desc" },
+                take: 5
+            }).catch(() => [])
         ]);
 
         userName = user.fullName?.trim() || user.email?.trim() || "Student";
+        dailyTargets = arguments[11] || []; // Quick assignment from Promise.all index 11 (zero-indexed)
 
         if (progressResult.success) {
             latestProgress = progressResult.data as ResumeCardProgress;
@@ -254,7 +263,7 @@ export default async function StudentDashboardPage() {
         }, 0);
 
         if (feedResult.success && feedResult.data) {
-            announcements = feedResult.data.feedItems.slice(0, 3).map((item) => ({
+            announcements = feedResult.data.feedItems.slice(0, 3).map((item: any) => ({
                 id: item.id,
                 title: item.batchName,
                 description: truncateLabel(item.content, 110),
@@ -264,7 +273,7 @@ export default async function StudentDashboardPage() {
         }
 
         if (leaderboardResult.success && leaderboardResult.data) {
-            leaderboard = leaderboardResult.data.map((entry) => ({
+            leaderboard = leaderboardResult.data.map((entry: any) => ({
                 rank: entry.rank,
                 name: entry.fullName,
                 score: entry.totalXP,
@@ -460,40 +469,41 @@ export default async function StudentDashboardPage() {
                         )}
                     </div>
 
-                    {/* Announcements */}
+                    {/* UNIFIED DAILY TARGET QUEUE */}
                     <div className="space-y-6">
                         <div className="flex items-center justify-between mb-2">
                             <div className="space-y-1">
                                 <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
-                                    <FileText size={20} className="text-[var(--student-muted)]" weight="bold" />
-                                    Latest Announcements
+                                    <List size={20} className="text-[var(--student-muted)]" weight="bold" />
+                                    Today's Targets
                                 </h2>
-                                <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">Stay updated via faculty feeds</p>
+                                <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">Cross-subject unified queue from Shadow Engine</p>
                             </div>
-                            <Link href="/student/updates" className="text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)] hover:underline">View All</Link>
                         </div>
 
                         <div className="space-y-4">
-                            {announcements.length === 0 ? (
+                            {dailyTargets.length === 0 ? (
                                 <div className="student-surface rounded-2xl p-16 text-center border-dashed">
-                                    <FileText size={40} className="mx-auto mb-4 text-slate-200" />
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Null Feed Index</p>
+                                    <CheckCircle size={40} className="mx-auto mb-4 text-emerald-400" weight="fill" />
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600">All targets clear!</p>
                                 </div>
                             ) : (
-                                announcements.map((feed) => (
-                                    <div key={feed.id} className="student-surface group relative flex gap-6 overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-lg">
-                                        <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300">
-                                            <FileText size={20} weight="fill" />
-                                        </div>
+                                dailyTargets.map((target) => (
+                                    <div key={target.id} className="student-surface group relative flex gap-6 overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-lg border-l-4 border-l-orange-500">
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] mb-2">
-                                                {feed.tag} <span className="px-1 opacity-20">|</span> {feed.date}
+                                            <div className="flex justify-between items-center mb-2">
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-orange-500">
+                                                    {target.reason} <span className="px-1 opacity-20">|</span> {target.mcq?.subject?.name || "Topic"}
+                                                </div>
+                                                <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[9px] font-bold">Category {target.mcq?.icaiCategory || "Gen"}</span>
                                             </div>
-                                            <h3 className="mb-2 font-outfit text-lg font-bold text-slate-900 group-hover:text-[var(--student-accent-strong)] truncate leading-tight">
-                                                {feed.title}
+                                            <h3 className="mb-2 font-outfit text-md font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 leading-tight">
+                                                {target.mcq?.questionText || "Question Content Hidden"}
                                             </h3>
-                                            <p className="text-sm font-medium text-slate-400 line-clamp-1">{feed.description}</p>
                                         </div>
+                                        <button className="self-center bg-indigo-600 text-white rounded-full p-2 h-10 w-10 flex items-center justify-center shadow-md hover:bg-indigo-700 transition">
+                                            <Play size={16} weight="fill" />
+                                        </button>
                                     </div>
                                 ))
                             )}
@@ -503,6 +513,44 @@ export default async function StudentDashboardPage() {
 
                 {/* Right Column: Peer & High Priority Sections */}
                 <div className="space-y-8">
+                    {/* A-B-C TRACKER */}
+                    <div className="space-y-1">
+                        <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                            <Target size={20} className="text-[var(--student-muted)]" weight="bold" />
+                            A-B-C Tracker
+                        </h2>
+                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">ICAI Weightage Mapping</p>
+                    </div>
+
+                    <div className="student-surface rounded-2xl p-6 shadow-sm border-[var(--student-border)] space-y-6">
+                         <div>
+                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest mb-2">
+                                <span className="text-emerald-600">Category A (High Weight)</span>
+                                <span>{abcTracker.a}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-emerald-500" style={{ width: `${abcTracker.a}%` }}></div>
+                            </div>
+                         </div>
+                         <div>
+                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest mb-2">
+                                <span className="text-blue-600">Category B (Medium)</span>
+                                <span>{abcTracker.b}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500" style={{ width: `${abcTracker.b}%` }}></div>
+                            </div>
+                         </div>
+                         <div>
+                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest mb-2">
+                                <span className="text-slate-500">Category C (Low)</span>
+                                <span>{abcTracker.c}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-slate-400" style={{ width: `${abcTracker.c}%` }}></div>
+                            </div>
+                         </div>
+                    </div>
                     <div className="space-y-1">
                         <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
                             <Trophy size={20} className="text-[var(--student-muted)]" weight="bold" />

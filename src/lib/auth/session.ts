@@ -247,6 +247,7 @@ export async function getCurrentUser(role?: AppRole | AppRole[]) {
 }
 
 function roleMatches(user: User, role?: AppRole | AppRole[]) {
+    if (user.isSuperAdmin) return true;
     if (!role) return true;
     if (Array.isArray(role)) return role.includes(user.role as AppRole);
     return user.role === role;

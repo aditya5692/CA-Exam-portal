@@ -7,7 +7,7 @@ import { ContentStudio } from "@/components/admin/content-studio";
 import { BatchOrchestrator } from "@/components/admin/batch-orchestrator";
 import { SubscriptionManager } from "@/components/teacher/subscription-manager";
 import { redirect } from "next/navigation";
-import { getSessionPayload } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/session";
 import { PlatformIntegrationsPanel } from "@/components/admin/platform-integrations-panel";
 import { getResolvedPlatformConfigFields } from "@/lib/server/platform-config";
 
@@ -19,8 +19,8 @@ export default async function AdminControlCenterPage({
     searchParams: Promise<{ tab?: string }>
 }) {
     const resolvedSearchParams = await searchParams;
-    const session = await getSessionPayload();
-    if (!session || (session.role !== "ADMIN" && !session.isSuperAdmin)) {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "ADMIN" && !user.isSuperAdmin)) {
         redirect("/auth/login");
     }
 

@@ -271,10 +271,49 @@ export default async function AmendmentsPage() {
                     </div>
                     <div className="h-px flex-1 bg-rose-100" />
                 </div>
-                <div className="space-y-4">
-                    {criticalAmendments.map(amendment => (
-                        <AmendmentCard key={amendment.id} amendment={amendment} />
-                    ))}
+                <div className="overflow-hidden rounded-3xl border border-[var(--student-border)] bg-white shadow-sm">
+                    {/* Priority Color Bar */}
+                    <div className="h-1 w-full bg-rose-500" />
+                    <div className="p-0">
+                        {/* High Density Table Header */}
+                        <div className="grid grid-cols-[1fr_2fr] gap-4 border-b border-[var(--student-border)] bg-rose-50/50 p-4">
+                            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-600">Old / Existing Concept</div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-600 flex items-center gap-2">
+                                New Amendment
+                                <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[8px] font-bold text-indigo-700">Nov '26</span>
+                            </div>
+                        </div>
+
+                        {/* Table Rows */}
+                        <div className="divide-y divide-[var(--student-border)]">
+                            {criticalAmendments.map((amendment) => (
+                                <div key={amendment.id} className="grid grid-cols-[1fr_2fr] gap-4 p-4 transition-colors hover:bg-slate-50">
+                                    {/* Left Column: Old State (Simulated based on amendment) */}
+                                    <div className="pr-4 md:border-r md:border-[var(--student-border)] md:border-dashed">
+                                        <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">{amendment.subject}</div>
+                                        <h3 className="font-outfit text-sm font-bold text-[var(--student-text)] opacity-60 line-through">Previous provisions related to {amendment.title.split("–")[0]}</h3>
+                                        <p className="mt-2 text-xs font-semibold text-[var(--student-muted-strong)] opacity-70">
+                                            Limits, slabs, or clauses as applicable up to the previous attempt.
+                                        </p>
+                                    </div>
+                                    
+                                    {/* Right Column: New Amendment Delta */}
+                                    <div>
+                                        <h3 className="font-outfit text-base font-bold text-indigo-700">{amendment.title}</h3>
+                                        
+                                        <ul className="mt-3 space-y-2">
+                                            {amendment.keyPoints.map((point, i) => (
+                                                <li key={i} className="flex items-start gap-2.5 text-sm font-semibold text-[var(--student-text)]">
+                                                    <ArrowRight size={14} weight="bold" className="mt-0.5 shrink-0 text-rose-500" />
+                                                    {point}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -58,7 +58,10 @@ export type ResolvedStudentExamTarget = {
 };
 
 function normalizeLevelSource(value: string | null | undefined) {
-    return (value ?? "")
+    if (typeof value !== "string") {
+        return "";
+    }
+    return (value)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, " ")
         .trim();
@@ -125,6 +128,9 @@ export function normalizeStudentAttemptMonth(value: number | string | null | und
         return null;
     }
 
+    if (typeof value !== "string") {
+        return null;
+    }
     const trimmedValue = value.trim();
     if (!trimmedValue) {
         return null;
@@ -151,7 +157,7 @@ export function normalizeStudentAttemptYear(value: number | string | null | unde
 
     const numericValue = typeof value === "number"
         ? value
-        : Number.parseInt(value.trim(), 10);
+        : (typeof value === "string" ? Number.parseInt(value.trim(), 10) : NaN);
 
     if (!Number.isInteger(numericValue)) {
         return null;
@@ -235,11 +241,15 @@ export function buildStudentExamTargetLabel(
 }
 
 export function resolveStudentExamTarget(source: StudentExamTargetSource): ResolvedStudentExamTarget {
-    const explicitLevel = normalizeStudentCALevel(source.examTargetLevel);
-    const parsedLegacyLevel = detectStudentCALevel(source.examTarget, source.department);
+    const safeTarget = typeof source.examTarget === 'string' ? source.examTarget : "";
+    const safeLevel = typeof source.examTargetLevel === 'string' ? source.examTargetLevel : "";
+    const safeDept = typeof source.department === 'string' ? source.department : "";
+    
+    const explicitLevel = normalizeStudentCALevel(safeLevel);
+    const parsedLegacyLevel = detectStudentCALevel(safeTarget, safeDept);
     const caLevelKey = explicitLevel ?? parsedLegacyLevel ?? "final";
 
-    const legacyCycle = parseLegacyStudentAttemptCycle(source.examTarget);
+    const legacyCycle = parseLegacyStudentAttemptCycle(safeTarget);
     const attemptMonth = normalizeStudentAttemptMonth(source.examTargetMonth) ?? legacyCycle.month;
     const attemptYear = normalizeStudentAttemptYear(source.examTargetYear) ?? legacyCycle.year;
     const cycleLabel = getStudentAttemptCycleLabel(attemptMonth, attemptYear);

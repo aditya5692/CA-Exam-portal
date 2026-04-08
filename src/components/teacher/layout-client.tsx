@@ -7,6 +7,7 @@ import { type ReactNode, useState } from "react";
 import { TeacherSidebar } from "./sidebar";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { GlobalSearch } from "@/components/shared/global-search";
+import { SubjectFilter } from "@/components/admin/subject-filter";
 
 interface TeacherLayoutClientProps {
     children: ReactNode;
@@ -15,9 +16,10 @@ interface TeacherLayoutClientProps {
         role: string;
         isSuperAdmin: boolean;
     };
+    subjects?: { id: string; name: string }[];
 }
 
-export function TeacherLayoutClient({ children, session }: TeacherLayoutClientProps) {
+export function TeacherLayoutClient({ children, session, subjects = [] }: TeacherLayoutClientProps) {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     return (
@@ -60,6 +62,11 @@ export function TeacherLayoutClient({ children, session }: TeacherLayoutClientPr
 
                         {/* Global Search Component */}
                         <GlobalSearch role="TEACHER" />
+                        
+                        {/* Global Subject Filter */}
+                        <div className="hidden sm:block ml-2">
+                            <SubjectFilter subjects={subjects} />
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2 md:gap-8 ml-2">
