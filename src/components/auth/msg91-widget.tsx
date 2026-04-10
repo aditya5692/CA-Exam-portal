@@ -57,14 +57,31 @@ function extractAccessToken(data: unknown) {
     }
 
     const payload = data as Record<string, unknown>;
+    
+    // Priority: Specific token fields first, then general message
     const candidate =
-        payload.message ??
         payload.token ??
         payload.accessToken ??
         payload.access_token ??
-        payload.jwt;
+        payload.jwt ??
+        payload.message;
 
-    return typeof candidate === "string" ? candidate : "";
+    if (typeof candidate !== "string") {
+        return "";
+    }
+
+    // Defensive check: If the candidate is from the 'message' field,
+    // ensure it's not just a status string like "OTP Verified".
+    // Most MSG91 tokens are JWTs which contain at least one dot.
+    if (candidate === payload.message && !candidate.includes(".")) {
+        // If 'token' also exists, it probably contained the real JWT
+        if (typeof payload.token === "string" && payload.token.includes(".")) {
+            return payload.token;
+        }
+        return "";
+    }
+
+    return candidate;
 }
 
 function extractErrorMessage(error: Msg91ErrorPayload, fallback: string) {

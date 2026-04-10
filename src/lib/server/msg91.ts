@@ -196,7 +196,11 @@ export async function verifyMsg91WidgetToken(token: string): Promise<{ success: 
             };
         }
 
-        console.error("MSG91 Widget Token Validation Failed:", result);
+        console.error("MSG91 Widget Token Validation Failed:", {
+            status: response.status,
+            result,
+            tokenSent: token.length > 20 ? `${token.slice(0, 10)}...${token.slice(-10)}` : "TOO_SHORT"
+        });
         return { success: false, message: result.message || "Authentication token is invalid." };
     } catch (error) {
         console.error("MSG91 Network Error (verifyWidgetToken):", error);
