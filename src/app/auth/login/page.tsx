@@ -120,6 +120,12 @@ export default function LoginPage() {
     }
 
     async function handleAuthSuccess(accessToken: string) {
+        if (!accessToken) {
+            setErrorMessage("Failed to acquire a secure verification token. Please try again.");
+            setAuthState("IDLE");
+            return;
+        }
+
         setAuthState("FINALIZING");
         console.log("LoginPage: Starting server-side verification...");
 

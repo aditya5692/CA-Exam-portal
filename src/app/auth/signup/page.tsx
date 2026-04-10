@@ -122,6 +122,11 @@ function SignupFormContent() {
     }
 
     function handleWidgetSuccess(accessToken: string) {
+        if (!accessToken) {
+            setErrorMessage("Security token acquisition failed. Please retry verification.");
+            return;
+        }
+
         console.log("SignupPage: Widget verified successfully. Received token.");
         setMsg91Token(accessToken);
         window.sessionStorage.setItem("pending-msg91-token", accessToken);

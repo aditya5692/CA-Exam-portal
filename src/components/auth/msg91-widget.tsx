@@ -73,23 +73,12 @@ function extractAccessToken(data: unknown) {
     ];
 
     // Look for a field that contains a string with a dot (typical of JWTs)
-    // and is of substantial length (typical IDs are < 30 chars)
+    // and is of substantial length (Typical JWTs are > 40-50 chars)
     for (const field of potentialFields) {
         const val = payload[field];
-        if (typeof val === "string" && val.includes(".") && val.length > 40) {
+        if (typeof val === "string" && val.includes(".") && val.length > 30) {
             console.log(`MSG91 Extraction: Found valid JWT in field '${field}'`);
             return val;
-        }
-    }
-
-    // Fallback: If no JWT-like string found, check if any field contains a string 
-    // that doesn't have a dot but is clearly the only candidate. 
-    // We log this as a warning because it's likely an ID being mistaken for a token.
-    for (const field of ['token', 'accessToken', 'access_token']) {
-        const val = payload[field];
-        if (typeof val === "string" && val.length > 10) {
-             console.warn(`MSG91 Extraction Warning: Field '${field}' has no dots. Might be a RequestID instead of a JWT.`);
-             return val;
         }
     }
 
@@ -299,7 +288,9 @@ export default function Msg91Widget({ onSuccess, onFailure, phoneNumber }: Msg91
                         wasSuccessCalled.current = true;
                         onSuccess(token);
                     } else if (!token) {
-                        setInternalError("MSG91 did not return a usable access token.");
+                        console.error("MSG91: Token extraction failed for payload:", data);
+                        setInternalError("Verification succeeded locally, but failed to extract security token. Check console for details.");
+                        onFailure("Token extraction failed.");
                     }
                     setIsVerifying(false);
                 },
