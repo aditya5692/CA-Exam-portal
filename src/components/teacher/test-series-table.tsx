@@ -113,7 +113,7 @@ export function TestSeriesTable({ initialExams }: Props) {
     return (
         <>
             {/* ── INPUT zone: search + filter ─────────────────────────────── */}
-            <div className="px-6 pb-5 border-b border-slate-100 space-y-4">
+            <div className="pb-5 border-b border-slate-100 space-y-4 px-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">All Test Series</h2>
@@ -206,7 +206,7 @@ export function TestSeriesTable({ initialExams }: Props) {
                     </div>
                 </div>
             ) : (
-                <div className="p-4 space-y-2">
+                <div className="space-y-2 mt-4 bg-white border border-slate-100 rounded-2xl p-2 pb-4">
                     {/* Select all row */}
                     {filteredExams.length > 1 && (
                         <div className="flex items-center gap-3 px-3 py-2">
@@ -238,10 +238,10 @@ export function TestSeriesTable({ initialExams }: Props) {
                             <div
                                 key={exam.id}
                                 className={cn(
-                                    "group flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
+                                    "group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
                                     isSelected
                                         ? "bg-indigo-50/60 border-indigo-200"
-                                        : "bg-white border-slate-100 hover:border-indigo-200 hover:bg-slate-50/50"
+                                        : "bg-white border-transparent hover:bg-slate-50"
                                 )}
                             >
                                 {/* Checkbox */}

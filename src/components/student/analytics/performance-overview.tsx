@@ -14,10 +14,10 @@ export function StudentAnalyticsOverview({ data }: Props) {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {/* Score Trend Card */}
-                <div className="student-surface lg:col-span-2 relative flex h-[320px] md:h-[400px] flex-col overflow-hidden rounded-2xl p-6 md:p-10 font-outfit">
+                <div className="student-surface lg:col-span-2 relative flex h-[320px] md:h-[400px] flex-col overflow-hidden rounded-2xl p-6 md:p-10  ">
                     <div className="flex items-center justify-between mb-4 md:mb-8">
                         <div className="space-y-1">
-                            <h3 className="text-lg md:text-xl font-outfit">Performance Trend</h3>
+                            <h3 className="text-lg md:text-xl  ">Performance Trend</h3>
                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Progress over time</p>
                         </div>
                         <div className="student-chip hidden sm:flex items-center gap-2.5 rounded-xl px-4 py-2 transition-all active:scale-95">
@@ -52,7 +52,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                             return (
                                                 <div className="bg-[var(--student-panel)] p-4 rounded-xl shadow-xl border border-[var(--student-border)] animate-in zoom-in-95 duration-200">
                                                     <p className="text-[10px] font-bold text-[var(--student-muted)] uppercase tracking-widest mb-1">{payload[0].payload.date}</p>
-                                                    <p className="text-2xl font-bold text-[var(--student-text)] font-outfit">{payload[0].value}%</p>
+                                                    <p className="text-2xl font-bold text-[var(--student-text)]  ">{payload[0].value}%</p>
                                                 </div>
                                             );
                                         }
@@ -77,7 +77,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                 {data.errorDistribution && data.errorDistribution.length > 0 ? (
                     <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                         <div className="mb-6 md:mb-8">
-                            <h3 className="text-lg md:text-xl font-outfit">Error Distribution</h3>
+                            <h3 className="text-lg md:text-xl  ">Error Distribution</h3>
                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Self-Diagnosis Insights</p>
                         </div>
                         <div className="flex-1 w-full flex flex-col">
@@ -105,7 +105,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.label}</span>
                                         </div>
-                                        <span className="text-sm md:text-base font-bold text-slate-900 font-outfit">{item.value}%</span>
+                                        <span className="text-sm md:text-base font-bold text-slate-900  ">{item.value}%</span>
                                     </div>
                                 ))}
                             </div>
@@ -115,7 +115,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                     /* Fallback to Performance Benchmark if no sub-tags yet */
                     <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                         <div className="mb-6 md:mb-8">
-                            <h3 className="text-lg md:text-xl font-outfit">Performance Benchmark</h3>
+                            <h3 className="text-lg md:text-xl  ">Performance Benchmark</h3>
                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Accuracy vs Peers</p>
                         </div>
                         <div className="flex-1 w-full flex flex-col">
@@ -143,7 +143,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.name}</span>
                                         </div>
-                                        <span className="text-sm md:text-base font-bold text-slate-900 font-outfit">{Math.round(item.value)}%</span>
+                                        <span className="text-sm md:text-base font-bold text-slate-900  ">{Math.round(item.value)}%</span>
                                     </div>
                                 ))}
                             </div>
@@ -166,16 +166,16 @@ export function StudentAnalyticsOverview({ data }: Props) {
                             {(profile?.rank ?? 0) > 0 && (
                                 <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 text-right">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-0.5 whitespace-nowrap">Global Rank</p>
-                                    <p className="text-xl font-bold font-outfit text-[var(--student-support)]">#{profile.rank}</p>
+                                    <p className="text-xl font-bold   text-[var(--student-support)]">#{profile.rank}</p>
                                 </div>
                             )}
                         </div>
                         <div>
-                            <h2 className="text-2xl md:text-3xl text-white font-outfit mb-4 md:mb-6 leading-tight">
+                            <h2 className="text-2xl md:text-3xl text-white   mb-4 md:mb-6 leading-tight">
                                 {profile.avgAccuracy >= 75 ? "Excellent Progress" : "Keep Improving"}, <br/>
                                 <span className="text-[var(--student-support-soft)]">{profile.name.split(' ')[0]}</span>
                             </h2>
-                            <p className="text-slate-400 font-medium text-base leading-relaxed max-w-2xl font-sans opacity-90">
+                            <p className="text-slate-400 font-medium text-base leading-relaxed max-w-2xl   opacity-90">
                                 {data.errorDistribution && data.errorDistribution.length > 0 ? (
                                     <>
                                         You know the concepts, but 
@@ -207,16 +207,16 @@ export function StudentAnalyticsOverview({ data }: Props) {
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Exam Deadline</span>
                         </div>
-                        <h4 className="font-bold text-slate-900 font-outfit mb-4">{examTargetLabel}</h4>
+                        <h4 className="font-bold text-slate-900   mb-4">{examTargetLabel}</h4>
                         <div className="flex items-baseline gap-2 mb-4 md:mb-8">
-                            <span className="font-outfit text-4xl md:text-6xl font-bold leading-none tracking-tight text-[var(--student-accent-strong)]">{examTargetDays}</span>
+                            <span className="  text-4xl md:text-6xl font-bold leading-none tracking-tight text-[var(--student-accent-strong)]">{examTargetDays}</span>
                             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Days Left</span>
                         </div>
                     </div>
                     <div className="relative z-10 space-y-4">
                         <div className="flex justify-between items-end">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Prep Readiness</span>
-                            <span className="font-outfit text-xl font-bold leading-none text-[var(--student-accent-strong)]">{profile.avgAccuracy}%</span>
+                            <span className="  text-xl font-bold leading-none text-[var(--student-accent-strong)]">{profile.avgAccuracy}%</span>
                         </div>
                         <div className="h-4 w-full overflow-hidden rounded-full border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1 shadow-inner">
                             <div className="h-full rounded-full bg-[var(--student-accent)] transition-all duration-1000" style={{ width: `${profile.avgAccuracy}%` }} />

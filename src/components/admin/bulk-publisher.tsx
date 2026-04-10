@@ -32,7 +32,7 @@ export function BulkPublisher({ subjectId }: { subjectId: string }) {
                 <FileCsv size={48} weight="fill" />
             </div>
             <div className="text-center">
-                <h3 className="font-outfit text-lg font-bold text-[var(--student-text)]">Content Vault Bulk Publisher</h3>
+                <h3 className="  text-lg font-bold text-[var(--student-text)]">Content Vault Bulk Publisher</h3>
                 <p className="text-xs text-[var(--student-muted)] uppercase tracking-widest font-black mt-1">Accepts strictly-typed CSV with 'applicable_attempts' column</p>
             </div>
             

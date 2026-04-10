@@ -17,7 +17,7 @@ export default function GlobalLoading() {
             </div>
             
             <div className="mt-8 flex flex-col items-center">
-                <div className="font-outfit text-sm font-black uppercase tracking-[0.3em] text-[var(--landing-text)] animate-pulse">
+                <div className="  text-sm font-black uppercase tracking-[0.3em] text-[var(--landing-text)] animate-pulse">
                     Financly
                 </div>
                 <div className="mt-2 text-[10px] font-medium uppercase tracking-[0.15em] text-[var(--landing-muted)]">

@@ -227,7 +227,7 @@ function ContentCard({ title, author, category, badge, isActive, activeLabel, ac
 
                 <div className="space-y-1">
                     <h4 className={cn(
-                        "font-outfit text-lg font-black tracking-tight line-clamp-2",
+                        "  text-lg font-black tracking-tight line-clamp-2",
                         isActive ? "text-white" : "text-[var(--student-text)]"
                     )}>
                         {title}

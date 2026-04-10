@@ -50,7 +50,7 @@ export function InfoCards(props: InfoCardsProps) {
     const storageStatus = props.storageUsed < props.storageLimit * 0.9 ? "Active" : "Full";
 
     return (
-        <div className="grid grid-cols-1 gap-6 font-outfit md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6   md:grid-cols-2 lg:grid-cols-4">
             <Card icon={<GraduationCap className="h-5 w-5" />} title="Student Details" iconTone="accent">
                 <DetailItem label="Batch" value={props.batch || "Not set"} />
                 <DetailItem label="Attempt Due" value={props.attemptDue || "Not set"} />

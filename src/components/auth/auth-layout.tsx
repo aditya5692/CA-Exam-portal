@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                         CA Student Access
                     </div>
 
-                    <h1 className="text-3xl lg:text-4xl font-bold font-outfit leading-tight mb-4">
+                    <h1 className="text-3xl lg:text-4xl font-bold   leading-tight mb-4">
                         Empower Your CA Journey
                     </h1>
 

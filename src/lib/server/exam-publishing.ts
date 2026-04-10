@@ -324,3 +324,75 @@ export async function listStudentVisibleExams(
         attempt: attemptMap.get(exam.id) ?? null,
     }));
 }
+export async function publishExamFromVaultIds(
+    actor: ManagedActor,
+    input: {
+        title: string;
+        caLevel: string;
+        subject: string;
+        chapter?: string;
+        durationMinutes: number;
+        examType: string;
+        target: PublishTarget;
+        questionIds: string[];
+    }
+): Promise<PublishExamResultData> {
+    const category = CA_LEVEL_CATEGORY[input.caLevel] ?? "CA Final";
+    const duration = clampNumber(Math.round(Number(input.durationMinutes) || 0), 1, 24 * 60);
+
+    return withSerializableTransaction(async (tx) => {
+        let resolvedBatchId: string | null = null;
+        let targetLabel = "All Students";
+
+        if (input.target.kind === "batch") {
+            const batch = await tx.batch.findUnique({
+                where: { id: input.target.batchId },
+                select: { id: true, name: true, teacherId: true },
+            });
+
+            if (!batch || (!isAdminUser(actor) && batch.teacherId !== actor.id)) {
+                throw new Error("Batch not found or unauthorized.");
+            }
+
+            resolvedBatchId = batch.id;
+            targetLabel = `Batch: ${batch.name}`;
+        }
+
+        const totalMarks = input.questionIds.length;
+        const exam = await tx.exam.create({
+            data: {
+                title: input.title,
+                description: `${input.subject} - ${category} - Series built from Question Bank`,
+                duration,
+                totalMarks,
+                passingMarks: Math.ceil(totalMarks * 0.4),
+                category,
+                subject: input.subject,
+                chapter: input.chapter,
+                status: "PUBLISHED",
+                examType: input.examType,
+                teacherId: actor.id,
+                batchId: resolvedBatchId,
+            },
+        });
+
+        // Link existing questions
+        await Promise.all(input.questionIds.map((qId, idx) => 
+            tx.examQuestion.create({
+                data: {
+                    examId: exam.id,
+                    questionId: qId,
+                    order: idx + 1,
+                    marks: 1,
+                }
+            })
+        ));
+
+        return {
+            examIds: [exam.id],
+            examTitles: [exam.title],
+            targetLabel,
+            questionCount: totalMarks,
+        };
+    });
+}

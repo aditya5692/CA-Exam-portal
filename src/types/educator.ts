@@ -23,3 +23,9 @@ export type TeacherOverviewData = {
     recentMaterials: { id: string; title: string; type: string; category: string; date: string }[];
     teacherName: string;
 };
+
+export type TeacherMaterialsData = {
+    materials: TeacherMaterialWithRelations[];
+    isAdminView: boolean;
+    availableEducators: { id: string; fullName: string | null; email: string | null; role: string }[];
+};

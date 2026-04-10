@@ -54,7 +54,7 @@ export default async function LeaderboardPage() {
                                 <Star size={12} weight="fill" className="text-[var(--student-support)]" />
                                 Leaderboard
                             </div>
-                            <h1 className="mt-4 max-w-3xl font-outfit text-4xl font-black leading-none tracking-[-0.05em] text-[var(--student-text)] md:text-5xl">
+                            <h1 className="mt-4 max-w-3xl   text-4xl font-black leading-none tracking-[-0.05em] text-[var(--student-text)] md:text-5xl">
                                 Global rankings shaped by
                                 <span className="text-[var(--student-accent-strong)]"> steady practice</span>
                             </h1>

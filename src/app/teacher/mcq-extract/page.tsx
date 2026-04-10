@@ -109,7 +109,7 @@ export default function TeacherMCQExtractPage() {
     };
 
     return (
-        <div className="space-y-10 pb-20 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-10 pb-20 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-4">
                 <div className="space-y-4">
@@ -118,7 +118,7 @@ export default function TeacherMCQExtractPage() {
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Autonomous Extraction Engine</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tighter text-slate-900">AI MCQ Studio</h1>
-                    <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 font-medium text-sm   max-w-2xl leading-relaxed">
                         Deploy neural-mapping to transcribe scanned papers into high-fidelity MCQs. Automated structure detection for CA/CMA curriculums.
                     </p>
                 </div>
@@ -296,7 +296,7 @@ export default function TeacherMCQExtractPage() {
                                     { label: "Sync protocol", value: `₹${totalCost}`, color: "text-emerald-600", bg: "bg-emerald-50" },
                                 ].map((stat, i) => (
                                     <div key={i} className={cn("p-6 rounded-[28px] border border-slate-100 flex flex-col items-center justify-center text-center group transition-all hover:shadow-md hover:-translate-y-1", stat.bg)}>
-                                         <span className={cn("text-3xl font-black font-outfit mb-1", stat.color)}>{stat.value}</span>
+                                         <span className={cn("text-3xl font-black   mb-1", stat.color)}>{stat.value}</span>
                                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 opacity-60">{stat.label}</span>
                                     </div>
                                 ))}

@@ -135,7 +135,6 @@ export default async function StudentDashboardPage() {
     let latestProgress: ResumeCardProgress = null;
     let myEducators: MyEducator[] = [];
     let dailyTargets: any[] = [];
-    let abcTracker = { a: 80, b: 20, c: 5 }; // Mock data for now, would aggregate dynamically
 
     const user = await getCurrentUser();
     if (!user) {
@@ -334,7 +333,7 @@ export default async function StudentDashboardPage() {
         : "Complete practice to unlock ranking";
 
     return (
-        <div className="space-y-8 pb-10 w-full max-w-[1400px] mx-auto font-outfit">
+        <div className="space-y-8 pb-10 w-full max-w-[1400px] mx-auto  ">
             <StudentPageHeader
                 eyebrow="Student dashboard"
                 title={`Welcome back, ${userName}.`}
@@ -376,7 +375,7 @@ export default async function StudentDashboardPage() {
                         </div>
                     </div>
                     <div className="mb-3 flex items-end gap-2 px-5">
-                        <div className="font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{totalQuestionsAttempted.toLocaleString()}</div>
+                        <div className="  text-3xl xl:text-4xl font-bold leading-none tracking-tight text-[var(--student-text)]">{totalQuestionsAttempted.toLocaleString()}</div>
                     </div>
                     <div className="mt-3 flex items-center justify-between px-5 pb-8 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                         <span className="text-[var(--student-accent-strong)]">{mcqProgressPct}% Progress</span>
@@ -396,7 +395,7 @@ export default async function StudentDashboardPage() {
                             <Clock size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="mb-3 font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight">{studyHoursLabel}</div>
+                    <div className="mb-3   text-3xl xl:text-4xl font-bold leading-none tracking-tight">{studyHoursLabel}</div>
                     <div className="text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)]">Learning Engine Active</div>
                 </div>
 
@@ -410,7 +409,7 @@ export default async function StudentDashboardPage() {
                             <Target size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="relative z-10 mb-3 font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight">{totalMCQScore.toLocaleString()} <span className="text-sm font-black tracking-tight text-[var(--student-success)]">XP</span></div>
+                    <div className="relative z-10 mb-3   text-3xl xl:text-4xl font-bold leading-none tracking-tight">{totalMCQScore.toLocaleString()} <span className="text-sm font-black tracking-tight text-[var(--student-success)]">XP</span></div>
                     <div className="text-[10px] font-black uppercase tracking-widest text-[var(--student-success-strong)]">{avgAccuracy}% Accuracy</div>
                 </div>
 
@@ -424,7 +423,7 @@ export default async function StudentDashboardPage() {
                             <Medal size={20} weight="fill" />
                         </div>
                     </div>
-                    <div className="relative z-10 mb-3 font-outfit text-3xl xl:text-4xl font-bold leading-none tracking-tight">#{currentRank > 0 ? currentRank : '-'} <span className="pl-1 text-xs font-black uppercase tracking-widest opacity-40">INDEX</span></div>
+                    <div className="relative z-10 mb-3   text-3xl xl:text-4xl font-bold leading-none tracking-tight">#{currentRank > 0 ? currentRank : '-'} <span className="pl-1 text-xs font-black uppercase tracking-widest opacity-40">INDEX</span></div>
                     <div className="relative z-10 text-[10px] font-black uppercase tracking-widest text-[var(--student-support)] opacity-80">
                         Top {Math.max(1, 100 - percentile)}% Rank
                     </div>
@@ -438,7 +437,7 @@ export default async function StudentDashboardPage() {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                                <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                                <h2 className="flex items-center gap-3   uppercase font-bold text-lg text-[var(--student-text)]">
                                     <ChalkboardTeacher size={20} className="text-[var(--student-muted)]" weight="bold" />
                                     My Educators
                                 </h2>
@@ -459,7 +458,7 @@ export default async function StudentDashboardPage() {
                                             {ed.name.charAt(0)}
                                         </div>
                                         <div className="min-w-0">
-                                            <h3 className="font-outfit text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{ed.name}</h3>
+                                            <h3 className="  text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{ed.name}</h3>
                                             <div className="text-[10px] font-black uppercase tracking-widest text-indigo-500 opacity-80 truncate">{ed.subjects[0] || "Faculty"}</div>
                                         </div>
                                         <CaretRight size={14} weight="bold" className="ml-auto text-slate-300 group-hover:text-indigo-600 transition-colors" />
@@ -473,7 +472,7 @@ export default async function StudentDashboardPage() {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between mb-2">
                             <div className="space-y-1">
-                                <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                                <h2 className="flex items-center gap-3   uppercase font-bold text-lg text-[var(--student-text)]">
                                     <List size={20} className="text-[var(--student-muted)]" weight="bold" />
                                     Today's Targets
                                 </h2>
@@ -497,7 +496,7 @@ export default async function StudentDashboardPage() {
                                                 </div>
                                                 <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[9px] font-bold">Category {target.mcq?.icaiCategory || "Gen"}</span>
                                             </div>
-                                            <h3 className="mb-2 font-outfit text-md font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 leading-tight">
+                                            <h3 className="mb-2   text-md font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 leading-tight">
                                                 {target.mcq?.questionText || "Question Content Hidden"}
                                             </h3>
                                         </div>
@@ -513,46 +512,8 @@ export default async function StudentDashboardPage() {
 
                 {/* Right Column: Peer & High Priority Sections */}
                 <div className="space-y-8">
-                    {/* A-B-C TRACKER */}
                     <div className="space-y-1">
-                        <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
-                            <Target size={20} className="text-[var(--student-muted)]" weight="bold" />
-                            A-B-C Tracker
-                        </h2>
-                        <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">ICAI Weightage Mapping</p>
-                    </div>
-
-                    <div className="student-surface rounded-2xl p-6 shadow-sm border-[var(--student-border)] space-y-6">
-                         <div>
-                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest mb-2">
-                                <span className="text-emerald-600">Category A (High Weight)</span>
-                                <span>{abcTracker.a}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500" style={{ width: `${abcTracker.a}%` }}></div>
-                            </div>
-                         </div>
-                         <div>
-                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest mb-2">
-                                <span className="text-blue-600">Category B (Medium)</span>
-                                <span>{abcTracker.b}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500" style={{ width: `${abcTracker.b}%` }}></div>
-                            </div>
-                         </div>
-                         <div>
-                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest mb-2">
-                                <span className="text-slate-500">Category C (Low)</span>
-                                <span>{abcTracker.c}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-slate-400" style={{ width: `${abcTracker.c}%` }}></div>
-                            </div>
-                         </div>
-                    </div>
-                    <div className="space-y-1">
-                        <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                        <h2 className="flex items-center gap-3   uppercase font-bold text-lg text-[var(--student-text)]">
                             <Trophy size={20} className="text-[var(--student-muted)]" weight="bold" />
                             Global Leaderboard
                         </h2>
@@ -586,7 +547,7 @@ export default async function StudentDashboardPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={cn("text-right font-outfit text-sm font-bold", item.isMe ? "text-white" : "text-indigo-600")}>
+                                        <div className={cn("text-right   text-sm font-bold", item.isMe ? "text-white" : "text-indigo-600")}>
                                             {item.score.toLocaleString()} <span className="text-[9px] opacity-60 ml-0.5 whitespace-nowrap">XP</span>
                                         </div>
                                     </div>
@@ -617,7 +578,7 @@ export default async function StudentDashboardPage() {
                 <div className="space-y-8">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                            <h2 className="flex items-center gap-3   uppercase font-bold text-lg text-[var(--student-text)]">
                                 <BookOpen size={20} className="text-[var(--student-muted)]" weight="bold" />
                                 Resource Library
                             </h2>
@@ -647,7 +608,7 @@ export default async function StudentDashboardPage() {
                 <div className="space-y-8">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <h2 className="flex items-center gap-3 font-outfit uppercase font-bold text-lg text-[var(--student-text)]">
+                            <h2 className="flex items-center gap-3   uppercase font-bold text-lg text-[var(--student-text)]">
                                 <List size={20} className="text-[var(--student-muted)]" weight="bold" />
                                 War Room Access
                             </h2>

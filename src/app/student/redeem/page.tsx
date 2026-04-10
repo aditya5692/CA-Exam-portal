@@ -23,7 +23,7 @@ export default async function StudentRedeemPage() {
   }
 
   return (
-    <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
         <div className="space-y-4">
           <div className="flex items-center gap-2.5 mb-2">
@@ -32,10 +32,10 @@ export default async function StudentRedeemPage() {
               Access Verification
             </span>
           </div>
-          <h1 className="font-outfit tracking-tighter leading-tight text-3xl font-bold text-[var(--student-text)]">
+          <h1 className="  tracking-tighter leading-tight text-3xl font-bold text-[var(--student-text)]">
             Redeem Code
           </h1>
-          <p className="text-[var(--student-muted)] font-medium text-base font-sans max-w-2xl leading-relaxed">
+          <p className="text-[var(--student-muted)] font-medium text-base   max-w-2xl leading-relaxed">
             Validate your batch code to securely attach your profile to the corresponding instructional segment.
           </p>
         </div>

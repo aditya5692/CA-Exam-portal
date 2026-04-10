@@ -43,7 +43,7 @@ export function Testimonials() {
                         </div>
                         <span className="text-[11px] font-black uppercase tracking-[0.22em] text-[var(--landing-muted)]">Used by rank holders</span>
                     </div>
-                    <h2 className="font-outfit text-4xl font-black tracking-tight text-[var(--landing-text)] md:text-5xl">
+                    <h2 className="  text-4xl font-black tracking-tight text-[var(--landing-text)] md:text-5xl">
                         Proof from people who actually sat the papers
                     </h2>
                     <p className="mx-auto max-w-2xl text-lg font-medium leading-relaxed text-[var(--landing-muted)]">

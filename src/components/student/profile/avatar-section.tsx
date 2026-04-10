@@ -20,7 +20,7 @@ export function ProfileHeader({
     isResumeDownloadAvailable,
 }: ProfileHeaderProps) {
     return (
-        <div className="student-surface rounded-[32px] px-6 py-7 md:px-8 md:py-8 font-outfit">
+        <div className="student-surface rounded-[32px] px-6 py-7 md:px-8 md:py-8  ">
             <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
             <div className="flex flex-col md:flex-row items-center md:items-center gap-6 text-center md:text-left">
                 <div className="relative w-28 h-28 rounded-[28px] overflow-hidden border border-[var(--student-border)] bg-[var(--student-panel-solid)] shadow-[0_18px_40px_rgba(55,48,38,0.08)]">

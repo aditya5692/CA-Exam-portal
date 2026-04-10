@@ -27,7 +27,7 @@ export default function GlobalError({
                     <Warning size={32} weight="bold" />
                 </div>
 
-                <h1 className="font-outfit text-3xl font-black tracking-tight text-[var(--landing-text)]">
+                <h1 className="  text-3xl font-black tracking-tight text-[var(--landing-text)]">
                     Something went wrong
                 </h1>
                 

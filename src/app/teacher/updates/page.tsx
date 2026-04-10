@@ -114,7 +114,7 @@ export default function TeacherUpdatesPage() {
     };
 
     return (
-        <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
                 <div className="space-y-4">
@@ -122,10 +122,10 @@ export default function TeacherUpdatesPage() {
                         <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Communications Hub</span>
                     </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-2xl font-bold text-slate-900">
+                    <h1 className="  tracking-tighter leading-tight text-2xl font-bold text-slate-900">
                         Updates & Announcements
                     </h1>
-                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 font-medium text-base   max-w-2xl leading-relaxed">
                         {isAdminView
                             ? "Post and review academy-wide announcements across all visible batches."
                             : "Broadcast targeted updates to specific batches or send a general announcement to all your students."}
@@ -227,7 +227,7 @@ export default function TeacherUpdatesPage() {
                                 onChange={(e) => setContent(e.target.value)}
                                 rows={6}
                                 placeholder="Type your update here. Be clear and concise..."
-                                className="w-full rounded-[24px] bg-slate-50/50 border border-slate-100 px-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/20 transition-all font-sans font-medium leading-relaxed resize-none shadow-inner"
+                                className="w-full rounded-[24px] bg-slate-50/50 border border-slate-100 px-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/20 transition-all   font-medium leading-relaxed resize-none shadow-inner"
                             />
                         </div>
 
@@ -292,7 +292,7 @@ export default function TeacherUpdatesPage() {
                                             {formatTime(ann.createdAt)}
                                         </div>
                                     </div>
-                                    <p className="text-sm font-medium leading-relaxed text-slate-600 font-sans group-hover:text-slate-900 transition-colors">
+                                    <p className="text-sm font-medium leading-relaxed text-slate-600   group-hover:text-slate-900 transition-colors">
                                         {ann.content}
                                     </p>
                                     {isAdminView && (

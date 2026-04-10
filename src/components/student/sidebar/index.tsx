@@ -19,7 +19,8 @@ import {
     User,
     ShieldCheck,
     IdentificationBadge,
-    X
+    X,
+    Users
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -42,9 +43,10 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
     { label: "Dashboard", href: "/student/dashboard", icon: House },
     { label: "Study Notes", href: "/student/materials", icon: Notebook },
-    { label: "Free resources", href: "/student/free-resources", icon: Sparkle },
+    { label: "Study Materials", href: "/student/free-resources", icon: Sparkle },
     { label: "Mock Tests", href: "/student/exams", icon: SuitcaseSimple },
     { label: "Updates", href: "/student/updates", icon: Megaphone },
+    { label: "My Batches", href: "/student/batches", icon: Users },
 ];
 
 const PERSONAL_NAV: NavItem[] = [

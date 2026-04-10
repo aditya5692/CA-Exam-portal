@@ -23,8 +23,9 @@ import {
   deleteStudyMaterialWithAccessCleanup,
   splitCsvValues,
 } from "@/lib/server/study-material-service";
-import type {
+import {
   TeacherMaterialWithRelations,
+  TeacherMaterialsData,
   TeacherOverviewData,
 } from "@/types/educator";
 import { ActionResponse } from "@/types/shared";
@@ -44,8 +45,8 @@ export async function publishMaterial(
     let savedFileUrl: string | null = null;
     try {
         const file = formData.get("file");
+        const batchIds = formData.getAll("batchIds").map(String);
         const studentEmailsStr = String(formData.get("studentEmails") ?? "");
-        const batchIdsStr = String(formData.get("batchIds") ?? "");
 
         if (!file || !(file instanceof File)) {
             throw new Error("No file provided or invalid file format.");
@@ -85,7 +86,7 @@ export async function publishMaterial(
             subType,
             isProtected,
             isPublic,
-            batchIds: splitCsvValues(batchIdsStr),
+            batchIds,
             studentEmails: splitCsvValues(studentEmailsStr),
         });
         revalidateMaterialSurfaces();
@@ -121,11 +122,6 @@ export async function getTeacherBatchesForMaterials(): Promise<ActionResponse<{ 
     }
 }
 
-type TeacherMaterialsData = {
-    materials: TeacherMaterialWithRelations[];
-    isAdminView: boolean;
-    availableEducators: { id: string; fullName: string | null; email: string | null; role: string }[];
-};
 
 /**
  * Fetches all materials uploaded by the current teacher.
@@ -383,6 +379,7 @@ export async function deletePYQ(id: string): Promise<ActionResponse<void>> {
         );
         await removeSavedFileByUrl(deletedMaterial.fileUrl);
         revalidatePastYearQuestionSurfaces();
+        revalidateMaterialSurfaces();
         return { success: true, data: undefined };
     } catch (error) {
         console.error("Delete error:", error);

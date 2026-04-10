@@ -158,7 +158,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
     };
 
     return (
-        <div className="max-w-4xl mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-4xl mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-8 space-y-5">
                 <button 
                     onClick={onCancel}

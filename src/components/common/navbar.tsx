@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 const NAV_LINKS = [
     { label: "Home", href: "/" },
     { label: "Test Series", href: "/exam" },
-    { label: "Study Vault", href: "/study-material" },
+    { label: "Study Materials", href: "/study-material" },
     { label: "PYQ Archives", href: "/past-year-questions" },
     { label: "Plans", href: "/pricing" },
 ];
@@ -51,7 +51,7 @@ export function Navbar({ user }: { user?: { fullName: string | null; role: strin
                         <GraduationCap size={22} weight="bold" />
                     </div>
                     <div>
-                        <div className="font-lexend text-xl font-bold tracking-tight text-slate-900">Financly</div>
+                        <div className="  text-xl font-bold tracking-tight text-slate-900">Financly</div>
                         <div className="text-[10px] font-bold uppercase tracking-widest text-[#0f2cbd]/60">CA Test Series</div>
                     </div>
                 </Link>

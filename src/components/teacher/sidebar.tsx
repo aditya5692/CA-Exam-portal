@@ -16,6 +16,7 @@ import {
     IdentificationBadge,
     SignOut,
     Sparkle,
+    Stack,
     User,
     Users,
     X,
@@ -34,16 +35,14 @@ interface NavItem {
 const MAIN_NAV_ITEMS: NavItem[] = [
     { label: "Overview", href: "/teacher/dashboard", icon: ChartPieSlice },
     { label: "Test Series", href: "/teacher/test-series", icon: FileText },
-    { label: "Resources", href: "/teacher/free-resources", icon: Sparkle },
+    { label: "Question Bank", href: "/teacher/question-bank", icon: Stack },
+    { label: "Study Materials", href: "/teacher/free-resources", icon: Sparkle },
     { label: "My Batches", href: "/teacher/batches", icon: GraduationCap },
     { label: "Students", href: "/teacher/students", icon: Users },
     { label: "Analytics", href: "/teacher/analytics", icon: ChartPieSlice },
 ];
 
-const PUBLISHING_NAV_ITEMS: NavItem[] = [
-    { label: "Study Materials", href: "/teacher/materials", icon: Books },
-    { label: "Create test series", href: "/teacher/questions", icon: Books },
-];
+const PUBLISHING_NAV_ITEMS: NavItem[] = [];
 
 const ADMIN_NAV_ITEMS: NavItem[] = [
     { label: "Platform Governance", href: "/admin/control-center", icon: IdentificationBadge },
@@ -259,23 +258,6 @@ export function TeacherSidebar({
                     />
                 ))}
 
-                <div className="mt-8 space-y-1">
-                    {!isCollapsed && (
-                        <div className="px-4 py-2">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted-strong)]">
-                                Publishing tools
-                            </p>
-                        </div>
-                    )}
-                    {PUBLISHING_NAV_ITEMS.map((item) => (
-                        <SidebarNavItem
-                            key={item.href}
-                            item={item}
-                            isActive={pathname === item.href}
-                            isCollapsed={isCollapsed}
-                        />
-                    ))}
-                </div>
 
                 {showAdminLink && (
                     <div className="mt-8 space-y-2">

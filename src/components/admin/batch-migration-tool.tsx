@@ -29,7 +29,7 @@ export function BatchMigrationTool({ batchId, nextAttemptStr }: { batchId: strin
                     <MagicWand size={24} weight="fill" />
                 </div>
                 <div>
-                    <h3 className="font-outfit text-lg font-bold text-[var(--student-text)]">Attempt Migration</h3>
+                    <h3 className="  text-lg font-bold text-[var(--student-text)]">Attempt Migration</h3>
                     <p className="text-xs font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-70 flex items-center gap-1 mt-0.5">
                         <WarningCircle size={14} weight="bold" className="text-amber-500" />
                         Migrate to {nextAttemptStr} MasterBatch

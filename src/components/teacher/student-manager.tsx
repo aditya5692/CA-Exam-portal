@@ -60,13 +60,13 @@ type PerformanceData = {
 type FilterColumnIcon = ComponentType<ComponentProps<typeof GraduationCap>>;
 
 const FILTERABLE_COLUMNS: Array<{ key: keyof Omit<StudentDirectoryRow, "id" | "batchNames" | "batchCodes" | "batchOwners"> | "batch"; label: string; icon: FilterColumnIcon }> = [
-    { key: "name", label: "Cadet Identity", icon: GraduationCap },
+    { key: "name", label: "Student Name", icon: GraduationCap },
     { key: "registrationNumber", label: "Registry ID", icon: UserID },
     { key: "department", label: "Division", icon: Buildings },
-    { key: "batch", label: "Cohort Segment", icon: Target },
-    { key: "attemptDue", label: "Cycle Phase", icon: CalendarCheck },
-    { key: "status", label: "Vitals", icon: UserCircleCheck },
-    { key: "joinedAt", label: "Enlistment", icon: Sparkle },
+    { key: "batch", label: "Batch", icon: Target },
+    { key: "attemptDue", label: "Exam Target", icon: CalendarCheck },
+    { key: "status", label: "Status", icon: UserCircleCheck },
+    { key: "joinedAt", label: "Enrolled Date", icon: Sparkle },
 ];
 
 // ── Performance slide-out panel ────────────────────────────────────────────────
@@ -89,34 +89,32 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
     }, [studentId]);
 
     return (
-        <div className="fixed inset-0 z-[100] flex justify-end font-lexend">
+        <div className="fixed inset-0 z-[100] flex justify-end">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500" onClick={onClose} />
             <div className="relative z-10 w-full max-w-lg bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right-8 duration-500 overflow-hidden">
-                <div className="bg-slate-900 p-6 md:p-10 text-white shrink-0 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-500/20 rounded-full -mr-32 -mt-32 blur-[80px] pointer-events-none" />
-                    
+                <div className="bg-white p-6 md:p-10 text-slate-900 shrink-0 relative border-b border-slate-100">
                     <div className="flex items-center justify-between mb-8 relative z-10">
                         <div className="flex items-center gap-3">
-                             <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-md">
-                                 <ChartLineUp size={18} weight="bold" className="text-indigo-400" />
+                             <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                                 <ChartLineUp size={18} weight="bold" className="text-indigo-600" />
                              </div>
-                             <div className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400">Intelligence Node</div>
+                             <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Performance Profile</div>
                         </div>
-                        <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 transition-all backdrop-blur-md border border-white/10 flex items-center justify-center group active:scale-95">
+                        <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-200 flex items-center justify-center group active:scale-95 text-slate-500">
                             <X size={16} weight="bold" className="group-hover:rotate-90 transition-transform" />
                         </button>
                     </div>
 
-                    <div className="space-y-4 relative z-10">
-                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{studentName}</h2>
+                    <div className="space-y-3 relative z-10">
+                        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{studentName}</h2>
                         <div className="flex flex-wrap gap-2 text-xs">
                             {data?.student.examTarget && (
-                                <span className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/20 uppercase tracking-widest text-[9px]">
+                                <span className="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-bold border border-indigo-100 uppercase tracking-widest text-[9px]">
                                     Target: {data.student.examTarget}
                                 </span>
                             )}
-                            <span className="px-3 py-1 rounded-lg bg-white/5 text-slate-400 font-bold border border-white/5 uppercase tracking-widest text-[9px]">
-                                Enlisted: {data ? new Date(data.student.createdAt).toLocaleDateString() : '...'}
+                            <span className="px-3 py-1 rounded-lg bg-slate-50 text-slate-500 font-bold border border-slate-200 uppercase tracking-widest text-[9px]">
+                                Enrolled: {data ? new Date(data.student.createdAt).toLocaleDateString() : '...'}
                             </span>
                         </div>
                     </div>
@@ -140,7 +138,7 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
                     {!loading && data && (
                         <>
                             <div className="space-y-4">
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Engagement Matrix</h3>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Engagement Metrics</h3>
                                 {data.profile ? (
                                     <div className="grid grid-cols-2 gap-4">
                                         {[
@@ -161,7 +159,7 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
                                 ) : (
                                     <div className="py-12 flex flex-col items-center justify-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                                         <IdentificationBadge size={40} weight="light" className="text-slate-300 mb-3" />
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Zero Datapoints Detected</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No Assessment Data Available</p>
                                     </div>
                                 )}
                             </div>
@@ -187,7 +185,7 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
 
                             {data.recentAttempts.length > 0 && (
                                 <div className="space-y-6 pb-10">
-                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Recent Missions</h3>
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Recent Attempts</h3>
                                     <div className="space-y-3">
                                         {data.recentAttempts.slice(0, 5).map((a) => (
                                             <div key={a.id} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-slate-50/30 transition-all">
@@ -223,7 +221,7 @@ function RemoveModal({
     const [batchId, setBatchId] = useState(batches[0]?.id ?? "");
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center font-lexend p-4">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
             <div className="relative z-10 w-full max-w-lg bg-white rounded-[32px] border border-slate-100 shadow-2xl p-8 md:p-10 animate-in zoom-in-95 duration-300">
                 <div className="flex items-center gap-4 mb-8">
@@ -231,8 +229,8 @@ function RemoveModal({
                          <Trash size={24} weight="bold" />
                      </div>
                      <div>
-                        <h3 className="font-bold text-slate-900 text-xl tracking-tight">De-enroll Protocol</h3>
-                        <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mt-0.5">Registry Cleanup Sequence</p>
+                        <h3 className="font-bold text-slate-900 text-xl tracking-tight">Remove Student</h3>
+                        <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mt-0.5">Revoke batch access</p>
                      </div>
                 </div>
 
@@ -241,28 +239,28 @@ function RemoveModal({
                 </p>
 
                 {batches.length > 1 ? (
-                    <div className="mb-8 space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Select Target Segment</label>
+                    <div className="mb-6 space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Select Batch</label>
                         <select value={batchId} onChange={(e) => setBatchId(e.target.value)}
                             className="w-full h-12 border border-slate-100 rounded-xl px-4 text-sm bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-bold text-slate-700">
                             {batches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                     </div>
                 ) : (
-                    <div className="mb-8 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 flex justify-between items-center">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Segment</span>
+                    <div className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 flex justify-between items-center">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Batch</span>
                         <span className="text-indigo-600">{batches[0]?.name}</span>
                     </div>
                 )}
 
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                     <button onClick={onClose}
-                        className="flex-1 h-12 rounded-xl border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95">
-                        Abort
+                        className="flex-1 h-11 rounded-xl border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95">
+                        Cancel
                     </button>
                     <button onClick={() => onConfirm(batchId)} disabled={saving}
-                        className="flex-1 h-12 rounded-xl bg-slate-900 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all active:scale-95">
-                        {saving ? "Processing..." : "Confirm Removal"}
+                        className="flex-1 h-11 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all active:scale-95">
+                        {saving ? "Removing..." : "Remove Student"}
                     </button>
                 </div>
             </div>
@@ -347,7 +345,7 @@ export function StudentManager() {
     const formatDate = (v: string | Date) => new Date(v).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
     return (
-        <div className="space-y-6 pb-20 w-full max-w-[1400px] mx-auto font-lexend animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-6">
+        <div className="space-y-6 pb-20 w-full max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-6">
             {toast && (
                 <div className="fixed bottom-10 right-10 z-[120] px-6 py-3 rounded-xl bg-slate-900 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest shadow-2xl animate-in slide-in-from-right-8">
                     <div className="flex items-center gap-3">
@@ -383,43 +381,42 @@ export function StudentManager() {
                 <div className="space-y-3">
                     <div className="flex items-center gap-2 mb-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.4)]" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Registry Operations</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Student Database</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        {isAdminView ? "Cadet Command Center" : "Student Registry"}
+                        {isAdminView ? "Student Command Center" : "Student Registry"}
                     </h1>
                     <p className="text-slate-500 font-medium text-sm max-w-2xl leading-relaxed opacity-80">
-                        High-density management of indexed cohort intelligence and performance metrics.
+                        Manage your students and view their performance profiles globally across all your active batches.
                     </p>
                 </div>
                 
                 <div className="flex items-center gap-4">
-                    <div className="px-4 py-2.5 rounded-xl bg-white border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-3 shadow-sm transition-all hover:border-indigo-100">
-                        <Users size={16} weight="bold" className="text-indigo-600" />
-                        <span className="opacity-60">Cohort Volume</span> 
-                        <span className="text-sm font-bold text-slate-900 ml-1">{students.length}</span>
+                    <div className="px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <Users size={14} weight="bold" className="text-indigo-600" />
+                        <span>{students.length} Students</span>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-xl rounded-[28px] border border-slate-100 shadow-sm p-5 md:p-6 lg:p-8">
+            <div className="flex flex-col gap-4">
                 {/* Search / Filter Row */}
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4 mb-8">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-3">
                     <div className="relative flex-1">
                         <MagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} weight="bold" />
                         <input type="text" value={globalQuery} onChange={(e) => setGlobalQuery(e.target.value)}
-                            placeholder="Global Intelligence Search..."
-                            className="w-full h-11 bg-slate-50 border border-slate-100 rounded-xl pl-11 pr-4 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-lexend" />
+                            placeholder="Search by name, email, batch or ID..."
+                            className="w-full h-11 bg-slate-50 border border-slate-100 rounded-xl pl-11 pr-4 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:bg-white focus:border-indigo-400 transition-all" />
                     </div>
-                    <button className="h-11 px-6 rounded-xl bg-white border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-all shadow-sm active:scale-95 flex items-center gap-2">
-                        <DotsThreeVertical size={18} weight="bold" /> Export Feed
+                    <button className="h-11 px-5 rounded-xl bg-white border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 hover:text-slate-800 transition-all active:scale-95 flex items-center gap-2">
+                        <DotsThreeVertical size={18} weight="bold" /> Export
                     </button>
                 </div>
 
                 {/* TABLE VIEW (Desktop Large) */}
                 <div className="hidden lg:block overflow-x-auto scrollbar-thin border border-slate-100 rounded-2xl">
                     <table className="min-w-full text-left border-collapse">
-                        <thead className="bg-slate-50/50">
+                        <thead className="bg-slate-50">
                             <tr>
                                 {FILTERABLE_COLUMNS.map((col) => {
                                     const sk = col.key === "batch" ? "batch" : col.key as SortKey;
@@ -455,8 +452,8 @@ export function StudentManager() {
                                 </tr>
                             ) : (
                                 visibleStudents.map((student) => (
-                                    <tr key={student.id} className="group hover:bg-slate-50/50 transition-colors duration-300">
-                                        <td className="p-4">
+                                    <tr key={student.id} className="group hover:bg-slate-50 transition-colors duration-200">
+                                        <td className="p-4 rounded-l-2xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-[10px] border border-indigo-100 transition-all group-hover:bg-indigo-600 group-hover:text-white">
                                                     {student.name.substring(0, 2).toUpperCase()}
@@ -494,7 +491,7 @@ export function StudentManager() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-[10px] font-bold text-slate-400">{formatDate(student.joinedAt)}</td>
-                                        <td className="p-4">
+                                        <td className="p-4 rounded-r-2xl">
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                 <button onClick={() => setPerformanceStudent({ id: student.id, name: student.name })}
                                                     className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center border border-indigo-100 shadow-sm" title="Performance">
@@ -522,7 +519,7 @@ export function StudentManager() {
                         </div>
                     ) : (
                         visibleStudents.map((student) => (
-                            <div key={student.id} className="student-surface rounded-2xl p-5 md:p-6 space-y-5 transition-all hover:border-indigo-100 hover:shadow-lg">
+                            <div key={student.id} className="rounded-2xl p-5 md:p-6 space-y-5 transition-all bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0 border border-indigo-50">

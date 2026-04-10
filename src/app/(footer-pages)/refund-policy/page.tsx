@@ -13,7 +13,7 @@ export default function RefundPolicyPage() {
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                         Refund and cancellation policy
                     </div>
-                    <h1 className="font-outfit text-4xl font-black tracking-tight text-[var(--landing-text)] sm:text-5xl">
+                    <h1 className="  text-4xl font-black tracking-tight text-[var(--landing-text)] sm:text-5xl">
                         Refund expectations for digital access
                     </h1>
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--landing-muted)]">

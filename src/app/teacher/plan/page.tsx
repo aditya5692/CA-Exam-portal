@@ -30,7 +30,7 @@ export default async function TeacherPlanPage() {
         : null;
 
     return (
-        <div className="space-y-10 pb-24 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-10 pb-24 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
                 <div className="space-y-4">
@@ -39,7 +39,7 @@ export default async function TeacherPlanPage() {
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Subscription Ledger</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tighter text-slate-900">Educator Plan</h1>
-                    <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 font-medium text-sm   max-w-2xl leading-relaxed">
                         Manage your licensing, billing cycles, and feature access across the Free, Basic, and Pro educator tiers.
                     </p>
                 </div>

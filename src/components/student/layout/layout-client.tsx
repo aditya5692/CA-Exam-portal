@@ -69,7 +69,7 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
 
     return (
         <div className={cn(
-            "student-theme student-shell flex h-screen overflow-hidden font-sans relative text-[var(--student-text)]",
+            "student-theme student-shell flex h-screen overflow-hidden   relative text-[var(--student-text)]",
             whiteBackground && "bg-white"
         )}>
             {/* Ambient Background Blobs - hidden when white bg is active */}
@@ -124,35 +124,6 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                         <div className="flex items-center gap-1 md:gap-2">
                             <NotificationBell />
 
-                            {/* ICAI ABC Analysis Link */}
-                            <Link
-                                href="/student/abc-analysis"
-                                title="ICAI ABC Analysis"
-                                className={cn(
-                                    "hidden items-center gap-1.5 rounded-xl border border-[var(--student-border)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all sm:flex",
-                                    pathname === "/student/abc-analysis"
-                                        ? "bg-[var(--student-accent-strong)] text-white shadow-md border-[var(--student-accent-strong)]"
-                                        : "bg-[var(--student-panel)]/80 text-[var(--student-muted-strong)] hover:bg-white hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)]"
-                                )}
-                            >
-                                <ChartPieSlice size={16} weight="fill" />
-                                <span className="hidden lg:inline">ABC Analysis</span>
-                            </Link>
-
-                            {/* Latest Amendments Link */}
-                            <Link
-                                href="/student/amendments"
-                                title="Latest Amendments"
-                                className={cn(
-                                    "hidden items-center gap-1.5 rounded-xl border border-[var(--student-border)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all sm:flex",
-                                    pathname === "/student/amendments"
-                                        ? "bg-[var(--student-accent-strong)] text-white shadow-md border-[var(--student-accent-strong)]"
-                                        : "bg-[var(--student-panel)]/80 text-[var(--student-muted-strong)] hover:bg-white hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)]"
-                                )}
-                            >
-                                <Scroll size={16} weight="fill" />
-                                <span className="hidden lg:inline">Amendments</span>
-                            </Link>
 
                             {/* White Background Toggle */}
                             <button
@@ -176,7 +147,7 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
                         {/* Identity Section */}
                         <Link href="/student/profile" className="flex items-center gap-2 md:gap-4 group shrink-0">
                             <div className="text-right hidden md:block">
-                                <p className="font-outfit text-sm font-bold leading-none text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
+                                <p className="  text-sm font-bold leading-none text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
                                     {session.fullName ?? "Student"}
                                 </p>
                                 <div className="flex items-center justify-end gap-2 mt-1.5">
@@ -199,7 +170,7 @@ export function StudentLayoutClient({ children, session, initials }: StudentLayo
 
                 {/* Page Content */}
                 <div
-                    className="mx-auto w-full max-w-[1600px] animate-in px-4 font-outfit fade-in slide-in-from-bottom-2 duration-700 sm:px-6 md:px-8 tuner-content-container"
+                    className="mx-auto w-full max-w-[1600px] animate-in px-4   fade-in slide-in-from-bottom-2 duration-700 sm:px-6 md:px-8 tuner-content-container"
                 >
                     {children}
                 </div>

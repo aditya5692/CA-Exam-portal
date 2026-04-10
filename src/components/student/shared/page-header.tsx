@@ -38,11 +38,11 @@ export function StudentPageHeader({
                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--student-accent)]" />
                     {eyebrow}
                 </div>
-                <h1 className="font-outfit text-3xl font-black leading-tight tracking-[-0.04em] text-[var(--student-text)] md:text-4xl">
+                <h1 className="  text-3xl font-black leading-tight tracking-[-0.04em] text-[var(--student-text)] md:text-4xl">
                     {title}
                     {accent && <span className="text-[var(--student-accent-strong)]"> {accent}</span>}
                 </h1>
-                <div className="max-w-2xl font-sans text-base font-medium leading-relaxed text-[var(--student-muted)]">
+                <div className="max-w-2xl   text-base font-medium leading-relaxed text-[var(--student-muted)]">
                     {description}
                 </div>
             </div>

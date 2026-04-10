@@ -17,7 +17,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
     };
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500 font-outfit pb-24">
+        <div className="p-8 max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500 pb-24">
             <StudentPageHeader
                 eyebrow="Educator space"
                 title={teacher.name}
@@ -85,7 +85,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
                                 </div>
                                 
                                 <button className="text-left w-full block group-hover:text-indigo-500/80 transition-colors">
-                                    <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] font-outfit tracking-tight">
+                                    <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2 min-h-[44px] tracking-tight">
                                         {material.title}
                                     </h3>
                                     {material.description && (
@@ -121,7 +121,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
                     <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                         <Lock className="w-8 h-8 text-slate-300" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 font-outfit tracking-tight">No Resources Available</h3>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">No Resources Available</h3>
                     <p className="text-slate-500 text-sm max-w-sm mt-2">
                         {teacher.name} has not published any announcements, materials, or exams to your batches yet.
                     </p>

@@ -22,11 +22,6 @@ const faqs = [
         icon: <Exam className="w-6 h-6" />
     },
     {
-        question: "What happens if there are Law or Tax amendments?",
-        answer: "CA exams are dynamic. Our 'Amendment Tracker' automatically flags and updates questions affected by the Finance Act or recent Case Law developments, ensuring you never practice outdated content.",
-        icon: <ArrowsClockwise className="w-6 h-6" />
-    },
-    {
         question: "Can I access the platform on my mobile phone?",
         answer: "Yes! The CA Exam Portal is fully responsive. You can take MCQs, view analytics, and read study notes on any device—mobile, tablet, or desktop.",
         icon: <DeviceMobile className="w-6 h-6" />

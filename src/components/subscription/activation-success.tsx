@@ -27,7 +27,7 @@ export function ActivationSuccess({ planName }: { planName: string }) {
             </div>
 
             <div className="space-y-4 mb-10">
-                <h2 className="text-3xl font-black text-slate-800 font-outfit tracking-tight leading-tight">
+                <h2 className="text-3xl font-black text-slate-800   tracking-tight leading-tight">
                     Authorization <span className="text-emerald-500">Confirmed!</span>
                 </h2>
                 <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Preparing your Pro Workspace...</p>

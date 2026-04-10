@@ -60,7 +60,7 @@ export default async function TeacherProfilePage({ params }: PageProps) {
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-[10px] font-bold uppercase tracking-widest">
                                     Verified Educator
                                 </div>
-                                <h1 className="text-4xl md:text-5xl font-outfit font-bold tracking-tight leading-tight">
+                                <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
                                     {teacher.fullName}
                                 </h1>
                                 <p className="text-slate-400 text-lg font-medium">
@@ -119,7 +119,7 @@ export default async function TeacherProfilePage({ params }: PageProps) {
                 <div className="grid md:grid-cols-3 gap-8">
                     <div className="md:col-span-2 space-y-6">
                         <section className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-4">
-                            <h2 className="text-xl font-bold font-outfit text-slate-900">About the Educator</h2>
+                            <h2 className="text-xl font-bold text-slate-900">About the Educator</h2>
                             <p className="text-slate-600 leading-relaxed font-medium">
                                 {teacher.bio || `${teacher.fullName} is a dedicated expert in ${teacher.expertise}, helping CA aspirants achieve excellence through structured learning and comprehensive practice.`}
                             </p>
@@ -139,7 +139,7 @@ export default async function TeacherProfilePage({ params }: PageProps) {
                     <div className="space-y-4">
                         <div className="bg-indigo-600 rounded-[32px] p-8 text-white shadow-xl shadow-indigo-500/10 space-y-6">
                             <div className="space-y-2">
-                                <h3 className="text-xl font-bold font-outfit">Join a Batch</h3>
+                                <h3 className="text-xl font-bold">Join a Batch</h3>
                                 <p className="text-indigo-100/70 text-xs font-medium">Learn directly from {teacher.fullName.split(' ')[0]} in personalized cohorts.</p>
                             </div>
                             <Link 
@@ -151,7 +151,7 @@ export default async function TeacherProfilePage({ params }: PageProps) {
                         </div>
                         
                         <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
-                            <h3 className="text-sm font-bold font-outfit text-slate-900">Education Registry</h3>
+                            <h3 className="text-sm font-bold text-slate-900">Education Registry</h3>
                             <div className="space-y-4">
                                 <EducationItem year="2018 - Present" title="Senior Faculty" org="Academy of Professional Excellence" />
                                 <EducationItem year="2012 - 2018" title="Chartered Accountant" org="ICAI Registry" />
@@ -177,7 +177,7 @@ function StatCard({ label, value, icon, color }: { label: string, value: string,
             <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", colors[color])}>
                 {icon}
             </div>
-            <div className="text-2xl font-bold font-outfit text-slate-900">{value}</div>
+            <div className="text-2xl font-bold text-slate-900">{value}</div>
             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{label}</div>
         </div>
     );

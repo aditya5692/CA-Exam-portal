@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import "tailwindcss";
 
 @theme inline {
@@ -24,13 +24,15 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-  --font-outfit: var(--font-outfit);
-  --font-inter: var(--font-inter);
+  --font-sans: "Open Sans", system-ui, sans-serif;
+  --font-outfit: "Open Sans", system-ui, sans-serif;
+  --font-inter: "Open Sans", system-ui, sans-serif;
 }
 
 :root {
-  --font-lexend: "Lexend", system-ui, sans-serif;
-  --font-sans: "Lexend", system-ui, sans-serif;
+  --font-lexend: "Open Sans", system-ui, sans-serif;
+  --font-open-sans: "Open Sans", system-ui, sans-serif;
+  --font-sans: "Open Sans", system-ui, sans-serif;
 
   /* Brand Tokens - The Source of Truth */
   --brand-navy: #0f172a;
@@ -263,13 +265,14 @@
 
   body {
     @apply bg-background text-foreground antialiased scroll-smooth;
-    font-family: 'Lexend', system-ui, sans-serif !important;
+    font-family: 'Open Sans', system-ui, sans-serif !important;
     text-rendering: optimizeLegibility;
   }
 
   /* Global Auto-Fit & Neaten Rules */
   html,
   body {
+    font-size: 14px;
     overflow-x: hidden;
     width: 100%;
     -webkit-font-smoothing: antialiased;
@@ -292,7 +295,7 @@
   h5,
   h6 {
     @apply tracking-tight font-bold;
-    font-family: 'Lexend', system-ui, sans-serif !important;
+    font-family: 'Open Sans', system-ui, sans-serif !important;
     text-wrap: balance;
     color: var(--foreground);
   }

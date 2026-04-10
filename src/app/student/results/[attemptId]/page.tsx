@@ -1,4 +1,5 @@
 import { getExamResults, getExamPeerBenchmarks } from "@/actions/exam-actions";
+import { getCurrentUser } from "@/lib/auth/session";
 import { computeAttemptSpeedSummary, formatSeconds } from "@/lib/server/peer-benchmarking";
 import { cn } from "@/lib/utils";
 import {
@@ -14,6 +15,7 @@ import {
     Minus,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SolutionReview, type SolutionAnswer } from "./solution-review";
 import type { BenchmarkMap } from "@/lib/server/peer-benchmarking";
 
@@ -126,6 +128,11 @@ function SpeedBenchmarkPanel({
 }
 
 export default async function ResultsPage({ params }: ResultsPageProps) {
+    const user = await getCurrentUser(["STUDENT", "ADMIN"]);
+    if (!user) {
+        redirect("/auth/login");
+    }
+
     const { attemptId } = await params;
     const { success, data: attempt } = await getExamResults(attemptId);
 
@@ -209,7 +216,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                     Exam result review
                                 </div>
-                                <h1 className="font-outfit text-3xl font-black tracking-tight text-[var(--student-text)] md:text-4xl">
+                                <h1 className="text-3xl font-black tracking-tight text-[var(--student-text)] md:text-4xl">
                                     {attempt.exam.title}
                                 </h1>
                                 <p className="max-w-3xl text-sm leading-7 text-[var(--student-muted-strong)]">

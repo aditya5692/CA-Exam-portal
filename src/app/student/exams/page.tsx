@@ -1,13 +1,17 @@
 import { getStudentVisibleExams } from "@/actions/publish-exam-actions";
 import { getCurrentUser } from "@/lib/auth/session";
 import { resolveStudentExamTarget } from "@/lib/student-level";
+import { redirect } from "next/navigation";
 import StudentExamsClient from "./client";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentExamsPage() {
     // 1. Get current student
-    const user = await getCurrentUser(["STUDENT", "ADMIN"]).catch(() => null);
+    const user = await getCurrentUser(["STUDENT", "ADMIN"]);
+    if (!user) {
+        redirect("/auth/login");
+    }
 
     const examTarget = resolveStudentExamTarget(user ?? {});
     const caLevelKey = examTarget.caLevelKey;

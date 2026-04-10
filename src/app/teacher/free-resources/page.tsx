@@ -15,7 +15,7 @@ export default async function TeacherFreeResourcesPage({
     const user = await getCurrentUser(["TEACHER", "ADMIN"]);
 
     return (
-        <div className="w-full max-w-7xl mx-auto pb-12 font-outfit animate-in fade-in slide-in-from-bottom-4 duration-500 px-0">
+        <div className="w-full max-w-7xl mx-auto pb-12   animate-in fade-in slide-in-from-bottom-4 duration-500 px-0">
             <FreeResourcesDashboard
                 saveState="hidden"
                 mode="TEACHER"

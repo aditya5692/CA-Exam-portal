@@ -55,7 +55,7 @@ export function ExamCard({
                 </button>
             </div>
 
-            <h3 className="mb-5 min-h-[52px] line-clamp-2 font-outfit text-lg font-bold leading-tight text-slate-950 transition-colors group-hover:text-[var(--student-accent-strong)]">
+            <h3 className="mb-5 min-h-[52px] line-clamp-2   text-lg font-bold leading-tight text-slate-950 transition-colors group-hover:text-[var(--student-accent-strong)]">
                 {exam.title}
             </h3>
 
@@ -95,7 +95,7 @@ export function ExamCard({
                             <CheckCircle size={18} weight="fill" className="text-emerald-500/80" />
                             <span className="text-[10px] font-bold text-emerald-700/80 uppercase tracking-widest">Score</span>
                         </div>
-                        <div className="text-[11px] font-bold text-emerald-700/80 font-outfit">
+                        <div className="text-[11px] font-bold text-emerald-700/80  ">
                             {Math.round(exam.attempt.score)} / {exam.totalMarks}
                         </div>
                     </div>

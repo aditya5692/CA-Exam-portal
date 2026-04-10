@@ -51,10 +51,10 @@ export function ManagementHub({
                         <span className="h-1.5 w-1.5 rounded-full bg-[var(--student-accent)] animate-pulse" />
                         Governance Suite
                     </div>
-                    <h1 className="font-outfit text-4xl font-black tracking-tight text-[var(--student-text)]">
+                    <h1 className="  text-4xl font-black tracking-tight text-[var(--student-text)]">
                         Platform <span className="text-[var(--student-accent-strong)]">Management</span>
                     </h1>
-                    <p className="font-sans font-medium text-[var(--student-muted)] max-w-xl">
+                    <p className="  font-medium text-[var(--student-muted)] max-w-xl">
                         Comprehensive oversight and real-time orchestration of users, content spotlighting, and system health.
                     </p>
                 </div>

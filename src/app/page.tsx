@@ -18,17 +18,6 @@ import {
     Trophy,
     Target
 } from "@phosphor-icons/react/dist/ssr";
-import { Lexend, Outfit } from "next/font/google";
-
-const lexend = Lexend({
-    subsets: ["latin"],
-    display: "swap",
-});
-
-const outfit = Outfit({
-    subsets: ["latin"],
-    display: "swap",
-});
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -63,7 +52,7 @@ export default async function Home() {
     }
 
     return (
-        <div className={cn(lexend.className, "min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden")}>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
             <Navbar user={session} />
 
             <main>
@@ -182,7 +171,7 @@ export default async function Home() {
                                 { val: "Rank 1", lbl: "STUDY WORKSPACE" },
                             ].map((s, i) => (
                                 <div key={i} className="space-y-3">
-                                    <div className={cn(outfit.className, "text-4xl md:text-5xl lg:text-7xl font-black italic tracking-tighter text-white")}>
+                                    <div className="text-4xl md:text-5xl lg:text-7xl font-black italic tracking-tighter text-white">
                                         {s.val}
                                     </div>
                                     <div className="text-[10px] md:text-xs font-black text-blue-500 uppercase tracking-[0.2em]">
@@ -263,7 +252,7 @@ export default async function Home() {
                                 Ready to accelerate your <span className="text-blue-600 block sm:inline italic">CA Prep?</span>
                             </h2>
 
-                            <p className="text-xl lg:text-2xl text-slate-600 font-medium font-lexend leading-relaxed">
+                            <p className="text-xl lg:text-2xl text-slate-600 font-medium   leading-relaxed">
                                 Join the high-integrity workspace where discipline meets performance. Claim your access to Financly today.
                             </p>
 

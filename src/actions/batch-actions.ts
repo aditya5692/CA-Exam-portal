@@ -228,7 +228,7 @@ export async function createBatch(formData: FormData): Promise<ActionResponse<Ba
     try {
         const validated = createBatchSchema.safeParse({
             name: formData.get("name"),
-            teacherId: formData.get("teacherId"),
+            teacherId: formData.get("teacherId")?.toString() || undefined,
         });
 
         if (!validated.success) {
@@ -395,7 +395,7 @@ export async function updateBatch(formData: FormData): Promise<ActionResponse<Ba
         const validated = updateBatchSchema.safeParse({
             batchId: formData.get("batchId"),
             name: formData.get("name"),
-            teacherId: formData.get("teacherId"),
+            teacherId: formData.get("teacherId")?.toString() || undefined,
         });
 
         if (!validated.success) {
@@ -866,5 +866,62 @@ export async function getMyEducators(): Promise<ActionResponse<MyEducator[]>> {
         return { success: true, data: Array.from(educatorMap.values()) };
     } catch (error) {
          return { success: false, message: "Failed to fetch educators" };
+    }
+}
+
+export type StudentBatchDetail = {
+    id: string;
+    name: string;
+    uniqueJoinCode: string;
+    joinedAt: Date;
+    teacherName: string;
+    teacherId: string;
+    announcementCount: number;
+    materialCount: number;
+    examCount: number;
+};
+
+/**
+ * Fetches detailed batch information for the current student.
+ */
+export async function getStudentBatches(): Promise<ActionResponse<StudentBatchDetail[]>> {
+    try {
+        const student = await requireAuth(["STUDENT"]);
+        
+        const enrollments = await prisma.enrollment.findMany({
+            where: { studentId: student.id },
+            include: {
+                batch: {
+                    include: {
+                        teacher: { select: { id: true, fullName: true, email: true } },
+                        _count: {
+                            select: {
+                                announcements: true,
+                                batchMaterials: true,
+                                exams: true,
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { joinedAt: "desc" }
+        });
+
+        const data: StudentBatchDetail[] = enrollments.map(e => ({
+            id: e.batch.id,
+            name: e.batch.name,
+            uniqueJoinCode: e.batch.uniqueJoinCode,
+            joinedAt: e.joinedAt,
+            teacherName: e.batch.teacher.fullName || e.batch.teacher.email || "Educator",
+            teacherId: e.batch.teacher.id,
+            announcementCount: e.batch._count.announcements,
+            materialCount: e.batch._count.batchMaterials,
+            examCount: e.batch._count.exams,
+        }));
+
+        return { success: true, data };
+    } catch (error) {
+        console.error("getStudentBatches error:", error);
+        return { success: false, message: "Failed to fetch your batches." };
     }
 }

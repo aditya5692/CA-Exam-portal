@@ -17,7 +17,7 @@ export function StudyMaterialDashboard() {
     const [activeLevel, setActiveLevel] = useState("CA Final");
 
     return (
-        <section className="py-12 px-6 sm:px-12 bg-slate-50 border-t border-b border-gray-100 font-outfit">
+        <section className="py-12 px-6 sm:px-12 bg-slate-50 border-t border-b border-gray-100  ">
             <div className="max-w-7xl mx-auto">
                 {/* Top Tabs */}
                 <div className="flex gap-1.5 mb-6 overflow-x-auto pb-1 scrollbar-hide">

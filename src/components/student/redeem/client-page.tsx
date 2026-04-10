@@ -18,7 +18,7 @@ function LinkedContexts({ claimedCodes }: { claimedCodes: ClaimedCode[] }) {
 
     return (
         <div className="mt-16 pt-10 border-t border-[var(--student-border)]">
-            <h3 className="text-xl font-bold font-outfit text-[var(--student-text)] tracking-tight mb-6">Your Linked Contexts</h3>
+            <h3 className="text-xl font-bold   text-[var(--student-text)] tracking-tight mb-6">Your Linked Contexts</h3>
             <div className="grid gap-4 md:grid-cols-2">
                 {claimedCodes.map((c: ClaimedCode) => (
                     <div key={c.id} className="p-5 rounded-2xl border border-[var(--student-border)] bg-[var(--student-surface)] flex items-start gap-4">
@@ -74,7 +74,7 @@ export function RedeemCodeClient({ claimedCodes = [] }: { claimedCodes?: any[] }
                 <div className="w-16 h-16 rounded-[24px] bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] flex items-center justify-center shadow-sm">
                     <IdentificationBadge size={32} weight="bold" />
                 </div>
-                <h2 className="text-3xl font-bold font-outfit text-[var(--student-text)] tracking-tight">Redeem Code</h2>
+                <h2 className="text-3xl font-bold   text-[var(--student-text)] tracking-tight">Redeem Code</h2>
                 <p className="text-[var(--student-muted)] max-w-sm leading-relaxed">
                     Enter the access payload provided by your educator to link your profile to the designated section.
                 </p>

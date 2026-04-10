@@ -299,7 +299,7 @@ export default function TeacherBatchesPage() {
         new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
     return (
-        <div className="space-y-6 pb-20 w-full max-w-[1400px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 pb-20 w-full max-w-[1400px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8 px-4 lg:px-0">
                 <div className="space-y-4">
@@ -307,10 +307,10 @@ export default function TeacherBatchesPage() {
                         <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_12px_rgba(79,70,229,0.4)]" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Batch Management</span>
                     </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-4xl font-bold text-slate-900">
+                    <h1 className="  tracking-tighter leading-tight text-4xl font-bold text-slate-900">
                         {isAdminView ? "Academy Dashboard" : "My Batches"}
                     </h1>
-                    <p className="text-slate-500 font-medium text-base font-sans max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 font-medium text-base   max-w-2xl leading-relaxed">
                         {isAdminView
                             ? "Comprehensive management of all batches and student enrollment patterns."
                             : "Create and manage learning environments. Share codes or send individual invitations to track progress."}
@@ -344,7 +344,7 @@ export default function TeacherBatchesPage() {
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                            <div className="text-2xl font-bold font-outfit text-slate-900">{stat.value}</div>
+                            <div className="text-2xl font-bold   text-slate-900">{stat.value}</div>
                         </div>
                     </div>
                 ))}
@@ -439,7 +439,7 @@ export default function TeacherBatchesPage() {
                     <div className="bg-white rounded-[48px] border border-slate-100 shadow-sm p-10 lg:p-14 space-y-12">
                         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
                             <div className="space-y-4">
-                                <h2 className="text-4xl font-bold tracking-tighter text-slate-900 font-outfit">{selectedBatch?.name}</h2>
+                                <h2 className="text-4xl font-bold tracking-tighter text-slate-900  ">{selectedBatch?.name}</h2>
                                 <div className="flex flex-wrap gap-3">
                                     <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
                                         <Calendar size={16} weight="bold" /> Created {selectedBatch && formatDate(selectedBatch.createdAt)}
@@ -558,7 +558,7 @@ export default function TeacherBatchesPage() {
                                     {editingBatch ? <PencilLine size={24} weight="bold" /> : <Plus size={24} weight="bold" />}
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold tracking-tight font-outfit text-slate-900">{editingBatch ? "Edit Batch" : "New Batch"}</h2>
+                                    <h2 className="text-2xl font-bold tracking-tight   text-slate-900">{editingBatch ? "Edit Batch" : "New Batch"}</h2>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Define your learning environment</p>
                                 </div>
                             </div>
@@ -574,7 +574,7 @@ export default function TeacherBatchesPage() {
                                     <select
                                         value={selectedOwnerId}
                                         onChange={(e) => setSelectedOwnerId(e.target.value)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         <option value="">Select educator</option>
                                         {availableTeachers.map((t) => (
@@ -593,7 +593,7 @@ export default function TeacherBatchesPage() {
                                     value={batchName}
                                     onChange={(e) => setBatchName(e.target.value)}
                                     placeholder="e.g. CA Final Audit May 2026"
-                                    className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                    className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                 />
                                 <div className="flex items-start gap-2 p-4 rounded-2xl bg-indigo-50 border border-indigo-100/50 mt-4">
                                      <Info size={16} weight="fill" className="text-indigo-400 mt-0.5 shrink-0" />
@@ -630,7 +630,7 @@ export default function TeacherBatchesPage() {
                                     <Plus size={22} weight="bold" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold font-outfit text-slate-900">Invite Student</h3>
+                                    <h3 className="text-xl font-bold   text-slate-900">Invite Student</h3>
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Personal accession invite</p>
                                 </div>
                             </div>
@@ -641,20 +641,20 @@ export default function TeacherBatchesPage() {
                         <form onSubmit={handleCreateInvite} className="p-10 space-y-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Full Name</label>
-                                <input required type="text" value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="e.g. Jane Doe" className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold" />
+                                <input required type="text" value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="e.g. Jane Doe" className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email Address</label>
-                                <input required type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="student@example.com" className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold" />
+                                <input required type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="student@example.com" className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">CA Level</label>
-                                    <input placeholder="e.g. Inter" type="text" value={inviteLevel} onChange={e => setInviteLevel(e.target.value)} className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold" />
+                                    <input placeholder="e.g. Inter" type="text" value={inviteLevel} onChange={e => setInviteLevel(e.target.value)} className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Subject</label>
-                                    <input placeholder="e.g. Audit" type="text" value={inviteSubject} onChange={e => setInviteSubject(e.target.value)} className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold" />
+                                    <input placeholder="e.g. Audit" type="text" value={inviteSubject} onChange={e => setInviteSubject(e.target.value)} className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                                 </div>
                             </div>
                             <button type="submit" disabled={isInviting} className="w-full h-16 bg-slate-900 hover:bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-900/10 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
@@ -676,7 +676,7 @@ export default function TeacherBatchesPage() {
                                     <UploadSimple size={22} weight="bold" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold font-outfit text-slate-900">Bulk Invite</h3>
+                                    <h3 className="text-xl font-bold   text-slate-900">Bulk Invite</h3>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Quick enrollment sequence</p>
                                 </div>
                             </div>

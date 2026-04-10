@@ -63,7 +63,7 @@ export function NotificationBell() {
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[var(--student-panel-solid)] rounded-2xl shadow-xl border border-[var(--student-border)] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                     <div className="p-4 border-b border-[var(--student-border)] flex items-center justify-between bg-[var(--student-panel-muted)]/50">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-[var(--student-text)] text-sm tracking-tight font-outfit uppercase">Notifications</h3>
+                            <h3 className="font-bold text-[var(--student-text)] text-sm tracking-tight   uppercase">Notifications</h3>
                             {unreadCount > 0 && (
                                 <span className="bg-[var(--student-accent-soft-strong)] text-[var(--student-accent-strong)] text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">{unreadCount} New</span>
                             )}

@@ -5,8 +5,11 @@ import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
   listStudentVisibleExams,
   listTeacherBatchOptions,
+  publishExamFromVaultIds,
   publishExamQuestions,
 } from "@/lib/server/exam-publishing";
+import { revalidatePath } from "next/cache";
+import { PublishTarget } from "@/types/publish-exam";
 import { revalidateExamSurfaces } from "@/lib/server/revalidation";
 import prisma from "@/lib/prisma/client";
 import type {
@@ -125,6 +128,45 @@ export async function getPublicMockExams(): Promise<ActionResponse<StudentVisibl
         return {
             success: false,
             message: getActionErrorMessage(err, "Failed to fetch public exams."),
+        };
+    }
+}
+
+/**
+ * Publishes an exam using existing questions from the Question Bank (Vault).
+ */
+export async function createExamFromVault(input: {
+    title: string;
+    caLevel: "foundation" | "ipc" | "final";
+    subject: string;
+    chapter?: string;
+    durationMinutes: number;
+    examType: string;
+    target: PublishTarget;
+    questionIds: string[];
+}): Promise<ActionResponse<PublishExamResultData>> {
+    try {
+        const teacher = await requireAuth(["TEACHER", "ADMIN"]);
+        
+        if (!input.questionIds || input.questionIds.length === 0) {
+            return { success: false, message: "Please select at least one question." };
+        }
+
+        const data = await publishExamFromVaultIds(teacher, input);
+        
+        revalidateExamSurfaces();
+        revalidatePath("/teacher/test-series");
+
+        return {
+            success: true,
+            message: "Test series created successfully from Question Bank.",
+            data,
+        };
+    } catch (err) {
+        console.error("createExamFromVault error:", err);
+        return {
+            success: false,
+            message: getActionErrorMessage(err, "Failed to create test series."),
         };
     }
 }

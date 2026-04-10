@@ -22,7 +22,7 @@ export default async function StudentFreeResourcesPage({
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                         Student resources
                     </div>
-                    <h1 className="font-outfit text-3xl font-black tracking-tight text-slate-900">
+                    <h1 className="  text-3xl font-black tracking-tight text-slate-900">
                         Study library
                     </h1>
                     <p className="max-w-3xl text-sm leading-7 text-slate-500">

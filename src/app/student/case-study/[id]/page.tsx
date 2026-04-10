@@ -87,7 +87,7 @@ export default function CaseStudySplitScreen({ params }: { params: Promise<{ id:
     };
 
     return (
-        <div className="flex h-screen w-full flex-col md:flex-row overflow-hidden bg-white text-slate-900 font-outfit">
+        <div className="flex h-screen w-full flex-col md:flex-row overflow-hidden bg-white text-slate-900">
             {/* Header Overlay (Mobile only, or absolutized on desktop) */}
             <div className="absolute top-0 left-0 w-full p-4 flex justify-between z-10 pointer-events-none">
                 <Link href="/student/dashboard" className="pointer-events-auto flex items-center gap-2 rounded-full bg-slate-900/10 px-4 py-2 text-xs font-bold backdrop-blur-md transition hover:bg-slate-900/20">

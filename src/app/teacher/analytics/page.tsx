@@ -52,7 +52,7 @@ export default async function TeacherAnalyticsPage() {
     const trendMax = Math.max(...trends.map(t => t.attempts), 1);
 
     return (
-        <div className="w-full max-w-7xl mx-auto pb-12 font-outfit animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+        <div className="w-full max-w-7xl mx-auto pb-12   animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
 
             {/* ── Header ─────────────────────────────────────────────── */}
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 md:p-10 relative overflow-hidden">
@@ -63,7 +63,7 @@ export default async function TeacherAnalyticsPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                             Intelligence Engine
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">Analytics</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">Analytics</h1>
                         <p className="text-sm text-slate-400 font-medium max-w-xl">
                             Real-time performance data for {teacherName}&apos;s students — attempts, pass rates, at-risk detection, and subject mastery.
                         </p>

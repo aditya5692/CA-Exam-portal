@@ -18,7 +18,7 @@ export default async function SavedItemsPage() {
     const examTarget = resolveStudentExamTarget(user ?? {});
 
     return (
-        <div className="space-y-12 pb-20 font-outfit">
+        <div className="space-y-12 pb-20  ">
             <StudentPageHeader
                 eyebrow="My collection"
                 title="Saved"

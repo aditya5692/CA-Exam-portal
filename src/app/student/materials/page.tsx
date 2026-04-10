@@ -176,7 +176,7 @@ export default function StudentVaultPage() {
     const usagePercent = storageLimit > 0 ? Math.min(100, (storageUsed / storageLimit) * 100) : 0;
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto space-y-6 animate-in fade-in duration-500 font-outfit">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto space-y-6 animate-in fade-in duration-500  ">
             <StudentPageHeader
                 eyebrow={isAdminView ? "Admin protocol" : "Scholarly assets"}
                 title={isAdminView ? "Materials" : "Study"}

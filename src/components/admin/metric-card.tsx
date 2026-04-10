@@ -27,7 +27,7 @@ export function MetricCard({ label, value, trend, icon: Icon, color }: MetricCar
                 </div>
                 <div className="text-right">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">{label}</p>
-                    <h3 className="mt-1 font-outfit text-3xl font-black text-[var(--student-text)]">{value}</h3>
+                    <h3 className="mt-1   text-3xl font-black text-[var(--student-text)]">{value}</h3>
                 </div>
             </div>
             <div className="mt-6 flex items-center justify-between border-t border-[var(--student-border)] pt-4">

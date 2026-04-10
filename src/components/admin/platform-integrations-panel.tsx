@@ -94,7 +94,7 @@ export function PlatformIntegrationsPanel({
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                 Runtime Integrations
                             </div>
-                            <h2 className="font-outfit text-3xl font-black tracking-tight text-[var(--student-text)]">
+                            <h2 className="  text-3xl font-black tracking-tight text-[var(--student-text)]">
                                 Razorpay and MSG91 settings
                             </h2>
                             <p className="max-w-3xl text-sm leading-7 text-[var(--student-muted-strong)]">
@@ -158,7 +158,7 @@ export function PlatformIntegrationsPanel({
                                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                         {groupKey === "MSG91" ? "Authentication Channel" : "Payments Channel"}
                                     </div>
-                                    <h3 className="font-outfit text-2xl font-black tracking-tight text-[var(--student-text)]">
+                                    <h3 className="  text-2xl font-black tracking-tight text-[var(--student-text)]">
                                         {groupKey === "MSG91" ? "MSG91 Runtime Keys" : "Razorpay Runtime Keys"}
                                     </h3>
                                 </div>

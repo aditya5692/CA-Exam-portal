@@ -202,7 +202,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                         <ShieldCheck size={28} weight="bold" className="text-emerald-400" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <Dialog.Title className="font-outfit text-xl font-bold tracking-tight">
+                                        <Dialog.Title className="  text-xl font-bold tracking-tight">
                                             Secure Checkout
                                         </Dialog.Title>
                                         <p className="text-[10px] font-bold uppercase leading-none tracking-widest text-white/40">
@@ -235,7 +235,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
 
                                         <div className="flex items-end justify-between">
                                             <div className="space-y-1">
-                                                <h4 className="font-outfit text-lg font-bold leading-none text-slate-900">
+                                                <h4 className="  text-lg font-bold leading-none text-slate-900">
                                                     {plan.name}
                                                 </h4>
                                                 <p className="text-[10px] font-bold uppercase leading-none tracking-widest text-slate-400">
@@ -244,7 +244,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                             </div>
                                             <div className="text-right">
                                                 <div className="flex items-baseline justify-end gap-1">
-                                                    <span className="font-outfit text-2xl font-bold text-slate-900">
+                                                    <span className="  text-2xl font-bold text-slate-900">
                                                         {plan.price}
                                                     </span>
                                                     {plan.price !== "Rs 0" && (

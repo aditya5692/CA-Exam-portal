@@ -29,7 +29,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-8 flex-wrap px-2">
                 <div className="space-y-2">
-                    <h2 className="font-outfit">Attempt History</h2>
+                    <h2 className=" ">Attempt History</h2>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-70">A complete record of your practice attempts — {attempts.length} Attempt{attempts.length !== 1 ? 's' : ''} found</p>
                 </div>
             </div>
@@ -39,7 +39,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
                     <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
                         <span className="text-3xl">📭</span>
                     </div>
-                    <div className="font-bold text-slate-800 text-xl font-outfit tracking-tight">No attempts yet</div>
+                    <div className="font-bold text-slate-800 text-xl   tracking-tight">No attempts yet</div>
                     <p className="text-sm mt-2 mb-8 max-w-xs mx-auto font-medium opacity-70">Start a practice attempt from the Exams section to see your history here.</p>
                     <Link href="/student/exams"
                         className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95">
@@ -60,7 +60,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                         {a.status === "abandoned"
                                             ? <span className="text-3xl opacity-80">💤</span>
                                             : <>
-                                                <span className={cn("text-2xl font-bold font-outfit tracking-tight", accColor)}>{a.accuracy}%</span>
+                                                <span className={cn("text-2xl font-bold   tracking-tight", accColor)}>{a.accuracy}%</span>
                                                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-70">Score</span>
                                             </>}
                                     </div>
@@ -73,7 +73,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                             </span>
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-70 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">{a.subject}</span>
                                         </div>
-                                        <h3 className="font-bold text-slate-900 text-xl leading-none truncate font-outfit tracking-tight group-hover:text-indigo-600 transition-colors">{a.seriesTitle}</h3>
+                                        <h3 className="font-bold text-slate-900 text-xl leading-none truncate   tracking-tight group-hover:text-indigo-600 transition-colors">{a.seriesTitle}</h3>
 
                                         {a.status === "completed" && (
                                             <div className="flex items-center gap-5 mt-4 text-[10px] font-bold text-slate-400 flex-wrap uppercase tracking-[0.1em]">
@@ -88,11 +88,11 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-amber-500 font-bold text-xs">⚡</span> +{a.xpEarned} XP
                                                 </div>
-                                                <span className="ml-auto text-slate-300 opacity-70 font-sans tracking-normal font-medium">{a.attemptedAt}</span>
+                                                <span className="ml-auto text-slate-300 opacity-70   tracking-normal font-medium">{a.attemptedAt}</span>
                                             </div>
                                         )}
                                         {a.status === "abandoned" && (
-                                            <p className="text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-[0.15em] flex items-center gap-2"><span className="w-1.5 h-px bg-slate-300" /> Attempt Abandoned · <span className="font-sans tracking-normal opacity-70 font-medium">{a.attemptedAt}</span></p>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-[0.15em] flex items-center gap-2"><span className="w-1.5 h-px bg-slate-300" /> Attempt Abandoned · <span className="  tracking-normal opacity-70 font-medium">{a.attemptedAt}</span></p>
                                         )}
                                     </div>
 
@@ -127,7 +127,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                                 <div className="space-y-6">
                                                     <div className="space-y-1">
                                                         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Performance by Topic</h4>
-                                                        <p className="text-lg font-bold font-outfit text-slate-900 tracking-tight">Topic-wise accuracy</p>
+                                                        <p className="text-lg font-bold   text-slate-900 tracking-tight">Topic-wise accuracy</p>
                                                     </div>
                                                     <div className="space-y-5">
                                                         {a.topicBreakdown.map((t) => {
@@ -136,7 +136,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                                                 <div key={t.topic} className="flex items-center gap-5">
                                                                     <span className="text-[11px] font-bold text-slate-700 w-40 shrink-0 truncate uppercase tracking-tight">{t.topic}</span>
                                                                     <AccuracyBar accuracy={t.accuracy} />
-                                                                    <span className={cn("text-[11px] font-bold w-10 text-right font-outfit", col)}>{t.accuracy}%</span>
+                                                                    <span className={cn("text-[11px] font-bold w-10 text-right  ", col)}>{t.accuracy}%</span>
                                                                 </div>
                                                             );
                                                         })}
@@ -146,7 +146,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                                     <div className="space-y-6">
                                                         <div className="space-y-1">
                                                             <h4 className="text-[10px] font-bold text-rose-400/80 uppercase tracking-widest">Focus Areas</h4>
-                                                            <p className="text-lg font-bold font-outfit text-slate-900 tracking-tight">Identified Weak Topics</p>
+                                                            <p className="text-lg font-bold   text-slate-900 tracking-tight">Identified Weak Topics</p>
                                                         </div>
                                                         <div className="space-y-3">
                                                             {a.weakTopics.map((topic, i) => (

@@ -100,7 +100,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
     return (
         <div className="student-surface overflow-hidden rounded-[32px]">
             <div className="flex flex-col justify-between gap-6 border-b border-[var(--student-border)] p-10 sm:flex-row sm:items-center">
-                <h3 className="font-outfit text-2xl font-black tracking-tighter text-[var(--student-text)]">System Directory</h3>
+                <h3 className="  text-2xl font-black tracking-tighter text-[var(--student-text)]">System Directory</h3>
                 <div className="relative">
                     <MagnifyingGlass size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--student-muted)]" weight="bold" />
                     <input
@@ -141,7 +141,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                                 {user.fullName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
                                             </div>
                                             <div>
-                                                <div className="font-outfit text-base font-black text-[var(--student-text)]">{user.fullName || "Unnamed User"}</div>
+                                                <div className="  text-base font-black text-[var(--student-text)]">{user.fullName || "Unnamed User"}</div>
                                                 <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] opacity-80">{user.email}</div>
                                             </div>
                                         </div>
@@ -160,7 +160,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-6 font-outfit text-sm font-black text-[var(--student-muted-strong)]">{user.registrationNumber || "-"}</td>
+                                    <td className="px-8 py-6   text-sm font-black text-[var(--student-muted-strong)]">{user.registrationNumber || "-"}</td>
                                     <td className="px-8 py-6">
                                         <div
                                             className={cn(
@@ -253,7 +253,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                     <div className="w-full max-w-xl rounded-[40px] border border-[var(--student-border)] bg-white p-10 shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="mb-8 flex items-center justify-between">
                             <div className="space-y-1">
-                                <h3 className="font-outfit text-2xl font-black tracking-tight text-[var(--student-text)]">Edit Platform Member</h3>
+                                <h3 className="  text-2xl font-black tracking-tight text-[var(--student-text)]">Edit Platform Member</h3>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Configuration for {editingUser.email}</p>
                             </div>
                             <button onClick={() => setEditingUser(null)} className="rounded-2xl border border-[var(--student-border)] p-3 text-[var(--student-muted)] transition-all hover:bg-[var(--student-panel-muted)]">
@@ -328,7 +328,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                             <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[24px] bg-rose-50 text-rose-500">
                                 <Trash size={40} weight="fill" />
                             </div>
-                            <h3 className="mb-2 font-outfit text-2xl font-black tracking-tight text-slate-900">Irreversible Action</h3>
+                            <h3 className="mb-2   text-2xl font-black tracking-tight text-slate-900">Irreversible Action</h3>
                             <p className="text-sm font-medium leading-relaxed text-slate-500">
                                 You are about to permanently delete <strong>{deletingUser.fullName || deletingUser.email}</strong>. This will erase all their exam attempts, resources, and analytic history.
                             </p>
@@ -364,7 +364,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                             )}>
                                 <Prohibit size={40} weight="fill" />
                             </div>
-                            <h3 className="mb-2 font-outfit text-2xl font-black tracking-tight text-slate-900">
+                            <h3 className="mb-2   text-2xl font-black tracking-tight text-slate-900">
                                 {blockingUser.status ? "Suspend Membership" : "Restore Membership"}
                             </h3>
                             <p className="text-sm font-medium leading-relaxed text-slate-500">

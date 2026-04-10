@@ -130,7 +130,7 @@ export default function StudentUpdatesPage() {
     const hasMore = visibleCount < feedItems.length;
 
     return (
-        <div className="max-w-[1400px] mx-auto pb-20 font-outfit space-y-12">
+        <div className="max-w-[1400px] mx-auto pb-20   space-y-12">
             <StudentPageHeader
                 className="px-4"
                 eyebrow="Academy intelligence"
@@ -247,7 +247,7 @@ export default function StudentUpdatesPage() {
                                                         {item.scheduledFor ? `Scheduled: ${item.scheduledFor}` : formatRelativeDate(item.createdAt)}
                                                     </span>
                                                 </div>
-                                                <h3 className="text-xl font-bold text-slate-900 font-outfit leading-tight group-hover/item:text-[var(--student-accent-strong)] transition-colors">
+                                                <h3 className="text-xl font-bold text-slate-900   leading-tight group-hover/item:text-[var(--student-accent-strong)] transition-colors">
                                                     {item.title}
                                                 </h3>
                                                 <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-4xl">

@@ -109,7 +109,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                 {activeTab === "exams" && (
                     <div className="p-8 space-y-6">
                         <div className="flex items-center justify-between px-2">
-                            <h3 className="font-outfit text-xl font-black tracking-tight text-[var(--student-text)]">Published Exams</h3>
+                            <h3 className="  text-xl font-black tracking-tight text-[var(--student-text)]">Published Exams</h3>
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                 {exams.filter(e => (e as any).isFeatured).length} Spotlighted
                             </div>
@@ -138,7 +138,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                                             </button>
                                         </div>
                                         <div className="space-y-2">
-                                            <h4 className="font-outfit text-lg font-black tracking-tight text-[var(--student-text)]">{exam.title}</h4>
+                                            <h4 className="  text-lg font-black tracking-tight text-[var(--student-text)]">{exam.title}</h4>
                                             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                                                 <span>{exam.subject}</span>
                                                 <span className="h-1 w-1 rounded-full bg-[var(--student-border-strong)]" />
@@ -155,7 +155,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                 {activeTab === "resources" && (
                     <div className="p-8 space-y-6">
                         <div className="flex items-center justify-between px-2">
-                            <h3 className="font-outfit text-xl font-black tracking-tight text-[var(--student-text)]">Public Resources</h3>
+                            <h3 className="  text-xl font-black tracking-tight text-[var(--student-text)]">Public Resources</h3>
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                 {materials.filter(m => (m as any).isTrending).length} Trending
                             </div>
@@ -184,7 +184,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                                             </button>
                                         </div>
                                         <div className="space-y-2">
-                                            <h4 className="font-outfit text-lg font-black tracking-tight text-[var(--student-text)]">{mat.title}</h4>
+                                            <h4 className="  text-lg font-black tracking-tight text-[var(--student-text)]">{mat.title}</h4>
                                             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                                                 <span>{mat.subType}</span>
                                                 <span className="h-1 w-1 rounded-full bg-[var(--student-border-strong)]" />
@@ -201,7 +201,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                 {activeTab === "announcements" && (
                     <div className="p-8 space-y-8">
                         <div className="flex items-center justify-between px-2">
-                            <h3 className="font-outfit text-xl font-black tracking-tight text-[var(--student-text)]">Active Announcements</h3>
+                            <h3 className="  text-xl font-black tracking-tight text-[var(--student-text)]">Active Announcements</h3>
                         </div>
                         
                         <div className="space-y-4">
@@ -222,7 +222,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                                                     <span>/</span>
                                                     <span className="flex items-center gap-1"><Clock size={12} /> {new Date(announce.createdAt).toLocaleDateString()}</span>
                                                 </div>
-                                                <p className="font-sans text-sm font-bold text-[var(--student-text)]">{announce.content}</p>
+                                                <p className="  text-sm font-bold text-[var(--student-text)]">{announce.content}</p>
                                             </div>
                                         </div>
                                         <button 

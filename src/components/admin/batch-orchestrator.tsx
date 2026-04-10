@@ -86,7 +86,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
             {/* Header */}
             <div className="flex flex-col border-b border-[var(--student-border)] p-10 lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div>
-                    <h3 className="font-outfit text-2xl font-black tracking-tight text-[var(--student-text)]">Pulse Orchestrator</h3>
+                    <h3 className="  text-2xl font-black tracking-tight text-[var(--student-text)]">Pulse Orchestrator</h3>
                     <p className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] mt-1">Managing {batches.length} active training clusters</p>
                 </div>
 
@@ -113,13 +113,13 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">Join Code</p>
-                                    <p className="font-outfit text-sm font-black text-slate-800">{batch.uniqueJoinCode}</p>
+                                    <p className="  text-sm font-black text-slate-800">{batch.uniqueJoinCode}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div>
-                                    <h4 className="font-outfit text-xl font-black tracking-tight text-slate-900 truncate">{batch.name}</h4>
+                                    <h4 className="  text-xl font-black tracking-tight text-slate-900 truncate">{batch.name}</h4>
                                     <p className="text-xs font-bold text-slate-400">Led by {batch.teacher.fullName || batch.teacher.email}</p>
                                 </div>
 
@@ -153,7 +153,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="w-full max-w-lg rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <div className="mb-8 flex items-center justify-between">
-                            <h3 className="font-outfit text-2xl font-black tracking-tight">Batch Governance</h3>
+                            <h3 className="  text-2xl font-black tracking-tight">Batch Governance</h3>
                             <button onClick={() => setEditingBatch(null)} className="p-2"><X size={24} /></button>
                         </div>
                         <form onSubmit={handleUpdateBatch} className="space-y-6">
@@ -184,7 +184,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="w-full max-w-lg rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <div className="mb-8 flex items-center justify-between">
-                            <h3 className="font-outfit text-2xl font-black tracking-tight">Direct Broadcast</h3>
+                            <h3 className="  text-2xl font-black tracking-tight">Direct Broadcast</h3>
                             <button onClick={() => setAnnouncingBatch(null)} className="p-2"><X size={24} /></button>
                         </div>
                         <form onSubmit={handleSendAnnouncement} className="space-y-6">

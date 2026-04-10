@@ -55,8 +55,8 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                 <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
                     <BookmarkSimple size={32} weight="duotone" className="text-slate-300" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-950 font-outfit mb-3 tracking-tight">No saved items</h3>
-                <p className="text-slate-500 max-w-sm mx-auto mb-8 text-base font-medium leading-relaxed font-sans opacity-70">
+                <h3 className="text-2xl font-bold text-slate-950   mb-3 tracking-tight">No saved items</h3>
+                <p className="text-slate-500 max-w-sm mx-auto mb-8 text-base font-medium leading-relaxed   opacity-70">
                     You haven&apos;t saved any materials or exams yet. Start exploring to build your collection.
                 </p>
                 <Link 
@@ -112,7 +112,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                                 <span className="w-1 h-1 rounded-full bg-slate-200" />
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-80">{item.subType ?? item.type}</span>
                             </div>
-                            <h4 className="min-h-[44px] line-clamp-2 font-outfit text-lg font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
+                            <h4 className="min-h-[44px] line-clamp-2   text-lg font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
                                 {item.title}
                             </h4>
                         </div>
@@ -120,7 +120,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                         <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between relative z-10">
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 opacity-60">Uploaded By</span>
-                                <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight font-outfit opacity-80">{item.uploadedBy?.fullName || "Verified Faculty"}</span>
+                                <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight   opacity-80">{item.uploadedBy?.fullName || "Verified Faculty"}</span>
                             </div>
                             <Link href={item.fileUrl ?? "#"} target="_blank" className="student-button-secondary flex h-10 items-center justify-center rounded-xl px-6 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                 View File
@@ -151,7 +151,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                                 <span className="w-1 h-1 rounded-full bg-slate-200" />
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-80">{item.duration ?? item.durationMinutes} Mins</span>
                             </div>
-                            <h4 className="min-h-[44px] line-clamp-2 font-outfit text-lg font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
+                            <h4 className="min-h-[44px] line-clamp-2   text-lg font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
                                 {item.title}
                             </h4>
                         </div>
@@ -159,7 +159,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                         <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between relative z-10">
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 opacity-60">Educator</span>
-                                <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight font-outfit opacity-80">{item.teacher?.fullName || "Verified Expert"}</span>
+                                <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight   opacity-80">{item.teacher?.fullName || "Verified Expert"}</span>
                             </div>
                             <Link href={`/exam/war-room?examId=${item.id}`} className="student-button-primary flex h-10 items-center justify-center rounded-xl px-6 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                 Start Exam

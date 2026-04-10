@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { ExamWithQuestions } from "@/types/exam";
 import { useRouter,useSearchParams } from "next/navigation";
 import { useCallback,useEffect,useRef,useState, Suspense } from "react";
+import { List, Gear, X, CaretLeft, CaretRight, Info, CheckCircle, Warning, Clock } from "@phosphor-icons/react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type OptionShape = { id: string; text: string; isCorrect?: boolean };
@@ -83,6 +84,8 @@ function ExamWarRoomContent() {
     const [solFilter, setSolFilter] = useState<"all" | "wrong" | "correct">("all");
     const [showPracticeAnswer, setShowPracticeAnswer] = useState(false);
     const [negativeMarkingEnabled, setNegativeMarkingEnabled] = useState(false);
+    const [showPalette, setShowPalette] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     // Results state
     const [resultData, setResultData] = useState<{ correct: number; total: number; xpGained: number; timeUsed: number; actualScore: number; wrongAttemptedCount: number; guessedWrongCount: number; skippedCount: number; topicList: { topic: string; accuracy: number; correct: number; total: number }[] } | null>(null);
@@ -415,7 +418,7 @@ function ExamWarRoomContent() {
                 {/* Hero */}
                 <div className="px-8 py-12">
                     <div className="student-surface-dark mx-auto grid max-w-5xl gap-10 rounded-[36px] px-8 py-10 text-white md:grid-cols-[auto_1fr] md:items-center">
-                        <div className="relative w-36 h-36 shrink-0">
+                        <div className="relative w-28 h-28 sm:w-36 sm:h-36 shrink-0 mx-auto md:mx-0">
                             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                                 <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
                                 <circle cx="50" cy="50" r="42" fill="none" stroke={scoreColor} strokeWidth="10" strokeLinecap="round"
@@ -424,7 +427,7 @@ function ExamWarRoomContent() {
                                     style={{ transition: "stroke-dashoffset 1s ease" }} />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-4xl font-black">{accuracy}%</span>
+                                <span className="text-3xl sm:text-4xl font-black">{accuracy}%</span>
                                 <span className="text-[10px] text-white/40 font-bold uppercase">Accuracy</span>
                             </div>
                         </div>
@@ -440,33 +443,32 @@ function ExamWarRoomContent() {
                                     { v: `${correct}/${total}`, l: "Correct" },
                                     { v: wrongAttemptedCount, l: "Wrong" },
                                     { v: skippedCount, l: "Skipped" },
-                                    { v: `${Math.floor(timeUsed / 60)}m ${timeUsed % 60}s`, l: "Time" },
+                                    { v: `${Math.floor(timeUsed / 60)}m`, l: "Time" },
                                 ].map(s => (
-                                    <div key={s.l} className="p-3 rounded-[16px] bg-white/5 border border-white/10 text-center shadow-inner">
-                                        <div className="text-xl font-black">{s.v}</div>
-                                        <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">{s.l}</div>
+                                    <div key={s.l} className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center shadow-inner">
+                                        <div className="text-lg sm:text-xl font-black">{s.v}</div>
+                                        <div className="text-[9px] sm:text-[10px] text-white/40 uppercase tracking-[0.2em]">{s.l}</div>
                                     </div>
                                 ))}
                             </div>
                             {mode === "mock" && (
-                                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 w-fit mx-auto md:mx-0">
                                     <span className="text-[#f2d295] font-black">+{xpGained} XP</span>
-                                    {correct === total && <span className="px-2 py-1 rounded-full bg-[#f2d295]/16 text-[#f2d295] text-xs font-bold">Perfect score</span>}
-                                    {accuracy >= 80 && correct < total && <span className="px-2 py-1 rounded-full bg-[#8dbdaf]/16 text-[#bfe1d6] text-xs font-bold">High accuracy</span>}
+                                    {accuracy >= 80 && <span className="px-2 py-1 rounded-full bg-[#8dbdaf]/16 text-[#bfe1d6] text-[10px] font-bold">Lvl Mastery</span>}
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                <div className="mx-auto max-w-5xl px-8">
+                <div className="mx-auto max-w-5xl px-4 sm:px-8">
                     <div className="student-surface rounded-[28px] p-6 md:p-8">
                         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                             <div className="space-y-2">
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
                                     Negative Marking Simulator
                                 </div>
-                                <h2 className="font-outfit text-2xl font-bold tracking-tight text-[var(--student-text)]">
+                                <h2 className="  text-2xl font-bold tracking-tight text-[var(--student-text)]">
                                     Practice the art of skipping
                                 </h2>
                                 <p className="text-sm leading-7 text-[var(--student-muted-strong)]">
@@ -486,7 +488,7 @@ function ExamWarRoomContent() {
                             </button>
                         </div>
 
-                        <div className="mt-6 grid gap-4 md:grid-cols-3">
+                        <div className="mt-6 grid gap-4 grid-cols-1 md:grid-cols-3">
                             {[
                                 {
                                     label: "Raw Score",
@@ -557,7 +559,7 @@ function ExamWarRoomContent() {
                     {/* Topic breakdown */}
                     {topicList.length > 0 && (
                         <div className="student-surface rounded-[24px] p-6">
-                            <h2 className="font-bold font-outfit text-[var(--student-text)] mb-5">Topic-wise Performance</h2>
+                            <h2 className="font-bold   text-[var(--student-text)] mb-5">Topic-wise Performance</h2>
                             <div className="space-y-3">
                                 {topicList.map(t => {
                                     const c = t.accuracy >= 80 ? "#2f7d55" : t.accuracy >= 55 ? "#b7791f" : "#ef4444";
@@ -593,7 +595,7 @@ function ExamWarRoomContent() {
 
                     {/* Solution Review */}
                     <div className="student-surface rounded-[24px] p-6">
-                        <h2 className="font-bold font-outfit text-[var(--student-text)] mb-4">Solution Review</h2>
+                        <h2 className="font-bold   text-[var(--student-text)] mb-4">Solution Review</h2>
                         <div className="flex gap-2 mb-5 flex-wrap">
                             {([["all", `All (${questions.length})`], ["wrong", `Wrong (${wrongAttemptedCount})`], ["correct", `Correct (${correct})`]] as const).map(([key, label]) => (
                                 <button key={key} onClick={() => setSolFilter(key as "all" | "wrong" | "correct")}
@@ -682,66 +684,103 @@ function ExamWarRoomContent() {
             )}
 
             {/* Top Bar */}
-            <header className={cn("flex items-center justify-between px-6 py-3 shadow-sm border-b", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
-                <div className="flex items-center gap-3">
-                    <div className={cn("w-8 h-8 rounded flex items-center justify-center font-black text-white text-xs", highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)]")}>CA</div>
-                    <div>
-                        <div className={cn("font-bold text-sm", highContrast ? "text-white" : "text-[var(--student-text)]")}>{examTitle}</div>
-                        <div className={cn("text-[10px]", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>{examCategory} · {questions.length} Questions</div>
+            <header className={cn("sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 py-3 shadow-sm border-b", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <button 
+                        onClick={() => setShowPalette(true)}
+                        className="lg:hidden p-2 rounded-lg hover:bg-[var(--student-panel-muted)] transition-colors"
+                    >
+                        <List size={20} weight="bold" />
+                    </button>
+                    <div className={cn("w-7 h-7 sm:w-8 sm:h-8 rounded flex items-center justify-center font-black text-white text-[10px] sm:text-xs", highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)]")}>CA</div>
+                    <div className="hidden xs:block">
+                        <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none", highContrast ? "text-white" : "text-[var(--student-text)]")}>{examTitle}</div>
+                        <div className={cn("text-[9px] sm:text-[10px]", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>{questions.length} Questions</div>
                     </div>
-                    {mode === "practice" && <span className={cn("px-2 py-1 rounded-full text-[10px] font-bold border uppercase tracking-widest", highContrast ? "border-gray-600 text-gray-200" : "border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]")}>Practice Mode</span>}
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleExitExam}
-                        className={cn(
-                            "rounded-lg border px-3 py-1.5 text-xs font-bold transition-all",
-                            highContrast
-                                ? "border-gray-600 text-gray-200 hover:bg-gray-800"
-                                : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]"
-                        )}
-                    >
-                        Exit Test
-                    </button>
-                    {/* Font size */}
-                    <div className="hidden sm:flex items-center gap-1">
-                        {(["sm", "md", "lg"] as const).map(s => (
-                            <button key={s} onClick={() => setFontSize(s)}
-                                className={cn("w-8 h-8 rounded font-bold text-xs", fontSize === s ? (highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white") : (highContrast ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-solid)]"))}>
-                                {s === "sm" ? "A-" : s === "md" ? "A" : "A+"}
-                            </button>
-                        ))}
-                    </div>
-                    {/* High contrast */}
-                    <button onClick={() => setHighContrast(h => !h)}
-                        className={cn("w-10 h-6 rounded-full transition-all relative", highContrast ? "bg-white" : "bg-[var(--student-accent-strong)]/30")}>
-                        <span className={cn("absolute top-0.5 w-5 h-5 rounded-full transition-all bg-white shadow", highContrast ? "left-4 bg-black" : "left-0.5")} />
-                    </button>
-                    <button
-                        onClick={() => setNegativeMarkingEnabled(value => !value)}
-                        className={cn(
-                            "rounded-lg border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all",
-                            negativeMarkingEnabled
-                                ? highContrast
-                                    ? "border-rose-300 bg-rose-500 text-black"
-                                    : "border-rose-200 bg-rose-50 text-rose-700"
-                                : highContrast
+
+                <div className="flex items-center gap-2 sm:gap-3">
+                    {mode === "mock" && (
+                        <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-100 shadow-sm">
+                            <Clock size={16} weight="bold" className={cn(timeLeft < 300 ? "text-rose-500 animate-pulse" : "text-rose-400")} />
+                            <span className={cn("font-mono font-black text-sm sm:text-base", timeLeft < 300 ? "text-rose-600" : "text-slate-700")}>{formatTime(timeLeft)}</span>
+                        </div>
+                    )}
+
+                    <div className="hidden lg:flex items-center gap-3">
+                        <button
+                            onClick={handleExitExam}
+                            className={cn(
+                                "rounded-lg border px-3 py-1.5 text-xs font-bold transition-all",
+                                highContrast
                                     ? "border-gray-600 text-gray-200 hover:bg-gray-800"
-                                    : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]",
-                        )}
+                                    : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]"
+                            )}
+                        >
+                            Exit Test
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {(["sm", "md", "lg"] as const).map(s => (
+                                <button key={s} onClick={() => setFontSize(s)}
+                                    className={cn("w-8 h-8 rounded font-bold text-xs", fontSize === s ? (highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white") : (highContrast ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-solid)]"))}>
+                                    {s === "sm" ? "A-" : s === "md" ? "A" : "A+"}
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={() => setHighContrast(h => !h)}
+                            className={cn("w-10 h-6 rounded-full transition-all relative", highContrast ? "bg-white" : "bg-[var(--student-accent-strong)]/30")}>
+                            <span className={cn("absolute top-0.5 w-5 h-5 rounded-full transition-all bg-white shadow", highContrast ? "left-4 bg-black" : "left-0.5")} />
+                        </button>
+                    </div>
+
+                    <button 
+                        onClick={() => setShowSettings(!showSettings)}
+                        className="lg:hidden p-2 rounded-lg hover:bg-[var(--student-panel-muted)] transition-colors"
                     >
-                        Neg. Marking {negativeMarkingEnabled ? "On" : "Off"}
+                        <Gear size={20} weight="bold" />
                     </button>
-                    {/* Pause (mock mode only) */}
+
                     {mode === "mock" && (
                         <button onClick={togglePause} disabled={pauseUsed && !paused}
-                            className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
+                            className={cn("hidden xs:flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
                                 pauseUsed && !paused ? "bg-gray-100 text-gray-300 cursor-not-allowed" : highContrast ? "border border-gray-600 text-gray-200 hover:bg-gray-800" : "bg-[var(--student-support-soft)] text-[var(--student-support)] border border-[var(--student-support-soft-strong)] hover:bg-[#ecd9b5]")}>
                             {paused ? "Resume" : "Pause"}
-                            {!pauseUsed && <span className={cn("text-[9px]", highContrast ? "text-gray-400" : "text-[var(--student-support)]/70")}>(1x)</span>}
                         </button>
                     )}
                 </div>
+
+                {/* Mobile Settings Popover */}
+                {showSettings && (
+                    <div className="absolute top-16 right-4 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase text-slate-400">Appearance</span>
+                                <button onClick={() => setShowSettings(false)}><X size={16} /></button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold">Contrast</span>
+                                <button onClick={() => setHighContrast(!highContrast)}
+                                    className={cn("w-10 h-6 rounded-full relative transition-all", highContrast ? "bg-black" : "bg-slate-200")}>
+                                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full transition-all bg-white", highContrast ? "right-0.5" : "left-0.5")} />
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold">Text Size</span>
+                                <div className="flex gap-1">
+                                    {(["sm", "md", "lg"] as const).map(s => (
+                                        <button key={s} onClick={() => setFontSize(s)}
+                                            className={cn("w-8 h-8 rounded font-bold text-xs", fontSize === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500")}>
+                                            {s === "sm" ? "A-" : s === "md" ? "A" : "A+"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="pt-2 border-t">
+                                <button onClick={handleExitExam} className="w-full py-3 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold uppercase tracking-widest text-center">Exit Test</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Progress + status bar */}
@@ -750,38 +789,53 @@ function ExamWarRoomContent() {
                 <div className={cn("h-1", highContrast ? "bg-gray-700" : "bg-[var(--student-panel-muted)]")}>
                     <div className={cn("h-full transition-all", highContrast ? "bg-white" : "bg-[var(--student-accent-strong)]")} style={{ width: `${(answered / questions.length) * 100}%` }} />
                 </div>
-                <div className={cn("flex items-center gap-6 px-6 py-2 text-xs font-bold", highContrast ? "text-white" : "text-[var(--student-muted-strong)]")}>
-                    <span>✅ <span className="text-[#00cc00]">{answered}</span> answered</span>
-                    <span>🟣 <span className="text-[#9b59b6]">{marked}</span> marked</span>
-                    <span>⬜ {notVisited} unvisited</span>
+                <div className={cn("flex items-center gap-4 sm:gap-6 px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold overflow-x-auto whitespace-nowrap scrollbar-hide", highContrast ? "text-white" : "text-[var(--student-muted-strong)]")}>
+                    <span>✅ <span className="text-[#00cc00]">{answered}</span> <span className="hidden sm:inline">answered</span></span>
+                    <span>🟣 <span className="text-[#9b59b6]">{marked}</span> <span className="hidden sm:inline">marked</span></span>
+                    <span>⬜ {notVisited} <span className="hidden sm:inline">unvisited</span></span>
                     {mode === "mock" && (
                         <div className="ml-auto flex items-center gap-2">
-                            <span className={cn("text-[10px] uppercase tracking-widest", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>Time Left</span>
-                            <span className={cn("font-mono font-black text-base", timeLeft < 300 ? "text-red-500" : highContrast ? "text-white" : "text-[var(--student-text)]")}>{formatTime(timeLeft)}</span>
+                            <span className={cn("text-[9px] sm:text-[10px] uppercase tracking-widest", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>Time</span>
+                            <span className={cn("font-mono font-black text-sm sm:text-base", timeLeft < 300 ? "text-red-500" : highContrast ? "text-white" : "text-[var(--student-text)]")}>{formatTime(timeLeft)}</span>
                         </div>
                     )}
-                    {mode === "practice" && <span className={cn("ml-auto font-medium", highContrast ? "text-gray-300" : "text-[var(--student-accent-strong)]")}>No timer · {answered}/{questions.length} done</span>}
                 </div>
             </div>
 
             {/* Main layout */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Palette sidebar */}
-                <aside className={cn("w-52 shrink-0 flex flex-col border-r overflow-y-auto select-none", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
-                    <div className={cn("px-4 py-3 font-bold text-sm border-b", highContrast ? "border-gray-700 text-white" : "border-[var(--student-border)] text-[var(--student-text)]")}>Question Palette</div>
-                    <div className="px-3 py-3 grid grid-cols-4 gap-1.5">
-                        {questions.map((qItem, i) => (
-                            <button key={qItem.id} onClick={() => setCurrent(i)}
-                                className={cn("w-10 h-10 rounded-lg font-bold text-xs transition-all hover:opacity-90 active:scale-95",
-                                    highContrast ? "border border-gray-700 bg-gray-800 text-gray-200" : paletteColor(answers[qItem.id]?.status ?? "not-visited"),
-                                    current === i && (highContrast ? "ring-2 ring-white ring-offset-1 ring-offset-black" : "ring-2 ring-[var(--student-accent)] ring-offset-1 ring-offset-[var(--student-bg)]"))}>
-                                {i + 1}
-                            </button>
-                        ))}
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Palette Drawer Overlay */}
+                {showPalette && (
+                    <div className="fixed inset-0 z-[60] lg:hidden bg-black/50 backdrop-blur-sm" onClick={() => setShowPalette(false)} />
+                )}
+
+                {/* Question Palette (Drawer on mobile, Sidebar on desktop) */}
+                <aside className={cn(
+                    "fixed inset-y-0 left-0 z-[70] w-72 lg:relative lg:inset-auto lg:z-auto lg:w-52 shrink-0 flex flex-col border-r transition-transform duration-300 ease-in-out",
+                    highContrast ? "bg-gray-950 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]",
+                    showPalette ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                )}>
+                    <div className={cn("px-4 py-4 lg:py-3 font-bold text-sm border-b flex items-center justify-between", highContrast ? "border-gray-700 text-white" : "border-[var(--student-border)] text-[var(--student-text)]")}>
+                        <span>Question Palette</span>
+                        <button onClick={() => setShowPalette(false)} className="lg:hidden p-1 rounded-lg hover:bg-slate-100 transition-colors">
+                            <X size={18} />
+                        </button>
                     </div>
-                    <div className="px-4 py-2 space-y-1 text-[10px]">
-                        {[["bg-[var(--student-accent-strong)] border border-[var(--student-accent-strong)]", `Answered: ${answered}`], ["bg-rose-500 border border-rose-500", `Not Answered: ${notAnswered}`], ["bg-[var(--student-support)] border border-[var(--student-support)]", `Marked: ${marked}`], ["bg-[var(--student-panel-solid)] border border-[var(--student-border)]", `Not Visited: ${notVisited}`]].map(([cls, lbl]) => (
-                            <div key={lbl} className="flex items-center gap-2"><span className={cn("w-4 h-4 rounded-full shrink-0", highContrast ? "border border-gray-600 bg-gray-800" : cls)} /><span className={highContrast ? "text-gray-300" : "text-[var(--student-muted)]"}>{lbl}</span></div>
+                    <div className="flex-1 overflow-y-auto p-4 lg:p-3">
+                        <div className="grid grid-cols-5 lg:grid-cols-4 gap-2">
+                            {questions.map((qItem, i) => (
+                                <button key={qItem.id} onClick={() => { setCurrent(i); setShowPalette(false); }}
+                                    className={cn("aspect-square rounded-xl font-bold text-xs transition-all hover:opacity-90 active:scale-95 flex items-center justify-center",
+                                        highContrast ? "border border-gray-700 bg-gray-800 text-gray-200" : paletteColor(answers[qItem.id]?.status ?? "not-visited"),
+                                        current === i && (highContrast ? "ring-2 ring-white ring-offset-1 ring-offset-black scale-110" : "ring-2 ring-[var(--student-accent)] ring-offset-2 scale-110"))}>
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="p-4 border-t space-y-2 text-[10px]">
+                        {[["bg-[var(--student-accent-strong)]", `Answered: ${answered}`], ["bg-rose-500", `Not Answered: ${notAnswered}`], ["bg-[var(--student-support)]", `Marked: ${marked}`], ["bg-[var(--student-panel-solid)] border border-[var(--student-border)]", `Not Visited: ${notVisited}`]].map(([cls, lbl]) => (
+                            <div key={lbl} className="flex items-center gap-2"><span className={cn("w-3.5 h-3.5 rounded-full shrink-0", highContrast ? "border border-gray-600 bg-gray-800" : cls)} /><span className={highContrast ? "text-gray-300" : "text-[var(--student-muted)]"}>{lbl}</span></div>
                         ))}
                     </div>
                 </aside>
@@ -805,9 +859,9 @@ function ExamWarRoomContent() {
                     </div>
 
                     {/* Question text + options */}
-                    <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+                    <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
                         {q.caseStudy && (
-                            <div className={cn("flex-1 p-8 overflow-y-auto border-r", highContrast ? "bg-gray-950 border-gray-700" : "bg-slate-50/30 border-[var(--student-border)]")}>
+                            <div className={cn("h-1/2 lg:h-auto lg:flex-1 p-6 sm:p-8 overflow-y-auto border-b lg:border-b-0 lg:border-r", highContrast ? "bg-gray-950 border-gray-700" : "bg-slate-50/30 border-[var(--student-border)]")}>
                                 <div className="mb-4 flex flex-wrap items-center gap-2">
                                     <div className={cn("inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest", highContrast ? "bg-gray-800 text-gray-400" : "bg-slate-200 text-slate-500")}>Case Scenario</div>
                                     {currentCaseBundle && (
@@ -823,7 +877,7 @@ function ExamWarRoomContent() {
                             </div>
                         )}
                         
-                        <div className={cn("flex-1 p-8 overflow-y-auto", q.caseStudy ? "w-full md:w-1/2" : "w-full")}>
+                        <div className={cn("flex-1 p-6 sm:p-8 overflow-y-auto", q.caseStudy ? "w-full lg:w-1/2" : "w-full")}>
                             {currentCaseBundle && (
                                 <div className={cn("mb-6 rounded-[24px] border p-5", highContrast ? "border-gray-700 bg-gray-900" : "border-amber-200 bg-amber-50/70")}>
                                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -929,27 +983,31 @@ function ExamWarRoomContent() {
                     </div>
 
                     {/* Bottom action bar */}
-                    <div className={cn("sticky bottom-0 flex items-center justify-between px-8 py-4 border-t gap-3 flex-wrap", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
-                        <div className="flex items-center gap-2">
-                            <button onClick={markForReview} className={cn("flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 font-bold text-sm", highContrast ? "border-gray-500 text-gray-100 hover:bg-gray-800" : "border-[var(--student-support)] text-[var(--student-support)] hover:bg-[var(--student-support-soft)]")}>
-                                Mark and Next
+                    <div className={cn("sticky bottom-0 z-30 flex items-center justify-between px-4 sm:px-8 py-4 border-t gap-2 sm:gap-4 flex-wrap sm:flex-nowrap", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-panel-solid)] border-[var(--student-border)]")}>
+                        <div className="flex items-center gap-2 flex-1 sm:flex-none justify-between sm:justify-start">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}
+                                    className={cn("h-11 px-4 sm:px-5 flex items-center justify-center rounded-xl border font-black text-xs sm:text-sm disabled:opacity-30", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
+                                    <CaretLeft size={16} weight="bold" />
+                                </button>
+                                <button onClick={() => { if (current < questions.length - 1) setCurrent(c => c + 1); }} disabled={current === questions.length - 1}
+                                    className={cn("h-11 px-4 sm:px-6 flex items-center justify-center rounded-xl font-black text-xs sm:text-sm disabled:opacity-30 transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "bg-[var(--student-accent-strong)] text-white hover:bg-[#18493f] shadow-lg shadow-[rgba(31,92,80,0.18)]")}>
+                                    Next <CaretRight size={16} weight="bold" className="ml-1" />
+                                </button>
+                            </div>
+                            
+                            <button onClick={markForReview} className={cn("flex-1 sm:flex-none h-11 flex items-center justify-center gap-2 px-4 sm:px-6 rounded-xl border-2 font-black text-[10px] sm:text-xs uppercase tracking-widest", highContrast ? "border-gray-500 text-gray-100 hover:bg-gray-800" : "border-[var(--student-support)] text-[var(--student-support)] hover:bg-[var(--student-support-soft)]")}>
+                                <Info size={16} weight="fill" className="hidden xs:block" /> Mark
                             </button>
-                            <button onClick={clearAnswer} className={cn("px-5 py-2.5 rounded-lg border-2 font-bold text-sm", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 flex-1 sm:flex-none w-full sm:w-auto">
+                            <button onClick={clearAnswer} className={cn("flex-1 sm:flex-none h-11 px-6 rounded-xl border font-black text-[10px] sm:text-xs uppercase tracking-widest", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
                                 Clear
                             </button>
                             <button onClick={() => void handleFinalSubmit()}
-                                className={cn("flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "bg-[var(--student-accent-strong)] text-white hover:bg-[#18493f] shadow-lg shadow-[rgba(31,92,80,0.18)]")}>
-                                Submit
-                            </button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}
-                                className={cn("px-5 py-2.5 rounded-lg border-2 font-bold text-sm disabled:opacity-30", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
-                                Previous
-                            </button>
-                            <button onClick={() => { if (current < questions.length - 1) setCurrent(c => c + 1); }} disabled={current === questions.length - 1}
-                                className={cn("px-6 py-2.5 rounded-lg font-bold text-sm disabled:opacity-30 transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "bg-[var(--student-accent-strong)] text-white hover:bg-[#18493f] shadow-lg shadow-[rgba(31,92,80,0.18)]")}>
-                                Next
+                                className={cn("flex-1 sm:flex-none h-11 flex items-center justify-center gap-2 px-8 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all", highContrast ? "bg-rose-500 text-white hover:bg-rose-600" : "bg-slate-900 text-white hover:bg-black shadow-lg shadow-black/10")}>
+                                <CheckCircle size={18} weight="fill" /> Final Submit
                             </button>
                         </div>
                     </div>

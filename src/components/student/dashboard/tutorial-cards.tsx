@@ -66,7 +66,7 @@ export function TutorialCards() {
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#667370]">Quick Start Tutorial</div>
-                            <h2 className="mt-2 font-outfit text-3xl font-black tracking-tight text-[#1f2b2f]">
+                            <h2 className="mt-2   text-3xl font-black tracking-tight text-[#1f2b2f]">
                                 Welcome to your Workspace
                             </h2>
                         </div>
@@ -100,7 +100,7 @@ export function TutorialCards() {
                                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1f5c50]">
                                     Step {currentStep + 1} of 4
                                 </div>
-                                <h3 className="font-outfit text-2xl font-black text-[#1f2b2f]">
+                                <h3 className="  text-2xl font-black text-[#1f2b2f]">
                                     {step.title}
                                 </h3>
                                 <p className="text-sm font-medium leading-relaxed text-[#667370] max-w-sm">

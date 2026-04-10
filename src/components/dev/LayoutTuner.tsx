@@ -56,7 +56,7 @@ export function LayoutTuner() {
     }
 
     return (
-        <div className="fixed bottom-4 right-4 left-4 md:left-auto z-[9999] md:w-80 bg-white border border-slate-200 shadow-2xl rounded-2xl p-5 font-outfit animate-in slide-in-from-bottom flex flex-col gap-6">
+        <div className="fixed bottom-4 right-4 left-4 md:left-auto z-[9999] md:w-80 bg-white border border-slate-200 shadow-2xl rounded-2xl p-5   animate-in slide-in-from-bottom flex flex-col gap-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-indigo-600 text-[18px]">tune</span>

@@ -29,7 +29,7 @@ export default function PrivacyPolicyPage() {
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                         Privacy policy
                     </div>
-                    <h1 className="font-outfit text-4xl font-black tracking-tight text-[var(--landing-text)] sm:text-5xl">
+                    <h1 className="  text-4xl font-black tracking-tight text-[var(--landing-text)] sm:text-5xl">
                         How platform data is handled
                     </h1>
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--landing-muted)]">
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                                 Section {index + 1}
                             </div>
-                            <h2 className="font-outfit text-2xl font-black tracking-tight text-[var(--landing-text)]">
+                            <h2 className="  text-2xl font-black tracking-tight text-[var(--landing-text)]">
                                 {section.title}
                             </h2>
                             <p className="max-w-4xl text-sm leading-8 text-[var(--landing-muted)]">

@@ -55,7 +55,7 @@ export default async function GlobalIndexPage() {
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-[10px] font-bold uppercase tracking-widest">
                             <Broadcast size={12} weight="fill" className="animate-pulse" /> Live Platform Active
                         </div>
-                        <h1 className="font-outfit leading-tight tracking-tight">
+                        <h1 className="  leading-tight tracking-tight">
                             Your CA <br /> Preparation Hub
                         </h1>
                         <p className="text-slate-400 text-base font-medium leading-relaxed">
@@ -110,7 +110,7 @@ export default async function GlobalIndexPage() {
             <div className="space-y-8">
                 <div className="flex justify-between items-end">
                     <div className="space-y-1">
-                        <h2 className="font-outfit uppercase tracking-tight">Platform Index</h2>
+                        <h2 className="  uppercase tracking-tight">Platform Index</h2>
                         <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Explore modules & features</p>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
@@ -130,7 +130,7 @@ export default async function GlobalIndexPage() {
                                     {section.icon}
                                 </div>
                                 <div className="space-y-2">
-                                    <h3 className="text-lg font-bold text-slate-900 font-outfit flex items-center justify-between">
+                                    <h3 className="text-lg font-bold text-slate-900   flex items-center justify-between">
                                         {section.title}
                                         <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                                     </h3>
@@ -158,7 +158,7 @@ export default async function GlobalIndexPage() {
             {/* Subject Directory: CA Final 2024 */}
             <div className="space-y-8">
                 <div className="space-y-1">
-                    <h2 className="font-outfit uppercase tracking-tight">CA Final <span className="text-indigo-600/80">Subjects</span></h2>
+                    <h2 className="  uppercase tracking-tight">CA Final <span className="text-indigo-600/80">Subjects</span></h2>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Syllabus Index • Group I & II</p>
                 </div>
 
@@ -173,7 +173,7 @@ export default async function GlobalIndexPage() {
                     ].map((subject, idx) => (
                         <div key={idx} className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-indigo-500/20 transition-all group cursor-pointer hover:shadow-lg hover:-translate-y-1">
                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-600/80">Paper {idx + 1}</div>
-                            <div className="text-sm font-bold text-slate-900 font-outfit leading-tight mb-4 group-hover:text-indigo-600/80">{subject.name}</div>
+                            <div className="text-sm font-bold text-slate-900   leading-tight mb-4 group-hover:text-indigo-600/80">{subject.name}</div>
                             <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
                                 <span className="px-2 py-0.5 rounded-md bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Group {subject.group}</span>
                                 <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 opacity-0 group-hover:opacity-100 transition-all">
@@ -225,7 +225,7 @@ function MetricWidget({ label, value, icon, color }: { label: string, value: str
                 {icon}
             </div>
             <div className="space-y-1">
-                <div className="text-xl font-bold font-outfit leading-none">{value}</div>
+                <div className="text-xl font-bold   leading-none">{value}</div>
                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</div>
             </div>
         </div>

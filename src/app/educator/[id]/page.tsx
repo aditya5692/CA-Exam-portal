@@ -18,7 +18,7 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
         <main className="min-h-screen bg-[var(--landing-bg)] text-[var(--landing-text)] font-medium selection:bg-[var(--landing-selection-bg)] selection:text-[var(--landing-accent)]">
             {/* Simple Navbar */}
             <nav className="fixed top-0 inset-x-0 h-16 bg-[var(--landing-panel)]/80 backdrop-blur-md border-b border-[var(--landing-border)] z-50 flex items-center px-6">
-                <Link href="/" className="font-outfit font-black text-xl text-[var(--landing-text)]">Financly</Link>
+                <Link href="/" className="font-black text-xl text-[var(--landing-text)]">Financly</Link>
             </nav>
 
             <section className="relative pt-32 pb-24 px-6 sm:px-12">
@@ -52,7 +52,7 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
                                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--landing-accent)]">Official CA Partner</span>
                                 </div>
 
-                                <h1 className="text-4xl md:text-5xl font-black font-outfit text-[var(--landing-text)] tracking-tight flex items-center gap-4">
+                                <h1 className="text-4xl md:text-5xl font-black text-[var(--landing-text)] tracking-tight flex items-center gap-4">
                                     {fullName}
                                 </h1>
 
@@ -63,8 +63,8 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
                             </div>
 
                              <div className="bg-[var(--landing-panel)] rounded-[32px] p-8 shadow-[var(--landing-shadow)] border border-[var(--landing-border)] mt-8 relative overflow-hidden">
-                                <h2 className="text-xl font-bold font-outfit text-[var(--landing-text)] mb-4 flex items-center gap-2">About the Educator</h2>
-                                <p className="text-[var(--landing-muted)] leading-relaxed text-sm md:text-base whitespace-pre-wrap font-sans">
+                                <h2 className="text-xl font-bold text-[var(--landing-text)] mb-4 flex items-center gap-2">About the Educator</h2>
+                                <p className="text-[var(--landing-muted)] leading-relaxed text-sm md:text-base whitespace-pre-wrap">
                                     {bio || "This educator hasn't written a biography yet, but their materials speak for themselves!"}
                                 </p>
                             </div>
@@ -73,7 +73,7 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
                             <div className="grid grid-cols-2 gap-6 mt-6">
                                 <div className="bg-[var(--landing-panel)] rounded-[32px] p-8 border border-[var(--landing-border)] shadow-[var(--landing-shadow)] flex items-center justify-between group hover:shadow-[var(--landing-shadow-lg)] hover:-translate-y-1 transition-all duration-300">
                                     <div>
-                                        <p className="text-3xl font-black text-[var(--landing-text)] font-outfit">{totalMaterials}</p>
+                                        <p className="text-3xl font-black text-[var(--landing-text)]">{totalMaterials}</p>
                                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--landing-muted)] mt-2">Free Resources</p>
                                     </div>
                                     <div className="w-14 h-14 bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] rounded-[20px] flex items-center justify-center shrink-0">
@@ -82,7 +82,7 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
                                 </div>
                                 <div className="bg-[var(--landing-panel)] rounded-[32px] p-8 border border-[var(--landing-border)] shadow-[var(--landing-shadow)] flex items-center justify-between group hover:shadow-[var(--landing-shadow-lg)] hover:-translate-y-1 transition-all duration-300">
                                     <div>
-                                        <p className="text-3xl font-black text-[var(--landing-text)] font-outfit">{totalBatches}</p>
+                                        <p className="text-3xl font-black text-[var(--landing-text)]">{totalBatches}</p>
                                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--landing-muted)] mt-2">Active Batches</p>
                                     </div>
                                     <div className="w-14 h-14 bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] rounded-[20px] flex items-center justify-center shrink-0">

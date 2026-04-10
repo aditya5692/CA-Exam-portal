@@ -43,7 +43,7 @@ export default async function PaymentSuccessPage({ searchParams }: PaymentSucces
                     </div>
 
                     <div className="relative mb-12 space-y-4">
-                        <h1 className="font-outfit text-4xl font-black tracking-tighter text-slate-900 md:text-5xl">
+                        <h1 className="  text-4xl font-black tracking-tighter text-slate-900 md:text-5xl">
                             Payment <span className="text-emerald-500">Authorized</span>
                         </h1>
                         <p className="mx-auto max-w-md text-lg font-medium text-slate-500">

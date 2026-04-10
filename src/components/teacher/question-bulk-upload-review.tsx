@@ -217,7 +217,7 @@ export function QuestionBulkUploadReview() {
 
     if (publishResult?.success) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[500px] animate-in fade-in zoom-in-95 duration-700 text-center space-y-8 max-w-2xl mx-auto font-outfit">
+            <div className="flex flex-col items-center justify-center min-h-[500px] animate-in fade-in zoom-in-95 duration-700 text-center space-y-8 max-w-2xl mx-auto  ">
                 <div className="relative">
                     <div className="absolute inset-0 bg-emerald-500/20 blur-[40px] rounded-full animate-pulse" />
                     <div className="relative w-24 h-24 rounded-[32px] bg-slate-900 text-emerald-400 flex items-center justify-center shadow-2xl">
@@ -273,7 +273,7 @@ export function QuestionBulkUploadReview() {
     }
 
     return (
-        <div className="space-y-8 pb-10 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-8 pb-10 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-4">
                 <div className="space-y-4">
@@ -282,7 +282,7 @@ export function QuestionBulkUploadReview() {
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Review & Publish</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tighter text-slate-900">Review Questions</h1>
-                    <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 font-medium text-sm   max-w-2xl leading-relaxed">
                         Verify your uploaded questions and publish them to your students.
                     </p>
                 </div>
@@ -334,7 +334,7 @@ export function QuestionBulkUploadReview() {
                                     report.skippedCount > 0 ? "border-amber-100 bg-amber-50/50" : "border-slate-100 bg-slate-50/30"
                                 )}>
                                     <p className={cn("text-[9px] font-black uppercase tracking-[0.2em] mb-2", report.skippedCount > 0 ? "text-amber-600" : "text-slate-400")}>Skipped Rows</p>
-                                    <div className={cn("text-3xl font-bold tracking-tight font-outfit", report.skippedCount > 0 ? "text-amber-600" : "text-slate-300")}>{report.skippedCount}</div>
+                                    <div className={cn("text-3xl font-bold tracking-tight  ", report.skippedCount > 0 ? "text-amber-600" : "text-slate-300")}>{report.skippedCount}</div>
                                 </div>
                             </div>
 
@@ -368,7 +368,7 @@ export function QuestionBulkUploadReview() {
                 </div>
 
                 {/* ── Right Side: Deploy Panel ───────────────────────────── */}
-                <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden flex flex-col p-8 font-outfit relative">
+                <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden flex flex-col p-8   relative">
                     {stage === "processing" ? (
                         <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
                             <div className="w-20 h-20 rounded-[28px] bg-slate-50 flex items-center justify-center text-indigo-500">
@@ -400,7 +400,7 @@ export function QuestionBulkUploadReview() {
                                         value={seriesTitle}
                                         onChange={(e) => setSeriesTitle(e.target.value)}
                                         placeholder="e.g. Corporate Law — Final Mock 01"
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold placeholder:text-slate-300"
+                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold placeholder:text-slate-300"
                                     />
                                 </div>
 
@@ -410,7 +410,7 @@ export function QuestionBulkUploadReview() {
                                     <select
                                         value={caLevel}
                                         onChange={(e) => setCaLevel(e.target.value as typeof caLevel)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         {CA_LEVELS.map((l) => (
                                             <option key={l.value} value={l.value}>{l.label}</option>
@@ -424,7 +424,7 @@ export function QuestionBulkUploadReview() {
                                     <select
                                         value={subject}
                                         onChange={(e) => setSubject(e.target.value)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         <option value="" disabled>Select Subject</option>
                                         {availableSubjects.map((s) => (
@@ -439,7 +439,7 @@ export function QuestionBulkUploadReview() {
                                     <select
                                         value={examType}
                                         onChange={(e) => setExamType(e.target.value)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-sans font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         <option value="GENERAL">General Practice</option>
                                         <option value="RPT">RPT (Revision Test Paper)</option>

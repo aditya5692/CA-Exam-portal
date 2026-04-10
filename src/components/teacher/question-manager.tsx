@@ -4,63 +4,33 @@ import {
   parseQuestionRows,
   writeBulkUploadSession
 } from "@/lib/question-bank-upload";
-import { 
-  getVaultQuestions, 
-  deleteVaultQuestion, 
-  saveQuestionsToVault 
-} from "@/actions/mcq-vault-actions";
+import { saveQuestionsToVault } from "@/actions/mcq-vault-actions";
 import { cn } from "@/lib/utils";
 import {
   CaretDown,
   Check,
   CloudArrowUp,
   DownloadSimple,
-  FloppyDisk,
   Lightning,
-  MagnifyingGlass,
   PencilSimple,
   Plus,
   SpinnerGap,
-  Trash,
-  Books
+  Stack,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect,useRef,useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
-interface VaultQuestion {
-    id: string;
-    text: string;
-    subject?: string;
-    topic?: string;
-    difficulty?: string;
-    type?: string;
-    options: { text: string; isCorrect: boolean }[];
-}
-
 export function QuestionManager() {
-    const [questions, setQuestions] = useState<VaultQuestion[]>([]);
     const [draft, setDraft] = useState({ prompt: "", options: ["", "", "", ""], correct: [] as number[], subject: "", topic: "", difficulty: "Medium" });
     const [isPreparingUpload, setIsPreparingUpload] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
     const [isSavingManual, setIsSavingManual] = useState(false);
     
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-    const fetchQuestions = async () => {
-        const res = await getVaultQuestions();
-        if (res.success) {
-            setQuestions((res.data || []) as VaultQuestion[]);
-        }
-    };
-
-    useEffect(() => {
-        fetchQuestions();
-    }, []);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -117,15 +87,6 @@ export function QuestionManager() {
             setIsPreparingUpload(false);
         }
     };
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this question?")) return;
-        const res = await deleteVaultQuestion(id);
-        if (res.success) {
-            fetchQuestions();
-        } else {
-            alert(res.message);
-        }
-    };
 
     const handleManualSave = async () => {
         if (!draft.prompt.trim()) return alert("Prompt is required");
@@ -145,7 +106,8 @@ export function QuestionManager() {
 
         if (res.success) {
             setDraft({ prompt: "", options: ["", "", "", ""], correct: [], subject: "", topic: "", difficulty: "Medium" });
-            fetchQuestions();
+            // Redirect to question bank after adding
+            router.push("/teacher/question-bank");
         } else {
             alert(res.message);
         }
@@ -162,21 +124,21 @@ export function QuestionManager() {
     };
 
     return (
-        <div className="w-full max-w-7xl mx-auto pb-12 font-outfit animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-full max-w-4xl mx-auto pb-12   animate-in fade-in slide-in-from-bottom-4 duration-500">
             <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleBulkUpload} />
 
             {/* Premium Header */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 md:p-10 mb-8 relative overflow-hidden">
+            <div className="mb-10 relative">
                 <div className="absolute top-0 right-0 w-[500px] h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
                     <div className="space-y-3">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-black uppercase tracking-widest text-indigo-600">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            Assessment Engine
+                            Creation Wizard
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">Create Test Series</h1>
+                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">Add MCQs</h1>
                         <p className="text-slate-500 font-medium text-sm max-w-xl leading-relaxed">
-                            Author and manage high-quality questions for your mock tests. Upload questions in bulk using Excel, or build them individually using the studio editor.
+                            Upload questions in bulk via Excel, or use the single question manual editor. Generated questions are saved to the Question Bank.
                         </p>
                     </div>
                     
@@ -186,6 +148,13 @@ export function QuestionManager() {
                             className="h-12 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-xs hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 transition-all active:scale-95 flex items-center gap-2 px-5 shadow-sm"
                         >
                             <Lightning size={16} weight="fill" className="text-amber-500" /> AI Generator
+                        </Link>
+                        
+                        <Link
+                            href="/teacher/question-bank"
+                            className="h-12 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-xs hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 transition-all active:scale-95 flex items-center gap-2 px-5 shadow-sm"
+                        >
+                            <Stack size={16} weight="bold" /> View Bank
                         </Link>
 
                         <div ref={dropdownRef} className="relative">
@@ -235,191 +204,100 @@ export function QuestionManager() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-[2.5fr_1.5fr] gap-8">
-                {/* Question Inventory */}
-                <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-lg font-bold text-slate-900">Question Bank</h2>
-                            <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">{questions.length} Total</span>
-                        </div>
-                        <div className="relative w-full sm:w-auto mt-1 sm:mt-0">
-                             <MagnifyingGlass size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" weight="bold" />
-                             <input 
-                                type="text" 
-                                value={searchQuery} 
-                                onChange={(e) => setSearchQuery(e.target.value)} 
-                                placeholder="Search questions..." 
-                                className="pl-10 pr-4 h-10 w-full sm:w-64 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm" 
-                             />
-                        </div>
+            {/* Manual Builder */}
+            <div className="pt-8 border-t border-slate-100">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                        <PencilSimple size={16} weight="fill" />
                     </div>
-                    
-                    <div className="space-y-4">
-                        {questions.length === 0 ? (
-                            <div className="w-full rounded-3xl border-2 border-dashed border-slate-200 p-12 text-center bg-slate-50/50">
-                                <div className="w-16 h-16 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                    <Books size={32} />
-                                </div>
-                                <h3 className="text-base font-bold text-slate-900 mb-1">No questions found</h3>
-                                <p className="text-sm text-slate-500 max-w-sm mx-auto">Upload an Excel file or use the manual entry form to start building your test series.</p>
-                            </div>
-                        ) : (
-                            questions.filter(q => q.text.toLowerCase().includes(searchQuery.toLowerCase())).map((q, i) => (
-                                <div key={i} className="group bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8 transition-all hover:shadow-md hover:border-indigo-200 relative overflow-hidden">
-                                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-100 group-hover:bg-indigo-500 transition-colors" />
-
-                                    <div className="absolute top-5 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                        <button className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center"><PencilSimple size={16} weight="fill" /></button>
-                                        <button 
-                                            onClick={() => handleDelete(q.id)}
-                                            className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center justify-center"
-                                        >
-                                            <Trash size={16} weight="fill" />
-                                        </button>
-                                    </div>
-                                    
-                                    <div className="pl-4 space-y-5">
-                                        <div className="space-y-3 pr-16 bg">
-                                            <div className="flex flex-wrap gap-2 mb-1">
-                                                {q.difficulty && (
-                                                    <span className={cn(
-                                                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest",
-                                                        q.difficulty.toLowerCase() === "hard" ? "bg-rose-50 text-rose-600" :
-                                                        q.difficulty.toLowerCase() === "medium" ? "bg-amber-50 text-amber-600" :
-                                                        "bg-emerald-50 text-emerald-600"
-                                                    )}>{q.difficulty}</span>
-                                                )}
-                                                {q.subject && (
-                                                     <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest">
-                                                         {q.subject}
-                                                     </span>
-                                                )}
-                                            </div>
-                                            <h3 className="text-base font-bold text-slate-900 leading-normal">{i + 1}. {q.text}</h3>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                                            {q.options.map((opt, idx: number) => (
-                                                <div key={idx} className={cn(
-                                                    "px-4 py-3 rounded-xl border flex items-center justify-between text-sm transition-all relative overflow-hidden",
-                                                    opt.isCorrect
-                                                        ? "bg-emerald-50/50 border-emerald-200 font-bold text-emerald-900 shadow-sm"
-                                                        : "bg-white border-slate-200 font-medium text-slate-600 hover:border-slate-300"
-                                                )}>
-                                                    {opt.isCorrect && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
-                                                    <div className="flex gap-3 text-left">
-                                                        <span className={cn("shrink-0", opt.isCorrect ? "text-emerald-500" : "text-slate-400")}>{String.fromCharCode(65 + idx)}.</span>
-                                                        <span className="break-words">{opt.text}</span>
-                                                    </div>
-                                                    {opt.isCorrect && <Check size={16} weight="bold" className="text-emerald-600 shrink-0 ml-2" />}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        )}
+                    <div>
+                        <h3 className="text-base font-bold tracking-tight text-slate-900">Manual Entry</h3>
+                        <p className="text-[10px] font-medium text-slate-400 mt-0.5">Add a single question to the bank</p>
                     </div>
                 </div>
 
-                {/* Manual Builder Sticky Map */}
-                <div className="relative">
-                    <div className="bg-white rounded-[32px] border border-slate-200 shadow-lg shadow-slate-200/40 p-8 sticky top-28">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
-                                <PencilSimple size={24} weight="fill" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold tracking-tight text-slate-900">Add New Question</h3>
-                                <p className="text-xs font-medium text-slate-500 mt-1">Manual entry editor</p>
-                            </div>
+                <div className="space-y-6">
+                    <div className="space-y-2.5">
+                        <label className="text-xs font-bold text-slate-700">Question Text</label>
+                        <textarea
+                            rows={4}
+                            value={draft.prompt}
+                            onChange={(e) => setDraft(prev => ({ ...prev, prompt: e.target.value }))}
+                            placeholder="Enter your question here..."
+                            className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all font-medium resize-none shadow-sm"
+                        />
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-700">Answer Options</label>
+                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded">Select Correct</span>
                         </div>
-
-                        <div className="space-y-6">
-                            <div className="space-y-2.5">
-                                <label className="text-xs font-bold text-slate-700">Question Text</label>
-                                <textarea
-                                    rows={4}
-                                    value={draft.prompt}
-                                    onChange={(e) => setDraft(prev => ({ ...prev, prompt: e.target.value }))}
-                                    placeholder="Enter your question here..."
-                                    className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all font-medium resize-none shadow-sm"
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-slate-700">Answer Options</label>
-                                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded">Select Correct</span>
-                                </div>
-                                <div className="space-y-2.5">
-                                    {draft.options.map((opt, i) => (
-                                        <div key={i} className="flex gap-2">
-                                            <div className="flex-1">
-                                                <input
-                                                    type="text"
-                                                    value={opt}
-                                                    onChange={(e) => {
-                                                        const newOptions = [...draft.options];
-                                                        newOptions[i] = e.target.value;
-                                                        setDraft(prev => ({ ...prev, options: newOptions }));
-                                                    }}
-                                                    placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                                                    className="w-full h-11 bg-slate-50/50 border border-slate-200 rounded-xl px-4 text-sm font-medium text-slate-900 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
-                                                />
-                                            </div>
-                                            <button 
-                                                onClick={() => toggleCorrect(i)}
-                                                className={cn(
-                                                    "w-11 h-11 shrink-0 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 shadow-sm",
-                                                    draft.correct.includes(i)
-                                                        ? "bg-emerald-50 border-emerald-500 text-emerald-600"
-                                                        : "bg-white border-slate-200 text-slate-300 hover:text-emerald-500 hover:border-emerald-200 hover:bg-emerald-50/50"
-                                                )}
-                                            >
-                                                <Check size={18} weight={draft.correct.includes(i) ? "bold" : "regular"} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Difficulty</label>
-                                    <select 
-                                        value={draft.difficulty}
-                                        onChange={(e) => setDraft(prev => ({ ...prev, difficulty: e.target.value }))}
-                                        className="w-full h-11 bg-white border border-slate-200 rounded-xl px-3 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-400 shadow-sm"
+                        <div className="space-y-2.5">
+                            {draft.options.map((opt, i) => (
+                                <div key={i} className="flex gap-2">
+                                    <div className="flex-1">
+                                        <input
+                                            type="text"
+                                            value={opt}
+                                            onChange={(e) => {
+                                                const newOptions = [...draft.options];
+                                                newOptions[i] = e.target.value;
+                                                setDraft(prev => ({ ...prev, options: newOptions }));
+                                            }}
+                                            placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                                            className="w-full h-11 bg-slate-50/50 border border-slate-200 rounded-xl px-4 text-sm font-medium text-slate-900 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                                        />
+                                    </div>
+                                    <button 
+                                        onClick={() => toggleCorrect(i)}
+                                        className={cn(
+                                            "w-11 h-11 shrink-0 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 shadow-sm",
+                                            draft.correct.includes(i)
+                                                ? "bg-emerald-50 border-emerald-500 text-emerald-600"
+                                                : "bg-white border-slate-200 text-slate-300 hover:text-emerald-500 hover:border-emerald-200 hover:bg-emerald-50/50"
+                                        )}
                                     >
-                                        <option>Easy</option>
-                                        <option>Medium</option>
-                                        <option>Hard</option>
-                                    </select>
+                                        <Check size={18} weight={draft.correct.includes(i) ? "bold" : "regular"} />
+                                    </button>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Subject Tag</label>
-                                    <input 
-                                        type="text"
-                                        value={draft.subject}
-                                        onChange={(e) => setDraft(prev => ({ ...prev, subject: e.target.value }))}
-                                        placeholder="e.g. Audit"
-                                        className="w-full h-11 bg-white border border-slate-200 rounded-xl px-3 text-sm font-semibold text-slate-700 placeholder:text-slate-300 outline-none focus:border-indigo-400 shadow-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <button 
-                                onClick={handleManualSave}
-                                disabled={isSavingManual}
-                                className="w-full h-12 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-indigo-600 shadow-lg shadow-slate-900/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:pointer-events-none"
-                            >
-                                {isSavingManual ? <SpinnerGap size={18} className="animate-spin" /> : <Plus size={18} weight="bold" />}
-                                {isSavingManual ? "Saving..." : "Add to Question Bank"}
-                            </button>
+                            ))}
                         </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Difficulty</label>
+                            <select 
+                                value={draft.difficulty}
+                                onChange={(e) => setDraft(prev => ({ ...prev, difficulty: e.target.value }))}
+                                className="w-full h-11 bg-white border border-slate-200 rounded-xl px-3 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-400 shadow-sm"
+                            >
+                                <option>Easy</option>
+                                <option>Medium</option>
+                                <option>Hard</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Subject Tag</label>
+                            <input 
+                                type="text"
+                                value={draft.subject}
+                                onChange={(e) => setDraft(prev => ({ ...prev, subject: e.target.value }))}
+                                placeholder="e.g. Audit"
+                                className="w-full h-11 bg-white border border-slate-200 rounded-xl px-3 text-sm font-semibold text-slate-700 placeholder:text-slate-300 outline-none focus:border-indigo-400 shadow-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={handleManualSave}
+                        disabled={isSavingManual}
+                        className="w-full h-12 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-indigo-600 shadow-lg shadow-slate-900/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                        {isSavingManual ? <SpinnerGap size={18} className="animate-spin" /> : <Plus size={18} weight="bold" />}
+                        {isSavingManual ? "Saving..." : "Save to Question Bank"}
+                    </button>
                 </div>
             </div>
         </div>

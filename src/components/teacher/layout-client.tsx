@@ -23,7 +23,7 @@ export function TeacherLayoutClient({ children, session, subjects = [] }: Teache
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     return (
-        <div className="student-theme student-shell relative flex h-screen overflow-hidden font-sans">
+        <div className="student-theme student-shell relative flex h-screen overflow-hidden  ">
             {isMobileSidebarOpen && (
                 <div
                     className="fixed inset-0 z-[60] bg-[var(--landing-panel-dark)]/20 backdrop-blur-sm md:hidden"
@@ -80,7 +80,7 @@ export function TeacherLayoutClient({ children, session, subjects = [] }: Teache
                         {/* Identity Section */}
                         <Link href="/teacher/profile" className="flex items-center gap-2 md:gap-4 group shrink-0">
                             <div className="hidden text-right md:block">
-                                <p className="font-outfit text-sm font-bold leading-none text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
+                                <p className="  text-sm font-bold leading-none text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
                                     {session.fullName ?? "Teacher"}
                                 </p>
                                 <div className="flex items-center justify-end gap-2 mt-1.5">

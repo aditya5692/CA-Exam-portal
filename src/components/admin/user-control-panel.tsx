@@ -155,7 +155,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                             {user.fullName?.[0] || user.email?.[0]?.toUpperCase()}
                         </div>
                         <div className="space-y-1">
-                            <h2 className="font-outfit text-3xl font-black tracking-tight">{user.fullName || "Unnamed"}</h2>
+                            <h2 className="  text-3xl font-black tracking-tight">{user.fullName || "Unnamed"}</h2>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">{user.email}</p>
                         </div>
                     </div>

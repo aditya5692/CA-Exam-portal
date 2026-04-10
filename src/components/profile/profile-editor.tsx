@@ -282,7 +282,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
     }
 
     return (
-        <div className="space-y-12 animate-in fade-in duration-500 font-outfit">
+        <div className="space-y-12 animate-in fade-in duration-500  ">
             {/* Standardized Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
                 <div className="space-y-4">
@@ -292,10 +292,10 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                             {mode === "teacher" ? "Faculty Protocol" : "Scholarly Identity"}
                         </span>
                     </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-2xl md:text-3xl font-black text-slate-900">
+                    <h1 className="  tracking-tighter leading-tight text-2xl md:text-3xl font-black text-slate-900">
                         {profile.fullName?.split(" ")[0] || "User"}&apos;s <span className="text-indigo-600">Profile</span>
                     </h1>
-                    <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 font-medium text-sm   max-w-2xl leading-relaxed">
                         Unified terminal for personal identity, scholarly credentials, and operational security management.
                     </p>
                 </div>
@@ -311,7 +311,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                 <div />
                 <div className="rounded-3xl border border-indigo-100/50 bg-indigo-50/20 backdrop-blur-md px-10 py-8 min-w-[340px] shadow-xl shadow-indigo-900/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200/10 rounded-full blur-3xl -mr-16 -mt-16" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/70 font-outfit">Identity Integrity</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/70  ">Identity Integrity</p>
                     <div className="mt-5 flex items-end gap-4">
                         <span className="text-6xl font-black text-indigo-600 tracking-tighter leading-none">{completion.percentage}%</span>
                         {completion.percentage === 100 && (
@@ -340,7 +340,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                             {mode === "teacher" ? <ShieldCheck className="w-8 h-8" strokeWidth={2.5} /> : <GraduationCap className="w-8 h-8" strokeWidth={2.5} />}
                         </div>
                         <div>
-                            <h2 className="font-outfit tracking-tight">Identity Matrix</h2>
+                            <h2 className="  tracking-tight">Identity Matrix</h2>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Verified Authorization</p>
                         </div>
                     </div>
@@ -349,18 +349,18 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                         <div className="rounded-3xl bg-slate-50 border border-slate-100 px-7 py-7 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-full blur-2xl -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors relative z-10">Access Tier</p>
-                            <p className="mt-3 text-2xl font-bold text-slate-900 font-outfit tracking-tighter relative z-10">{profile.role}</p>
+                            <p className="mt-3 text-2xl font-bold text-slate-900   tracking-tighter relative z-10">{profile.role}</p>
                         </div>
                         <div className="rounded-3xl bg-slate-50 border border-slate-100 px-7 py-7 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-full blur-2xl -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors relative z-10">Asset Plan</p>
-                            <p className="mt-3 text-2xl font-bold text-slate-900 font-outfit tracking-tighter relative z-10">{profile.plan}</p>
+                            <p className="mt-3 text-2xl font-bold text-slate-900   tracking-tighter relative z-10">{profile.plan}</p>
                         </div>
                         <div className="rounded-3xl bg-slate-50 border border-slate-100 px-7 py-7 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group md:col-span-2 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full blur-3xl -mr-12 -mt-12 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors relative z-10">Storage Allocation</p>
                             <div className="flex justify-between items-end mt-3 relative z-10">
-                                <p className="text-2xl font-bold text-slate-900 font-outfit tracking-tighter">{storageUsage}% <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1 opacity-60">Capacity</span></p>
+                                <p className="text-2xl font-bold text-slate-900   tracking-tighter">{storageUsage}% <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1 opacity-60">Capacity</span></p>
                                 <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">Status: Nominal</p>
                             </div>
                             <div className="mt-6 h-2 rounded-full bg-slate-200/50 overflow-hidden ring-1 ring-slate-100 relative z-10 shadow-inner">
@@ -371,17 +371,17 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                             <>
                                 <div className="rounded-[28px] bg-slate-50 border border-slate-100 px-7 py-7 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 relative overflow-hidden">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-600 relative z-10">Faculty Title</p>
-                                    <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter leading-none relative z-10">{profile.designation || "Faculty Member"}</p>
+                                    <p className="mt-3 text-2xl font-black text-slate-950   tracking-tighter leading-none relative z-10">{profile.designation || "Faculty Member"}</p>
                                 </div>
                                 <div className="rounded-[28px] bg-slate-50 border border-slate-100 px-7 py-7 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 relative overflow-hidden">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-600 relative z-10">Core Domain</p>
-                                    <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter leading-none relative z-10">{profile.expertise || "Economics & Strategy"}</p>
+                                    <p className="mt-3 text-2xl font-black text-slate-950   tracking-tighter leading-none relative z-10">{profile.expertise || "Economics & Strategy"}</p>
                                 </div>
                             </>
                         ) : (
                             <div className="rounded-[28px] bg-slate-50 border border-slate-100 px-7 py-7 md:col-span-2 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 relative overflow-hidden">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-600 relative z-10">Diagnostic Target</p>
-                                <p className="mt-3 text-2xl font-black text-slate-950 font-outfit tracking-tighter relative z-10">{studentTargetPreview?.label || profile.examTarget || "Chartered Accountancy 2027"}</p>
+                                <p className="mt-3 text-2xl font-black text-slate-950   tracking-tighter relative z-10">{studentTargetPreview?.label || profile.examTarget || "Chartered Accountancy 2027"}</p>
                             </div>
                         )}
                     </div>
@@ -389,7 +389,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
 
                 <form onSubmit={handleSave} className="rounded-3xl border border-slate-100 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-slate-200/20 space-y-8">
                     <div>
-                        <h2 className="font-outfit tracking-tight">Security Records</h2>
+                        <h2 className="  tracking-tight">Security Records</h2>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Verified Asset Management</p>
                     </div>
 
@@ -402,7 +402,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                     type="text"
                                     value={formState.fullName}
                                     onChange={(event) => handleChange("fullName", event.target.value)}
-                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter full name"
                                 />
                             </div>
@@ -416,7 +416,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                     type="email"
                                     value={formState.email}
                                     onChange={(event) => handleChange("email", event.target.value)}
-                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter email"
                                 />
                             </div>
@@ -430,7 +430,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                     type="text"
                                     value={formState.registrationNumber}
                                     onChange={(event) => handleChange("registrationNumber", event.target.value.toUpperCase())}
-                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder={mode === "teacher" ? "Enter faculty ID" : "Enter registration number"}
                                 />
                             </div>
@@ -444,7 +444,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                     type="text"
                                     value={formState.department}
                                     onChange={(event) => handleChange("department", event.target.value)}
-                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter department"
                                 />
                             </div>
@@ -458,7 +458,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                     type="text"
                                     value={formState.phone}
                                     onChange={(event) => handleChange("phone", event.target.value)}
-                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Enter phone number"
                                 />
                             </div>
@@ -472,7 +472,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                     type="text"
                                     value={formState.preferredLanguage}
                                     onChange={(event) => handleChange("preferredLanguage", event.target.value)}
-                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="English, Hindi, etc."
                                 />
                             </div>
@@ -486,7 +486,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                     type="text"
                                     value={formState.timezone}
                                     onChange={(event) => handleChange("timezone", event.target.value)}
-                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                     placeholder="Asia/Kolkata"
                                 />
                             </div>
@@ -502,7 +502,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                             type="text"
                                             value={formState.designation}
                                             onChange={(event) => handleChange("designation", event.target.value)}
-                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                             placeholder="CA Faculty, Mentor, etc."
                                         />
                                     </div>
@@ -516,7 +516,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                             type="text"
                                             value={formState.expertise}
                                             onChange={(event) => handleChange("expertise", event.target.value)}
-                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                             placeholder="Taxation, Audit, Accounts"
                                         />
                                     </div>
@@ -553,7 +553,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                         <select
                                             value={tempLevel}
                                             onChange={(e) => setTempLevel(e.target.value)}
-                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 appearance-none shadow-inner"
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 appearance-none shadow-inner"
                                         >
                                             <option value="CA Foundation">CA Foundation</option>
                                             <option value="CA Intermediate">CA Intermediate</option>
@@ -566,7 +566,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                             type="text"
                                             value={tempCycle}
                                             onChange={(e) => setTempCycle(e.target.value)}
-                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                            className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-16 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                             placeholder="May 2026, Nov 2025, etc."
                                         />
                                     </div>
@@ -580,7 +580,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                 rows={5}
                                 value={formState.bio}
                                 onChange={(event) => handleChange("bio", event.target.value)}
-                                className="w-full rounded-[28px] bg-slate-50 border border-slate-100 px-8 py-6 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner resize-none"
+                                className="w-full rounded-[28px] bg-slate-50 border border-slate-100 px-8 py-6 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner resize-none"
                                 placeholder={mode === "teacher" ? "Brief summary of teaching experience, classes, and approach." : "Brief summary of goals, background, or study preferences."}
                             />
                         </label>
@@ -596,7 +596,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                 type="text"
                                                 value={formState.batch}
                                                 onChange={(e) => handleChange("batch", e.target.value)}
-                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                                 placeholder="e.g. Nov 2024"
                                             />
                                         </label>
@@ -606,7 +606,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                 type="text"
                                                 value={formState.dob}
                                                 onChange={(e) => handleChange("dob", e.target.value)}
-                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                                 placeholder="e.g. 14 Aug 2002"
                                             />
                                         </label>
@@ -616,7 +616,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                 type="text"
                                                 value={formState.location}
                                                 onChange={(e) => handleChange("location", e.target.value)}
-                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                                 placeholder="e.g. Mumbai"
                                             />
                                         </label>
@@ -626,7 +626,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                 type="text"
                                                 value={formState.firm}
                                                 onChange={(e) => handleChange("firm", e.target.value)}
-                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                                 placeholder="e.g. Deloitte & Touche"
                                             />
                                         </label>
@@ -636,7 +636,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                 type="text"
                                                 value={formState.firmRole}
                                                 onChange={(e) => handleChange("firmRole", e.target.value)}
-                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                                 placeholder="e.g. Statutory Audit"
                                             />
                                         </label>
@@ -646,7 +646,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                 type="text"
                                                 value={formState.resumeUrl}
                                                 onChange={(e) => handleChange("resumeUrl", e.target.value)}
-                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 placeholder:text-slate-300 shadow-inner"
+                                                className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 placeholder:text-slate-300 shadow-inner"
                                                 placeholder="https://..."
                                             />
                                         </label>
@@ -657,7 +657,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                     type="number"
                                                     value={formState.articleshipYear}
                                                     onChange={(e) => handleChange("articleshipYear", e.target.value)}
-                                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 shadow-inner"
+                                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 shadow-inner"
                                                 />
                                             </label>
                                             <label className="space-y-3">
@@ -666,7 +666,7 @@ export function ProfileEditor({ mode }: { mode: Mode }) {
                                                     type="number"
                                                     value={formState.articleshipTotal}
                                                     onChange={(e) => handleChange("articleshipTotal", e.target.value)}
-                                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all font-sans text-slate-900 shadow-inner"
+                                                    className="w-full rounded-[20px] bg-slate-50 border border-slate-100 px-8 py-4.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:bg-white transition-all   text-slate-900 shadow-inner"
                                                 />
                                             </label>
                                         </div>

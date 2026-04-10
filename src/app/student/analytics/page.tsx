@@ -10,10 +10,14 @@ import { redirect } from "next/navigation";
 
 export default async function StudentAnalyticsPage() {
     const user = await getCurrentUser(["STUDENT", "ADMIN"]);
+    if (!user) {
+        redirect("/auth/login");
+    }
+
     const result = await getStudentHistory();
     
     if (!result.success || !result.data) {
-        redirect("/auth/login");
+        redirect("/student/dashboard"); // If auth passed but data failed, go to dashboard
     }
 
     const recommendations = user
@@ -22,7 +26,7 @@ export default async function StudentAnalyticsPage() {
     const examTarget = resolveStudentExamTarget(user ?? {});
 
     return (
-        <div className="space-y-12 pb-20 font-outfit">
+        <div className="space-y-12 pb-20  ">
             <StudentPageHeader
                 eyebrow="Performance metrics"
                 title="Performance"
@@ -114,8 +118,8 @@ export default async function StudentAnalyticsPage() {
                     </div>
                 </div>
                 <div className="flex-1 space-y-3 text-center lg:text-left relative z-10">
-                    <h3 className="text-2xl font-bold text-white font-outfit tracking-tight">Understanding Your Ranking</h3>
-                    <p className="max-w-4xl font-sans text-base font-medium leading-relaxed text-white/70">
+                    <h3 className="text-2xl font-bold text-white   tracking-tight">Understanding Your Ranking</h3>
+                    <p className="max-w-4xl   text-base font-medium leading-relaxed text-white/70">
                         We use two key metrics to track your progress: <strong className="text-[var(--student-support)]">Performance Benchmark</strong> measures your average accuracy against peers and toppers, while your <strong className="text-[var(--student-support)]">Global Rank</strong> is determined by your total XP earned. Keep practicing to climb the leaderboard!
                     </p>
                 </div>

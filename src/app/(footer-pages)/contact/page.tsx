@@ -32,7 +32,7 @@ export default function ContactPage() {
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                         Contact and support
                     </div>
-                    <h1 className="font-outfit text-4xl font-black tracking-tight text-[var(--landing-text)] sm:text-5xl">
+                    <h1 className="  text-4xl font-black tracking-tight text-[var(--landing-text)] sm:text-5xl">
                         Reach the Financly team
                     </h1>
                     <p className="max-w-3xl text-base leading-8 text-[var(--landing-muted)]">
@@ -51,7 +51,7 @@ export default function ContactPage() {
                         <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--landing-selection-bg)] text-[var(--landing-accent)]">
                             <card.icon size={28} weight="bold" />
                         </div>
-                        <h2 className="font-outfit text-2xl font-black tracking-tight text-[var(--landing-text)]">
+                        <h2 className="  text-2xl font-black tracking-tight text-[var(--landing-text)]">
                             {card.title}
                         </h2>
                         <p className="mt-2 text-sm leading-7 text-[var(--landing-muted)]">{card.helper}</p>
@@ -75,7 +75,7 @@ export default function ContactPage() {
                             <ShieldCheck size={16} weight="bold" />
                             Payment compliance
                         </div>
-                        <h2 className="font-outfit text-3xl font-black tracking-tight">
+                        <h2 className="  text-3xl font-black tracking-tight">
                             Business details used for Razorpay verification
                         </h2>
                         <p className="text-sm leading-7 text-white/70">

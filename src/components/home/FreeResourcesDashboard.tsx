@@ -17,9 +17,11 @@ import {
     SquaresFour,
     Star,
     Trash,
+    Upload,
     Video,
     X,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -43,11 +45,11 @@ interface Props {
 }
 
 const TYPE_CONFIG: Record<string, { icon: React.ReactNode; bg: string; accent: string }> = {
-    VIDEO:   { icon: <Video    size={18} weight="fill" />, bg: "bg-blue-50",    accent: "text-blue-600"   },
-    PYQ:     { icon: <FilePdf  size={18} weight="fill" />, bg: "bg-rose-50",    accent: "text-rose-600"   },
-    MTP:     { icon: <FileText size={18} weight="fill" />, bg: "bg-amber-50",   accent: "text-amber-600"  },
-    RTP:     { icon: <FileText size={18} weight="fill" />, bg: "bg-amber-50",   accent: "text-amber-600"  },
-    DEFAULT: { icon: <FilePdf  size={18} weight="fill" />, bg: "bg-emerald-50", accent: "text-emerald-600" },
+    VIDEO: { icon: <Video size={18} weight="fill" />, bg: "bg-blue-50", accent: "text-blue-600" },
+    PYQ: { icon: <FilePdf size={18} weight="fill" />, bg: "bg-rose-50", accent: "text-rose-600" },
+    MTP: { icon: <FileText size={18} weight="fill" />, bg: "bg-amber-50", accent: "text-amber-600" },
+    RTP: { icon: <FileText size={18} weight="fill" />, bg: "bg-amber-50", accent: "text-amber-600" },
+    DEFAULT: { icon: <FilePdf size={18} weight="fill" />, bg: "bg-emerald-50", accent: "text-emerald-600" },
 };
 
 function getTypeConfig(subType: string) {
@@ -65,23 +67,22 @@ export function FreeResourcesDashboard({
     defaultView = "GRID",
     currentUserId,
 }: Props) {
-    const router   = useRouter();
+    const router = useRouter();
     const pathname = usePathname();
 
-    const [activeCategory,  setActiveCategory]  = useState(initialCategory);
+    const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [activeSecondary, setActiveSecondary] = useState(initialSubType);
-    const [searchQuery,     setSearchQuery]     = useState(initialSearch);
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
-    const [resources,       setResources]       = useState<PublicResource[]>([]);
-    const [savedIds,        setSavedIds]        = useState<Set<string>>(new Set());
-    const [loading,         setLoading]         = useState(true);
-    const [viewMode,        setViewMode]        = useState<ViewMode>(defaultView);
+    const [resources, setResources] = useState<PublicResource[]>([]);
+    const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+    const [loading, setLoading] = useState(true);
 
-    const canSave       = saveState === "enabled";
-    const visibleSaved  = canSave ? savedIds : EMPTY_SAVED_IDS;
-    const isTeacher     = mode === "TEACHER";
+    const canSave = saveState === "enabled";
+    const visibleSaved = canSave ? savedIds : EMPTY_SAVED_IDS;
+    const isTeacher = mode === "TEACHER";
 
-    const dynamicCategories = ["All", initialCategory !== "All" ? initialCategory : "CA Final", "Case Studies", "Amendments"]
+    const dynamicCategories = ["All", initialCategory !== "All" ? initialCategory : "CA Final", "Case Studies"]
         .filter((x, i, a) => a.indexOf(x) === i);
 
     // Debounce search
@@ -106,7 +107,7 @@ export function FreeResourcesDashboard({
             if (res.success && res.data) {
                 setSavedIds(new Set([
                     ...(res.data.materials || []).map(m => m.id),
-                    ...(res.data.exams     || []).map(e => e.id),
+                    ...(res.data.exams || []).map(e => e.id),
                 ]));
             }
         };
@@ -115,7 +116,6 @@ export function FreeResourcesDashboard({
 
     const handleSecondaryChange = (type: string) => {
         setActiveSecondary(type);
-        if (type === "PYQ") setViewMode("TABLE");
     };
 
     const handleToggleSave = async (id: string, e: React.MouseEvent) => {
@@ -134,7 +134,7 @@ export function FreeResourcesDashboard({
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm("Delete this resource permanently?")) {
+        if (confirm("Delete this material permanently?")) {
             const res = await deletePYQ(id);
             if (res.success) void fetchResources();
         }
@@ -145,23 +145,23 @@ export function FreeResourcesDashboard({
     /* ─────────────────────────────────────────────────────────────────────── */
 
     return (
-        <div className="w-full space-y-6 pb-16 font-outfit">
+        <div className="w-full space-y-6 pb-16  ">
 
             {/* ══ INPUT zone: header + search + filters ══════════════════════ */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="">
 
                 {/* Top bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 border-b border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
                     <div className="space-y-1">
                         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            {isTeacher ? "Resource Management" : "Study Library"}
+                            {isTeacher ? "Inventory Management" : "Study Library"}
                         </div>
-                        <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-                            {isTeacher ? "Free Resources" : "Study Library"}
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                            {isTeacher ? "Study Materials" : "Study Library"}
                         </h2>
                         <p className="text-sm text-slate-400 font-medium">
-                            {loading ? "Loading…" : `${resources.length} verified CA practice assets`}
+                            {loading ? "Loading…" : `${resources.length} verified CA study materials`}
                         </p>
                     </div>
 
@@ -172,28 +172,19 @@ export function FreeResourcesDashboard({
                                 {daysToExam} days to exam
                             </div>
                         )}
-                        {/* View toggle */}
-                        <div className="flex p-1 bg-slate-100 rounded-xl gap-1">
-                            <button
-                                onClick={() => setViewMode("GRID")}
-                                className={cn("p-2 rounded-lg transition-all", viewMode === "GRID" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600")}
-                                title="Grid view"
+                        {isTeacher && (
+                            <Link
+                                href="/teacher/free-resources/materials"
+                                className="h-10 px-4 rounded-xl bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2"
                             >
-                                <SquaresFour size={16} weight="bold" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode("TABLE")}
-                                className={cn("p-2 rounded-lg transition-all", viewMode === "TABLE" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600")}
-                                title="List view"
-                            >
-                                <List size={16} weight="bold" />
-                            </button>
-                        </div>
+                                <Upload size={14} weight="bold" /> Upload Material
+                            </Link>
+                        )}
                     </div>
                 </div>
 
                 {/* Search */}
-                <div className="px-6 py-4 border-b border-slate-100">
+                <div className="py-4 border-b border-slate-100">
                     <div className="relative group max-w-xl">
                         <MagnifyingGlass size={16} weight="bold" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input
@@ -212,7 +203,7 @@ export function FreeResourcesDashboard({
                 </div>
 
                 {/* Filter pills */}
-                <div className="px-6 py-3 flex items-center gap-3 flex-wrap">
+                <div className="py-3 flex items-center gap-3 flex-wrap">
                     {/* Category */}
                     <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Level</span>
@@ -291,86 +282,12 @@ export function FreeResourcesDashboard({
                         </button>
                     </div>
 
-                ) : viewMode === "GRID" ? (
-                    /* ── Grid view ─────────────────────────────────────────── */
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                        {resources.map(res => {
-                            const cfg    = getTypeConfig(res.subType);
-                            const isSaved = canSave && visibleSaved.has(res.id);
-                            const canDelete = isTeacher && (!res.authorId || res.authorId === currentUserId);
-
-                            return (
-                                <div
-                                    key={res.id}
-                                    className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all duration-200 flex flex-col"
-                                >
-                                    {/* Card header */}
-                                    <div className="p-4 flex items-start justify-between">
-                                        {/* Type icon */}
-                                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-100", cfg.bg, cfg.accent)}>
-                                            {cfg.icon}
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex items-center gap-1">
-                                            {saveState !== "hidden" && (
-                                                <button
-                                                    onClick={e => handleToggleSave(res.id, e)}
-                                                    className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-all", isSaved ? "bg-indigo-50 text-indigo-600" : "text-slate-200 hover:text-indigo-500 hover:bg-slate-50")}
-                                                >
-                                                    <BookmarkSimple size={15} weight={isSaved ? "fill" : "bold"} />
-                                                </button>
-                                            )}
-                                            {canDelete && (
-                                                <button
-                                                    onClick={() => handleDelete(res.id)}
-                                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-200 hover:text-rose-500 hover:bg-rose-50 transition-all"
-                                                >
-                                                    <Trash size={15} weight="bold" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Card body */}
-                                    <div className="px-4 pb-4 flex-1 flex flex-col gap-3">
-                                        <div>
-                                            <span className={cn("text-[9px] font-black uppercase tracking-widest", cfg.accent)}>{res.category}</span>
-                                            <h3 className="text-sm font-bold text-slate-900 leading-snug group-hover:text-indigo-700 transition-colors line-clamp-2 mt-1">
-                                                {res.title}
-                                            </h3>
-                                        </div>
-
-                                        {/* Stats row */}
-                                        <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold pt-2 border-t border-slate-100">
-                                            <span className="flex items-center gap-1">
-                                                <Eye size={11} weight="bold" /> {res.downloads.toLocaleString()}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Star size={11} weight="fill" className="text-amber-400" /> {(res.rating || 4.5).toFixed(1)}
-                                            </span>
-                                            <span className="ml-auto bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">{res.subType}</span>
-                                        </div>
-
-                                        {/* CTA */}
-                                        <button
-                                            onClick={() => handleDownload(res.id, res.fileUrl)}
-                                            className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-indigo-600 transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2"
-                                        >
-                                            <Eye size={13} weight="bold" /> Access
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
                 ) : (
                     /* ── List / Table view ─────────────────────────────────── */
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="overflow-hidden mt-4">
 
                         {/* List header */}
-                        <div className="grid grid-cols-[1fr_120px_80px_80px_100px] items-center px-5 py-3 bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <div className="grid grid-cols-[1fr_120px_80px_80px_100px] items-center px-5 py-3 bg-slate-50 border border-slate-100 rounded-t-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest border-b-0">
                             <span>Material</span>
                             <span>Level</span>
                             <span className="text-center">Format</span>
@@ -378,16 +295,16 @@ export function FreeResourcesDashboard({
                             <span className="text-right">Action</span>
                         </div>
 
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-slate-100 border border-slate-100 rounded-b-2xl overflow-hidden bg-white">
                             {resources.map(res => {
-                                const cfg       = getTypeConfig(res.subType);
-                                const isSaved   = canSave && visibleSaved.has(res.id);
+                                const cfg = getTypeConfig(res.subType);
+                                const isSaved = canSave && visibleSaved.has(res.id);
                                 const canDelete = isTeacher && (!res.authorId || res.authorId === currentUserId);
 
                                 return (
                                     <div
                                         key={res.id}
-                                        className="grid grid-cols-[1fr_120px_80px_80px_100px] items-center px-5 py-3.5 group hover:bg-slate-50/60 transition-colors"
+                                        className="grid grid-cols-[1fr_120px_80px_80px_100px] items-center px-5 py-3.5 group hover:bg-slate-50 transition-colors duration-200"
                                     >
                                         {/* Title */}
                                         <div className="flex items-center gap-3 min-w-0 pr-4">

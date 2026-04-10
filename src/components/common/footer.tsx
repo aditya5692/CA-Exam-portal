@@ -24,7 +24,7 @@ export function Footer() {
                                 <GraduationCap size={22} weight="bold" />
                             </div>
                             <div>
-                                <div className="font-lexend text-xl font-bold tracking-tight text-slate-900">Financly</div>
+                                <div className="  text-xl font-bold tracking-tight text-slate-900">Financly</div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-[#0f2cbd]/60">CA Test Series</div>
                             </div>
                         </Link>

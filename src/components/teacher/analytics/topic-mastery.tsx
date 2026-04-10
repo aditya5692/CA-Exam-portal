@@ -32,7 +32,7 @@ export function TopicMasteryHeatmap() {
     };
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 font-outfit">
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700  ">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-1">
                 <div className="space-y-4">
                     <div className="flex items-center gap-4">
@@ -128,7 +128,7 @@ export function TopicMasteryHeatmap() {
                          
                          <div>
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">{item.label}</p>
-                            <h3 className="text-xl font-bold text-slate-900 tracking-tighter mb-2 group-hover:text-indigo-600 transition-colors font-outfit">{item.value}</h3>
+                            <h3 className="text-xl font-bold text-slate-900 tracking-tighter mb-2 group-hover:text-indigo-600 transition-colors  ">{item.value}</h3>
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{item.subtitle}</p>
                          </div>
                          

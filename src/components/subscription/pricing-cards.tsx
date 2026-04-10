@@ -374,13 +374,13 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                                     <plan.icon size={24} weight="bold" />
                                 </div>
 
-                                <h3 className="font-lexend text-xl font-bold text-slate-950">{plan.name}</h3>
+                                <h3 className="  text-xl font-bold text-slate-950">{plan.name}</h3>
                                 <p className="mt-1 text-xs font-bold uppercase tracking-tight text-slate-500">
                                     Tier: {plan.appPlan}
                                 </p>
 
                                 <div className="mt-6 flex items-baseline gap-1">
-                                    <span className="font-lexend text-4xl font-bold tracking-tight text-slate-950">
+                                    <span className="  text-4xl font-bold tracking-tight text-slate-950">
                                         {displayedPrice}
                                     </span>
                                     {priceSuffix && (

@@ -142,7 +142,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                     Question by question review
                 </div>
-                <h2 className="font-outfit text-2xl font-black tracking-tight text-[var(--student-text)]">
+                <h2 className="text-2xl font-black tracking-tight text-[var(--student-text)]">
                     Compare your marked option with the correct answer
                 </h2>
                 <p className="max-w-3xl text-sm leading-7 text-[var(--student-muted-strong)]">
@@ -251,7 +251,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                                         )}
                                     </div>
 
-                                    <p className="font-outfit text-lg font-black leading-relaxed tracking-tight text-[var(--student-text)]">
+                                    <p className="text-lg font-black leading-relaxed tracking-tight text-[var(--student-text)]">
                                         {answer.question.text}
                                     </p>
 

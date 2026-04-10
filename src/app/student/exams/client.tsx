@@ -48,7 +48,7 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, daysToExa
     }
 
     return (
-        <div className="space-y-8 w-full pb-12 font-outfit">
+        <div className="space-y-8 w-full pb-12  ">
             <StudentPageHeader
                 eyebrow="Exam hub"
                 title="Professional"

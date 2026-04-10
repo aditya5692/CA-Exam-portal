@@ -71,7 +71,7 @@ export default function DashboardOverview() {
             <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
                 <Target size={32} className="text-slate-300" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">No Dashboard Data</h3>
+            <h3 className="text-lg font-bold text-slate-900   mb-2">No Dashboard Data</h3>
             <p className="text-sm text-slate-500 max-w-xs mx-auto">We couldn&apos;t retrieve your academy metrics. Please try refreshing the page or contact support.</p>
         </div>
     );
@@ -85,13 +85,13 @@ export default function DashboardOverview() {
 
     const QUICK_ACTIONS = [
         { label: "Create Test", href: "/teacher/test-series", icon: Plus, color: "bg-indigo-600 text-white" },
-        { label: "Upload Material", href: "/teacher/materials", icon: FilePdf, color: "bg-slate-900 text-white" },
+        { label: "Upload Material", href: "/teacher/free-resources/materials", icon: FilePdf, color: "bg-slate-900 text-white" },
         { label: "Send Update", href: "/teacher/updates", icon: BellSimple, color: "bg-white text-slate-900 border border-slate-200" },
         { label: "Manage Batches", href: "/teacher/batches", icon: Books, color: "bg-white text-slate-900 border border-slate-200" },
     ];
 
     return (
-        <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
                 <div className="space-y-4">
@@ -99,10 +99,10 @@ export default function DashboardOverview() {
                         <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Teacher Studio</span>
                     </div>
-                    <h1 className="font-outfit tracking-tighter leading-tight text-2xl font-bold text-slate-900">
+                    <h1 className="  tracking-tighter leading-tight text-2xl font-bold text-slate-900">
                         Welcome back, {data.teacherName}.
                     </h1>
-                    <p className="text-slate-500 font-medium text-sm font-sans max-w-2xl leading-relaxed">
+                    <p className="text-slate-500 font-medium text-sm   max-w-2xl leading-relaxed">
                         Your academy is performing <span className="text-emerald-600 font-bold">well above average</span> this week. Keep up the momentum!
                     </p>
                 </div>
@@ -120,15 +120,15 @@ export default function DashboardOverview() {
                 {STATS.map((stat) => (
                     <div key={stat.label} className="bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm rounded-[24px] p-5 xl:p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-indigo-100/50 group flex flex-col justify-between min-h-[140px]">
                         <div className="flex items-start justify-between mb-4">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest  ">
                                 {stat.label}
                             </span>
                             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border border-slate-100/50 group-hover:border-indigo-200 group-hover:scale-110 group-hover:shadow-indigo-600/10", stat.bg, stat.color)}>
                                 <stat.icon size={20} weight="bold" />
                             </div>
                         </div>
-                        <div className="text-2xl xl:text-3xl font-bold text-slate-900 leading-none mt-2 tracking-tight font-outfit mb-3">{stat.value}</div>
-                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                        <div className="text-2xl xl:text-3xl font-bold text-slate-900 leading-none mt-2 tracking-tight   mb-3">{stat.value}</div>
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest  ">
                             {stat.trend !== 0 ? (
                                 <span className="text-emerald-500 flex items-center gap-1">+{stat.trend}% <TrendUp size={12} weight="bold" /></span>
                             ) : (
@@ -163,7 +163,7 @@ export default function DashboardOverview() {
                     <div className="bg-white/80 backdrop-blur-md p-6 rounded-[24px] border border-slate-100 shadow-sm">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900 font-outfit uppercase flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-slate-900   uppercase flex items-center gap-2">
                                     <Target size={20} className="text-indigo-500" weight="bold" />
                                     Performance Trends
                                 </h3>
@@ -227,7 +227,7 @@ export default function DashboardOverview() {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between mb-2">
                             <div className="space-y-1">
-                                <h2 className="flex items-center gap-3 font-outfit uppercase">
+                                <h2 className="flex items-center gap-3   uppercase">
                                     <BellSimple size={20} className="text-slate-400" weight="bold" />
                                     Recent Announcements
                                 </h2>
@@ -266,7 +266,7 @@ export default function DashboardOverview() {
                 {/* Right Column: Top Students & Insights */}
                 <div className="space-y-8">
                     <div className="space-y-1 mb-2">
-                        <h2 className="flex items-center gap-3 uppercase font-outfit">
+                        <h2 className="flex items-center gap-3 uppercase  ">
                             <Trophy size={20} className="text-slate-400" weight="bold" />
                             Top Performers
                         </h2>
@@ -290,7 +290,7 @@ export default function DashboardOverview() {
                                                 {student.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <div className="text-sm font-bold tracking-tight font-outfit leading-tight mb-0.5 text-slate-900">
+                                                <div className="text-sm font-bold tracking-tight   leading-tight mb-0.5 text-slate-900">
                                                     {student.name}
                                                 </div>
                                                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -299,7 +299,7 @@ export default function DashboardOverview() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-bold tracking-tight font-outfit leading-tight mb-0.5 text-slate-900">{student.xp.toLocaleString()}</div>
+                                            <div className="text-sm font-bold tracking-tight   leading-tight mb-0.5 text-slate-900">{student.xp.toLocaleString()}</div>
                                             <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">XP</div>
                                         </div>
                                     </div>
@@ -322,7 +322,7 @@ export default function DashboardOverview() {
                             <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500">
                                 <Sparkle size={20} weight="fill" />
                             </div>
-                            <h4 className="font-bold text-lg font-outfit leading-tight">Academy Growth</h4>
+                            <h4 className="font-bold text-lg   leading-tight">Academy Growth</h4>
                             <p className="text-slate-400 text-xs leading-relaxed font-medium">
                                 Your students have completed <span className="text-white font-bold">120+ new attempts</span> this week. Engagement is up by <span className="text-emerald-400 font-bold">18%</span>.
                             </p>
@@ -336,13 +336,13 @@ export default function DashboardOverview() {
             <div className="pt-8">
                 <div className="flex items-center justify-between mb-8">
                     <div className="space-y-1">
-                        <h2 className="flex items-center gap-3 uppercase font-outfit">
+                        <h2 className="flex items-center gap-3 uppercase  ">
                             <FilePdf size={20} className="text-slate-400" weight="bold" />
                             Recent Materials
                         </h2>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-8">The latest files you&apos;ve uploaded</p>
                     </div>
-                    <Link href="/teacher/materials" className="px-5 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-950 hover:text-white transition-all duration-200 border border-slate-100 shadow-sm active:scale-95">Manage Library</Link>
+                    <Link href="/teacher/free-resources/materials" className="px-5 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-950 hover:text-white transition-all duration-200 border border-slate-100 shadow-sm active:scale-95">Manage Library</Link>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 px-1">
@@ -352,7 +352,7 @@ export default function DashboardOverview() {
                         </div>
                     ) : (
                         data.recentMaterials.map((res) => (
-                            <Link href="/teacher/materials" key={res.id}
+                            <Link href="/teacher/free-resources/materials" key={res.id}
                                 className="p-6 bg-white rounded-[24px] border border-slate-100 hover:border-indigo-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer min-h-[140px] relative overflow-hidden">
                                 <div className="flex items-start justify-between mb-4 relative z-10">
                                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
@@ -363,7 +363,7 @@ export default function DashboardOverview() {
                                     </span>
                                 </div>
                                 <div className="z-10 relative">
-                                    <h4 className="font-bold text-base text-slate-900 leading-tight mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors tracking-tight font-outfit">
+                                    <h4 className="font-bold text-base text-slate-900 leading-tight mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors tracking-tight  ">
                                         {res.title}
                                     </h4>
                                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
