@@ -49,7 +49,7 @@ declare global {
 
 function extractAccessToken(data: unknown) {
     if (typeof data === "string") {
-        return data;
+        return data.includes(".") ? data : "";
     }
 
     if (!data || typeof data !== "object") {
@@ -58,30 +58,42 @@ function extractAccessToken(data: unknown) {
 
     const payload = data as Record<string, unknown>;
     
-    // Priority: Specific token fields first, then general message
-    const candidate =
-        payload.token ??
-        payload.accessToken ??
-        payload.access_token ??
-        payload.jwt ??
-        payload.message;
+    // Debug: Log keys to help identify structure in case of failure
+    console.log("MSG91 Success Callback Keys:", Object.keys(payload));
 
-    if (typeof candidate !== "string") {
-        return "";
-    }
+    // Define a list of fields where MSG91 might store the JWT
+    // Re-ordered to check 'token' and 'accessToken' first
+    const potentialFields = [
+        'token',
+        'accessToken',
+        'access_token',
+        'jwt',
+        'message',
+        'auth_token'
+    ];
 
-    // Defensive check: If the candidate is from the 'message' field,
-    // ensure it's not just a status string like "OTP Verified".
-    // Most MSG91 tokens are JWTs which contain at least one dot.
-    if (candidate === payload.message && !candidate.includes(".")) {
-        // If 'token' also exists, it probably contained the real JWT
-        if (typeof payload.token === "string" && payload.token.includes(".")) {
-            return payload.token;
+    // Look for a field that contains a string with a dot (typical of JWTs)
+    // and is of substantial length (typical IDs are < 30 chars)
+    for (const field of potentialFields) {
+        const val = payload[field];
+        if (typeof val === "string" && val.includes(".") && val.length > 40) {
+            console.log(`MSG91 Extraction: Found valid JWT in field '${field}'`);
+            return val;
         }
-        return "";
     }
 
-    return candidate;
+    // Fallback: If no JWT-like string found, check if any field contains a string 
+    // that doesn't have a dot but is clearly the only candidate. 
+    // We log this as a warning because it's likely an ID being mistaken for a token.
+    for (const field of ['token', 'accessToken', 'access_token']) {
+        const val = payload[field];
+        if (typeof val === "string" && val.length > 10) {
+             console.warn(`MSG91 Extraction Warning: Field '${field}' has no dots. Might be a RequestID instead of a JWT.`);
+             return val;
+        }
+    }
+
+    return "";
 }
 
 function extractErrorMessage(error: Msg91ErrorPayload, fallback: string) {
