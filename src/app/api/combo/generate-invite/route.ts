@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma/client";
-import * as jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 
 export async function POST(req: Request) {
     try {
@@ -18,7 +18,16 @@ export async function POST(req: Request) {
         // Generate invitation token
         // In securely isolated mode we just grant a JWT payload that Teacher B can present back
         const secret = process.env.JWT_SECRET || "default_local_secret";
-        const inviteToken = jwt.sign({ masterBatchId: master.id, type: "TEACHER_B_INVITE" }, secret, { expiresIn: '7d' });
+        const secretKey = new TextEncoder().encode(secret);
+        
+        const inviteToken = await new SignJWT({ 
+            masterBatchId: master.id, 
+            type: "TEACHER_B_INVITE" 
+        })
+            .setProtectedHeader({ alg: "HS256" })
+            .setIssuedAt()
+            .setExpirationTime("7d")
+            .sign(secretKey);
 
         return NextResponse.json({
             success: true,
@@ -27,6 +36,7 @@ export async function POST(req: Request) {
         });
 
     } catch(err) {
+        console.error("Generate Invite Error:", err);
         return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
     }
 }
