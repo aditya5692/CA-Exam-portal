@@ -49,9 +49,12 @@ function SignupFormContent() {
     const searchRole = searchParams.get("role")?.toUpperCase();
     const searchVerified = searchParams.get("verified") === "true";
     const initialRole = searchRole === "TEACHER" || searchRole === "STUDENT" ? searchRole : "STUDENT";
-    const initialToken = typeof window !== "undefined"
+    const storageToken = typeof window !== "undefined"
         ? window.sessionStorage.getItem("pending-msg91-token") ?? ""
         : "";
+    // Only accept cached tokens that look like real JWTs
+    const initialToken = storageToken.length > 50 && storageToken.includes(".") ? storageToken : "";
+    
     const initialStep = searchVerified
         ? initialToken
             ? "details"
