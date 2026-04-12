@@ -21,7 +21,8 @@ export async function getAdminMetrics(): Promise<ActionResponse<AdminMetricsData
             materialCount,
             totalDownloads,
             totalAttempts,
-            recentUsers
+            recentUsers,
+            recentSubscriptions
         ] = await Promise.all([
             prisma.user.count({ where: { role: "STUDENT" } }),
             prisma.user.count({ where: { role: "TEACHER" } }),
@@ -35,6 +36,13 @@ export async function getAdminMetrics(): Promise<ActionResponse<AdminMetricsData
                 orderBy: { createdAt: 'desc' },
                 take: 5,
                 select: { id: true, fullName: true, email: true, createdAt: true, role: true }
+            }),
+            prisma.subscription.findMany({
+                take: 20,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    user: { select: { fullName: true, email: true } }
+                }
             })
         ]);
 
@@ -52,6 +60,21 @@ export async function getAdminMetrics(): Promise<ActionResponse<AdminMetricsData
                     attempts: totalAttempts,
                 },
                 recentUsers,
+                recentSubscriptions: recentSubscriptions.map(s => ({
+                    id: s.id,
+                    userId: s.userId,
+                    userFullName: s.user.fullName,
+                    userEmail: s.user.email,
+                    plan: s.plan,
+                    role: s.role,
+                    status: s.status,
+                    amountPaise: s.amountPaise,
+                    razorpayPaymentId: s.razorpayPaymentId,
+                    startedAt: s.startedAt.toISOString(),
+                    expiresAt: s.expiresAt.toISOString(),
+                    createdAt: s.createdAt.toISOString(),
+                    grantedByAdminId: s.grantedByAdminId
+                })),
                 timestamp: new Date().toISOString()
             }
         };

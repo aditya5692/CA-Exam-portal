@@ -2,9 +2,9 @@
 
 import { 
     loginAsDemoUser, 
-    verifyWidgetOtpAndLogin 
+    verifyFirebaseTokenAndLogin 
 } from "@/actions/auth-actions";
-import Msg91Widget from "@/components/auth/msg91-widget";
+import FirebaseAuthWidget from "@/components/auth/firebase-auth-widget";
 import { 
     getGlobalLeaderboard, 
     LeaderboardEntry 
@@ -32,6 +32,8 @@ import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { Lexend } from "next/font/google";
+import { trackLogin, setUserId } from "@/lib/analytics-utils";
+
 
 const lexend = Lexend({
     subsets: ["latin"],
@@ -117,6 +119,7 @@ export default function LoginPage() {
 
         setErrorMessage("");
         setAuthState("VERIFYING");
+        trackLogin("otp_request");
     }
 
     async function handleAuthSuccess(accessToken: string) {
@@ -131,7 +134,7 @@ export default function LoginPage() {
 
         try {
             const requestedRole = role.toUpperCase() as "STUDENT" | "TEACHER";
-            const result = await verifyWidgetOtpAndLogin(accessToken, requestedRole);
+            const result = await verifyFirebaseTokenAndLogin(accessToken, requestedRole);
             
             if (!result.success) {
                 if (result.data && "roleMismatch" in result.data && result.data.roleMismatch) {
@@ -145,9 +148,14 @@ export default function LoginPage() {
             }
 
             setAuthState("SUCCESS");
+            
+            if (result.success && result.data && 'user' in result.data) {
+                setUserId(result.data.user.registrationNumber);
+                trackLogin("otp_verify_success");
+            }
 
             if ('needsRegistration' in result.data! && result.data.needsRegistration) {
-                window.sessionStorage.setItem("pending-msg91-token", accessToken);
+                window.sessionStorage.setItem("pending-firebase-token", accessToken);
                 console.log("LoginPage: New user detected. Redirecting to signup.");
                 window.location.assign(`/auth/signup?phone=${encodeURIComponent(phone)}&role=${encodeURIComponent(role)}&verified=true`);
                 return;
@@ -375,7 +383,7 @@ export default function LoginPage() {
                                         Change
                                     </button>
                                 </div>
-                                <Msg91Widget
+                                <FirebaseAuthWidget
                                     phoneNumber={normalizedPhone}
                                     onSuccess={handleAuthSuccess}
                                     onFailure={(err) => {
@@ -416,6 +424,8 @@ export default function LoginPage() {
                                             setAuthState("FINALIZING");
                                             const res = await loginAsDemoUser(account.registrationNumber);
                                             if (res.success && res.data && 'redirectTo' in res.data) {
+                                                setUserId(account.registrationNumber);
+                                                trackLogin("demo_account");
                                                 window.location.assign(res.data.redirectTo);
                                             } else {
                                                 setErrorMessage(res.message || "Login failed.");

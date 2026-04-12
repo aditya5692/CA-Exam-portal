@@ -1,7 +1,7 @@
 "use client";
 
 import { verifyOtpAndRegister } from "@/actions/auth-actions";
-import Msg91Widget from "@/components/auth/msg91-widget";
+import FirebaseAuthWidget from "@/components/auth/firebase-auth-widget";
 import { 
     getGlobalLeaderboard, 
     LeaderboardEntry 
@@ -29,6 +29,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { trackSignUp, setUserId } from "@/lib/analytics-utils";
 
 import { Lexend } from "next/font/google";
 
@@ -50,9 +51,9 @@ function SignupFormContent() {
     const searchVerified = searchParams.get("verified") === "true";
     const initialRole = searchRole === "TEACHER" || searchRole === "STUDENT" ? searchRole : "STUDENT";
     const storageToken = typeof window !== "undefined"
-        ? window.sessionStorage.getItem("pending-msg91-token") ?? ""
+        ? window.sessionStorage.getItem("pending-firebase-token") ?? ""
         : "";
-    // Only accept cached tokens that look like real JWTs
+    // Only accept cached tokens that look like real Firebase ID tokens
     const initialToken = storageToken.length > 50 && storageToken.includes(".") ? storageToken : "";
     
     const initialStep = searchVerified
@@ -65,7 +66,7 @@ function SignupFormContent() {
 
     const [step, setStep] = useState<"phone" | "verify" | "details">(initialStep);
     const [phone, setPhone] = useState(searchPhone);
-    const [msg91Token, setMsg91Token] = useState(initialToken);
+    const [firebaseToken, setFirebaseToken] = useState(initialToken);
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -101,9 +102,9 @@ function SignupFormContent() {
     }, []);
 
     function clearPendingVerification() {
-        setMsg91Token("");
+        setFirebaseToken("");
         if (typeof window !== "undefined") {
-            window.sessionStorage.removeItem("pending-msg91-token");
+            window.sessionStorage.removeItem("pending-firebase-token");
         }
     }
 
@@ -118,6 +119,7 @@ function SignupFormContent() {
             return;
         }
 
+        trackSignUp("otp_request");
         setStep("verify");
     }
 
@@ -128,9 +130,10 @@ function SignupFormContent() {
         }
 
         console.log("SignupPage: Widget verified successfully. Received token.");
-        setMsg91Token(accessToken);
-        window.sessionStorage.setItem("pending-msg91-token", accessToken);
+        setFirebaseToken(accessToken);
+        window.sessionStorage.setItem("pending-firebase-token", accessToken);
         setErrorMessage("");
+        trackSignUp("otp_verify_success");
         setStep("details");
     }
 
@@ -144,7 +147,7 @@ function SignupFormContent() {
         setIsSubmitting(true);
         setErrorMessage("");
 
-        if (!msg91Token) {
+        if (!firebaseToken) {
             console.warn("SignupPage: Registration attempted without verified token.");
             setIsSubmitting(false);
             setErrorMessage("Please verify your phone number before creating the account.");
@@ -155,7 +158,7 @@ function SignupFormContent() {
         const result = await verifyOtpAndRegister({
             phone,
             otp: "VERIFIED",
-            token: msg91Token,
+            token: firebaseToken,
             fullName,
             email,
             password,
@@ -177,6 +180,11 @@ function SignupFormContent() {
             }
             setErrorMessage(result.message);
             return;
+        }
+
+        if (result.success && result.data && 'user' in result.data) {
+            setUserId(result.data.user.registrationNumber);
+            trackSignUp("registration_complete");
         }
 
         clearPendingVerification();
@@ -380,7 +388,7 @@ function SignupFormContent() {
                                     </button>
                                 </div>
 
-                                <Msg91Widget
+                                <FirebaseAuthWidget
                                     phoneNumber={phone.replace(/\D/g, "").length === 10 ? `91${phone.replace(/\D/g, "")}` : phone.replace(/\D/g, "")}
                                     onSuccess={handleWidgetSuccess}
                                     onFailure={(message) => {

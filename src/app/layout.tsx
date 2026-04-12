@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: "India's highest-integrity mock test series and study vault for CA aspirants.",
 };
 
+import { Suspense } from "react";
+import FirebaseAnalytics from "@/components/analytics/firebase-analytics";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,6 +35,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Suspense fallback={null}>
+            <FirebaseAnalytics />
+          </Suspense>
           {children}
           <Toaster position="top-center" richColors />
         </ThemeProvider>

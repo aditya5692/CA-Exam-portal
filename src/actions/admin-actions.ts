@@ -758,4 +758,185 @@ export async function toggleAdminMaterialTrending(formData: FormData): Promise<A
   }
 }
 
+/**
+ * Force-deletes an exam record and all its question mappings.
+ */
+export async function deleteAdminManagedExam(formData: FormData): Promise<ActionResponse<void>> {
+  try {
+    await requireAdmin();
+    const examId = String(formData.get("examId") ?? "").trim();
+    if (!examId) throw new Error("Exam ID is required.");
+
+    // Delete attempts and questions links (cascaded by DB)
+    await prisma.exam.delete({ where: { id: examId } });
+
+    revalidateAdminSurfaces();
+    return { success: true, message: "Exam and all related records deleted.", data: undefined };
+  } catch (error) {
+    console.error("deleteAdminManagedExam failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to delete exam.") };
+  }
+}
+
+/**
+ * Fetches full exam details including linked questions for administrative review.
+ */
+export async function getAdminExamDetails(examId: string): Promise<ActionResponse<any>> {
+  try {
+    await requireAdmin();
+    if (!examId) throw new Error("Exam ID is required.");
+
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+      include: {
+        questions: {
+          orderBy: { order: "asc" },
+          include: {
+            question: {
+              include: { options: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!exam) throw new Error("Exam not found.");
+
+    return { success: true, data: exam };
+  } catch (error) {
+    console.error("getAdminExamDetails failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to load exam details.") };
+  }
+}
+
+/**
+ * Updates high-level exam metadata.
+ */
+export async function updateAdminManagedExam(formData: FormData): Promise<ActionResponse<void>> {
+  try {
+    await requireAdmin();
+    const examId = String(formData.get("examId") ?? "").trim();
+    const title = String(formData.get("title") ?? "").trim();
+    const category = String(formData.get("category") ?? "").trim();
+    const status = String(formData.get("status") ?? "").trim();
+    const duration = parseInt(String(formData.get("duration") ?? "60"));
+
+    if (!examId || !title) throw new Error("Exam ID and Title are required.");
+
+    await prisma.exam.update({
+      where: { id: examId },
+      data: {
+        title,
+        category,
+        status,
+        duration,
+      },
+    });
+
+    revalidateAdminSurfaces();
+    return { success: true, message: "Exam metadata updated.", data: undefined };
+  } catch (error) {
+    console.error("updateAdminManagedExam failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to update exam.") };
+  }
+}
+
+/**
+ * Global override to update any MCQ in the platform, regardless of owner.
+ */
+export async function adminUpdateVaultQuestion(formData: FormData): Promise<ActionResponse<void>> {
+  try {
+    await requireAdmin();
+    const id = String(formData.get("questionId") ?? "").trim();
+    const text = String(formData.get("text") ?? "").trim();
+    const subject = String(formData.get("subject") ?? "").trim();
+    const optionsJson = String(formData.get("options") ?? "[]");
+    const correctIdxs = String(formData.get("correct") ?? "[]");
+
+    if (!id || !text) throw new Error("Question ID and Text are required.");
+
+    const options = JSON.parse(optionsJson) as string[];
+    const correct = JSON.parse(correctIdxs) as number[];
+
+    await prisma.$transaction(async (tx) => {
+      // Sync options
+      await tx.option.deleteMany({ where: { questionId: id } });
+      await tx.option.createMany({
+        data: options.map((opt, idx) => ({
+          text: opt,
+          isCorrect: correct.includes(idx),
+          questionId: id,
+        }))
+      });
+
+      await tx.question.update({
+        where: { id },
+        data: {
+          text,
+          subject,
+        },
+      });
+    });
+
+    revalidateAdminSurfaces();
+    return { success: true, message: "Global question updated successfully.", data: undefined };
+  } catch (error) {
+    console.error("adminUpdateVaultQuestion failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to update question.") };
+  }
+}
+
+/**
+ * Global override to delete any MCQ from the bank.
+ */
+export async function adminDeleteVaultQuestion(formData: FormData): Promise<ActionResponse<void>> {
+  try {
+    await requireAdmin();
+    const id = String(formData.get("questionId") ?? "").trim();
+    if (!id) throw new Error("Question ID is required.");
+
+    await prisma.question.delete({ where: { id } });
+
+    revalidateAdminSurfaces();
+    return { success: true, message: "Question removed from platform.", data: undefined };
+  } catch (error) {
+    console.error("adminDeleteVaultQuestion failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to delete question.") };
+  }
+}
+
+/**
+ * Searches for users by name, email, or phone to facilitate manual plan grants.
+ */
+export async function adminSearchUsers(query: string): Promise<ActionResponse<any[]>> {
+  try {
+    await requireAdmin();
+    if (!query || query.length < 2) return { success: true, data: [] };
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { fullName: { contains: query, mode: "insensitive" as any } },
+          { email: { contains: query, mode: "insensitive" as any } },
+          { phone: { contains: query } },
+        ],
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        role: true,
+        plan: true,
+      },
+      take: 10,
+    });
+
+    return { success: true, data: users };
+  } catch (error) {
+    console.error("adminSearchUsers failed", error);
+    return { success: false, message: getActionErrorMessage(error, "Failed to search users.") };
+  }
+}
+
 

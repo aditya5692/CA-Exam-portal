@@ -5,7 +5,8 @@ import { StatusView } from "@/components/admin/status-view";
 import { AdminDirectory } from "@/components/admin/admin-directory";
 import { ContentStudio } from "@/components/admin/content-studio";
 import { BatchOrchestrator } from "@/components/admin/batch-orchestrator";
-import { SubscriptionManager } from "@/components/teacher/subscription-manager";
+import { TreasuryPortal } from "@/components/admin/treasury-portal";
+import { adminGetAllSubscriptions } from "@/actions/subscription-actions";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { PlatformIntegrationsPanel } from "@/components/admin/platform-integrations-panel";
@@ -49,6 +50,7 @@ export default async function AdminControlCenterPage({
             select: { id: true, fullName: true, email: true }
         }),
         getResolvedPlatformConfigFields(),
+        adminGetAllSubscriptions(),
     ]);
 
     if (!metricsResult.success || !metricsResult.data) {
@@ -71,7 +73,7 @@ export default async function AdminControlCenterPage({
     const usersView = <AdminDirectory initialUsers={users} />;
     const orchestratorView = <BatchOrchestrator batches={batches as any} teachers={teachers as any} />;
     const studioView = <ContentStudio exams={exams as any} materials={materials as any} />;
-    const treasuryView = <SubscriptionManager />;
+    const treasuryView = <TreasuryPortal initialSubscriptions={metricsResult.data?.recentSubscriptions || []} />;
     const integrationView = <PlatformIntegrationsPanel initialFields={integrationFields} />;
 
     return (

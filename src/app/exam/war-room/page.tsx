@@ -8,6 +8,8 @@ import type { ExamWithQuestions } from "@/types/exam";
 import { useRouter,useSearchParams } from "next/navigation";
 import { useCallback,useEffect,useRef,useState, Suspense } from "react";
 import { List, Gear, X, CaretLeft, CaretRight, Info, CheckCircle, Warning, Clock } from "@phosphor-icons/react";
+import { trackTestStart, trackTestComplete, logEvent } from "@/lib/analytics-utils";
+
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type OptionShape = { id: string; text: string; isCorrect?: boolean };
@@ -153,6 +155,9 @@ function ExamWarRoomContent() {
                     startedAtRef.current = Date.now();
                 }
 
+                // Track test start
+                trackTestStart(examId, exam.title);
+
                 // Restore existing answers
                 if (r.data.existingAnswers && r.data.existingAnswers.length > 0) {
                     const restored: Record<string, Answer> = {};
@@ -267,6 +272,9 @@ function ExamWarRoomContent() {
             );
         }
 
+        // Track test completion
+        trackTestComplete(examId ?? "demo", actualScore);
+
         setSolFilter("all"); // reset filter for new results
         setResultData({ correct: correctCount, total: questions.length, xpGained, timeUsed, actualScore, wrongAttemptedCount, guessedWrongCount, skippedCount, topicList });
         setPhase("results");
@@ -380,6 +388,7 @@ function ExamWarRoomContent() {
             }
         }
 
+        logEvent("test_exit", { exam_id: examId, mode });
         router.push("/student/exams");
     }, [mode, phase, router]);
 

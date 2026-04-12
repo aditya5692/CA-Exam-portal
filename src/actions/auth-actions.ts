@@ -16,7 +16,8 @@ import {
 } from "@/lib/server/auth-management";
 import { ActionResponse } from "@/types/shared";
 import prisma from "@/lib/prisma/client";
-import { sendMsg91Otp, verifyMsg91Otp, verifyMsg91WidgetToken, normalizePhone } from "@/lib/server/msg91";
+import { normalizePhone } from "@/lib/server/msg91";
+import { verifyIdToken } from "@/lib/server/firebase-admin";
 import { loginSchema, requestOtpSchema, verifyOtpSchema, registrationSchema } from "@/lib/validations/auth-schemas";
 
 type RequestedOtpRole = "STUDENT" | "TEACHER";
@@ -193,11 +194,7 @@ export async function requestOtp(phone: string): Promise<ActionResponse<void>> {
             return { success: false, message: validated.error.issues[0].message };
         }
 
-        const result = await sendMsg91Otp(validated.data.phone);
-        if (result.success) {
-            return { success: true, data: undefined, message: result.message };
-        }
-        return { success: false, message: result.message };
+        return { success: false, message: "Direct OTP request via MSG91 is currently disabled." };
     } catch (error) {
         console.error("requestOtp error:", error);
         return { success: false, message: "Failed to send OTP." };
@@ -218,48 +215,49 @@ export async function verifyOtpAndLogin(
             return { success: false, message: validated.error.issues[0].message };
         }
 
-        const verification = await verifyMsg91Otp(validated.data.phone, validated.data.otp);
-        if (!verification.success) {
-            return { success: false, message: verification.message };
-        }
-
-        return finalizeVerifiedPhoneLogin(validated.data.phone, normalizeRequestedRole(requestedRole));
+        return { success: false, message: "Direct OTP verification via MSG91 is currently disabled." };
     } catch {
         return { success: false, message: "Verification failed." };
     }
 }
 
 /**
+ * Verifies the Firebase ID token and handles the full login/registration flow.
+ */
+export async function verifyFirebaseTokenAndLogin(
+    idToken: string,
+    requestedRole?: RequestedOtpRole,
+): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
+    try {
+        const decodedToken = await verifyIdToken(idToken);
+        const phone = decodedToken.phone_number;
+
+        if (!phone) {
+            return { success: false, message: "Could not retrieve phone number from verification." };
+        }
+
+        const normalizedPhone = normalizePhone(phone);
+        console.log(`AuthAction: [VerifyFirebase] Initializing login for: ${normalizedPhone}`);
+
+        return finalizeVerifiedPhoneLogin(normalizedPhone, normalizeRequestedRole(requestedRole));
+    } catch (error) {
+        console.error("AuthAction: Firebase Verification Failed:", error);
+        return { 
+            success: false, 
+            message: "Authentication failed. Please try again.",
+        };
+    }
+}
+
+/**
  * Verifies the MSG91 widget access token and handle the full login/registration flow.
+ * @deprecated Switching to Firebase Auth
  */
 export async function verifyWidgetOtpAndLogin(
     accessToken: string,
     requestedRole?: RequestedOtpRole,
 ): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
-    const IS_PROD = process.env.NODE_ENV === "production";
-    
-    try {
-        // 1. Server-side Token Verification
-        const verification = await verifyMsg91WidgetToken(accessToken);
-        if (!verification.success || !verification.phone) {
-            // Internal logging for admins
-            if (!IS_PROD) console.error("AuthAction: MSG91 Verification Failed:", verification.message);
-            return { success: false, message: verification.message };
-        }
-
-        const phone = verification.phone;
-        const normalizedPhone = normalizePhone(phone);
-        
-        console.log(`AuthAction: [VerifyWidget] Initializing login for verified phone: ${normalizedPhone}`);
-
-        return finalizeVerifiedPhoneLogin(normalizedPhone, normalizeRequestedRole(requestedRole));
-    } catch (error) {
-        console.error("AuthAction: Critical Failure in verifyWidgetOtpAndLogin:", error);
-        return { 
-            success: false, 
-            message: getSessionErrorMessage(error),
-        };
-    }
+    return { success: false, message: "MSG91 login is currently disabled. Please use the modern login." };
 }
 
 /**
@@ -321,22 +319,17 @@ export async function verifyOtpAndRegister(formData: {
         const normalizedPhone = normalizePhone(formData.phone);
 
         if (formData.token && formData.otp === "VERIFIED") {
-            const verification = await verifyMsg91WidgetToken(formData.token);
-            if (verification.success && verification.phone) {
-                const normalizedVerified = normalizePhone(verification.phone);
-                
-                if (normalizedPhone === normalizedVerified) {
-                    console.log("AuthAction: Token verification matched phone number.");
-                } else {
-                    console.error("AuthAction: Phone mismatch", { expected: normalizedPhone, actual: normalizedVerified });
-                    return { success: false, message: "Security Check: Verified phone number does not match registration number." };
-                }
+            const decodedToken = await verifyIdToken(formData.token);
+            const normalizedVerified = normalizePhone(decodedToken.phone_number || "");
+            
+            if (normalizedPhone === normalizedVerified) {
+                console.log("AuthAction: Firebase verification matched phone number.");
             } else {
-                return { success: false, message: verification.message || "Session verification failed. Please try again." };
+                console.error("AuthAction: Phone mismatch", { expected: normalizedPhone, actual: normalizedVerified });
+                return { success: false, message: "Security Check: Verified phone number does not match registration number." };
             }
         } else {
-            const verification = await verifyMsg91Otp(formData.phone, formData.otp);
-            if (!verification.success) return { success: false, message: verification.message };
+            return { success: false, message: "Direct OTP verification via MSG91 is disabled." };
         }
 
         const existingUser = await findUserByVerifiedPhone(normalizedPhone);

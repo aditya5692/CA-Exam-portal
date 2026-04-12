@@ -18,5 +18,6 @@ export type AdminMetricsData = {
         createdAt: Date;
         role: string;
     }[];
+    recentSubscriptions?: any[];
     timestamp: string;
 };
