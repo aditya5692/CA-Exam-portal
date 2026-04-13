@@ -64,6 +64,10 @@ export function QuestionBulkUploadReview() {
     const [batches, setBatches] = useState<BatchOption[]>([]);
     const [batchesLoaded, setBatchesLoaded] = useState(false);
 
+    // Visibility state
+    const [visibleToNonBatch, setVisibleToNonBatch] = useState(false);
+    const [visibleToOtherBatches, setVisibleToOtherBatches] = useState(false);
+
     // Breakdown state
     const [breakIntoTests, setBreakIntoTests] = useState(false);
     const [breakdownMode, setBreakdownMode] = useState<"RANDOM" | "FIFO">("FIFO");
@@ -163,6 +167,8 @@ export function QuestionBulkUploadReview() {
                 target: audienceMode === "batch"
                     ? { kind: "batch", batchId: selectedBatchId }
                     : { kind: "all" },
+                visibleToNonBatch,
+                visibleToOtherBatches,
                 questions: report.questions.map((q: Question) => ({
                     prompt: q.prompt,
                     options: q.options,
@@ -570,6 +576,41 @@ export function QuestionBulkUploadReview() {
                                             </div>
                                             {audienceMode === "batch" && <Sparkle size={40} weight="fill" className="absolute -right-4 -top-4 opacity-10" />}
                                         </button>
+                                    </div>
+
+                                    {/* Additional visibility controls */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                                        <label className={cn(
+                                            "flex items-center gap-3 px-5 py-4 rounded-lg border transition-all cursor-pointer",
+                                            visibleToNonBatch ? "bg-white border-indigo-600 shadow-md ring-4 ring-indigo-500/5" : "bg-white border-slate-100 hover:border-indigo-200"
+                                        )}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={visibleToNonBatch}
+                                                onChange={(e) => setVisibleToNonBatch(e.target.checked)}
+                                                className="w-4 h-4 rounded border-2 border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all"
+                                            />
+                                            <div>
+                                                <p className="font-bold text-slate-900 text-xs">Visible to Non-Batch</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Show to students without batches</p>
+                                            </div>
+                                        </label>
+
+                                        <label className={cn(
+                                            "flex items-center gap-3 px-5 py-4 rounded-lg border transition-all cursor-pointer",
+                                            visibleToOtherBatches ? "bg-white border-indigo-600 shadow-md ring-4 ring-indigo-500/5" : "bg-white border-slate-100 hover:border-indigo-200"
+                                        )}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={visibleToOtherBatches}
+                                                onChange={(e) => setVisibleToOtherBatches(e.target.checked)}
+                                                className="w-4 h-4 rounded border-2 border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all"
+                                            />
+                                            <div>
+                                                <p className="font-bold text-slate-900 text-xs">Visible to Other Batches</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Allow access from other batches</p>
+                                            </div>
+                                        </label>
                                     </div>
                                 </div>
 

@@ -20,6 +20,8 @@ export type PublishExamInput = {
     durationMinutes: number;
     examType?: string;
     target: PublishTarget;
+    visibleToNonBatch?: boolean;
+    visibleToOtherBatches?: boolean;
     questions: ParsedQuestion[];
     breakdown?: {
         enabled: boolean;

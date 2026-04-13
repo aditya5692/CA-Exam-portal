@@ -193,7 +193,10 @@ export async function publishExamQuestions(
                     examType: normalized.examType,
                     teacherId: actor.id,
                     batchId: resolvedBatchId,
-                },
+                    // Visibility toggles
+                    visibleToNonBatch: input.visibleToNonBatch ?? false,
+                    visibleToOtherBatches: input.visibleToOtherBatches ?? false,
+                } as any,
             });
 
             for (let qIndex = 0; qIndex < chunk.length; qIndex += 1) {
@@ -266,12 +269,29 @@ export async function buildStudentVisibleExamWhere(
     });
     const enrolledBatchIds = enrollments.map((enrollment) => enrollment.batchId);
 
-    return {
+    const baseWhere = {
         category: getStudentCACategory(caLevel),
         status: "PUBLISHED",
+    };
+
+    if (enrolledBatchIds.length === 0) {
+        // Student has no batches: Show Admin tests OR tests shared with Non-Batch students
+        return {
+            ...baseWhere,
+            OR: [
+                { teacher: { role: "ADMIN" } },
+                { visibleToNonBatch: true } as any,
+            ],
+        };
+    }
+
+    // Student has batches: Show their batch tests OR tests shared with Other Batches OR Admin tests (optional but usually good)
+    return {
+        ...baseWhere,
         OR: [
-            { batchId: null },
-            ...(enrolledBatchIds.length > 0 ? [{ batchId: { in: enrolledBatchIds } }] : []),
+            { batchId: { in: enrolledBatchIds } },
+            { visibleToOtherBatches: true } as any,
+            { teacher: { role: "ADMIN" } }, // Admin tests are usually default for everyone
         ],
     };
 }
@@ -373,7 +393,9 @@ export async function publishExamFromVaultIds(
                 examType: input.examType,
                 teacherId: actor.id,
                 batchId: resolvedBatchId,
-            },
+                visibleToNonBatch: (input as any).visibleToNonBatch ?? false,
+                visibleToOtherBatches: (input as any).visibleToOtherBatches ?? false,
+            } as any,
         });
 
         // Link existing questions

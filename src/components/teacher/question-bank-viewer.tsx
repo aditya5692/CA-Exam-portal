@@ -8,8 +8,14 @@ import {
     PencilSimple,
     Trash,
     Stack,
+    Sparkle,
+    CloudArrowUp,
+    CaretDown
 } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useState, useMemo } from "react";
+
+import { VaultFilterSuite } from "./vault-filter-suite";
 
 interface VaultQuestion {
     id: string;
@@ -25,6 +31,63 @@ export function QuestionBankViewer() {
     const [questions, setQuestions] = useState<VaultQuestion[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(true);
+    const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+    const [activeFilters, setActiveFilters] = useState<{
+        subject: string | null;
+        chapter: string | null;
+        difficulty: string | null;
+    }>({ subject: null, chapter: null, difficulty: null });
+
+    const filteredQuestions = useMemo(() => {
+        return questions.filter((q: VaultQuestion) => {
+            const matchesSearch = q.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                (q.subject && q.subject.toLowerCase().includes(searchQuery.toLowerCase()));
+            
+            const matchesSubject = !activeFilters.subject || q.subject === activeFilters.subject || (activeFilters.subject === "Uncategorized" && !q.subject);
+            const matchesChapter = !activeFilters.chapter || q.topic === activeFilters.chapter || (activeFilters.chapter === "General" && !q.topic);
+            const matchesDifficulty = !activeFilters.difficulty || q.difficulty === activeFilters.difficulty;
+
+            return matchesSearch && matchesSubject && matchesChapter && matchesDifficulty;
+        });
+    }, [questions, searchQuery, activeFilters]);
+
+    // Grouping Logic
+    const groupedData = useMemo(() => {
+        const groups: Record<string, Record<string, VaultQuestion[]>> = {};
+        filteredQuestions.forEach((q: VaultQuestion) => {
+            const sub = q.subject || "Uncategorized";
+            const chap = q.topic || "General";
+            if (!groups[sub]) groups[sub] = {};
+            if (!groups[sub][chap]) groups[sub][chap] = [];
+            groups[sub][chap].push(q);
+        });
+        return groups;
+    }, [filteredQuestions]);
+
+    const toggleChapter = (chapterId: string) => {
+        const next = new Set(expandedChapters);
+        if (next.has(chapterId)) next.delete(chapterId); else next.add(chapterId);
+        setExpandedChapters(next);
+    };
+
+    const toggleAll = (expand: boolean) => {
+        if (expand) {
+            const all: string[] = [];
+            Object.values(groupedData).forEach(chapters => {
+                Object.keys(chapters).forEach(c => all.push(c));
+            });
+            setExpandedChapters(new Set(all));
+        } else {
+            setExpandedChapters(new Set());
+        }
+    };
+
+    // Initially expand all chapters when data loads
+    useEffect(() => {
+        if (!loading && Object.keys(groupedData).length > 0 && expandedChapters.size === 0) {
+            toggleAll(true);
+        }
+    }, [loading, groupedData]);
 
     const fetchQuestions = async () => {
         setLoading(true);
@@ -49,15 +112,10 @@ export function QuestionBankViewer() {
         }
     };
 
-    const filteredQuestions = questions.filter(q =>
-        q.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (q.subject && q.subject.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-
     return (
         <div className="w-full max-w-7xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
-            <div className="mb-10 relative">
+            <div className="mb-8 relative">
                 <div className="absolute top-0 right-0 w-[500px] h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
                     <div className="space-y-3">
@@ -70,16 +128,58 @@ export function QuestionBankViewer() {
                             Organize and review all generated and uploaded MCQs. These questions can be automatically compiled into mock test series.
                         </p>
                     </div>
+
+                    <div className="flex flex-wrap gap-4">
+                        <Link 
+                            href="/teacher/mcq-extract"
+                            className="h-12 px-6 rounded-lg bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+                        >
+                            <Sparkle size={18} weight="fill" className="text-indigo-500" />
+                            AI Studio
+                        </Link>
+                        <Link 
+                            href="/teacher/questions/bulk-upload"
+                            className="h-12 px-6 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg"
+                        >
+                            <CloudArrowUp size={18} weight="bold" />
+                            Bulk Upload
+                        </Link>
+                    </div>
                 </div>
             </div>
+
+            <VaultFilterSuite 
+                onFilterChange={setActiveFilters} 
+                className="mb-8" 
+            />
 
             {/* Content area */}
             <div className="flex flex-col min-h-[500px]">
                 {/* Search Bar */}
-                <div className="pb-4 flex items-center justify-between gap-4 flex-wrap">
-                    <div className="flex items-center gap-3">
-                        <Stack size={20} weight="fill" className="text-slate-400" />
-                        <span className="text-xs font-bold text-slate-600">{questions.length} Items</span>
+                <div className="pb-6 flex items-center justify-between gap-4 flex-wrap border-b border-slate-100 mb-8">
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                                <Stack size={18} weight="bold" />
+                            </div>
+                            <span className="text-sm font-bold text-slate-900">{filteredQuestions.length} Matches Found</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 border-l border-slate-200 pl-6">
+                            <button 
+                                onClick={() => toggleAll(true)}
+                                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
+                            >
+                                Expand All
+                            </button>
+                            <span className="text-slate-200">•</span>
+                            <button 
+                                onClick={() => toggleAll(false)}
+                                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
+                            >
+                                Collapse All
+                            </button>
+                        </div>
                     </div>
 
                     <div className="relative w-full max-w-sm">
@@ -88,88 +188,125 @@ export function QuestionBankViewer() {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search questions or tags..."
-                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm"
+                            placeholder="Search within filtered results…"
+                            className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 transition-all"
                         />
                     </div>
                 </div>
 
-                {/* Table Header */}
-                <div className="grid grid-cols-[1fr_200px_80px] items-center px-6 py-3 bg-slate-50 border border-slate-100 rounded-lg-t-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 border-b-0">
-                    <span>Question Details</span>
-                    <span>Meta Tags</span>
-                    <span className="text-right">Actions</span>
-                </div>
-
-                {/* Rows */}
-                <div className="divide-y divide-slate-100 flex-1 overflow-x-auto border border-slate-100 rounded-lg-b-2xl bg-white mb-8">
-                    {loading ? (
-                        <div className="py-20 flex flex-col items-center justify-center">
-                            <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                            <span className="mt-4 text-xs font-bold text-slate-400">Loading Bank...</span>
+                {loading ? (
+                    <div className="py-20 flex flex-col items-center justify-center bg-white border border-slate-100 rounded-3xl">
+                        <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <span className="mt-4 text-xs font-black uppercase tracking-widest text-slate-400">Synchronizing Vault...</span>
+                    </div>
+                ) : filteredQuestions.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 bg-white border border-slate-100 rounded-3xl">
+                        <div className="w-20 h-20 bg-slate-50 shadow-sm border border-slate-100 rounded-2xl flex items-center justify-center text-slate-300">
+                            <Books size={40} />
                         </div>
-                    ) : filteredQuestions.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                            <div className="w-16 h-16 bg-slate-50 shadow-sm border border-slate-100 rounded-full flex items-center justify-center text-slate-300">
-                                <Books size={32} />
-                            </div>
-                            <div>
-                                <h3 className="text-base font-bold text-slate-900">Bank is Empty</h3>
-                                <p className="text-sm text-slate-500 mt-1">Upload questions to see them here.</p>
-                            </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900">No Questions Found</h3>
+                            <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">Try adjusting your intelligence filters or search criteria.</p>
                         </div>
-                    ) : (
-                        filteredQuestions.map((q, i) => {
-                            const correctOption = q.options.find(o => o.isCorrect);
-                            return (
-                                <div key={q.id} className="grid grid-cols-[1fr_200px_80px] items-start px-6 py-4 hover:bg-slate-50 transition-colors duration-200 group">
-                                    {/* Question & Answer */}
-                                    <div className="pr-6 min-w-0">
-                                        <h3 className="text-sm font-bold text-slate-900 leading-snug mb-1.5 break-words">
-                                            {q.text}
-                                        </h3>
-                                        <div className="flex items-start gap-2 max-w-full">
-                                            <span className="text-emerald-600 font-black text-[10px] uppercase tracking-widest shrink-0 mt-0.5">Answer:</span>
-                                            <span className="text-xs font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg truncate max-w-md">
-                                                {correctOption?.text || "None selected"}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Tags */}
-                                    <div className="flex flex-col gap-2 justify-center">
-                                        {q.subject && (
-                                            <span className="inline-flex px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wide self-start truncate max-w-full">
-                                                {q.subject}
-                                            </span>
-                                        )}
-                                        {q.difficulty && (
-                                            <span className={cn(
-                                                "inline-flex px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest self-start",
-                                                q.difficulty.toLowerCase() === "hard" ? "bg-rose-50 text-rose-600" :
-                                                    q.difficulty.toLowerCase() === "medium" ? "bg-amber-50 text-amber-600" :
-                                                        "bg-emerald-50 text-emerald-600"
-                                            )}>{q.difficulty}</span>
-                                        )}
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex items-center justify-end gap-1.5 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 transition-all flex items-center justify-center shadow-sm">
-                                            <PencilSimple size={14} weight="bold" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(q.id)}
-                                            className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 transition-all flex items-center justify-center shadow-sm"
-                                        >
-                                            <Trash size={14} weight="bold" />
-                                        </button>
-                                    </div>
+                    </div>
+                ) : (
+                    <div className="space-y-12">
+                        {Object.entries(groupedData).map(([subject, chapters]) => (
+                            <div key={subject} className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-lg font-black uppercase tracking-[0.2em] text-slate-900">{subject}</h2>
+                                    <div className="h-px flex-1 bg-slate-100" />
                                 </div>
-                            );
-                        })
-                    )}
-                </div>
+
+                                <div className="grid grid-cols-1 gap-6">
+                                    {Object.entries(chapters).map(([chapter, items]) => {
+                                        const isExpanded = expandedChapters.has(chapter);
+                                        return (
+                                            <div key={chapter} className={cn(
+                                                "bg-white border rounded-2xl overflow-hidden shadow-sm transition-all duration-300",
+                                                isExpanded ? "border-slate-200" : "border-slate-100 opacity-80 hover:opacity-100"
+                                            )}>
+                                                <div 
+                                                    onClick={() => toggleChapter(chapter)}
+                                                    className="px-6 py-4 bg-white hover:bg-slate-50 border-b border-transparent cursor-pointer flex items-center justify-between group"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={cn(
+                                                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                                            isExpanded ? "bg-indigo-600 text-white rotate-180" : "bg-slate-100 text-slate-400"
+                                                        )}>
+                                                            <CaretDown size={18} weight="bold" />
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className={cn(
+                                                                "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap transition-all",
+                                                                isExpanded ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-500"
+                                                            )}>
+                                                                {chapter}
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-slate-400">{items.length} questions matched</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {!isExpanded && (
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-slate-300 group-hover:text-indigo-400 transition-colors">
+                                                            Click to Expand
+                                                        </div>
+                                                    )}
+                                                </div>                                                {isExpanded && (
+                                                    <div className="divide-y divide-slate-50 animate-in slide-in-from-top-2 duration-300">
+                                                        {items.map((q) => {
+                                                            const correctOption = q.options.find(o => o.isCorrect);
+                                                            return (
+                                                                <div key={q.id} className="group p-6 hover:bg-slate-50 transition-all duration-200">
+                                                                    <div className="flex items-start justify-between gap-6">
+                                                                        <div className="space-y-3 flex-1">
+                                                                            <div className="flex items-center gap-2">
+                                                                                {q.difficulty && (
+                                                                                    <span className={cn(
+                                                                                        "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
+                                                                                        q.difficulty.toLowerCase() === "hard" ? "bg-rose-50 text-rose-600" :
+                                                                                        q.difficulty.toLowerCase() === "medium" ? "bg-amber-50 text-amber-600" :
+                                                                                        "bg-emerald-50 text-emerald-600"
+                                                                                    )}>{q.difficulty}</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <h3 className="text-sm font-semibold text-slate-800 leading-relaxed">
+                                                                                {q.text}
+                                                                            </h3>
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                                                                    <span className="text-[9px] font-black uppercase tracking-widest">Answer</span>
+                                                                                    <span className="text-xs font-bold truncate max-w-[300px]">{correctOption?.text || "None"}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                                                                            <button className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 transition-all flex items-center justify-center shadow-sm">
+                                                                                <PencilSimple size={16} weight="bold" />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleDelete(q.id)}
+                                                                                className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 transition-all flex items-center justify-center shadow-sm"
+                                                                            >
+                                                                                <Trash size={16} weight="bold" />
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

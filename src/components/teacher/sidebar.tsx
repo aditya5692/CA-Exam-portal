@@ -32,57 +32,144 @@ interface NavItem {
     icon: Icon;
 }
 
-const MAIN_NAV_ITEMS: NavItem[] = [
+interface NavGroup {
+    label: string;
+    icon: Icon;
+    items: NavItem[];
+}
+
+const ACADEMY_MANAGEMENT: NavItem[] = [
     { label: "Overview", href: "/teacher/dashboard", icon: ChartPieSlice },
+    { label: "My Batches", href: "/teacher/batches", icon: GraduationCap },
+    { label: "Students", href: "/teacher/students", icon: Users },
+];
+
+const QUESTIONS_HUB: NavItem[] = [
+    { label: "MCQs", href: "/teacher/questions", icon: Stack },
+    { label: "Case Studies", href: "/teacher/case-studies", icon: Books },
+];
+
+const ASSESSMENT_HUB: NavItem[] = [
     { label: "Test Series", href: "/teacher/test-series", icon: FileText },
     { label: "Question Bank", href: "/teacher/question-bank", icon: Stack },
     { label: "Study Materials", href: "/teacher/free-resources", icon: Sparkle },
-    { label: "My Batches", href: "/teacher/batches", icon: GraduationCap },
-    { label: "Students", href: "/teacher/students", icon: Users },
-    { label: "Analytics", href: "/teacher/analytics", icon: ChartPieSlice },
 ];
 
-const PUBLISHING_NAV_ITEMS: NavItem[] = [];
+const INSIGHTS_NAV: NavItem[] = [
+    { label: "Analytics", href: "/teacher/analytics", icon: ChartPieSlice },
+];
 
 const ADMIN_NAV_ITEMS: NavItem[] = [
     { label: "Platform Governance", href: "/admin/control-center", icon: IdentificationBadge },
 ];
 
-function SidebarNavItem({
+// --- Sub-components ---
+
+function SidebarSubItem({
     item,
-    isActive,
-    isCollapsed
+    isActive
 }: {
     item: NavItem;
     isActive: boolean;
-    isCollapsed: boolean;
 }) {
     return (
         <Link
             href={item.href}
-            title={isCollapsed ? item.label : ""}
             className={cn(
-                "group/item relative flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200",
-                isActive
-                    ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]"
-                    : "text-[var(--student-muted)] hover:bg-[var(--student-panel-muted)] hover:text-[var(--student-text)]"
+                "group/sub relative flex items-center gap-3 py-2 pl-9 pr-4 transition-all duration-200",
+                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
             )}
         >
-            {isActive && (
-                <div className="absolute bottom-2 left-0 top-2 w-1 rounded-lg-r-full bg-[var(--student-accent-strong)]" />
-            )}
-            <div
+            {/* Timeline Line */}
+            <div className="absolute left-[23px] top-0 bottom-0 w-px bg-[var(--student-border-strong)] opacity-20" />
+            
+            {/* Timeline Dot */}
+            <div className={cn(
+                "absolute left-[20px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all duration-300 z-10",
+                isActive 
+                    ? "bg-[var(--student-accent-strong)] border-[var(--student-accent-strong)] scale-110 shadow-[0_0_8px_rgba(31,92,80,0.4)]" 
+                    : "bg-white border-[var(--student-border-strong)] group-hover/sub:border-[var(--student-muted)]"
+            )} />
+
+            <span className={cn(
+                "text-xs font-bold transition-colors",
+                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] group-hover/sub:text-[var(--student-text)]"
+            )}>
+                {item.label}
+            </span>
+        </Link>
+    );
+}
+
+function SidebarNavGroup({
+    label,
+    icon: Icon,
+    items,
+    pathname,
+    isCollapsed
+}: {
+    label: string;
+    icon: Icon;
+    items: NavItem[];
+    pathname: string;
+    isCollapsed: boolean;
+}) {
+    const [isOpen, setIsOpen] = useState(true);
+    const hasActiveChild = items.some(item => pathname === item.href);
+
+    if (isCollapsed) {
+        return (
+            <div className="flex flex-col items-center gap-2 py-2">
+                <div className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-lg transition-all",
+                    hasActiveChild ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]" : "text-[var(--student-muted)]"
+                )}>
+                    <Icon size={22} weight={hasActiveChild ? "fill" : "bold"} />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="py-1">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-                    isActive
-                        ? "text-[var(--student-accent-strong)]"
-                        : "text-[var(--student-muted)] group-hover/item:text-[var(--student-text)]"
+                    "flex w-full items-center justify-between px-4 py-2 rounded-lg transition-all duration-200 group/group",
+                    hasActiveChild ? "text-[var(--student-text)]" : "text-[var(--student-muted)] hover:bg-[var(--student-panel-muted)] hover:text-[var(--student-text)]"
                 )}
             >
-                <item.icon size={20} weight={isActive ? "fill" : "bold"} />
+                <div className="flex items-center gap-3">
+                    <div className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                        hasActiveChild ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]" : "bg-transparent text-[var(--student-muted)] group-hover/group:text-[var(--student-text)]"
+                    )}>
+                        <Icon size={20} weight={hasActiveChild ? "fill" : "bold"} />
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-[0.15em]">{label}</span>
+                </div>
+                <CaretDown
+                    size={12}
+                    weight="bold"
+                    className={cn("transition-transform duration-300", isOpen ? "rotate-0" : "-rotate-90", hasActiveChild ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)]")}
+                />
+            </button>
+
+            <div className={cn(
+                "grid transition-all duration-300 ease-in-out",
+                isOpen ? "grid-rows-[1fr] opacity-100 mt-0.5" : "grid-rows-[0fr] opacity-0"
+            )}>
+                <div className="overflow-hidden">
+                    {items.map((item) => (
+                        <SidebarSubItem
+                            key={item.href}
+                            item={item}
+                            isActive={pathname === item.href}
+                        />
+                    ))}
+                </div>
             </div>
-            {!isCollapsed && <span className="text-sm font-semibold">{item.label}</span>}
-        </Link>
+        </div>
     );
 }
 
@@ -248,34 +335,48 @@ export function TeacherSidebar({
                 </Link>
             </div>
 
-            <nav className={cn("mt-2 flex-1 space-y-1 overflow-y-auto px-3", isCollapsed && "px-2")}>
-                {MAIN_NAV_ITEMS.map((item) => (
-                    <SidebarNavItem
-                        key={item.href}
-                        item={item}
-                        isActive={pathname === item.href}
-                        isCollapsed={isCollapsed}
-                    />
-                ))}
+            <nav className={cn("mt-2 flex-1 space-y-1 overflow-y-auto px-3 custom-scrollbar", isCollapsed && "px-2")}>
+                <SidebarNavGroup
+                    label="Academy"
+                    icon={IdentificationBadge}
+                    items={ACADEMY_MANAGEMENT}
+                    pathname={pathname}
+                    isCollapsed={isCollapsed}
+                />
 
+                <SidebarNavGroup
+                    label="Questions"
+                    icon={Stack}
+                    items={QUESTIONS_HUB}
+                    pathname={pathname}
+                    isCollapsed={isCollapsed}
+                />
+
+                <SidebarNavGroup
+                    label="Assessment"
+                    icon={FileText}
+                    items={ASSESSMENT_HUB}
+                    pathname={pathname}
+                    isCollapsed={isCollapsed}
+                />
+
+                <SidebarNavGroup
+                    label="Insights"
+                    icon={ChartPieSlice}
+                    items={INSIGHTS_NAV}
+                    pathname={pathname}
+                    isCollapsed={isCollapsed}
+                />
 
                 {showAdminLink && (
-                    <div className="mt-8 space-y-2">
-                        {!isCollapsed && (
-                            <div className="px-4 py-2">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted-strong)]">
-                                    Admin Center
-                                </p>
-                            </div>
-                        )}
-                        {ADMIN_NAV_ITEMS.map((item) => (
-                            <SidebarNavItem
-                                key={item.href}
-                                item={item}
-                                isActive={pathname === item.href}
-                                isCollapsed={isCollapsed}
-                            />
-                        ))}
+                    <div className="mt-8 border-t border-[var(--student-border)] pt-4">
+                        <SidebarNavGroup
+                            label="Governance"
+                            icon={IdentificationBadge}
+                            items={ADMIN_NAV_ITEMS}
+                            pathname={pathname}
+                            isCollapsed={isCollapsed}
+                        />
                     </div>
                 )}
             </nav>

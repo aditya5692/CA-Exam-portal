@@ -143,6 +143,8 @@ export async function createExamFromVault(input: {
     durationMinutes: number;
     examType: string;
     target: PublishTarget;
+    visibleToNonBatch?: boolean;
+    visibleToOtherBatches?: boolean;
     questionIds: string[];
 }): Promise<ActionResponse<PublishExamResultData>> {
     try {

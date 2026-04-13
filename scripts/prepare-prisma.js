@@ -66,13 +66,17 @@ function updatePrismaSchema() {
         return;
     }
 
-    const providerRegex = /provider\s*=\s*"([^"]+)"/;
-    const currentMatch = schema.match(providerRegex);
+    const datasourceRegex = /datasource\s+db\s*{[^}]*provider\s*=\s*"([^"]+)"/;
+    const currentMatch = schema.match(datasourceRegex);
     
     if (currentMatch && currentMatch[1] !== targetProvider) {
         console.log(`🔄 [PreparePrisma] Switching Prisma provider: ${currentMatch[1]} -> ${targetProvider}`);
-        schema = schema.replace(providerRegex, `provider = "${targetProvider}"`);
-        fs.writeFileSync(schemaPath, schema);
+        // Replace only the provider within the datasource block
+        const updatedSchema = schema.replace(
+            /(datasource\s+db\s*{[^}]*provider\s*=\s*")([^"]+)(")/,
+            `$1${targetProvider}$3`
+        );
+        fs.writeFileSync(schemaPath, updatedSchema);
     } else {
         console.log(`✅ [PreparePrisma] Schema provider is already ${targetProvider}`);
     }

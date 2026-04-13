@@ -8,6 +8,7 @@ import {
     Check,
     CheckCircle,
     CaretLeft,
+    CaretDown,
     Clock,
     FileText,
     Globe,
@@ -20,6 +21,8 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { VaultFilterSuite } from "./vault-filter-suite";
+import { getVaultIntel, harvestQuestions, type VaultIntel } from "@/actions/vault-intel-actions";
 
 type VaultQuestion = {
     id: string;
@@ -41,6 +44,23 @@ export function SeriesCreator() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [vaultQuestions, setVaultQuestions] = useState<VaultQuestion[]>([]);
     const [batches, setBatches] = useState<BatchOption[]>([]);
+    const [vaultIntel, setVaultIntel] = useState<VaultIntel | null>(null);
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [activeFilters, setActiveFilters] = useState<{
+        subject: string | null;
+        chapter: string | null;
+        difficulty: string | null;
+    }>({ subject: null, chapter: null, difficulty: null });
+
+    // Expansion state
+    const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+
+    const toggleChapter = (chapterId: string) => {
+        const next = new Set(expandedChapters);
+        if (next.has(chapterId)) next.delete(chapterId); else next.add(chapterId);
+        setExpandedChapters(next);
+    };
 
     // Form State
     const [title, setTitle] = useState("");
@@ -52,15 +72,61 @@ export function SeriesCreator() {
     const [selectedBatchId, setSelectedBatchId] = useState("");
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
 
-    // Filter questions
-    const [searchQuery, setSearchQuery] = useState("");
+    // New Visibility Flags
+    const [visibleToNonBatch, setVisibleToNonBatch] = useState(false);
+    const [visibleToOtherBatches, setVisibleToOtherBatches] = useState(false);
+
+    const filteredVault = useMemo(() => {
+        return vaultQuestions.filter((q: VaultQuestion) => {
+            const matchesSearch = q.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                (q.subject && q.subject.toLowerCase().includes(searchQuery.toLowerCase()));
+            
+            const matchesSubject = !activeFilters.subject || q.subject === activeFilters.subject || (activeFilters.subject === "Uncategorized" && !q.subject);
+            const matchesChapter = !activeFilters.chapter || q.topic === activeFilters.chapter || (activeFilters.chapter === "General" && !q.topic);
+            const matchesDifficulty = !activeFilters.difficulty || q.difficulty === activeFilters.difficulty;
+
+            return matchesSearch && matchesSubject && matchesChapter && matchesDifficulty;
+        });
+    }, [vaultQuestions, searchQuery, activeFilters]);
+
+    // Grouping for the harvester
+    const groupedHarvester = useMemo(() => {
+        const groups: Record<string, Record<string, VaultQuestion[]>> = {};
+        filteredVault.forEach((q: VaultQuestion) => {
+            const sub = q.subject || "Uncategorized";
+            const chap = q.topic || "General";
+            if (!groups[sub]) groups[sub] = {};
+            if (!groups[sub][chap]) groups[sub][chap] = [];
+            groups[sub][chap].push(q);
+        });
+        return groups;
+    }, [filteredVault]);
+
+    // Initially expand all when harvester groups change
+    useEffect(() => {
+        const all: string[] = [];
+        Object.values(groupedHarvester).forEach(chapters => {
+            Object.keys(chapters).forEach(c => all.push(c));
+        });
+        if (all.length > 0 && expandedChapters.size === 0) {
+            setExpandedChapters(new Set(all));
+        }
+    }, [vaultQuestions, activeFilters, groupedHarvester]);
+
+    // Mode: Manual or Generator
+    const [buildMode, setBuildMode] = useState<"MANUAL" | "GENERATOR">("MANUAL");
+    
+    // Generator State
+    const [genSubject, setGenSubject] = useState<string>("");
+    const [genChapters, setGenChapters] = useState<Record<string, number>>({});
 
     useEffect(() => {
         async function loadData() {
             setLoading(true);
-            const [qRes, bRes] = await Promise.all([
+            const [qRes, bRes, iRes] = await Promise.all([
                 getVaultQuestions(),
                 getTeacherBatchOptions(),
+                getVaultIntel()
             ]);
 
             if (qRes.success && qRes.data) setVaultQuestions(qRes.data);
@@ -68,22 +134,56 @@ export function SeriesCreator() {
                 setBatches(bRes.data);
                 if (bRes.data.length > 0) setSelectedBatchId(bRes.data[0].id);
             }
+            if (iRes.success && iRes.data) setVaultIntel(iRes.data);
+            
             setLoading(false);
         }
         loadData();
     }, []);
 
-    const filteredVault = useMemo(() => {
-        return vaultQuestions.filter(q =>
-            q.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (q.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
-        );
-    }, [vaultQuestions, searchQuery]);
-
     const toggleSelection = (id: string) => {
         const next = new Set(selectedQuestionIds);
         if (next.has(id)) next.delete(id); else next.add(id);
         setSelectedQuestionIds(next);
+    };
+
+    const selectAllInChapter = (items: VaultQuestion[]) => {
+        const next = new Set(selectedQuestionIds);
+        items.forEach(i => next.add(i.id));
+        setSelectedQuestionIds(next);
+    };
+
+    const handleSmartHarvest = async () => {
+        if (!genSubject) {
+            alert("Please select a subject for the smart generator.");
+            return;
+        }
+
+        const recipeChapters = Object.entries(genChapters)
+            .filter(([_, count]) => (count as number) > 0)
+            .map(([name, count]) => ({ name, count: count as number }));
+
+        if (recipeChapters.length === 0) {
+            alert("Please specify question counts for at least one chapter.");
+            return;
+        }
+
+        setLoading(true);
+        const res = await harvestQuestions({
+            subject: genSubject,
+            chapters: recipeChapters
+        });
+
+        if (res.success && res.data) {
+            const next = new Set(selectedQuestionIds);
+            res.data.forEach(id => next.add(id));
+            setSelectedQuestionIds(next);
+            setBuildMode("MANUAL");
+            alert(`Auto-harvested ${res.data.length} questions into your selection.`);
+        } else {
+            alert(res.message);
+        }
+        setLoading(false);
     };
 
     const handlePublish = async () => {
@@ -105,6 +205,8 @@ export function SeriesCreator() {
                 durationMinutes: parseInt(duration),
                 examType,
                 target: targetType === "BATCH" ? { kind: "batch", batchId: selectedBatchId } : { kind: "all" },
+                visibleToNonBatch,
+                visibleToOtherBatches,
                 questionIds: Array.from(selectedQuestionIds),
             });
 
@@ -124,7 +226,7 @@ export function SeriesCreator() {
     if (loading) {
         return (
             <div className="flex h-[400px] items-center justify-center">
-                <div className="w-8 h-8 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin" />
+                <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
             </div>
         );
     }
@@ -146,18 +248,23 @@ export function SeriesCreator() {
                     </div>
                 </div>
 
-                <button
-                    onClick={handlePublish}
-                    disabled={isSubmitting}
-                    className="h-14 px-8 rounded-lg bg-indigo-600 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center gap-3 disabled:opacity-50"
-                >
-                    {isSubmitting ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                        <RocketLaunch size={20} weight="fill" />
-                    )}
-                    {isSubmitting ? "Building..." : "Publish Series"}
-                </button>
+                <div className="flex items-center gap-4">
+                    <div className="px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-black">
+                        {selectedQuestionIds.size} Selected
+                    </div>
+                    <button
+                        onClick={handlePublish}
+                        disabled={isSubmitting}
+                        className="h-14 px-8 rounded-lg bg-indigo-600 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center gap-3 disabled:opacity-50"
+                    >
+                        {isSubmitting ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <RocketLaunch size={20} weight="fill" />
+                        )}
+                        {isSubmitting ? "Building..." : "Publish Series"}
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-10">
@@ -265,7 +372,7 @@ export function SeriesCreator() {
 
                         {targetType === "BATCH" && (
                             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                {batches.map(b => (
+                                {batches.map((b: BatchOption) => (
                                     <button
                                         key={b.id}
                                         onClick={() => setSelectedBatchId(b.id)}
@@ -288,108 +395,248 @@ export function SeriesCreator() {
                                 )}
                             </div>
                         )}
+
+                        {/* Extra Visibility Controls */}
+                        <div className="pt-6 space-y-4 border-t border-slate-100">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Cross-Platform Sharing</label>
+                            
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition-all cursor-pointer group">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={visibleToNonBatch}
+                                        onChange={(e) => setVisibleToNonBatch(e.target.checked)}
+                                        className="w-5 h-5 rounded border-2 border-slate-200 text-indigo-600 focus:ring-indigo-500 transition-all"
+                                    />
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">Show to Non-Batch Students</p>
+                                        <p className="text-[10px] font-semibold text-slate-400">Visible to students who haven't joined any batch</p>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition-all cursor-pointer group">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={visibleToOtherBatches}
+                                        onChange={(e) => setVisibleToOtherBatches(e.target.checked)}
+                                        className="w-5 h-5 rounded border-2 border-slate-200 text-indigo-600 focus:ring-indigo-500 transition-all"
+                                    />
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">Show to Other Batches</p>
+                                        <p className="text-[10px] font-semibold text-slate-400">Allow students in other batches to access this</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </section>
                 </div>
 
-                {/* Right side: Question Bank Selection */}
-                <div className="flex flex-col h-full min-h-[600px] bg-white border border-slate-100 rounded-lg p-8">
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400">
-                                <Stack size={22} weight="bold" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Question Harvester</h2>
-                                <p className="text-xs text-slate-400 font-medium">Select items to include in this series</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className="px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-black">
-                                {selectedQuestionIds.size} Selected
-                            </div>
+                {/* Right side: Question Selection Suite */}
+                <div className="flex flex-col h-full min-h-[600px] bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                    {/* Mode Toggle */}
+                    <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
+                         <div className="flex p-1 rounded-xl bg-slate-50 border border-slate-100 gap-1 w-fit">
                             <button
-                                onClick={() => setSelectedQuestionIds(new Set())}
-                                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
+                                onClick={() => setBuildMode("MANUAL")}
+                                className={cn(
+                                    "px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                                    buildMode === "MANUAL" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
                             >
-                                Clear All
+                                <Stack size={14} weight="bold" /> Manual Selection
+                            </button>
+                            <button
+                                onClick={() => setBuildMode("GENERATOR")}
+                                className={cn(
+                                    "px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                                    buildMode === "GENERATOR" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                <RocketLaunch size={14} weight="bold" /> Smart Generator
                             </button>
                         </div>
+
+                        <button
+                            onClick={() => setSelectedQuestionIds(new Set())}
+                            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
+                        >
+                            Clear Selection
+                        </button>
                     </div>
 
-                    <div className="relative group mb-6">
-                        <MagnifyingGlass
-                            size={18}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors"
-                            weight="bold"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Search your question bank by content or subject…"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full h-14 pl-12 pr-6 rounded-lg bg-slate-50 border border-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-medium"
-                        />
-                    </div>
-
-                    <div className="flex-1 space-y-3 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-100">
-                        {filteredVault.map((q) => {
-                            const isSelected = selectedQuestionIds.has(q.id);
-                            return (
-                                <div
-                                    key={q.id}
-                                    onClick={() => toggleSelection(q.id)}
-                                    className={cn(
-                                        "p-5 rounded-lg border transition-all cursor-pointer group flex items-start gap-5",
-                                        isSelected
-                                            ? "bg-indigo-50/50 border-indigo-200"
-                                            : "bg-white border-transparent hover:bg-slate-50/50 hover:border-slate-100"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "w-5 h-5 rounded-lg border-2 transition-all flex items-center justify-center shrink-0 mt-0.5",
-                                        isSelected ? "bg-indigo-600 border-indigo-600 text-white" : "border-slate-200 group-hover:border-slate-300"
-                                    )}>
-                                        {isSelected && <Check size={12} weight="bold" />}
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            {q.subject && (
-                                                <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">
-                                                    {q.subject}
-                                                </span>
-                                            )}
-                                            {q.difficulty && (
-                                                <span className={cn(
-                                                    "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
-                                                    q.difficulty === "HARD" ? "bg-rose-50 text-rose-500" : q.difficulty === "MEDIUM" ? "bg-amber-50 text-amber-500" : "bg-emerald-50 text-emerald-500"
-                                                )}>
-                                                    {q.difficulty}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm font-semibold text-slate-700 leading-relaxed line-clamp-2">
-                                            {q.text}
-                                        </p>
-                                    </div>
-
-                                    <button className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-300 hover:text-indigo-600 transition-all opacity-0 group-hover:opacity-100">
-                                        <ArrowsOut size={16} weight="bold" />
-                                    </button>
-                                </div>
-                            );
-                        })}
-
-                        {filteredVault.length === 0 && (
-                            <div className="py-20 text-center space-y-4">
-                                <div className="w-16 h-16 bg-slate-50 rounded-lg mx-auto flex items-center justify-center text-slate-200">
-                                    <Stack size={32} weight="duotone" />
-                                </div>
-                                <p className="text-sm font-bold text-slate-400 italic">No matching questions in your vault</p>
+                    {buildMode === "MANUAL" ? (
+                        <div className="space-y-6 flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-right-4 duration-500">
+                            <VaultFilterSuite onFilterChange={setActiveFilters} className="mb-2" />
+                            
+                            <div className="relative group">
+                                <MagnifyingGlass size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" weight="bold" />
+                                <input
+                                    type="text"
+                                    placeholder="Search content within search criteria…"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full h-14 pl-12 pr-6 rounded-xl bg-slate-50 border border-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-medium"
+                                />
                             </div>
-                        )}
-                    </div>
+
+                            <div className="flex-1 space-y-8 overflow-y-auto pr-2 custom-scrollbar">
+                                {Object.entries(groupedHarvester).length === 0 ? (
+                                    <div className="py-20 text-center space-y-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                        <div className="w-16 h-16 bg-white rounded-xl mx-auto flex items-center justify-center text-slate-200 shadow-sm">
+                                            <Stack size={32} weight="duotone" />
+                                        </div>
+                                        <p className="text-sm font-bold text-slate-400 italic">No matching questions in your harvester</p>
+                                    </div>
+                                ) : (
+                                    Object.entries(groupedHarvester).map(([subject, chapters]: [string, any]) => (
+                                        <div key={subject} className="space-y-4">
+                                            <div className="flex items-center gap-3 px-2">
+                                                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">{subject}</h3>
+                                                <div className="h-px flex-1 bg-slate-100" />
+                                            </div>
+
+                                            {Object.entries(chapters).map(([chapter, items]: [string, any]) => {
+                                                const isExpanded = expandedChapters.has(chapter);
+                                                return (
+                                                    <div key={chapter} className="space-y-3">
+                                                        <div 
+                                                            onClick={() => toggleChapter(chapter)}
+                                                            className="flex items-center justify-between px-2 cursor-pointer group"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={cn(
+                                                                    "w-4 h-4 rounded flex items-center justify-center transition-all",
+                                                                    isExpanded ? "bg-indigo-50 text-indigo-600 rotate-180" : "bg-slate-50 text-slate-400"
+                                                                )}>
+                                                                    <CaretDown size={14} weight="bold" />
+                                                                </div>
+                                                                <span className="text-[10px] font-bold text-slate-500">{chapter}</span>
+                                                                <span className="text-[9px] font-medium text-slate-300">({items.length})</span>
+                                                            </div>
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    selectAllInChapter(items);
+                                                                }}
+                                                                className="text-[9px] font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-all opacity-0 group-hover:opacity-100"
+                                                            >
+                                                                Select All
+                                                            </button>
+                                                        </div>
+
+                                                        {isExpanded && (
+                                                            <div className="grid grid-cols-1 gap-2 animate-in slide-in-from-top-1 duration-200">
+                                                                {(items as VaultQuestion[]).map((q: VaultQuestion) => {
+                                                                    const isSelected = selectedQuestionIds.has(q.id);
+                                                                    return (
+                                                                        <div
+                                                                            key={q.id}
+                                                                            onClick={() => toggleSelection(q.id)}
+                                                                            className={cn(
+                                                                                "p-4 rounded-xl border transition-all cursor-pointer group flex items-start gap-4",
+                                                                                isSelected
+                                                                                    ? "bg-indigo-50/50 border-indigo-200"
+                                                                                    : "bg-white border-transparent hover:bg-slate-50/50 hover:border-slate-100"
+                                                                            )}
+                                                                        >
+                                                                            <div className={cn(
+                                                                                "w-5 h-5 rounded-lg border-2 transition-all flex items-center justify-center shrink-0 mt-0.5",
+                                                                                isSelected ? "bg-indigo-600 border-indigo-600 text-white shadow-sm" : "border-slate-200 group-hover:border-slate-300"
+                                                                            )}>
+                                                                                {isSelected && <Check size={12} weight="bold" />}
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-center gap-2 mb-1.5">
+                                                                                    {q.difficulty && (
+                                                                                        <span className={cn(
+                                                                                            "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
+                                                                                            q.difficulty === "HARD" ? "bg-rose-50 text-rose-500" : q.difficulty === "MEDIUM" ? "bg-amber-50 text-amber-500" : "bg-emerald-50 text-emerald-500"
+                                                                                        )}>
+                                                                                            {q.difficulty}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <p className="text-sm font-semibold text-slate-700 leading-relaxed line-clamp-2">
+                                                                                    {q.text}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex-1 animate-in fade-in slide-in-from-left-4 duration-500 space-y-10 py-4 max-w-2xl">
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Generate Question Base</h3>
+                                <p className="text-sm text-slate-500 font-medium">Select a subject and specify counts per chapter for rapid series population.</p>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Primary Subject</label>
+                                    <select
+                                        value={genSubject}
+                                        onChange={(e) => {
+                                            setGenSubject(e.target.value);
+                                            setGenChapters({});
+                                        }}
+                                        className="w-full h-14 bg-slate-50 border border-slate-100 rounded-xl px-5 text-sm font-bold focus:outline-none focus:border-emerald-500/30 transition-all"
+                                    >
+                                        <option value="">Select Target Subject</option>
+                                        {vaultIntel?.subjects.map((s: string) => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {genSubject && vaultIntel?.chaptersBySubject[genSubject] && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Chapter Wise Breakdown</label>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {vaultIntel.chaptersBySubject[genSubject].map((c: { name: string; count: number }) => (
+                                                <div key={c.name} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 group hover:bg-white hover:border-emerald-100 transition-all">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">{c.name}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400">{c.count} total in vault</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] font-black uppercase text-slate-400">Add</span>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max={c.count}
+                                                            value={genChapters[c.name] || ""}
+                                                            onChange={(e) => setGenChapters({ ...genChapters, [c.name]: parseInt(e.target.value) || 0 })}
+                                                            placeholder="0"
+                                                            className="w-20 h-10 bg-white border border-slate-100 rounded-lg text-center font-bold text-sm focus:outline-none focus:border-emerald-500 transition-all"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={handleSmartHarvest}
+                                    disabled={!genSubject || Object.values(genChapters).every(v => (v as number) <= 0)}
+                                    className="w-full h-16 rounded-xl bg-emerald-600 text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-700 disabled:opacity-40 transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-600/10"
+                                >
+                                    <RocketLaunch size={24} weight="fill" />
+                                    Initiate Intelligence Harvest
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -40,16 +40,25 @@ interface NavItem {
     icon: SidebarIcon;
 }
 
-const MAIN_NAV: NavItem[] = [
+interface NavGroup {
+    label: string;
+    icon: SidebarIcon;
+    items: NavItem[];
+}
+
+const ACADEMIC_HUB: NavItem[] = [
     { label: "Dashboard", href: "/student/dashboard", icon: House },
-    { label: "Study Notes", href: "/student/materials", icon: Notebook },
-    { label: "Study Materials", href: "/student/free-resources", icon: Sparkle },
     { label: "Mock Tests", href: "/student/exams", icon: SuitcaseSimple },
-    { label: "Updates", href: "/student/updates", icon: Megaphone },
     { label: "My Batches", href: "/student/batches", icon: Users },
 ];
 
-const PERSONAL_NAV: NavItem[] = [
+const CONTENT_HUB: NavItem[] = [
+    { label: "Study Notes", href: "/student/materials", icon: Notebook },
+    { label: "Free Resources", href: "/student/free-resources", icon: Sparkle },
+    { label: "Updates", href: "/student/updates", icon: Megaphone },
+];
+
+const PERSONAL_HUB: NavItem[] = [
     { label: "My Progress", href: "/student/analytics", icon: ChartPolar },
     { label: "Saved Items", href: "/student/saved-items", icon: Bookmarks },
     { label: "Redeem Code", href: "/student/redeem", icon: IdentificationBadge },
@@ -57,40 +66,117 @@ const PERSONAL_NAV: NavItem[] = [
 
 // --- Sub-components ---
 
-function SidebarNavItem({
+function SidebarSubItem({
     item,
     isActive,
-    isCollapsed
+    isFirst,
+    isLast
 }: {
     item: NavItem;
     isActive: boolean;
-    isCollapsed: boolean;
+    isFirst: boolean;
+    isLast: boolean;
 }) {
     return (
         <Link
             href={item.href}
-            title={isCollapsed ? item.label : ""}
             className={cn(
-                "group/item relative flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200",
-                isActive
-                    ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] shadow-sm"
-                    : "text-[var(--student-muted)] hover:bg-[var(--student-panel)]/80 hover:text-[var(--student-text)]"
+                "group/sub relative flex items-center gap-3 py-2 pl-9 pr-4 transition-all duration-200",
+                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
             )}
         >
-            {isActive && (
-                <div className="absolute bottom-2 left-0 top-2 w-1 rounded-lg-r-full bg-[var(--student-accent-strong)]" />
-            )}
+            {/* Timeline Line */}
+            <div className="absolute left-[23px] top-0 bottom-0 w-px bg-[var(--student-border-strong)] opacity-20" />
+            
+            {/* Timeline Dot */}
             <div className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center transition-colors",
-                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] group-hover/item:text-[var(--student-text)]"
+                "absolute left-[20px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all duration-300 z-10",
+                isActive 
+                    ? "bg-[var(--student-accent-strong)] border-[var(--student-accent-strong)] scale-110 shadow-[0_0_8px_rgba(31,92,80,0.4)]" 
+                    : "bg-white border-[var(--student-border-strong)] group-hover/sub:border-[var(--student-muted)]"
+            )} />
+
+            <span className={cn(
+                "text-xs font-bold transition-colors",
+                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] group-hover/sub:text-[var(--student-text)]"
             )}>
-                <item.icon
-                    size={20}
-                    weight={isActive ? "fill" : "bold"}
-                />
-            </div>
-            {!isCollapsed && <span className="text-sm font-semibold">{item.label}</span>}
+                {item.label}
+            </span>
         </Link>
+    );
+}
+
+function SidebarNavGroup({
+    label,
+    icon: Icon,
+    items,
+    pathname,
+    isCollapsed
+}: {
+    label: string;
+    icon: SidebarIcon;
+    items: NavItem[];
+    pathname: string;
+    isCollapsed: boolean;
+}) {
+    const [isOpen, setIsOpen] = useState(true);
+    const hasActiveChild = items.some(item => pathname === item.href);
+
+    if (isCollapsed) {
+        return (
+            <div className="flex flex-col items-center gap-2 py-2">
+                <div className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-lg transition-all",
+                    hasActiveChild ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]" : "text-[var(--student-muted)]"
+                )}>
+                    <Icon size={22} weight={hasActiveChild ? "fill" : "bold"} />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="py-2">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={cn(
+                    "flex w-full items-center justify-between px-4 py-2 rounded-lg transition-all duration-200 group/group",
+                    hasActiveChild ? "text-[var(--student-text)]" : "text-[var(--student-muted)] hover:bg-[var(--student-panel)]/50 hover:text-[var(--student-text)]"
+                )}
+            >
+                <div className="flex items-center gap-3">
+                    <div className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                        hasActiveChild ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]" : "bg-transparent text-[var(--student-muted)] group-hover/group:text-[var(--student-text)]"
+                    )}>
+                        <Icon size={20} weight={hasActiveChild ? "fill" : "bold"} />
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-[0.15em]">{label}</span>
+                </div>
+                <CaretDown
+                    size={12}
+                    weight="bold"
+                    className={cn("transition-transform duration-300", isOpen ? "rotate-0" : "-rotate-90", hasActiveChild ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)]")}
+                />
+            </button>
+
+            <div className={cn(
+                "grid transition-all duration-300 ease-in-out",
+                isOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0"
+            )}>
+                <div className="overflow-hidden">
+                    {items.map((item, idx) => (
+                        <SidebarSubItem
+                            key={item.href}
+                            item={item}
+                            isActive={pathname === item.href}
+                            isFirst={idx === 0}
+                            isLast={idx === items.length - 1}
+                        />
+                    ))}
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -272,33 +358,30 @@ export function StudentSidebar({
                 </Link>
             </div>
 
-            <nav className={cn("flex-1 px-3 space-y-0.5 mt-2 overflow-y-auto custom-scrollbar", isCollapsed && "px-2")}>
-                {MAIN_NAV.map((item) => (
-                    <SidebarNavItem
-                        key={item.href}
-                        item={item}
-                        isActive={pathname === item.href}
-                        isCollapsed={isCollapsed}
-                    />
-                ))}
+            <nav className={cn("flex-1 px-3 space-y-1 mt-2 overflow-y-auto custom-scrollbar", isCollapsed && "px-2")}>
+                <SidebarNavGroup
+                    label="Academic Hub"
+                    icon={House}
+                    items={ACADEMIC_HUB}
+                    pathname={pathname}
+                    isCollapsed={isCollapsed}
+                />
 
-                {!isCollapsed && (
-                    <div className="pt-6 pb-2">
-                        <h3 className="mb-2 px-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">
-                            Personal
-                        </h3>
-                        <div className="space-y-0.5">
-                            {PERSONAL_NAV.map((item) => (
-                                <SidebarNavItem
-                                    key={item.href}
-                                    item={item}
-                                    isActive={pathname === item.href}
-                                    isCollapsed={isCollapsed}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
+                <SidebarNavGroup
+                    label="Content Hub"
+                    icon={Notebook}
+                    items={CONTENT_HUB}
+                    pathname={pathname}
+                    isCollapsed={isCollapsed}
+                />
+
+                <SidebarNavGroup
+                    label="Personal"
+                    icon={ChartPolar}
+                    items={PERSONAL_HUB}
+                    pathname={pathname}
+                    isCollapsed={isCollapsed}
+                />
             </nav>
 
             <UserProfile

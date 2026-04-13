@@ -1,262 +1,216 @@
-datasource db {
-  provider = "sqlite"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "sqlite"
+}
+
 model User {
-  id                 String    @id @default(cuid())
-  email              String?   @unique
-  fullName           String?
-  registrationNumber String?   @unique
-  department         String?
-  phone              String?   @unique
-  otp                String?
-  otpExpiresAt       DateTime?
-  preferredLanguage  String?
-  timezone           String?
-  bio                String?
-  designation        String?
-  expertise          String?
-  examTarget         String?
-  examTargetLevel    String?
-  examTargetMonth    Int?
-  examTargetYear     Int?
-  role               String    @default("STUDENT") // STUDENT, TEACHER, ADMIN
-  storageUsed        Int       @default(0)
-  storageLimit       Int       @default(52428800) // 50MB default
-  plan               String    @default("FREE")
-  planExpiresAt      DateTime?
-  passwordHash       String?
-  isSuperAdmin       Boolean   @default(false)
-  isBlocked          Boolean   @default(false)
-  blockedReason      String?
-  isPublicProfile    Boolean   @default(true)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  loginCount         Int       @default(0)
-
-  // Extended Student Profile Fields
-  batch               String?
-  dob                 String?
-  location            String?
-  firm                String?
-  firmRole            String?
-  articleshipYear     Int?
-  articleshipTotal    Int?
-  articleshipFirmType String? // BIG4, BIG6, TOP10, TOP30, OTHERS
-  city                String?
-  state               String?
-  experienceYears     Int?
-  foundationCleared   Boolean @default(false)
-  intermediateCleared Boolean @default(false)
-  finalCleared        Boolean @default(false)
-  resumeUrl           String?
-
-  // Relations
-  materialsUploaded StudyMaterial[]     @relation("UploadedMaterials")
-  folders           Folder[]
-  materialAccess    MaterialAccess[]
-  featureOverrides  UserFeatureAccess[]
-  savedItems        SavedItem[]         @relation("StudentSavedItems")
-
-  // Phase 2 Relations
-  batchesTeaching     Batch[]             @relation("TeacherBatches")
-  enrollments         Enrollment[]
-  announcements       Announcement[]      @relation("TeacherAnnouncements")
-  draftMCQs           DraftMCQ[]          @relation("DraftMCQs")
-  teacherAccessCodes  StudentAccessCode[] @relation("TeacherAccessCodes")
-  studentClaimedCodes StudentAccessCode[] @relation("StudentClaimedCodes")
-
-  // Extended Relations
-  notifications Notification[] @relation("UserNotifications")
-
-  // Exam Relations
-  examsCreated   Exam[]        @relation("TeacherExams")
-  ownedQuestions Question[]    @relation("TeacherOwnedQuestions")
-  examAttempts   ExamAttempt[]
-
-  // Adaptive Learning
-  learningProfile StudentLearningProfile?
-  topicProgress   TopicProgress[]
-  xpEvents        XPEvent[]
-
-  // Subscription
-  subscriptions Subscription[]
-
-  authToken String? // Explicit from prompt: auth_token
-
-  // Auth & Session
-  sessions     Session[]
-  userProgress UserProgress[]
-
-  // Financly New Relations
+  id                    String                    @id @default(cuid())
+  email                 String?                   @unique
+  fullName              String?
+  registrationNumber    String?                   @unique
+  department            String?
+  phone                 String?                   @unique
+  otp                   String?
+  otpExpiresAt          DateTime?
+  preferredLanguage     String?
+  timezone              String?
+  bio                   String?
+  designation           String?
+  expertise             String?
+  examTarget            String?
+  examTargetLevel       String?
+  examTargetMonth       Int?
+  examTargetYear        Int?
+  role                  String                    @default("STUDENT")
+  storageUsed           Int                       @default(0)
+  storageLimit          Int                       @default(52428800)
+  plan                  String                    @default("FREE")
+  planExpiresAt         DateTime?
+  passwordHash          String?
+  isSuperAdmin          Boolean                   @default(false)
+  isBlocked             Boolean                   @default(false)
+  blockedReason         String?
+  isPublicProfile       Boolean                   @default(true)
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  loginCount            Int                       @default(0)
+  batch                 String?
+  dob                   String?
+  location              String?
+  firm                  String?
+  firmRole              String?
+  articleshipYear       Int?
+  articleshipTotal      Int?
+  foundationCleared     Boolean                   @default(false)
+  intermediateCleared   Boolean                   @default(false)
+  finalCleared          Boolean                   @default(false)
+  resumeUrl             String?
+  authToken             String?
+  articleshipFirmType   String?
+  city                  String?
+  experienceYears       Int?
+  state                 String?
+  announcements         Announcement[]            @relation("TeacherAnnouncements")
+  batchesTeaching       Batch[]                   @relation("TeacherBatches")
   teacherCaseStudies    CaseStudy[]               @relation("TeacherCaseStudies")
-  teacherGlobalMCQs     GlobalMCQBank[]           @relation("TeacherGlobalMCQs")
-  teacherMasterBatches  MasterBatch[]             @relation("InitiatorMasterBatches")
-  studentActivityLogs   StudentActivityLog[]      @relation("StudentActivityLogs")
   studentChapterMarkers ChapterCompletionMarker[] @relation("StudentChapterMarkers")
   dailyTargets          DailyTargetQueue[]        @relation("StudentDailyTargets")
+  draftMCQs             DraftMCQ[]                @relation("DraftMCQs")
+  enrollments           Enrollment[]
+  examsCreated          Exam[]                    @relation("TeacherExams")
+  examAttempts          ExamAttempt[]
+  folders               Folder[]
+  teacherGlobalMCQs     GlobalMCQBank[]           @relation("TeacherGlobalMCQs")
+  teacherMasterBatches  MasterBatch[]             @relation("InitiatorMasterBatches")
+  materialAccess        MaterialAccess[]
+  notifications         Notification[]            @relation("UserNotifications")
+  ownedQuestions        Question[]                @relation("TeacherOwnedQuestions")
+  savedItems            SavedItem[]               @relation("StudentSavedItems")
+  sessions              Session[]
+  studentClaimedCodes   StudentAccessCode[]       @relation("StudentClaimedCodes")
+  teacherAccessCodes    StudentAccessCode[]       @relation("TeacherAccessCodes")
+  studentActivityLogs   StudentActivityLog[]      @relation("StudentActivityLogs")
+  learningProfile       StudentLearningProfile?
+  materialsUploaded     StudyMaterial[]           @relation("UploadedMaterials")
+  subscriptions         Subscription[]
+  topicProgress         TopicProgress[]
+  featureOverrides      UserFeatureAccess[]
+  userProgress          UserProgress[]
+  xpEvents              XPEvent[]
 }
 
 model Session {
   id           String   @id @default(cuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshToken String   @unique
   userAgent    String?
   ipAddress    String?
   lastActiveAt DateTime @default(now())
   expiresAt    DateTime
   createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model UserProgress {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // resourceType: e.g., "VIDEO", "CHAPTER", "EXAM", "PDF"
-  resourceType String
-  resourceId   String
-
-  // Minimal JSON to store progress state (e.g., { "time": 120, "completed": false })
-  data Json
-
+  id             String   @id @default(cuid())
+  userId         String
+  resourceType   String
+  resourceId     String
+  data           Json
   lastAccessedAt DateTime @default(now())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, resourceType, resourceId])
-  @@index([userId, updatedAt(sort: Desc)]) // For fast "Resume last activity" lookup
+  @@index([userId, updatedAt(sort: Desc)])
 }
 
 model StudyMaterial {
-  id          String  @id @default(cuid())
-  title       String
-  description String?
-  fileUrl     String
-  fileType    String
-  sizeInBytes Int
-  isPublic    Boolean @default(false)
-  isProtected Boolean @default(true)
-
-  // Dynamic Content Fields
-  category     String  @default("GENERAL") // e.g., CA Final, CA Inter
-  subType      String  @default("PDF") // PDF, VIDEO, RTP, MTP, PYQ
-  providerType String  @default("PLATFORM") // TEACHER, ICAI, PLATFORM
-  downloads    Int     @default(0)
-  shareCount   Int     @default(0)
-  rating       Float   @default(5.0)
-  isTrending   Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
+  id           String           @id @default(cuid())
+  title        String
+  description  String?
+  fileUrl      String
+  fileType     String
+  sizeInBytes  Int
+  isPublic     Boolean          @default(false)
+  isProtected  Boolean          @default(true)
+  category     String           @default("GENERAL")
+  subType      String           @default("PDF")
+  providerType String           @default("PLATFORM")
+  downloads    Int              @default(0)
+  shareCount   Int              @default(0)
+  rating       Float            @default(5.0)
+  isTrending   Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   uploadedById String
-  uploadedBy   User             @relation("UploadedMaterials", fields: [uploadedById], references: [id])
   folderId     String?
-  folder       Folder?          @relation(fields: [folderId], references: [id], onDelete: SetNull)
   batches      BatchMaterial[]
   accessedBy   MaterialAccess[]
+  folder       Folder?          @relation(fields: [folderId], references: [id])
+  uploadedBy   User             @relation("UploadedMaterials", fields: [uploadedById], references: [id])
 }
 
 model BatchMaterial {
   id         String        @id @default(cuid())
   batchId    String
   materialId String
-  batch      Batch         @relation(fields: [batchId], references: [id], onDelete: Cascade)
   material   StudyMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  batch      Batch         @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@unique([batchId, materialId])
 }
 
 model Folder {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
+  id         String          @id @default(cuid())
+  name       String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
   ownerId    String
-  owner      User            @relation(fields: [ownerId], references: [id])
   parentId   String?
   parent     Folder?         @relation("SubFolders", fields: [parentId], references: [id])
   subFolders Folder[]        @relation("SubFolders")
+  owner      User            @relation(fields: [ownerId], references: [id])
   materials  StudyMaterial[]
 }
 
 model MaterialAccess {
-  id         String   @id @default(cuid())
-  grantedAt  DateTime @default(now())
-  accessType String   @default("FREE_BATCH_MATERIAL")
-
-  // Relations
+  id         String        @id @default(cuid())
+  grantedAt  DateTime      @default(now())
+  accessType String        @default("FREE_BATCH_MATERIAL")
   studentId  String
-  student    User          @relation(fields: [studentId], references: [id])
   materialId String
   material   StudyMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  student    User          @relation(fields: [studentId], references: [id])
 
   @@unique([studentId, materialId])
 }
 
 model SavedItem {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  // Type of saved resource: MATERIAL, EXAM, etc.
-  type String @default("MATERIAL")
-
-  // Relations
-  studentId String
-  student   User   @relation("StudentSavedItems", fields: [studentId], references: [id], onDelete: Cascade)
-
-  // Polymorphic-ish relations (IDs pointing to specific models)
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  type       String   @default("MATERIAL")
+  studentId  String
   resourceId String
+  student    User     @relation("StudentSavedItems", fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, resourceId, type])
 }
 
 model Batch {
-  id             String   @id @default(cuid())
-  name           String
-  uniqueJoinCode String   @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  teacherId String
-  teacher   User   @relation("TeacherBatches", fields: [teacherId], references: [id])
-
-  enrollments      Enrollment[]
-  announcements    Announcement[]
-  exams            Exam[]              @relation("BatchExams")
-  batchMaterials   BatchMaterial[]
-  batchAccessCodes StudentAccessCode[] @relation("BatchAccessCodes")
-
-  // Financly Master-Child Batch System enhancements
+  id                String                    @id @default(cuid())
+  name              String
+  uniqueJoinCode    String                    @unique
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  teacherId         String
   masterId          String?
-  masterBatch       MasterBatch?              @relation(fields: [masterId], references: [id])
   subjectId         String?
+  announcements     Announcement[]
   subject           Subject?                  @relation(fields: [subjectId], references: [id])
+  masterBatch       MasterBatch?              @relation(fields: [masterId], references: [id])
+  teacher           User                      @relation("TeacherBatches", fields: [teacherId], references: [id])
+  batchMaterials    BatchMaterial[]
   completionMarkers ChapterCompletionMarker[]
+  enrollments       Enrollment[]
+  exams             Exam[]                    @relation("BatchExams")
+  batchAccessCodes  StudentAccessCode[]       @relation("BatchAccessCodes")
 }
 
 model Enrollment {
-  id       String   @id @default(cuid())
-  joinedAt DateTime @default(now())
-
+  id        String   @id @default(cuid())
+  joinedAt  DateTime @default(now())
   studentId String
-  student   User   @relation(fields: [studentId], references: [id])
-
-  batchId String
-  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
-
-  status String @default("ACTIVE") // ACTIVE, MIGRATED
+  batchId   String
+  status    String   @default("ACTIVE")
+  batch     Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  student   User     @relation(fields: [studentId], references: [id])
 
   @@unique([studentId, batchId])
 }
@@ -266,12 +220,10 @@ model Announcement {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  batchId String
-  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
-
+  batchId   String
   teacherId String
-  teacher   User   @relation("TeacherAnnouncements", fields: [teacherId], references: [id])
+  teacher   User     @relation("TeacherAnnouncements", fields: [teacherId], references: [id])
+  batch     Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
 }
 
 model DraftMCQ {
@@ -280,9 +232,8 @@ model DraftMCQ {
   options   String
   answer    String
   createdAt DateTime @default(now())
-
   teacherId String
-  teacher   User   @relation("DraftMCQs", fields: [teacherId], references: [id])
+  teacher   User     @relation("DraftMCQs", fields: [teacherId], references: [id])
 }
 
 model UserFeatureAccess {
@@ -298,236 +249,205 @@ model UserFeatureAccess {
   note         String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, featureKey])
 }
 
-// Exam Models
-
 model Exam {
-  id           String   @id @default(cuid())
-  title        String
-  description  String?
-  duration     Int      @default(60) // in minutes
-  totalMarks   Int      @default(0)
-  passingMarks Int      @default(0)
-  category     String   @default("GENERAL") // e.g., CA Foundation, Inter, Final
-  subject      String?
-  chapter      String?
-  status       String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
-  examType     String   @default("GENERAL") // RPT, MTP, PYQ, GENERAL
-  isFeatured   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Teacher who created the exam
-  teacherId String
-  teacher   User   @relation("TeacherExams", fields: [teacherId], references: [id])
-
-  // Batch specific exams
-  batchId String?
-  batch   Batch?  @relation("BatchExams", fields: [batchId], references: [id])
-
-  questions ExamQuestion[]
-  attempts  ExamAttempt[]
+  id                    String         @id @default(cuid())
+  title                 String
+  description           String?
+  duration              Int            @default(60)
+  totalMarks            Int            @default(0)
+  passingMarks          Int            @default(0)
+  category              String         @default("GENERAL")
+  subject               String?
+  chapter               String?
+  status                String         @default("DRAFT")
+  examType              String         @default("GENERAL")
+  isFeatured            Boolean        @default(false)
+  visibleToNonBatch     Boolean        @default(false)
+  visibleToOtherBatches Boolean        @default(false)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  teacherId             String
+  batchId               String?
+  batch                 Batch?         @relation("BatchExams", fields: [batchId], references: [id])
+  teacher               User           @relation("TeacherExams", fields: [teacherId], references: [id])
+  attempts              ExamAttempt[]
+  questions             ExamQuestion[]
 }
 
 model Question {
-  id          String   @id @default(cuid())
-  text        String
-  type        String   @default("MCQ")
-  explanation String?
-  difficulty  String   @default("MEDIUM") // EASY, MEDIUM, HARD
-  subject     String?
-  topic       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  teacherId String?
-  teacher   User?   @relation("TeacherOwnedQuestions", fields: [teacherId], references: [id])
-
-  options        Option[]
+  id             String          @id @default(cuid())
+  text           String
+  type           String          @default("MCQ")
+  explanation    String?
+  difficulty     String          @default("MEDIUM")
+  subject        String?
+  topic          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  teacherId      String?
+  caseStudyId    String?
   exams          ExamQuestion[]
+  options        Option[]
+  caseStudy      CaseStudy?      @relation(fields: [caseStudyId], references: [id])
+  teacher        User?           @relation("TeacherOwnedQuestions", fields: [teacherId], references: [id])
   studentAnswers StudentAnswer[]
-
-  // Case Study Support
-  caseStudyId String?
-  caseStudy   CaseStudy? @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
 }
 
 model CaseStudy {
-  id        String   @id @default(cuid())
-  title     String
-  content   String // Markdown or plain text case study
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                 String          @id @default(cuid())
+  title              String
+  content            String
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   teacherId          String?
-  teacher            User?    @relation("TeacherCaseStudies", fields: [teacherId], references: [id])
-  applicableAttempts String   @default("[]")
+  applicableAttempts String          @default("[]")
   scenarioImageUrl   String?
-
-  questions  Question[] // Legacy support
-  linkedMcqs GlobalMCQBank[] // Financly Vault
+  teacher            User?           @relation("TeacherCaseStudies", fields: [teacherId], references: [id])
+  linkedMcqs         GlobalMCQBank[]
+  questions          Question[]
 }
 
 model Option {
-  id        String  @id @default(cuid())
-  text      String
-  isCorrect Boolean @default(false)
-
-  questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
+  id             String          @id @default(cuid())
+  text           String
+  isCorrect      Boolean         @default(false)
+  questionId     String
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
   studentAnswers StudentAnswer[]
 }
 
 model ExamQuestion {
-  id    String @id @default(cuid())
-  order Int    @default(0)
-  marks Int    @default(1)
-
-  examId String
-  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
-
+  id         String   @id @default(cuid())
+  order      Int      @default(0)
+  marks      Int      @default(1)
+  examId     String
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   @@unique([examId, questionId])
 }
 
 model ExamAttempt {
-  id          String    @id @default(cuid())
-  startTime   DateTime  @default(now())
+  id          String          @id @default(cuid())
+  startTime   DateTime        @default(now())
   endTime     DateTime?
-  score       Float     @default(0)
-  status      String    @default("STARTED") // STARTED, SUBMITTED, EXPIRED
-  attemptMode String    @default("MOCK") // MOCK, PRACTICE
-
-  studentId String
-  student   User   @relation(fields: [studentId], references: [id])
-
-  examId String
-  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
-
-  answers StudentAnswer[]
+  score       Float           @default(0)
+  status      String          @default("STARTED")
+  attemptMode String          @default("MOCK")
+  studentId   String
+  examId      String
+  exam        Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student     User            @relation(fields: [studentId], references: [id])
+  answers     StudentAnswer[]
 }
 
 model StudentAnswer {
-  id        String  @id @default(cuid())
-  isCorrect Boolean @default(false)
-  timeSpent Int     @default(0) // seconds
-  gapTag    String? // CONCEPTUAL, SILLY, TIME
-
-  attemptId String
-  attempt   ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-
-  questionId String
-  question   Question @relation(fields: [questionId], references: [id])
-
+  id               String      @id @default(cuid())
+  isCorrect        Boolean     @default(false)
+  timeSpent        Int         @default(0)
+  attemptId        String
+  questionId       String
   selectedOptionId String?
-  selectedOption   Option? @relation(fields: [selectedOptionId], references: [id])
+  gapTag           String?
+  selectedOption   Option?     @relation(fields: [selectedOptionId], references: [id])
+  question         Question    @relation(fields: [questionId], references: [id])
+  attempt          ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionId])
 }
 
-// Adaptive Learning System
-
 model StudentLearningProfile {
-  id             String    @id @default(cuid())
-  totalXP        Int       @default(0)
-  level          Int       @default(1)
-  streak         Int       @default(0)
-  longestStreak  Int       @default(0)
-  totalAttempts  Int       @default(0)
-  totalCorrect   Int       @default(0)
-  avgAccuracy    Float     @default(0)
-  weakTopicsJson Json      @default("[]")
-  badgesJson     Json      @default("[]")
+  id             String          @id @default(cuid())
+  totalXP        Int             @default(0)
+  level          Int             @default(1)
+  streak         Int             @default(0)
+  longestStreak  Int             @default(0)
+  totalAttempts  Int             @default(0)
+  totalCorrect   Int             @default(0)
+  avgAccuracy    Float           @default(0)
+  weakTopicsJson Json            @default("[]")
+  badgesJson     Json            @default("[]")
   lastAttemptAt  DateTime?
-  practiceGoal   Int       @default(20)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  studentId String @unique
-  student   User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  topicProgress TopicProgress[]
-  xpEvents      XPEvent[]
+  practiceGoal   Int             @default(20)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  studentId      String          @unique
+  student        User            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topicProgress  TopicProgress[]
+  xpEvents       XPEvent[]
 }
 
 model TopicProgress {
-  id             String   @id @default(cuid())
+  id             String                 @id @default(cuid())
   subject        String
   topic          String
-  totalAttempted Int      @default(0)
-  totalCorrect   Int      @default(0)
-  accuracy       Float    @default(0)
-  avgTimeSpent   Float    @default(0)
-  lastSeenAt     DateTime @default(now())
-  nextReviewAt   DateTime @default(now())
-  difficulty     String   @default("MEDIUM")
-
-  studentId String
-  student   User                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  profileId String
-  profile   StudentLearningProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  totalAttempted Int                    @default(0)
+  totalCorrect   Int                    @default(0)
+  accuracy       Float                  @default(0)
+  avgTimeSpent   Float                  @default(0)
+  lastSeenAt     DateTime               @default(now())
+  nextReviewAt   DateTime               @default(now())
+  difficulty     String                 @default("MEDIUM")
+  studentId      String
+  profileId      String
+  profile        StudentLearningProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  student        User                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, subject, topic])
 }
 
 model XPEvent {
-  id        String   @id @default(cuid())
+  id        String                 @id @default(cuid())
   xpDelta   Int
   reason    String
-  meta      String   @default("")
-  createdAt DateTime @default(now())
-
+  meta      String                 @default("")
+  createdAt DateTime               @default(now())
   studentId String
-  student   User                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
   profileId String
   profile   StudentLearningProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  student   User                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
-// Notification System
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
-  type      String   @default("SYSTEM") // SYSTEM, ALERT, UPDATE, BADGE
+  type      String   @default("SYSTEM")
   link      String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// Subscription / Payment model
 model Subscription {
   id                     String    @id @default(cuid())
-  plan                   String // "PRO", "BASIC"
-  role                   String // "STUDENT" | "TEACHER"
-  status                 String    @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED, PENDING
-  amountPaise            Int // Amount in paise (e.g., 39900 = ₹399)
+  plan                   String
+  role                   String
+  status                 String    @default("ACTIVE")
+  amountPaise            Int
   razorpayOrderId        String?   @unique
   razorpayPaymentId      String?   @unique
   razorpaySignature      String?
   razorpaySubscriptionId String?   @unique
   razorpayPlanId         String?
   cancelAtPeriodEnd      Boolean   @default(false)
-  grantedByAdminId       String? // Set if manually granted by admin
+  grantedByAdminId       String?
   startedAt              DateTime  @default(now())
   expiresAt              DateTime
   currentPeriodEnd       DateTime?
   createdAt              DateTime  @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                 String
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -549,29 +469,23 @@ model PlatformConfig {
   updatedAt             DateTime @updatedAt
 }
 
-// Student Access Codes - Teacher to Student Map
 model StudentAccessCode {
-  id        String  @id @default(cuid())
-  code      String  @unique
+  id        String   @id @default(cuid())
+  code      String   @unique
   name      String
   email     String
-  caLevel   String? // CA Foundation, Inter, Final
-  subject   String? // The subject they are enrolled for
-  status    String  @default("PENDING") // PENDING, VERIFIED
-  isEmailed Boolean @default(false) // True once Mailchimp sends the email
-
+  caLevel   String?
+  subject   String?
+  status    String   @default("PENDING")
+  isEmailed Boolean  @default(false)
   teacherId String
-  teacher   User   @relation("TeacherAccessCodes", fields: [teacherId], references: [id], onDelete: Cascade)
-
-  batchId String?
-  batch   Batch?  @relation("BatchAccessCodes", fields: [batchId], references: [id], onDelete: Cascade)
-
-  // Once student verifies, we link them here
+  batchId   String?
   studentId String?
-  student   User?   @relation("StudentClaimedCodes", fields: [studentId], references: [id], onDelete: SetNull)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  student   User?    @relation("StudentClaimedCodes", fields: [studentId], references: [id])
+  batch     Batch?   @relation("BatchAccessCodes", fields: [batchId], references: [id], onDelete: Cascade)
+  teacher   User     @relation("TeacherAccessCodes", fields: [teacherId], references: [id], onDelete: Cascade)
 
   @@index([teacherId])
   @@index([email])
@@ -579,24 +493,20 @@ model StudentAccessCode {
 
 model WebhookEvent {
   id        String   @id @default(cuid())
-  eventId   String   @unique // Provider's event ID (e.g. Razorpay event.id)
-  type      String // Provider type (e.g. "razorpay")
-  eventName String? // Specific event name (e.g. "payment.captured")
-  status    String   @default("PROCESSED") // PROCESSED, FAILED
-  payload   Json? // Raw event payload for audit trail
+  eventId   String   @unique
+  type      String
+  status    String   @default("PROCESSED")
   createdAt DateTime @default(now())
+  eventName String?
+  payload   Json?
 
   @@index([eventId])
 }
 
-// ==============================================
-// 🚀 FINANCLY CORE ARCHITECTURE SCHEMA
-// ==============================================
-
 model AccessCode {
   id         String    @id @default(cuid())
   codeString String    @unique
-  payload    Json // Array of batch_ids
+  payload    Json
   usageLimit Int
   usedCount  Int       @default(0)
   expiresAt  DateTime?
@@ -604,90 +514,79 @@ model AccessCode {
 }
 
 model Subject {
-  id        String   @id @default(cuid())
-  name      String
-  icaiLevel String // Foundation | Inter | Final
-  createdAt DateTime @default(now())
-
+  id           String          @id @default(cuid())
+  name         String
+  icaiLevel    String
+  createdAt    DateTime        @default(now())
+  childBatches Batch[]
   globalMcqs   GlobalMCQBank[]
-  childBatches Batch[] // We mapped ChildBatch to legacy Batch
 }
 
 model GlobalMCQBank {
-  id        String  @id @default(cuid())
-  teacherId String
-  teacher   User    @relation("TeacherGlobalMCQs", fields: [teacherId], references: [id])
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id])
-
-  parentCaseId String?
-  parentCase   CaseStudy? @relation(fields: [parentCaseId], references: [id])
-
-  questionText  String
-  options       Json
-  correctAnswer String
-  explanation   String?
-
-  icaiCategory       String // A | B | C
-  sourceTag          String // e.g. MTP May 24
-  applicableAttempts String   @default("[]")
-
-  platformAvgTime Float @default(0.0) // running avg in seconds
-  totalAttempts   Int   @default(0)
-
-  createdAt         DateTime             @default(now())
-  activityLogs      StudentActivityLog[]
-  dailyTargetQueues DailyTargetQueue[]
+  id                 String               @id @default(cuid())
+  teacherId          String
+  subjectId          String
+  parentCaseId       String?
+  questionText       String
+  options            Json
+  correctAnswer      String
+  explanation        String?
+  icaiCategory       String
+  sourceTag          String
+  applicableAttempts String               @default("[]")
+  platformAvgTime    Float                @default(0.0)
+  totalAttempts      Int                  @default(0)
+  createdAt          DateTime             @default(now())
+  dailyTargetQueues  DailyTargetQueue[]
+  parentCase         CaseStudy?           @relation(fields: [parentCaseId], references: [id])
+  subject            Subject              @relation(fields: [subjectId], references: [id])
+  teacher            User                 @relation("TeacherGlobalMCQs", fields: [teacherId], references: [id])
+  activityLogs       StudentActivityLog[]
 }
 
 model MasterBatch {
   id                 String   @id @default(cuid())
   name               String
   initiatorTeacherId String
-  initiatorTeacher   User     @relation("InitiatorMasterBatches", fields: [initiatorTeacherId], references: [id])
-  comboExamAttempt   String // e.g. "Nov26"
+  comboExamAttempt   String
   createdAt          DateTime @default(now())
-
-  childBatches Batch[] // We mapped ChildBatch to legacy Batch
+  childBatches       Batch[]
+  initiatorTeacher   User     @relation("InitiatorMasterBatches", fields: [initiatorTeacherId], references: [id])
 }
 
 model StudentActivityLog {
-  id        String        @id @default(cuid())
-  studentId String
-  student   User          @relation("StudentActivityLogs", fields: [studentId], references: [id])
-  mcqId     String
-  mcq       GlobalMCQBank @relation(fields: [mcqId], references: [id])
-
+  id               String        @id @default(cuid())
+  studentId        String
+  mcqId            String
   isCorrect        Boolean
   timeTakenSeconds Int
-  gapTag           String? // Conceptual | Silly | Time Pressure
-
-  createdAt DateTime @default(now())
+  gapTag           String?
+  createdAt        DateTime      @default(now())
+  mcq              GlobalMCQBank @relation(fields: [mcqId], references: [id])
+  student          User          @relation("StudentActivityLogs", fields: [studentId], references: [id])
 }
 
 model ChapterCompletionMarker {
   id               String   @id @default(cuid())
   studentId        String
-  student          User     @relation("StudentChapterMarkers", fields: [studentId], references: [id])
   batchId          String
-  childBatch       Batch    @relation(fields: [batchId], references: [id])
-  chapterId        String // We'll keep this loosely typed to allow string-based chapters
+  chapterId        String
   markedCompleteAt DateTime @default(now())
+  childBatch       Batch    @relation(fields: [batchId], references: [id])
+  student          User     @relation("StudentChapterMarkers", fields: [studentId], references: [id])
 
   @@unique([studentId, batchId, chapterId])
 }
 
 model DailyTargetQueue {
-  id        String        @id @default(cuid())
-  studentId String
-  student   User          @relation("StudentDailyTargets", fields: [studentId], references: [id])
-  mcqId     String
-  mcq       GlobalMCQBank @relation(fields: [mcqId], references: [id])
-
-  isCompleted     Boolean  @default(false)
+  id              String        @id @default(cuid())
+  studentId       String
+  mcqId           String
+  isCompleted     Boolean       @default(false)
   targetedForDate DateTime
-  priority        String   @default("NORMAL") // e.g., "HIGH" for T+30
-  reason          String? // e.g. "Shadow Revision T+3"
-
-  createdAt DateTime @default(now())
+  priority        String        @default("NORMAL")
+  reason          String?
+  createdAt       DateTime      @default(now())
+  mcq             GlobalMCQBank @relation(fields: [mcqId], references: [id])
+  student         User          @relation("StudentDailyTargets", fields: [studentId], references: [id])
 }
