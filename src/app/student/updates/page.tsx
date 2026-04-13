@@ -139,13 +139,13 @@ export default function StudentUpdatesPage() {
                 daysToExam={daysToExam}
                 aside={
                     <div className="flex flex-wrap items-center gap-3">
-                        <button className="student-button-secondary flex items-center gap-2 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm">
+                        <button className="student-button-secondary flex items-center gap-2 rounded-lg px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm">
                             <Funnel size={18} weight="bold" />
                             Global Filter
                         </button>
                         <button
                             onClick={markAllAsRead}
-                            className="student-button-primary flex items-center gap-2 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10"
+                            className="student-button-primary flex items-center gap-2 rounded-lg px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10"
                         >
                             <CheckSquareOffset size={18} weight="bold" />
                             Mark All Read
@@ -153,7 +153,7 @@ export default function StudentUpdatesPage() {
                         {!isAdminView && (
                             <button
                                 onClick={() => router.push("/student/redeem")}
-                                className="student-chip-accent flex items-center gap-2 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                                className="student-chip-accent flex items-center gap-2 rounded-lg px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
                             >
                                 <Plus size={18} weight="bold" />
                                 Redeem batch
@@ -169,7 +169,7 @@ export default function StudentUpdatesPage() {
                         key={sub}
                         onClick={() => setSelectedCategory(sub)}
                         className={cn(
-                            "rounded-xl border px-6 py-2.5 text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm",
+                            "rounded-lg border px-6 py-2.5 text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm",
                             selectedCategory === sub
                                 ? "bg-[var(--student-accent-strong)] text-white border-[var(--student-accent-strong)]"
                                 : "bg-white border-[var(--student-border)] text-[var(--student-muted)] hover:border-[var(--student-accent-soft-strong)] hover:text-[var(--student-accent-strong)]"
@@ -194,11 +194,11 @@ export default function StudentUpdatesPage() {
                         }[subject] || { color: "slate", icon: <Bell size={20} weight="bold" /> };
 
                         return (
-                            <section key={subject} className="student-surface group overflow-hidden rounded-2xl border-[var(--student-border)] shadow-sm transition-all hover:shadow-lg">
+                            <section key={subject} className="student-surface group overflow-hidden rounded-lg border-[var(--student-border)] shadow-sm transition-all hover:shadow-lg">
                                 <div className="p-6 flex items-center justify-between border-b border-[var(--student-border)] transition-colors hover:bg-[var(--student-panel-muted)]">
                                     <div className="flex items-center gap-5">
                                         <div className={cn(
-                                            "h-11 w-11 rounded-xl flex items-center justify-center text-white shadow-xl",
+                                            "h-11 w-11 rounded-lg flex items-center justify-center text-white shadow-xl",
                                             subjectSettings.color === "indigo" ? "bg-indigo-600 shadow-indigo-100" :
                                                 subjectSettings.color === "purple" ? "bg-purple-600 shadow-purple-100" :
                                                     subjectSettings.color === "blue" ? "bg-blue-600 shadow-blue-100" :
@@ -256,10 +256,10 @@ export default function StudentUpdatesPage() {
                                             </div>
 
                                             <div className="flex flex-col gap-3 pt-1 shrink-0">
-                                                <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-[var(--student-border)] text-slate-400 hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)] transition-all shadow-sm active:scale-90">
+                                                <button className="h-10 w-10 flex items-center justify-center rounded-lg bg-white border border-[var(--student-border)] text-slate-400 hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)] transition-all shadow-sm active:scale-90">
                                                     <Bookmark size={20} weight="bold" />
                                                 </button>
-                                                <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-[var(--student-border)] text-slate-400 hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)] transition-all shadow-sm active:scale-90">
+                                                <button className="h-10 w-10 flex items-center justify-center rounded-lg bg-white border border-[var(--student-border)] text-slate-400 hover:text-[var(--student-accent-strong)] hover:border-[var(--student-accent-soft-strong)] transition-all shadow-sm active:scale-90">
                                                     {item.category === "MOCK ASSESSMENT" ? <CalendarCheck size={20} weight="bold" /> : <DownloadSimple size={20} weight="bold" />}
                                                 </button>
                                             </div>
@@ -275,7 +275,7 @@ export default function StudentUpdatesPage() {
                 <div className="mt-16 flex justify-center">
                     <button
                         onClick={() => setVisibleCount(p => p + 6)}
-                        className="flex items-center gap-3 px-10 py-4 bg-white border border-[var(--student-border)] rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest shadow-sm hover:border-slate-400 hover:text-slate-900 transition-all active:scale-95 group"
+                        className="flex items-center gap-3 px-10 py-4 bg-white border border-[var(--student-border)] rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest shadow-sm hover:border-slate-400 hover:text-slate-900 transition-all active:scale-95 group"
                     >
                         Load Older Feed Index
                         <CaretDown size={18} weight="bold" className="transition-transform group-hover:translate-y-1" />

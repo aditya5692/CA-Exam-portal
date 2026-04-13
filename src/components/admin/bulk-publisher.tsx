@@ -27,7 +27,7 @@ export function BulkPublisher({ subjectId }: { subjectId: string }) {
     };
 
     return (
-        <div className="border border-dashed border-[var(--student-border)] bg-[var(--student-surface)] rounded-2xl p-8 flex flex-col items-center justify-center space-y-4">
+        <div className="border border-dashed border-[var(--student-border)] bg-[var(--student-surface)] rounded-lg p-8 flex flex-col items-center justify-center space-y-4">
             <div className="text-[var(--student-muted)] bg-slate-100 p-4 rounded-full">
                 <FileCsv size={48} weight="fill" />
             </div>
@@ -46,7 +46,7 @@ export function BulkPublisher({ subjectId }: { subjectId: string }) {
             <button 
                 onClick={handleUpload}
                 disabled={!file || uploading} 
-                className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition"
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-black uppercase text-xs tracking-widest hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition"
             >
                 <UploadSimple weight="bold" />
                 {uploading ? "Parsing Matrix..." : "Upload to Vault"}

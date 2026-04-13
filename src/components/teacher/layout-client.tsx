@@ -54,7 +54,7 @@ export function TeacherLayoutClient({ children, session, subjects = [] }: Teache
                     <div className="flex items-center gap-2 md:gap-4 flex-1">
                         {/* Mobile Toggle */}
                         <button 
-                            className="rounded-xl border border-[var(--student-border)] bg-[var(--student-panel)]/90 p-2 text-[var(--student-muted-strong)] shadow-sm transition-all hover:bg-white active:scale-95 md:hidden"
+                            className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel)]/90 p-2 text-[var(--student-muted-strong)] shadow-sm transition-all hover:bg-white active:scale-95 md:hidden"
                             onClick={() => setIsMobileSidebarOpen(true)}
                         >
                             <List size={20} weight="bold" />
@@ -89,9 +89,9 @@ export function TeacherLayoutClient({ children, session, subjects = [] }: Teache
                                     </span>
                                 </div>
                             </div>
-                            <div className="relative rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel)]/90 p-1 shadow-[0_10px_24px_rgba(55,48,38,0.08)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_16px_26px_rgba(55,48,38,0.1)]">
-                                <div className="rounded-xl border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-0.5">
-                                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] bg-[var(--student-panel)]/90 text-[10px] font-black text-[var(--student-accent-strong)] md:h-10 md:w-10">
+                            <div className="relative rounded-lg border border-[var(--student-border)] bg-[var(--student-panel)]/90 p-1 shadow-[0_10px_24px_rgba(55,48,38,0.08)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_16px_26px_rgba(55,48,38,0.1)]">
+                                <div className="rounded-lg border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-0.5">
+                                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-[var(--student-panel)]/90 text-[10px] font-black text-[var(--student-accent-strong)] md:h-10 md:w-10">
                                         <UserCircle size={28} className="text-[var(--student-accent-strong)]" />
                                     </div>
                                 </div>

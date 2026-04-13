@@ -106,7 +106,7 @@ export function SubscriptionManager() {
                     { label: "Total Revenue (Razorpay)", value: `₹${(totalRevenue / 100).toLocaleString("en-IN")}`, color: "text-indigo-600" },
                     { label: "Expiring in 30 Days", value: expiringIn30, color: "text-amber-600" },
                 ].map(stat => (
-                    <div key={stat.label} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <div key={stat.label} className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{stat.label}</p>
                         <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
                     </div>
@@ -121,7 +121,7 @@ export function SubscriptionManager() {
                             key={s}
                             onClick={() => setStatusFilter(s)}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                                "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all",
                                 statusFilter === s
                                     ? "bg-slate-900 text-white"
                                     : "bg-white border border-slate-200 text-slate-500 hover:border-slate-400"
@@ -133,14 +133,14 @@ export function SubscriptionManager() {
                 </div>
                 <button
                     onClick={() => setShowGrantModal(true)}
-                    className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
+                    className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
                 >
                     + Manual Grant
                 </button>
             </div>
 
             {/* Table */}
-            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-lg border border-slate-100 bg-white shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center py-16 text-slate-400 text-sm">Loading...</div>
                 ) : filtered.length === 0 ? (
@@ -204,14 +204,14 @@ export function SubscriptionManager() {
             {/* Manual Grant Modal */}
             {showGrantModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
                         <h3 className="text-lg font-black text-slate-900">Manual Plan Grant</h3>
                         <p className="text-sm text-slate-500">Grant a paid plan to a user without requiring payment.</p>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">User ID</label>
                                 <input
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-300"
                                     placeholder="cuid... or paste user ID"
                                     value={grantForm.userId}
                                     onChange={e => setGrantForm(p => ({ ...p, userId: e.target.value }))}
@@ -220,7 +220,7 @@ export function SubscriptionManager() {
                             <div>
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Plan</label>
                                 <select
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium focus:outline-none appearance-none"
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium focus:outline-none appearance-none"
                                     value={grantForm.plan}
                                     onChange={e => setGrantForm(p => ({ ...p, plan: e.target.value }))}
                                 >
@@ -232,7 +232,7 @@ export function SubscriptionManager() {
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Duration (Days)</label>
                                 <input
                                     type="number"
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-300"
                                     value={grantForm.durationDays}
                                     onChange={e => setGrantForm(p => ({ ...p, durationDays: Number(e.target.value) }))}
                                 />
@@ -248,13 +248,13 @@ export function SubscriptionManager() {
                         <div className="flex gap-3">
                             <button
                                 onClick={handleGrant}
-                                className="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all"
+                                className="flex-1 py-3 rounded-lg bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all"
                             >
                                 Grant Plan
                             </button>
                             <button
                                 onClick={() => { setShowGrantModal(false); setGrantStatus(""); }}
-                                className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-all"
+                                className="flex-1 py-3 rounded-lg bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-all"
                             >
                                 Cancel
                             </button>

@@ -20,7 +20,7 @@ export default async function StudentBatchesPage() {
                 aside={
                     <Link
                         href="/student/redeem"
-                        className="student-button-primary flex items-center gap-2 rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10"
+                        className="student-button-primary flex items-center gap-2 rounded-lg px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10"
                     >
                         <Plus size={18} weight="bold" />
                         Join New Batch
@@ -30,8 +30,8 @@ export default async function StudentBatchesPage() {
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="student-surface rounded-[24px] p-6 border-l-4 border-l-indigo-600 flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <div className="student-surface rounded-lg p-6 border-l-4 border-l-indigo-600 flex items-center gap-5">
+                    <div className="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
                         <Users size={24} weight="fill" />
                     </div>
                     <div>
@@ -40,8 +40,8 @@ export default async function StudentBatchesPage() {
                     </div>
                 </div>
 
-                <div className="student-surface rounded-[24px] p-6 border-l-4 border-l-emerald-600 flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="student-surface rounded-lg p-6 border-l-4 border-l-emerald-600 flex items-center gap-5">
+                    <div className="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                         <GraduationCap size={24} weight="fill" />
                     </div>
                     <div>
@@ -52,8 +52,8 @@ export default async function StudentBatchesPage() {
                     </div>
                 </div>
 
-                <div className="student-surface rounded-[24px] p-6 border-l-4 border-l-amber-600 flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="student-surface rounded-lg p-6 border-l-4 border-l-amber-600 flex items-center gap-5">
+                    <div className="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
                         <IdentificationBadge size={24} weight="fill" />
                     </div>
                     <div>
@@ -68,8 +68,8 @@ export default async function StudentBatchesPage() {
 
             {/* Batch Grid or Empty State */}
             {batches.length === 0 ? (
-                <div className="student-surface rounded-[32px] p-20 text-center border-dashed border-2 border-[var(--student-border)]">
-                    <div className="w-20 h-20 rounded-3xl bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-6">
+                <div className="student-surface rounded-lg p-20 text-center border-dashed border-2 border-[var(--student-border)]">
+                    <div className="w-20 h-20 rounded-lg bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-6">
                         <Users size={40} weight="thin" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-2">No active enrollments found</h3>
@@ -78,7 +78,7 @@ export default async function StudentBatchesPage() {
                     </p>
                     <Link
                         href="/student/redeem"
-                        className="student-button-primary inline-flex items-center gap-2 rounded-xl px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg"
+                        className="student-button-primary inline-flex items-center gap-2 rounded-lg px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg"
                     >
                         <Plus size={18} weight="bold" />
                         Enter Access Payload

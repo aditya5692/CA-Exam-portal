@@ -54,7 +54,7 @@ export function StatusView({ metrics }: StatusViewProps) {
 
             {/* Main Operational Panel */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                <div className="lg:col-span-2 student-surface rounded-[40px] p-8 space-y-8">
+                <div className="lg:col-span-2 student-surface rounded-lg p-8 space-y-8">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <h3 className="flex items-center gap-3 text-2xl font-black tracking-tight text-[var(--student-text)]">
@@ -67,9 +67,9 @@ export function StatusView({ metrics }: StatusViewProps) {
 
                     <div className="grid grid-cols-1 gap-4">
                         {metrics.recentUsers.map(user => (
-                            <div key={user.id} className="flex items-center justify-between rounded-3xl border border-transparent bg-[var(--student-panel-muted)]/50 p-5 transition-all hover:border-[var(--student-border)] hover:bg-white hover:shadow-sm">
+                            <div key={user.id} className="flex items-center justify-between rounded-lg border border-transparent bg-[var(--student-panel-muted)]/50 p-5 transition-all hover:border-[var(--student-border)] hover:bg-white hover:shadow-sm">
                                 <div className="flex items-center gap-5">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[var(--student-accent-strong)] font-black shadow-sm border border-[var(--student-border)]">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white text-[var(--student-accent-strong)] font-black shadow-sm border border-[var(--student-border)]">
                                         {user.fullName?.[0] || user.email?.[0]?.toUpperCase() || "?"}
                                     </div>
                                     <div>
@@ -91,10 +91,10 @@ export function StatusView({ metrics }: StatusViewProps) {
 
                 <div className="space-y-8">
                     {/* System Health Card */}
-                    <div className="student-surface-dark relative flex flex-col justify-between overflow-hidden rounded-[40px] p-10 text-white min-h-[340px]">
+                    <div className="student-surface-dark relative flex flex-col justify-between overflow-hidden rounded-lg p-10 text-white min-h-[340px]">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(242,210,149,0.15),transparent_40%)]" />
                         <div className="relative z-10 space-y-8">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md shadow-inner border border-white/5">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/10 backdrop-blur-md shadow-inner border border-white/5">
                                 <Broadcast size={32} weight="fill" className="text-[#f2d295]" />
                             </div>
                             <div className="space-y-3">
@@ -108,15 +108,15 @@ export function StatusView({ metrics }: StatusViewProps) {
                                 </p>
                             </div>
                         </div>
-                        <button className="relative z-10 mt-8 group flex items-center justify-center gap-3 w-full rounded-[20px] bg-white px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-[var(--student-accent-strong)] shadow-xl transition-all hover:bg-[#f3f0ea] hover:-translate-y-1 active:scale-95">
+                        <button className="relative z-10 mt-8 group flex items-center justify-center gap-3 w-full rounded-lg bg-white px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-[var(--student-accent-strong)] shadow-xl transition-all hover:bg-[#f3f0ea] hover:-translate-y-1 active:scale-95">
                             Run Diagnostics
                         </button>
                     </div>
 
                     {/* Support Quick Link */}
-                    <div className="student-surface rounded-[40px] p-8 border-dashed border-2">
+                    <div className="student-surface rounded-lg p-8 border-dashed border-2">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 border border-slate-100">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
                                 <SealCheck size={24} weight="bold" />
                             </div>
                             <div>

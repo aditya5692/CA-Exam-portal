@@ -89,7 +89,7 @@ export default async function Home() {
                                 </Link>
                                 <Link
                                     href="/pricing"
-                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-8 py-4 text-sm font-bold text-slate-900 hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-8 py-4 text-sm font-bold text-slate-900 hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
                                 >
                                     Explore Pass Pro
                                 </Link>
@@ -112,9 +112,9 @@ export default async function Home() {
                         </div>
 
                         <div className="relative group lg:block hidden">
-                            <div className="absolute inset-0 bg-blue-500/20 rounded-[2.5rem] blur-3xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                            <div className="relative glass-surface rounded-[2.5rem] border-white/10 p-4 shadow-2xl scale-100 hover:scale-[1.02] transition-transform duration-500 overflow-hidden">
-                                <div className="bg-slate-900 rounded-[2rem] overflow-hidden border border-white/5 relative">
+                            <div className="absolute inset-0 bg-blue-500/20 rounded-lg blur-3xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                            <div className="relative glass-surface rounded-lg border-white/10 p-4 shadow-2xl scale-100 hover:scale-[1.02] transition-transform duration-500 overflow-hidden">
+                                <div className="bg-slate-900 rounded-lg overflow-hidden border border-white/5 relative">
                                     {/* Mock Dashboard UI Preview */}
                                     <div className="p-8 space-y-8">
                                         <div className="flex items-center justify-between">
@@ -125,14 +125,14 @@ export default async function Home() {
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="h-32 rounded-2xl bg-white/5 border border-white/5 p-6 space-y-4">
+                                            <div className="h-32 rounded-lg bg-white/5 border border-white/5 p-6 space-y-4">
                                                 <div className="h-3 w-12 bg-emerald-500/40 rounded-full"></div>
                                                 <div className="h-4 w-20 bg-white/20 rounded-full"></div>
                                                 <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                                                     <div className="h-full w-[75%] bg-emerald-500 rounded-full"></div>
                                                 </div>
                                             </div>
-                                            <div className="h-32 rounded-2xl bg-white/5 border border-white/5 p-6 space-y-4">
+                                            <div className="h-32 rounded-lg bg-white/5 border border-white/5 p-6 space-y-4">
                                                 <div className="h-3 w-12 bg-blue-500/40 rounded-full"></div>
                                                 <div className="h-4 w-20 bg-white/20 rounded-full"></div>
                                                 <div className="flex gap-1">
@@ -140,13 +140,13 @@ export default async function Home() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="h-48 rounded-2xl bg-white/[0.02] border border-white/5 p-6 relative overflow-hidden group/chart">
+                                        <div className="h-48 rounded-lg bg-white/[0.02] border border-white/5 p-6 relative overflow-hidden group/chart">
                                             <div className="h-full w-full flex items-end justify-between gap-2">
                                                 {[40, 70, 45, 90, 65, 80, 55, 95].map((h, i) => (
                                                     <div
                                                         key={i}
                                                         style={{ height: `${h}%` }}
-                                                        className="w-full bg-gradient-to-t from-[#0f2cbd]/40 to-blue-400 group-hover/chart:translate-y-[-10%] transition-transform duration-500 rounded-t-lg"
+                                                        className="w-full bg-gradient-to-t from-[#0f2cbd]/40 to-blue-400 group-hover/chart:translate-y-[-10%] transition-transform duration-500 rounded-lg-t-lg"
                                                     ></div>
                                                 ))}
                                             </div>
@@ -238,7 +238,7 @@ export default async function Home() {
 
                 {/* REDESIGNED: Flagship White-Card CTA */}
                 <section className="px-6 py-24 bg-slate-50 relative overflow-hidden">
-                    <div className="mx-auto max-w-7xl rounded-[3rem] bg-white border border-slate-200 p-10 lg:p-20 text-center relative shadow-[0_40px_100px_-20px_rgba(15,44,189,0.05)] overflow-hidden">
+                    <div className="mx-auto max-w-7xl rounded-lg bg-white border border-slate-200 p-10 lg:p-20 text-center relative shadow-[0_40px_100px_-20px_rgba(15,44,189,0.05)] overflow-hidden">
                         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/50 to-transparent"></div>
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(15,44,189,0.03),transparent)]"></div>
 

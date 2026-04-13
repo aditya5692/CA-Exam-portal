@@ -44,7 +44,7 @@ const DEMO_QUESTIONS: QuestionShape[] = [
 function LoadingScreen({ msg = "Loading exam…" }: { msg?: string }) {
     return (
         <div className="student-theme student-shell flex min-h-screen items-center justify-center">
-            <div className="student-surface rounded-[28px] px-10 py-9 text-center space-y-4">
+            <div className="student-surface rounded-lg px-10 py-9 text-center space-y-4">
                 <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[var(--student-accent-soft)] border-t-[var(--student-accent-strong)]" />
                 <p className="font-semibold text-[var(--student-muted-strong)]">{msg}</p>
             </div>
@@ -426,7 +426,7 @@ function ExamWarRoomContent() {
             <div className="student-theme student-shell min-h-screen pb-20 text-[var(--student-text)]">
                 {/* Hero */}
                 <div className="px-8 py-12">
-                    <div className="student-surface-dark mx-auto grid max-w-5xl gap-10 rounded-[36px] px-8 py-10 text-white md:grid-cols-[auto_1fr] md:items-center">
+                    <div className="student-surface-dark mx-auto grid max-w-5xl gap-10 rounded-lg px-8 py-10 text-white md:grid-cols-[auto_1fr] md:items-center">
                         <div className="relative w-28 h-28 sm:w-36 sm:h-36 shrink-0 mx-auto md:mx-0">
                             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                                 <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
@@ -454,14 +454,14 @@ function ExamWarRoomContent() {
                                     { v: skippedCount, l: "Skipped" },
                                     { v: `${Math.floor(timeUsed / 60)}m`, l: "Time" },
                                 ].map(s => (
-                                    <div key={s.l} className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center shadow-inner">
+                                    <div key={s.l} className="p-3 rounded-lg bg-white/5 border border-white/10 text-center shadow-inner">
                                         <div className="text-lg sm:text-xl font-black">{s.v}</div>
                                         <div className="text-[9px] sm:text-[10px] text-white/40 uppercase tracking-[0.2em]">{s.l}</div>
                                     </div>
                                 ))}
                             </div>
                             {mode === "mock" && (
-                                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 w-fit mx-auto md:mx-0">
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 w-fit mx-auto md:mx-0">
                                     <span className="text-[#f2d295] font-black">+{xpGained} XP</span>
                                     {accuracy >= 80 && <span className="px-2 py-1 rounded-full bg-[#8dbdaf]/16 text-[#bfe1d6] text-[10px] font-bold">Lvl Mastery</span>}
                                 </div>
@@ -471,7 +471,7 @@ function ExamWarRoomContent() {
                 </div>
 
                 <div className="mx-auto max-w-5xl px-4 sm:px-8">
-                    <div className="student-surface rounded-[28px] p-6 md:p-8">
+                    <div className="student-surface rounded-lg p-6 md:p-8">
                         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                             <div className="space-y-2">
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
@@ -519,7 +519,7 @@ function ExamWarRoomContent() {
                                             : "No risky attempts to recover",
                                 },
                             ].map((item) => (
-                                <div key={item.label} className="rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
+                                <div key={item.label} className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
                                         {item.label}
                                     </div>
@@ -534,7 +534,7 @@ function ExamWarRoomContent() {
                         </div>
 
                         <div className={cn(
-                            "mt-6 rounded-[24px] border p-5 text-sm leading-7",
+                            "mt-6 rounded-lg border p-5 text-sm leading-7",
                             negativeMarkingEnabled
                                 ? "border-rose-200 bg-rose-50 text-rose-900"
                                 : "border-[var(--student-border)] bg-[var(--student-panel-muted)] text-[var(--student-text)]",
@@ -567,7 +567,7 @@ function ExamWarRoomContent() {
                 <div className="max-w-5xl mx-auto px-8 mt-10 space-y-8">
                     {/* Topic breakdown */}
                     {topicList.length > 0 && (
-                        <div className="student-surface rounded-[24px] p-6">
+                        <div className="student-surface rounded-lg p-6">
                             <h2 className="font-bold   text-[var(--student-text)] mb-5">Topic-wise Performance</h2>
                             <div className="space-y-3">
                                 {topicList.map(t => {
@@ -589,11 +589,11 @@ function ExamWarRoomContent() {
 
                     {/* Weak topic focus */}
                     {weakTopics.length > 0 && (
-                        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6">
+                        <div className="bg-rose-50 border border-rose-200 rounded-lg p-6">
                             <h2 className="font-black text-rose-700 mb-4">Focus Topics</h2>
                             <div className="grid sm:grid-cols-2 gap-3">
                                 {weakTopics.map((t, i) => (
-                                    <div key={t.topic} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-rose-200">
+                                    <div key={t.topic} className="flex items-center gap-3 p-3 rounded-lg bg-white border border-rose-200">
                                         <span className="w-6 h-6 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
                                         <div><div className="text-sm font-bold text-gray-900">{t.topic}</div><div className="text-[10px] text-rose-500">{t.accuracy}% accuracy. Review in {t.accuracy < 40 ? "1 day" : "3 days"}.</div></div>
                                     </div>
@@ -603,12 +603,12 @@ function ExamWarRoomContent() {
                     )}
 
                     {/* Solution Review */}
-                    <div className="student-surface rounded-[24px] p-6">
+                    <div className="student-surface rounded-lg p-6">
                         <h2 className="font-bold   text-[var(--student-text)] mb-4">Solution Review</h2>
                         <div className="flex gap-2 mb-5 flex-wrap">
                             {([["all", `All (${questions.length})`], ["wrong", `Wrong (${wrongAttemptedCount})`], ["correct", `Correct (${correct})`]] as const).map(([key, label]) => (
                                 <button key={key} onClick={() => setSolFilter(key as "all" | "wrong" | "correct")}
-                                    className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all border",
+                                    className={cn("px-4 py-2 rounded-lg font-bold text-sm transition-all border",
                                         solFilter === key ? (key === "wrong" ? "border-rose-500 bg-rose-500 text-white" : key === "correct" ? "border-[var(--student-accent-strong)] bg-[var(--student-accent-strong)] text-white" : "student-tab-active") : "border-[var(--student-border)] bg-[var(--student-panel-muted)] text-[var(--student-muted)] hover:bg-[var(--student-panel-solid)]")}>
                                     {label}
                                 </button>
@@ -620,9 +620,9 @@ function ExamWarRoomContent() {
                                 const isCorrect = chosen ? (item.options.find(o => o.id === chosen)?.isCorrect ?? false) : false;
                                 const conf = item.answer?.confidence;
                                 return (
-                                    <div key={item.id} className={cn("p-5 rounded-[24px] border shadow-[0_8px_30px_rgb(0,0,0,0.03)]", isCorrect ? "border-[#cfe0d5] bg-[#e5f0e9]/70" : "border-rose-100 bg-rose-50/50")}>
+                                    <div key={item.id} className={cn("p-5 rounded-lg border shadow-[0_8px_30px_rgb(0,0,0,0.03)]", isCorrect ? "border-[#cfe0d5] bg-[#e5f0e9]/70" : "border-rose-100 bg-rose-50/50")}>
                                         <div className="flex items-start gap-3 mb-3">
-                                            <span className={cn("w-8 h-8 rounded-[12px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm", isCorrect ? "bg-[#d8e8dd] text-[var(--student-success)]" : "bg-rose-100 text-rose-700 shadow-rose-500/10")}>{idx + 1}</span>
+                                            <span className={cn("w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 shadow-sm", isCorrect ? "bg-[#d8e8dd] text-[var(--student-success)]" : "bg-rose-100 text-rose-700 shadow-rose-500/10")}>{idx + 1}</span>
                                             <div className="flex-1">
                                                 <div className="flex gap-2 flex-wrap mb-2">
                                                     {item.topic && <span className="px-2 py-0.5 rounded-full bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] text-[10px] font-bold border border-[var(--student-accent-soft-strong)]">{item.topic}</span>}
@@ -636,7 +636,7 @@ function ExamWarRoomContent() {
                                             {item.options.map((opt, oi) => {
                                                 const isChosen = opt.id === chosen;
                                                 return (
-                                                    <div key={opt.id} className={cn("p-3 rounded-[16px] border text-sm font-medium flex items-center justify-between gap-2 transition-all",
+                                                    <div key={opt.id} className={cn("p-3 rounded-lg border text-sm font-medium flex items-center justify-between gap-2 transition-all",
                                                         opt.isCorrect ? "bg-[#e5f0e9] border-[#cfe0d5] text-[var(--student-success)]" : isChosen ? "bg-rose-50 border-rose-200 text-rose-800" : "bg-[var(--student-panel-solid)] border-[var(--student-border)] text-[var(--student-muted-strong)]")}>
                                                         <span className="flex items-center gap-2">
                                                             <span className={cn("w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0",
@@ -651,7 +651,7 @@ function ExamWarRoomContent() {
                                             })}
                                         </div>
                                         {item.explanation && (
-                                            <div className="ml-11 mt-3 flex gap-2 p-3 rounded-xl bg-[var(--student-accent-soft)] border border-[var(--student-accent-soft-strong)]">
+                                            <div className="ml-11 mt-3 flex gap-2 p-3 rounded-lg bg-[var(--student-accent-soft)] border border-[var(--student-accent-soft-strong)]">
                                                 <span className="text-[var(--student-accent-strong)] shrink-0">i</span>
                                                 <p className="text-xs text-[var(--student-text)] leading-relaxed">{item.explanation}</p>
                                             </div>
@@ -664,9 +664,9 @@ function ExamWarRoomContent() {
 
                     {/* Actions */}
                     <div className="flex gap-4 flex-wrap">
-                        <button onClick={handleExitExam} className="student-button-primary flex-1 py-4 rounded-2xl font-bold text-sm transition-all">Back to Exams</button>
-                        <button onClick={() => { window.location.href = "/student/history"; }} className="student-button-secondary flex-1 py-4 rounded-2xl font-bold text-sm transition-all">History</button>
-                        {attemptId && <button onClick={() => { window.location.href = `/student/results/${attemptId}`; }} className="student-button-secondary flex-1 py-4 rounded-2xl font-bold text-sm transition-all">Full Results Page</button>}
+                        <button onClick={handleExitExam} className="student-button-primary flex-1 py-4 rounded-lg font-bold text-sm transition-all">Back to Exams</button>
+                        <button onClick={() => { window.location.href = "/student/history"; }} className="student-button-secondary flex-1 py-4 rounded-lg font-bold text-sm transition-all">History</button>
+                        {attemptId && <button onClick={() => { window.location.href = `/student/results/${attemptId}`; }} className="student-button-secondary flex-1 py-4 rounded-lg font-bold text-sm transition-all">Full Results Page</button>}
                     </div>
                 </div>
             </div>
@@ -683,11 +683,11 @@ function ExamWarRoomContent() {
             {/* Pause overlay */}
             {paused && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
-                    <div className={cn("mx-4 max-w-sm rounded-3xl p-10 text-center shadow-2xl space-y-4", highContrast ? "bg-gray-900" : "student-surface-strong")}>
+                    <div className={cn("mx-4 max-w-sm rounded-lg p-10 text-center shadow-2xl space-y-4", highContrast ? "bg-gray-900" : "student-surface-strong")}>
                         <div className="text-5xl">⏸</div>
                         <h2 className={cn("text-2xl font-black", highContrast ? "text-white" : "text-[var(--student-text)]")}>Exam Paused</h2>
                         <p className={cn("text-sm", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>Timer is stopped. Resume when you are ready.</p>
-                        <button onClick={togglePause} className={cn("w-full py-4 rounded-2xl font-black text-lg transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "student-button-primary")}>Resume</button>
+                        <button onClick={togglePause} className={cn("w-full py-4 rounded-lg font-black text-lg transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "student-button-primary")}>Resume</button>
                     </div>
                 </div>
             )}
@@ -701,7 +701,7 @@ function ExamWarRoomContent() {
                     >
                         <List size={20} weight="bold" />
                     </button>
-                    <div className={cn("w-7 h-7 sm:w-8 sm:h-8 rounded flex items-center justify-center font-black text-white text-[10px] sm:text-xs", highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)]")}>CA</div>
+                    <div className={cn("w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-black text-white text-[10px] sm:text-xs", highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)]")}>CA</div>
                     <div className="hidden xs:block">
                         <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none", highContrast ? "text-white" : "text-[var(--student-text)]")}>{examTitle}</div>
                         <div className={cn("text-[9px] sm:text-[10px]", highContrast ? "text-gray-400" : "text-[var(--student-muted)]")}>{questions.length} Questions</div>
@@ -710,7 +710,7 @@ function ExamWarRoomContent() {
 
                 <div className="flex items-center gap-2 sm:gap-3">
                     {mode === "mock" && (
-                        <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-100 shadow-sm">
+                        <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-100 shadow-sm">
                             <Clock size={16} weight="bold" className={cn(timeLeft < 300 ? "text-rose-500 animate-pulse" : "text-rose-400")} />
                             <span className={cn("font-mono font-black text-sm sm:text-base", timeLeft < 300 ? "text-rose-600" : "text-slate-700")}>{formatTime(timeLeft)}</span>
                         </div>
@@ -731,7 +731,7 @@ function ExamWarRoomContent() {
                         <div className="flex items-center gap-1">
                             {(["sm", "md", "lg"] as const).map(s => (
                                 <button key={s} onClick={() => setFontSize(s)}
-                                    className={cn("w-8 h-8 rounded font-bold text-xs", fontSize === s ? (highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white") : (highContrast ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-solid)]"))}>
+                                    className={cn("w-8 h-8 rounded-lg font-bold text-xs", fontSize === s ? (highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white") : (highContrast ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-solid)]"))}>
                                     {s === "sm" ? "A-" : s === "md" ? "A" : "A+"}
                                 </button>
                             ))}
@@ -760,7 +760,7 @@ function ExamWarRoomContent() {
 
                 {/* Mobile Settings Popover */}
                 {showSettings && (
-                    <div className="absolute top-16 right-4 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute top-16 right-4 w-64 bg-white rounded-lg shadow-2xl border border-slate-100 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-black uppercase text-slate-400">Appearance</span>
@@ -778,14 +778,14 @@ function ExamWarRoomContent() {
                                 <div className="flex gap-1">
                                     {(["sm", "md", "lg"] as const).map(s => (
                                         <button key={s} onClick={() => setFontSize(s)}
-                                            className={cn("w-8 h-8 rounded font-bold text-xs", fontSize === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500")}>
+                                            className={cn("w-8 h-8 rounded-lg font-bold text-xs", fontSize === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500")}>
                                             {s === "sm" ? "A-" : s === "md" ? "A" : "A+"}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div className="pt-2 border-t">
-                                <button onClick={handleExitExam} className="w-full py-3 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold uppercase tracking-widest text-center">Exit Test</button>
+                                <button onClick={handleExitExam} className="w-full py-3 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold uppercase tracking-widest text-center">Exit Test</button>
                             </div>
                         </div>
                     </div>
@@ -834,7 +834,7 @@ function ExamWarRoomContent() {
                         <div className="grid grid-cols-5 lg:grid-cols-4 gap-2">
                             {questions.map((qItem, i) => (
                                 <button key={qItem.id} onClick={() => { setCurrent(i); setShowPalette(false); }}
-                                    className={cn("aspect-square rounded-xl font-bold text-xs transition-all hover:opacity-90 active:scale-95 flex items-center justify-center",
+                                    className={cn("aspect-square rounded-lg font-bold text-xs transition-all hover:opacity-90 active:scale-95 flex items-center justify-center",
                                         highContrast ? "border border-gray-700 bg-gray-800 text-gray-200" : paletteColor(answers[qItem.id]?.status ?? "not-visited"),
                                         current === i && (highContrast ? "ring-2 ring-white ring-offset-1 ring-offset-black scale-110" : "ring-2 ring-[var(--student-accent)] ring-offset-2 scale-110"))}>
                                     {i + 1}
@@ -888,7 +888,7 @@ function ExamWarRoomContent() {
                         
                         <div className={cn("flex-1 p-6 sm:p-8 overflow-y-auto", q.caseStudy ? "w-full lg:w-1/2" : "w-full")}>
                             {currentCaseBundle && (
-                                <div className={cn("mb-6 rounded-[24px] border p-5", highContrast ? "border-gray-700 bg-gray-900" : "border-amber-200 bg-amber-50/70")}>
+                                <div className={cn("mb-6 rounded-lg border p-5", highContrast ? "border-gray-700 bg-gray-900" : "border-amber-200 bg-amber-50/70")}>
                                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                         <div className="space-y-1">
                                             <div className={cn("text-[10px] font-black uppercase tracking-widest", highContrast ? "text-amber-200" : "text-amber-700")}>
@@ -909,7 +909,7 @@ function ExamWarRoomContent() {
                                                         }
                                                     }}
                                                     className={cn(
-                                                        "min-w-10 rounded-xl border px-3 py-2 text-[11px] font-black transition-all",
+                                                        "min-w-10 rounded-lg border px-3 py-2 text-[11px] font-black transition-all",
                                                         questionId === q.id
                                                             ? highContrast
                                                                 ? "border-white bg-white text-black"
@@ -936,14 +936,14 @@ function ExamWarRoomContent() {
                                     const isCorrectOpt = opt.isCorrect;
                                     return (
                                         <button key={opt.id} onClick={() => !showPracticeAnswer && selectOption(opt.id)}
-                                            className={cn("w-full flex items-center gap-4 p-4 rounded-[20px] border text-left transition-all duration-300", fontClass,
+                                            className={cn("w-full flex items-center gap-4 p-4 rounded-lg border text-left transition-all duration-300", fontClass,
                                                 showCorrect && isCorrectOpt ? "border-[#2f7d55] bg-[#e5f0e9] hover:shadow-md hover:-translate-y-0.5" :
                                                     showCorrect && selected && !isCorrectOpt ? "border-rose-400 bg-rose-50 hover:shadow-md hover:-translate-y-0.5" :
                                                         selected ? highContrast ? "border-white bg-slate-800 text-white" : "border-[var(--student-accent-strong)] bg-[var(--student-accent-soft)] text-[var(--student-text)] shadow-md shadow-[rgba(31,92,80,0.10)] hover:-translate-y-0.5" :
                                                             highContrast ? "border-slate-700 bg-slate-800 hover:border-slate-500 hover:-translate-y-0.5" :
                                                                 "border-[var(--student-border)] bg-[var(--student-panel-solid)] hover:border-[var(--student-accent-soft-strong)] hover:bg-[var(--student-panel-muted)] hover:-translate-y-0.5")}>
                                             <span className={cn("flex items-center gap-4 select-none")}>
-                                                <span className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
+                                                <span className={cn("w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-colors",
                                                     showCorrect && isCorrectOpt ? "bg-[#2f7d55] text-white shadow-[rgba(47,125,85,0.2)]" :
                                                         showCorrect && selected && !isCorrectOpt ? "bg-rose-500 text-white shadow-rose-500/20" :
                                                             selected ? highContrast ? "bg-white text-black" : "bg-[var(--student-accent-strong)] text-white shadow-[rgba(31,92,80,0.2)]" : highContrast ? "bg-slate-700 text-slate-300" : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]")}>
@@ -960,7 +960,7 @@ function ExamWarRoomContent() {
     
                             {/* Practice mode explanation */}
                             {mode === "practice" && showPracticeAnswer && q.explanation && (
-                                <div className={cn("flex gap-3 p-4 rounded-2xl border mb-6", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-accent-soft)] border-[var(--student-accent-soft-strong)]")}>
+                                <div className={cn("flex gap-3 p-4 rounded-lg border mb-6", highContrast ? "bg-gray-900 border-gray-700" : "bg-[var(--student-accent-soft)] border-[var(--student-accent-soft-strong)]")}>
                                     <span className={cn("shrink-0", highContrast ? "text-gray-300" : "text-[var(--student-accent-strong)]")}>i</span>
                                     <div>
                                         <div className={cn("text-[10px] font-black uppercase tracking-widest mb-1", highContrast ? "text-gray-400" : "text-[var(--student-accent-strong)]")}>Explanation</div>
@@ -996,26 +996,26 @@ function ExamWarRoomContent() {
                         <div className="flex items-center gap-2 flex-1 sm:flex-none justify-between sm:justify-start">
                             <div className="flex items-center gap-2">
                                 <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}
-                                    className={cn("h-11 px-4 sm:px-5 flex items-center justify-center rounded-xl border font-black text-xs sm:text-sm disabled:opacity-30", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
+                                    className={cn("h-11 px-4 sm:px-5 flex items-center justify-center rounded-lg border font-black text-xs sm:text-sm disabled:opacity-30", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
                                     <CaretLeft size={16} weight="bold" />
                                 </button>
                                 <button onClick={() => { if (current < questions.length - 1) setCurrent(c => c + 1); }} disabled={current === questions.length - 1}
-                                    className={cn("h-11 px-4 sm:px-6 flex items-center justify-center rounded-xl font-black text-xs sm:text-sm disabled:opacity-30 transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "bg-[var(--student-accent-strong)] text-white hover:bg-[#18493f] shadow-lg shadow-[rgba(31,92,80,0.18)]")}>
+                                    className={cn("h-11 px-4 sm:px-6 flex items-center justify-center rounded-lg font-black text-xs sm:text-sm disabled:opacity-30 transition-all", highContrast ? "bg-white text-black hover:bg-gray-200" : "bg-[var(--student-accent-strong)] text-white hover:bg-[#18493f] shadow-lg shadow-[rgba(31,92,80,0.18)]")}>
                                     Next <CaretRight size={16} weight="bold" className="ml-1" />
                                 </button>
                             </div>
                             
-                            <button onClick={markForReview} className={cn("flex-1 sm:flex-none h-11 flex items-center justify-center gap-2 px-4 sm:px-6 rounded-xl border-2 font-black text-[10px] sm:text-xs uppercase tracking-widest", highContrast ? "border-gray-500 text-gray-100 hover:bg-gray-800" : "border-[var(--student-support)] text-[var(--student-support)] hover:bg-[var(--student-support-soft)]")}>
+                            <button onClick={markForReview} className={cn("flex-1 sm:flex-none h-11 flex items-center justify-center gap-2 px-4 sm:px-6 rounded-lg border-2 font-black text-[10px] sm:text-xs uppercase tracking-widest", highContrast ? "border-gray-500 text-gray-100 hover:bg-gray-800" : "border-[var(--student-support)] text-[var(--student-support)] hover:bg-[var(--student-support-soft)]")}>
                                 <Info size={16} weight="fill" className="hidden xs:block" /> Mark
                             </button>
                         </div>
                         
                         <div className="flex items-center gap-2 flex-1 sm:flex-none w-full sm:w-auto">
-                            <button onClick={clearAnswer} className={cn("flex-1 sm:flex-none h-11 px-6 rounded-xl border font-black text-[10px] sm:text-xs uppercase tracking-widest", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
+                            <button onClick={clearAnswer} className={cn("flex-1 sm:flex-none h-11 px-6 rounded-lg border font-black text-[10px] sm:text-xs uppercase tracking-widest", highContrast ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-[var(--student-border)] text-[var(--student-muted-strong)] hover:bg-[var(--student-panel-muted)]")}>
                                 Clear
                             </button>
                             <button onClick={() => void handleFinalSubmit()}
-                                className={cn("flex-1 sm:flex-none h-11 flex items-center justify-center gap-2 px-8 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all", highContrast ? "bg-rose-500 text-white hover:bg-rose-600" : "bg-slate-900 text-white hover:bg-black shadow-lg shadow-black/10")}>
+                                className={cn("flex-1 sm:flex-none h-11 flex items-center justify-center gap-2 px-8 rounded-lg font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all", highContrast ? "bg-rose-500 text-white hover:bg-rose-600" : "bg-slate-900 text-white hover:bg-black shadow-lg shadow-black/10")}>
                                 <CheckCircle size={18} weight="fill" /> Final Submit
                             </button>
                         </div>

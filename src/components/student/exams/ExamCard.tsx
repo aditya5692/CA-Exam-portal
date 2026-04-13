@@ -25,7 +25,7 @@ export function ExamCard({
     };
 
     return (
-        <div className="student-surface group relative flex h-full flex-col rounded-2xl p-6 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+        <div className="student-surface group relative flex h-full flex-col rounded-lg p-6 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
             <div className="flex items-start justify-between mb-6">
                 <div className="flex flex-wrap gap-2">
                     <span className={cn("px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border shadow-sm", diffColors[difficulty])}>
@@ -90,7 +90,7 @@ export function ExamCard({
 
             <div className="mt-auto space-y-4 pt-6 border-t border-slate-50">
                 {exam.attempt?.status === "SUBMITTED" && (
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50/50 rounded-xl border border-emerald-100/50 shadow-sm">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50/50 rounded-lg border border-emerald-100/50 shadow-sm">
                         <div className="flex items-center gap-2.5">
                             <CheckCircle size={18} weight="fill" className="text-emerald-500/80" />
                             <span className="text-[10px] font-bold text-emerald-700/80 uppercase tracking-widest">Score</span>
@@ -102,7 +102,7 @@ export function ExamCard({
                 )}
 
                 {exam.attempt?.status === "STARTED" && (
-                    <div className="flex items-center gap-2.5 px-4 py-2.5 bg-amber-50/50 rounded-xl border border-amber-100/50 shadow-sm">
+                    <div className="flex items-center gap-2.5 px-4 py-2.5 bg-amber-50/50 rounded-lg border border-amber-100/50 shadow-sm">
                         <div className="w-2 h-2 rounded-full bg-amber-500/80 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
                         <span className="text-[10px] font-bold text-amber-700/80 uppercase tracking-widest">Ongoing</span>
                     </div>
@@ -110,7 +110,7 @@ export function ExamCard({
 
                 <Link href={`/exam/war-room?examId=${exam.id}${exam.attempt?.status === "STARTED" ? "&mode=resume" : ""}`}
                     className={cn(
-                        "flex h-12 w-full items-center justify-center rounded-xl border text-center text-[10px] font-bold uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-sm",
+                        "flex h-12 w-full items-center justify-center rounded-lg border text-center text-[10px] font-bold uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-sm",
                         exam.attempt?.status === "SUBMITTED"
                             ? "student-button-secondary"
                             : "student-button-primary"

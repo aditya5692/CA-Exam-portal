@@ -36,6 +36,11 @@ export type AuthRegistrationInput = {
     examTargetLevel?: string | null;
     examTargetMonth?: number | null;
     examTargetYear?: number | null;
+    city?: string | null;
+    state?: string | null;
+    experienceYears?: number | null;
+    articleshipFirmType?: string | null;
+    expertise?: string | null;
 };
 
 const APP_ROLES = new Set<AppRole>(["ADMIN", "TEACHER", "STUDENT"]);
@@ -157,6 +162,11 @@ export async function registerUserRecord(
                 examTargetLevel: input.examTargetLevel,
                 examTargetMonth: input.examTargetMonth,
                 examTargetYear: input.examTargetYear,
+                city: input.city,
+                state: input.state,
+                experienceYears: input.experienceYears,
+                articleshipFirmType: input.articleshipFirmType,
+                expertise: input.expertise,
                 loginCount: 1,
             },
         });

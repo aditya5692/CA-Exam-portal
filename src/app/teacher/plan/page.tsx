@@ -46,19 +46,19 @@ export default async function TeacherPlanPage() {
             </div>
 
             {planStatusNotice && (
-                <div className="rounded-[24px] border border-amber-100 bg-amber-50 px-6 py-4 text-sm font-semibold text-amber-700">
+                <div className="rounded-lg border border-amber-100 bg-amber-50 px-6 py-4 text-sm font-semibold text-amber-700">
                     {planStatusNotice}
                 </div>
             )}
 
             {/* Status Banner - Premium Card */}
-            <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 text-white shadow-2xl group border border-slate-800">
+            <div className="relative overflow-hidden rounded-lg bg-slate-900 p-8 text-white shadow-2xl group border border-slate-800">
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full -mr-48 -mt-48 blur-[100px] pointer-events-none transition-all duration-1000 group-hover:bg-indigo-500/20" />
                 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div className="flex items-center gap-8">
                         <div className={cn(
-                            "w-20 h-20 rounded-[28px] flex items-center justify-center shadow-2xl relative transition-transform group-hover:scale-110 duration-500",
+                            "w-20 h-20 rounded-lg flex items-center justify-center shadow-2xl relative transition-transform group-hover:scale-110 duration-500",
                             isPremium ? "bg-indigo-600 text-white shadow-indigo-500/20" : "bg-slate-800 text-slate-400 border border-slate-700"
                         )}>
                             {isPremium ? (
@@ -88,15 +88,15 @@ export default async function TeacherPlanPage() {
 
                     <div className="flex flex-col items-center md:items-end gap-3">
                          {hasTopTier ? (
-                             <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
+                             <div className="flex items-center gap-3 px-6 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
                                  <CheckCircle size={18} weight="bold" /> Full Access Active
                              </div>
                          ) : isPremium ? (
-                             <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
+                             <div className="flex items-center gap-3 px-6 py-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
                                  <Sparkle size={18} weight="bold" /> Growth Tier Active
                              </div>
                          ) : (
-                             <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
+                             <div className="flex items-center gap-3 px-6 py-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">
                                  <Info size={18} weight="bold" /> Expansion Required
                              </div>
                          )}
@@ -108,22 +108,22 @@ export default async function TeacherPlanPage() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-                <div className="rounded-[32px] border border-slate-100 bg-white/80 p-8 shadow-sm">
+                <div className="rounded-lg border border-slate-100 bg-white/80 p-8 shadow-sm">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Capacity Envelope</p>
                     <div className="mt-6 grid grid-cols-2 gap-4">
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Storage Used</div>
                             <div className="mt-2 text-2xl font-black tracking-tight text-slate-900">{Math.round(planSummary.storageUsed / 1024 / 1024)} MB</div>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Storage Limit</div>
                             <div className="mt-2 text-2xl font-black tracking-tight text-slate-900">{Math.round(planSummary.storageLimit / 1024 / 1024)} MB</div>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Support Tier</div>
                             <div className="mt-2 text-lg font-black tracking-tight text-slate-900">{planSummary.supportTier}</div>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Entitled Floor</div>
                             <div className="mt-2 text-lg font-black tracking-tight text-slate-900">{Math.round(planSummary.entitledStorageLimit / 1024 / 1024)} MB</div>
                         </div>
@@ -139,16 +139,16 @@ export default async function TeacherPlanPage() {
                     </div>
                 </div>
 
-                <div className="rounded-[32px] border border-slate-100 bg-white/80 p-8 shadow-sm">
+                <div className="rounded-lg border border-slate-100 bg-white/80 p-8 shadow-sm">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Deployment Entitlements</p>
                     <div className="mt-6 space-y-3">
                         {planSummary.featureHighlights.map((feature) => (
-                            <div key={feature} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                            <div key={feature} className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
                                 {feature}
                             </div>
                         ))}
                         {planSummary.restrictions.length > 0 && planSummary.restrictions.map((restriction) => (
-                            <div key={restriction} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                            <div key={restriction} className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
                                 {restriction}
                             </div>
                         ))}
@@ -159,13 +159,13 @@ export default async function TeacherPlanPage() {
             {/* Pricing / Upgrade Component Section */}
             <div className="space-y-8">
                 <div className="flex items-center gap-4">
-                     <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                     <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
                          <CreditCard size={20} weight="bold" />
                      </div>
                      <h3 className="text-2xl font-bold tracking-tighter text-slate-900">Available Plans</h3>
                 </div>
                 
-                <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 lg:p-10 border border-slate-100 shadow-sm relative overflow-hidden">
+                <div className="bg-white/80 backdrop-blur-md rounded-lg p-8 lg:p-10 border border-slate-100 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
                     <PricingCards userPlan={session.plan} userRole={session.role} />
                 </div>

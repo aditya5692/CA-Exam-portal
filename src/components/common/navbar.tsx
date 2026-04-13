@@ -47,7 +47,7 @@ export function Navbar({ user }: { user?: { fullName: string | null; role: strin
         )}>
             <div className="mx-auto flex max-w-7xl items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f2cbd] text-white shadow-lg shadow-blue-500/20 transition-transform duration-300 group-hover:scale-105">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0f2cbd] text-white shadow-lg shadow-blue-500/20 transition-transform duration-300 group-hover:scale-105">
                         <GraduationCap size={22} weight="bold" />
                     </div>
                     <div>
@@ -115,7 +115,7 @@ export function Navbar({ user }: { user?: { fullName: string | null; role: strin
                                 </Link>
                                 <Link
                                     href="/auth/signup"
-                                    className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95"
+                                    className="rounded-lg bg-slate-900 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95"
                                 >
                                     Join Free
                                 </Link>
@@ -125,7 +125,7 @@ export function Navbar({ user }: { user?: { fullName: string | null; role: strin
                 </div>
 
                 <button
-                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-900 md:hidden"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-900 md:hidden"
                     onClick={() => setIsMobileMenuOpen((open) => !open)}
                 >
                     {isMobileMenuOpen ? <X size={20} weight="bold" /> : <List size={20} weight="bold" />}
@@ -133,7 +133,7 @@ export function Navbar({ user }: { user?: { fullName: string | null; role: strin
             </div>
 
             {isMobileMenuOpen && (
-                <div className="absolute left-6 right-6 top-full mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-xl animate-in slide-in-from-top-2 duration-200 md:hidden">
+                <div className="absolute left-6 right-6 top-full mt-2 rounded-lg border border-slate-200 bg-white p-4 shadow-xl animate-in slide-in-from-top-2 duration-200 md:hidden">
                     <div className="flex flex-col gap-2">
                         {NAV_LINKS.map((link) => (
                             <Link

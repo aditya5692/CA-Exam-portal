@@ -29,3 +29,8 @@ export const initAnalytics = async () => {
 export const auth = typeof window !== "undefined" ? getAuth(app) : null;
 export { app };
 
+// Auth Providers
+import { GoogleAuthProvider, EmailAuthProvider } from "firebase/auth";
+export const googleProvider = new GoogleAuthProvider();
+export { EmailAuthProvider };
+

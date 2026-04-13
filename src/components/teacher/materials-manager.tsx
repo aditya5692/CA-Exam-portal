@@ -116,7 +116,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-6 px-6 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                    <div className="hidden sm:flex items-center gap-6 px-6 py-3 bg-white border border-slate-100 rounded-lg shadow-sm">
                         <div className="text-center">
                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Total Files</p>
                             <p className="text-lg font-bold text-slate-900 leading-none">{stats.total}</p>
@@ -129,7 +129,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                     </div>
                     <button
                         onClick={() => setIsUploadModalOpen(true)}
-                        className="h-12 px-6 rounded-2xl bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/10 flex items-center gap-2 active:scale-95"
+                        className="h-12 px-6 rounded-lg bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/10 flex items-center gap-2 active:scale-95"
                     >
                         <Plus size={18} weight="bold" /> Upload Material
                     </button>
@@ -137,7 +137,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 bg-white border border-slate-100 rounded-[24px] shadow-sm">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 bg-white border border-slate-100 rounded-lg shadow-sm">
                 <div className="relative group w-full sm:max-w-sm">
                     < MagnifyingGlass size={18} weight="bold" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
@@ -145,7 +145,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                         placeholder="Search your library..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-slate-50/50 border border-transparent text-sm text-slate-800 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-100 focus:bg-white transition-all"
+                        className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-slate-50/50 border border-transparent text-sm text-slate-800 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-100 focus:bg-white transition-all"
                     />
                 </div>
 
@@ -153,7 +153,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                     <button
                         onClick={() => setSelectedCategory("All")}
                         className={cn(
-                            "px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap",
+                            "px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap",
                             selectedCategory === "All" ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20" : "bg-white text-slate-500 border-slate-100 hover:border-slate-300"
                         )}
                     >
@@ -164,7 +164,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap",
+                                "px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap",
                                 selectedCategory === cat ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20" : "bg-white text-slate-500 border-slate-100 hover:border-slate-300"
                             )}
                         >
@@ -175,7 +175,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
             </div>
 
             {/* Materials Table */}
-            <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
+            <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -192,7 +192,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                 <tr>
                                     <td colSpan={5} className="px-6 py-24 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
-                                            <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-200">
+                                            <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center text-slate-200">
                                                 <Upload size={32} />
                                             </div>
                                             <div>
@@ -207,7 +207,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                     <tr key={m.id} className="group hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-500 group-hover:border-indigo-100 transition-all">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-500 group-hover:border-indigo-100 transition-all">
                                                     {m.subType === "VIDEO" ? <ArrowUpRight size={20} weight="bold" /> : <FilePdf size={20} weight="fill" />}
                                                 </div>
                                                 <div className="min-w-0">
@@ -244,14 +244,14 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                                     href={m.fileUrl}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm active:scale-95"
+                                                    className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm active:scale-95"
                                                     title="View"
                                                 >
                                                     <DownloadSimple size={16} weight="bold" />
                                                 </a>
                                                 <button
                                                     onClick={() => handleDelete(m.id)}
-                                                    className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-all shadow-sm active:scale-95"
+                                                    className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-all shadow-sm active:scale-95"
                                                     title="Delete"
                                                 >
                                                     <Trash size={16} weight="bold" />
@@ -274,7 +274,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
                     />
                     <div
-                        className="relative w-full max-w-xl bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-300"
+                        className="relative w-full max-w-xl bg-white rounded-lg shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-300"
                     >
                             <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                                 <div>
@@ -283,7 +283,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                 </div>
                                 <button
                                     onClick={() => setIsUploadModalOpen(false)}
-                                    className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-950 transition-all active:scale-90 shadow-sm"
+                                    className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-950 transition-all active:scale-90 shadow-sm"
                                 >
                                     <X size={20} weight="bold" />
                                 </button>
@@ -297,14 +297,14 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                             required
                                             name="title"
                                             placeholder="e.g. Chapter 1 Summary"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all"
+                                            className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all"
                                         />
                                     </div>
                                     <div className="space-y-1.5 group">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 group-focus-within:text-indigo-600 transition-colors">Category</label>
                                         <select
                                             name="category"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all appearance-none"
+                                            className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all appearance-none"
                                         >
                                             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                         </select>
@@ -316,14 +316,14 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 group-focus-within:text-indigo-600 transition-colors">Type</label>
                                         <select
                                             name="subType"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all appearance-none"
+                                            className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all appearance-none"
                                         >
                                             {SUB_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-1.5 group">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Visibility</label>
-                                        <div className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-xl border border-slate-100">
+                                        <div className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-lg border border-slate-100">
                                             <input type="checkbox" name="isPublic" id="isPublic" className="sr-only peer" />
                                             <label htmlFor="isPublic" className="flex-1 flex items-center justify-center py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer bg-blue-100 text-blue-700 peer-checked:bg-slate-50 peer-checked:text-slate-400">
                                                 Private
@@ -337,13 +337,13 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
 
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Assign to Batches</label>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 grid grid-cols-2 gap-2 max-h-32 overflow-y-auto scrollbar-hide">
+                                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 grid grid-cols-2 gap-2 max-h-32 overflow-y-auto scrollbar-hide">
                                         {batches.length === 0 ? (
                                             <p className="col-span-2 text-[10px] text-slate-400 font-bold uppercase text-center py-2">No batches created yet</p>
                                         ) : (
                                             batches.map(b => (
                                                 <label key={b.id} className="flex items-center gap-2 p-2 rounded-lg bg-white border border-transparent hover:border-indigo-200 transition-all cursor-pointer group">
-                                                    <input type="checkbox" name="batchIds" value={b.id} className="w-3.5 h-3.5 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                                    <input type="checkbox" name="batchIds" value={b.id} className="w-3.5 h-3.5 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500" />
                                                     <div className="min-w-0">
                                                         <p className="text-[10px] font-bold text-slate-700 truncate">{b.name}</p>
                                                         <p className="text-[8px] font-black text-slate-300 uppercase">{b.studentCount} Students</p>
@@ -363,8 +363,8 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                             required
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                         />
-                                        <div className="w-full border-2 border-dashed border-slate-200 rounded-[24px] p-8 flex flex-col items-center justify-center gap-3 bg-slate-50 group-hover/file:bg-indigo-50 group-hover/file:border-indigo-200 transition-all group-hover/file:scale-[0.99]">
-                                            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-300 group-hover/file:text-indigo-600 group-hover/file:border-indigo-100 shadow-sm transition-all duration-300">
+                                        <div className="w-full border-2 border-dashed border-slate-200 rounded-lg p-8 flex flex-col items-center justify-center gap-3 bg-slate-50 group-hover/file:bg-indigo-50 group-hover/file:border-indigo-200 transition-all group-hover/file:scale-[0.99]">
+                                            <div className="w-12 h-12 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-300 group-hover/file:text-indigo-600 group-hover/file:border-indigo-100 shadow-sm transition-all duration-300">
                                                 <Upload size={24} weight="bold" />
                                             </div>
                                             <div className="text-center">
@@ -378,7 +378,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full h-14 rounded-2xl bg-slate-900 text-white font-bold text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 overflow-hidden"
+                                    className="w-full h-14 rounded-lg bg-slate-900 text-white font-bold text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 overflow-hidden"
                                 >
                                     {isSubmitting ? (
                                         <>

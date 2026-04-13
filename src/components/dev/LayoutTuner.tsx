@@ -56,7 +56,7 @@ export function LayoutTuner() {
     }
 
     return (
-        <div className="fixed bottom-4 right-4 left-4 md:left-auto z-[9999] md:w-80 bg-white border border-slate-200 shadow-2xl rounded-2xl p-5   animate-in slide-in-from-bottom flex flex-col gap-6">
+        <div className="fixed bottom-4 right-4 left-4 md:left-auto z-[9999] md:w-80 bg-white border border-slate-200 shadow-2xl rounded-lg p-5   animate-in slide-in-from-bottom flex flex-col gap-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-indigo-600 text-[18px]">tune</span>
@@ -69,7 +69,7 @@ export function LayoutTuner() {
             
             <div className="space-y-5">
                 {/* Visibility Toggle */}
-                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 cursor-pointer select-none" htmlFor="toggle-header">
                         Header Visibility
                     </label>
@@ -89,7 +89,7 @@ export function LayoutTuner() {
                 <div className={!showHeader ? "opacity-50 pointer-events-none" : ""}>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Header Height</label>
-                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{headerHeight}px</span>
+                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{headerHeight}px</span>
                     </div>
                     <input 
                         type="range" min="0" max="500" step="1"
@@ -103,7 +103,7 @@ export function LayoutTuner() {
                 <div>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Content Spacing</label>
-                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{contentPadding}px</span>
+                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{contentPadding}px</span>
                     </div>
                     <input 
                         type="range" min="0" max="500" step="1"
@@ -117,7 +117,7 @@ export function LayoutTuner() {
                 <div>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Heading Bottom Margin</label>
-                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{headingMargin}px</span>
+                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{headingMargin}px</span>
                     </div>
                     <input 
                         type="range" min="0" max="300" step="1"

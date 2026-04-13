@@ -38,18 +38,18 @@ export default async function TeacherProfilePage({ params }: PageProps) {
                 </Link>
 
                 {/* Hero Section */}
-                <div className="relative overflow-hidden rounded-[40px] bg-slate-900 p-8 md:p-12 text-white shadow-2xl border border-slate-800">
+                <div className="relative overflow-hidden rounded-lg bg-slate-900 p-8 md:p-12 text-white shadow-2xl border border-slate-800">
                     <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
                         {/* Avatar */}
                         <div className="relative group shrink-0">
-                            <div className="h-40 w-40 rounded-[32px] bg-gradient-to-br from-indigo-500 to-purple-600 p-1 transition-transform group-hover:scale-105 duration-500">
-                                <div className="h-full w-full rounded-[28px] bg-slate-900 flex items-center justify-center overflow-hidden border-4 border-slate-900">
+                            <div className="h-40 w-40 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 p-1 transition-transform group-hover:scale-105 duration-500">
+                                <div className="h-full w-full rounded-lg bg-slate-900 flex items-center justify-center overflow-hidden border-4 border-slate-900">
                                     <div className="text-5xl font-black text-white/20 uppercase tracking-tighter select-none">
                                         {teacher.fullName.split(' ').map(n => n[0]).join('')}
                                     </div>
                                 </div>
                             </div>
-                            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-indigo-500 flex items-center justify-center border-4 border-slate-900 shadow-xl">
+                            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-lg bg-indigo-500 flex items-center justify-center border-4 border-slate-900 shadow-xl">
                                 <SealCheck size={20} weight="fill" className="text-white" />
                             </div>
                         </div>
@@ -70,13 +70,13 @@ export default async function TeacherProfilePage({ params }: PageProps) {
 
                             {/* Contact/Social Links */}
                             <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                                <button className="h-10 px-5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2">
+                                <button className="h-10 px-5 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2">
                                     <EnvelopeSimple size={18} /> Message
                                 </button>
-                                <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all cursor-pointer">
+                                <div className="h-10 w-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all cursor-pointer">
                                     <LinkedinLogo size={18} />
                                 </div>
-                                <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all cursor-pointer">
+                                <div className="h-10 w-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all cursor-pointer">
                                     <TwitterLogo size={18} />
                                 </div>
                             </div>
@@ -118,7 +118,7 @@ export default async function TeacherProfilePage({ params }: PageProps) {
                 {/* About Section */}
                 <div className="grid md:grid-cols-3 gap-8">
                     <div className="md:col-span-2 space-y-6">
-                        <section className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-4">
+                        <section className="bg-white rounded-lg p-8 border border-slate-100 shadow-sm space-y-4">
                             <h2 className="text-xl font-bold text-slate-900">About the Educator</h2>
                             <p className="text-slate-600 leading-relaxed font-medium">
                                 {teacher.bio || `${teacher.fullName} is a dedicated expert in ${teacher.expertise}, helping CA aspirants achieve excellence through structured learning and comprehensive practice.`}
@@ -128,7 +128,7 @@ export default async function TeacherProfilePage({ params }: PageProps) {
                         {/* Features/Expertise Chips */}
                         <div className="flex flex-wrap gap-2">
                             {["Strategic Management", "AFM Specialist", "FR Consultant", "Live Mentology"].map(tag => (
-                                <span key={tag} className="px-5 py-2 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest shadow-sm">
+                                <span key={tag} className="px-5 py-2 rounded-lg bg-white border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest shadow-sm">
                                     {tag}
                                 </span>
                             ))}
@@ -137,20 +137,20 @@ export default async function TeacherProfilePage({ params }: PageProps) {
 
                     {/* Sidebar Actions */}
                     <div className="space-y-4">
-                        <div className="bg-indigo-600 rounded-[32px] p-8 text-white shadow-xl shadow-indigo-500/10 space-y-6">
+                        <div className="bg-indigo-600 rounded-lg p-8 text-white shadow-xl shadow-indigo-500/10 space-y-6">
                             <div className="space-y-2">
                                 <h3 className="text-xl font-bold">Join a Batch</h3>
                                 <p className="text-indigo-100/70 text-xs font-medium">Learn directly from {teacher.fullName.split(' ')[0]} in personalized cohorts.</p>
                             </div>
                             <Link 
                                 href="/student/dashboard" 
-                                className="w-full py-4 bg-white text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-slate-50 flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-black/5"
+                                className="w-full py-4 bg-white text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:bg-slate-50 flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-black/5"
                             >
                                 Explore Batches
                             </Link>
                         </div>
                         
-                        <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
+                        <div className="bg-white rounded-lg p-8 border border-slate-100 shadow-sm space-y-6">
                             <h3 className="text-sm font-bold text-slate-900">Education Registry</h3>
                             <div className="space-y-4">
                                 <EducationItem year="2018 - Present" title="Senior Faculty" org="Academy of Professional Excellence" />
@@ -173,8 +173,8 @@ function StatCard({ label, value, icon, color }: { label: string, value: string,
     };
 
     return (
-        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", colors[color])}>
+        <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+            <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform group-hover:scale-110", colors[color])}>
                 {icon}
             </div>
             <div className="text-2xl font-bold text-slate-900">{value}</div>

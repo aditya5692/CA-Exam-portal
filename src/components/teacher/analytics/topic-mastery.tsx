@@ -36,7 +36,7 @@ export function TopicMasteryHeatmap() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-1">
                 <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                        <div className="w-12 h-12 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
                             <ChartBar size={24} weight="bold" />
                         </div>
                         <div>
@@ -47,34 +47,34 @@ export function TopicMasteryHeatmap() {
                 </div>
                 
                 {/* Legend */}
-                <div className="flex flex-wrap items-center gap-6 bg-white/50 backdrop-blur-md rounded-2xl border border-slate-100 p-4 shadow-sm">
+                <div className="flex flex-wrap items-center gap-6 bg-white/50 backdrop-blur-md rounded-lg border border-slate-100 p-4 shadow-sm">
                     <div className="flex items-center gap-2">
-                        <div className="w-3.5 h-3.5 rounded bg-emerald-500" />
+                        <div className="w-3.5 h-3.5 rounded-lg bg-emerald-500" />
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">High Mastery</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3.5 h-3.5 rounded bg-amber-100 border border-amber-200" />
+                        <div className="w-3.5 h-3.5 rounded-lg bg-amber-100 border border-amber-200" />
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Developing</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3.5 h-3.5 rounded bg-rose-500/20 border border-rose-200" />
+                        <div className="w-3.5 h-3.5 rounded-lg bg-rose-500/20 border border-rose-200" />
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Critical Warning</span>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-md rounded-[32px] border border-slate-100 shadow-sm overflow-hidden p-6">
+            <div className="bg-white/80 backdrop-blur-md rounded-lg border border-slate-100 shadow-sm overflow-hidden p-6">
                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-100 pb-2">
                     <table className="w-full border-separate border-spacing-2">
                         <thead>
                             <tr>
-                                <th className="p-4 text-left bg-slate-50/50 rounded-2xl border border-slate-100/50 min-w-[200px]">
+                                <th className="p-4 text-left bg-slate-50/50 rounded-lg border border-slate-100/50 min-w-[200px]">
                                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                                         <Users size={16} weight="bold" /> Registered Cadet
                                     </div>
                                 </th>
                                 {TOPICS.map((topic, i) => (
-                                    <th key={i} className="p-4 text-center bg-slate-50/50 rounded-2xl border border-slate-100/50 min-w-[140px]">
+                                    <th key={i} className="p-4 text-center bg-slate-50/50 rounded-lg border border-slate-100/50 min-w-[140px]">
                                         <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 truncate px-2" title={topic}>
                                             {topic}
                                         </div>
@@ -85,9 +85,9 @@ export function TopicMasteryHeatmap() {
                         <tbody>
                             {STUDENTS.map((student, sIdx) => (
                                 <tr key={sIdx} className="group">
-                                    <td className="p-4 rounded-2xl bg-white border border-slate-50 group-hover:border-indigo-100 group-hover:shadow-sm transition-all duration-300">
+                                    <td className="p-4 rounded-lg bg-white border border-slate-50 group-hover:border-indigo-100 group-hover:shadow-sm transition-all duration-300">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[11px] font-black text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-[11px] font-black text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
                                                 {student.name.split(' ').map(n => n[0]).join('')}
                                             </div>
                                             <span className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{student.name}</span>
@@ -96,7 +96,7 @@ export function TopicMasteryHeatmap() {
                                     {student.scores.map((score, tIdx) => (
                                         <td key={tIdx} className="p-0">
                                             <div className={cn(
-                                                "h-14 w-full rounded-2xl flex items-center justify-center text-sm font-black transition-all hover:scale-110 active:scale-95 cursor-help shadow-sm border",
+                                                "h-14 w-full rounded-lg flex items-center justify-center text-sm font-black transition-all hover:scale-110 active:scale-95 cursor-help shadow-sm border",
                                                 getHeatColor(score)
                                             )} title={`${score}% Mastery`}>
                                                 {score}%
@@ -116,9 +116,9 @@ export function TopicMasteryHeatmap() {
                     { label: "Critical Focus", value: "Audit Standards", icon: Target, color: "text-rose-600", bg: "bg-rose-50", subtitle: "45% struggle with 'Controls'", trend: "-8%" },
                     { label: "Intervention Priority", value: "Ritika Sharma", icon: Users, color: "text-indigo-600", bg: "bg-indigo-50", subtitle: "Declining trend in Direct Tax", trend: "High Risk" },
                 ].map((item, i) => (
-                    <div key={i} className="p-6 rounded-[24px] bg-white border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md hover:border-indigo-100/50 transition-all duration-300 flex flex-col justify-between">
+                    <div key={i} className="p-6 rounded-lg bg-white border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md hover:border-indigo-100/50 transition-all duration-300 flex flex-col justify-between">
                          <div className="flex items-center justify-between mb-8">
-                            <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 duration-500", item.bg, item.color)}>
+                            <div className={cn("w-14 h-14 rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 duration-500", item.bg, item.color)}>
                                 <item.icon size={28} weight="bold" />
                             </div>
                             <div className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", item.color === "text-rose-600" ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600")}>

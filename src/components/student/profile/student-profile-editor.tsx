@@ -237,14 +237,14 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                         />
                         <div className="flex flex-col gap-2.5">
                             <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Class/Batch Connection</span>
-                            <div className="flex h-[56px] w-full items-center justify-between rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-6 shadow-inner">
+                            <div className="flex h-[56px] w-full items-center justify-between rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-6 shadow-inner">
                                 <span className="text-sm font-bold text-[var(--student-muted)]">
                                     Manage linked educators and batches
                                 </span>
                                 <button
                                     type="button"
                                     onClick={() => router.push('/student/redeem')}
-                                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-[var(--student-accent-strong)] text-white shadow-[0_4px_12px_rgba(31,92,80,0.15)]"
+                                    className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-[var(--student-accent-strong)] text-white shadow-[0_4px_12px_rgba(31,92,80,0.15)]"
                                 >
                                     Redeem Code
                                 </button>
@@ -369,7 +369,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                     <button
                         type="submit"
                         disabled={isSaving}
-                        className="student-button-primary flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl px-12 py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+                        className="student-button-primary flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg px-12 py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
                     >
                         {isSaving ? "Saving..." : <><Save className="w-4 h-4" /> Save All Changes</>}
                     </button>
@@ -391,9 +391,9 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
 
 function Section({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
     return (
-        <div className="student-surface rounded-[32px] p-8 md:p-10 space-y-8">
+        <div className="student-surface rounded-lg p-8 md:p-10 space-y-8">
             <div className="flex items-center gap-4 mb-2">
-                <div className="student-icon-tile flex h-10 w-10 items-center justify-center rounded-xl">
+                <div className="student-icon-tile flex h-10 w-10 items-center justify-center rounded-lg">
                     {icon}
                 </div>
                 <h3 className="text-lg font-black tracking-tight text-[var(--student-text)]">{title}</h3>
@@ -427,7 +427,7 @@ function InputField({ label, name, value, onChange, placeholder, type = "text", 
                     onChange={(e) => onChange(name, e.target.value)}
                     placeholder={placeholder}
                     aria-invalid={Boolean(error)}
-                    className={`w-full rounded-2xl border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} ${suffix ? "pr-32" : "pr-6"} text-sm font-bold text-[var(--student-text)] placeholder:text-[var(--student-muted)]/45 focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
+                    className={`w-full rounded-lg border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} ${suffix ? "pr-32" : "pr-6"} text-sm font-bold text-[var(--student-text)] placeholder:text-[var(--student-muted)]/45 focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
                 />
                 {suffix && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -462,7 +462,7 @@ function SelectField({ label, name, value, onChange, options, icon, error }: Sel
                     value={value}
                     onChange={(e) => onChange(name, e.target.value)}
                     aria-invalid={Boolean(error)}
-                    className={`w-full appearance-none rounded-2xl border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-10 text-sm font-bold text-[var(--student-text)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner cursor-pointer ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
+                    className={`w-full appearance-none rounded-lg border bg-[var(--student-panel-muted)] py-4.5 ${icon ? "pl-14" : "px-6"} pr-10 text-sm font-bold text-[var(--student-text)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 transition-all shadow-inner cursor-pointer ${error ? "border-rose-300 focus:ring-rose-100/80" : "border-[var(--student-border)] focus:ring-[var(--student-accent-soft)]/70"}`}
                 >
                     {options.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>

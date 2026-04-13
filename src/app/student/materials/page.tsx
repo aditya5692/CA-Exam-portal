@@ -190,11 +190,11 @@ export default function StudentVaultPage() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-3">
                     {isAdminView && (
-                        <div className="student-chip-accent inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
+                        <div className="student-chip-accent inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
                             <ShieldCheck size={16} weight="bold" /> Admin
                         </div>
                     )}
-                    <div className="flex rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1 shadow-sm">
+                    <div className="flex rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1 shadow-sm">
                         <button
                             onClick={() => setActiveTab("MY_NOTES")}
                             className={cn(
@@ -219,7 +219,7 @@ export default function StudentVaultPage() {
 
                     {/* Compact Live Storage Widget */}
                     {activeTab === "MY_NOTES" && (
-                        <div className="hidden sm:flex items-center gap-4 px-4 py-1.5 bg-white border border-[var(--student-border)] rounded-xl shadow-sm">
+                        <div className="hidden sm:flex items-center gap-4 px-4 py-1.5 bg-white border border-[var(--student-border)] rounded-lg shadow-sm">
                             <div className="space-y-0.5">
                                 <div className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-60">Storage</div>
                                 <div className="text-[10px] font-black text-slate-900">{formatBytes(storageUsed)} <span className="text-slate-400 font-bold">/ {formatBytes(storageLimit)}</span></div>
@@ -239,7 +239,7 @@ export default function StudentVaultPage() {
 
                 <div className="flex items-center gap-3">
                     {!isAdminView && activeTab === "MY_NOTES" && (
-                        <label className="student-button-primary cursor-pointer !rounded-xl px-6 py-2.5 flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10">
+                        <label className="student-button-primary cursor-pointer !rounded-lg px-6 py-2.5 flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-[var(--student-accent-soft-strong)]/10">
                             {isUploading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <UploadSimple size={18} weight="bold" />}
                             <span className="font-black text-[10px] uppercase tracking-widest">{isUploading ? "Syncing..." : "Upload Asset"}</span>
                             <input type="file" className="hidden" onChange={handleUpload} accept=".pdf,.png,.jpg,.jpeg" disabled={isUploading} />
@@ -252,8 +252,8 @@ export default function StudentVaultPage() {
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {materials.length === 0 ? (
-                            <div className="col-span-full py-16 text-center student-surface border-dashed rounded-2xl px-6">
-                                <div className="w-16 h-16 rounded-2xl bg-[var(--student-panel-muted)] flex items-center justify-center mx-auto mb-6 shadow-inner border border-[var(--student-border)] text-[var(--student-muted)]">
+                            <div className="col-span-full py-16 text-center student-surface border-dashed rounded-lg px-6">
+                                <div className="w-16 h-16 rounded-lg bg-[var(--student-panel-muted)] flex items-center justify-center mx-auto mb-6 shadow-inner border border-[var(--student-border)] text-[var(--student-muted)]">
                                     <BookOpen className="w-8 h-8 opacity-40" weight="bold" />
                                 </div>
                                 <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase">Archive Empty</h3>
@@ -261,7 +261,7 @@ export default function StudentVaultPage() {
                             </div>
                         ) : (
                             materials.map((material) => (
-                                <div key={material.id} className="group student-surface relative flex flex-col rounded-2xl p-5 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-lg">
+                                <div key={material.id} className="group student-surface relative flex flex-col rounded-lg p-5 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-lg">
                                     {material.isTrending && (
                                         <div className="absolute top-4 right-4 z-10">
                                             <div className="bg-amber-500 text-white p-1.5 rounded-lg shadow-lg">
@@ -270,7 +270,7 @@ export default function StudentVaultPage() {
                                         </div>
                                     )}
                                     <div className="flex items-start justify-between gap-3 mb-6">
-                                        <div className="w-12 h-12 flex items-center justify-center bg-[var(--student-panel-muted)] text-[var(--student-muted)] rounded-xl border border-[var(--student-border)] shadow-inner group-hover:bg-[var(--student-accent-soft)] group-hover:text-[var(--student-accent-strong)] transition-colors">
+                                        <div className="w-12 h-12 flex items-center justify-center bg-[var(--student-panel-muted)] text-[var(--student-muted)] rounded-lg border border-[var(--student-border)] shadow-inner group-hover:bg-[var(--student-accent-soft)] group-hover:text-[var(--student-accent-strong)] transition-colors">
                                             <FileText className="w-6 h-6" weight="bold" />
                                         </div>
                                         <div className="flex gap-1.5 pointer-events-auto">
@@ -330,8 +330,8 @@ export default function StudentVaultPage() {
 
             {activeTab === "EDUCATOR" && (
                 <div className="space-y-6">
-                    <div className="bg-slate-950 p-8 rounded-2xl flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden border border-white/5">
-                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--student-accent)] shrink-0">
+                    <div className="bg-slate-950 p-8 rounded-lg flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden border border-white/5">
+                        <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[var(--student-accent)] shrink-0">
                             <Lock size={24} weight="fill" />
                         </div>
                         <div className="flex-1 space-y-1 text-center sm:text-left relative z-10">
@@ -348,7 +348,7 @@ export default function StudentVaultPage() {
                             <div className="flex gap-2 overflow-x-auto pb-4 px-1 no-scrollbar">
                                 <button
                                     onClick={() => setSelectedEducator("ALL")}
-                                    className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", selectedEducator === "ALL" ? "student-button-primary text-white" : "bg-white text-slate-400 border border-slate-100 shadow-sm")}
+                                    className={cn("px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", selectedEducator === "ALL" ? "student-button-primary text-white" : "bg-white text-slate-400 border border-slate-100 shadow-sm")}
                                 >
                                     Global
                                 </button>
@@ -356,7 +356,7 @@ export default function StudentVaultPage() {
                                     <button
                                         key={ed}
                                         onClick={() => setSelectedEducator(ed)}
-                                        className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", selectedEducator === ed ? "student-button-primary text-white" : "bg-white text-slate-400 border border-slate-100 shadow-sm")}
+                                        className={cn("px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", selectedEducator === ed ? "student-button-primary text-white" : "bg-white text-slate-400 border border-slate-100 shadow-sm")}
                                     >
                                         {ed.split(' ')[0]}
                                     </button>
@@ -367,14 +367,14 @@ export default function StudentVaultPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {sharedMaterials.filter(m => selectedEducator === "ALL" || (m.uploadedBy?.fullName || "Expert") === selectedEducator).length === 0 ? (
-                            <div className="col-span-full py-16 text-center student-surface border-dashed rounded-2xl text-[10px] font-black text-slate-300 uppercase tracking-widest">Null Index</div>
+                            <div className="col-span-full py-16 text-center student-surface border-dashed rounded-lg text-[10px] font-black text-slate-300 uppercase tracking-widest">Null Index</div>
                         ) : (
                             sharedMaterials
                                 .filter(m => selectedEducator === "ALL" || (m.uploadedBy?.fullName || "Expert") === selectedEducator)
                                 .map((material) => (
-                                    <div key={material.id} className="group student-surface relative flex flex-col rounded-2xl p-5 transition-all duration-300 hover:border-indigo-200">
+                                    <div key={material.id} className="group student-surface relative flex flex-col rounded-lg p-5 transition-all duration-300 hover:border-indigo-200">
                                         <div className="flex items-start justify-between mb-6">
-                                            <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
+                                            <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
                                                 {material.isProtected ? <Lock size={20} weight="fill" /> : <LockOpen size={20} weight="bold" />}
                                             </div>
                                             <button
@@ -422,10 +422,10 @@ export default function StudentVaultPage() {
 
             {viewFileUrl && (
                 <div className="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 lg:p-10 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-6xl h-full rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 border border-white/20">
+                    <div className="bg-white w-full max-w-6xl h-full rounded-lg flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 border border-white/20">
                         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
                             <div className="flex items-center gap-4">
-                                <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-lg">
+                                <div className="p-2.5 bg-indigo-600 text-white rounded-lg shadow-lg">
                                     <FileText size={20} weight="bold" />
                                 </div>
                                 <div className="space-y-0.5">
@@ -433,7 +433,7 @@ export default function StudentVaultPage() {
                                     <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">System Verified</p>
                                 </div>
                             </div>
-                            <button onClick={() => setViewFileUrl(null)} className="p-2.5 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all duration-300 text-slate-300 active:scale-90">
+                            <button onClick={() => setViewFileUrl(null)} className="p-2.5 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-all duration-300 text-slate-300 active:scale-90">
                                 <X size={20} weight="bold" />
                             </button>
                         </div>
@@ -443,16 +443,16 @@ export default function StudentVaultPage() {
                             </div>
                             
                             {viewFileUrl.endsWith(".pdf") ? (
-                                <iframe src={`${viewFileUrl}#toolbar=0`} title="Secure Document Viewer" className="w-full h-full rounded-xl shadow-lg bg-white relative z-10 border border-white" />
+                                <iframe src={`${viewFileUrl}#toolbar=0`} title="Secure Document Viewer" className="w-full h-full rounded-lg shadow-lg bg-white relative z-10 border border-white" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center relative z-10">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={viewFileUrl} alt="Document" className="max-w-full max-h-full object-contain rounded-xl shadow-lg" style={{ pointerEvents: "none" }} />
+                                    <img src={viewFileUrl} alt="Document" className="max-w-full max-h-full object-contain rounded-lg shadow-lg" style={{ pointerEvents: "none" }} />
                                 </div>
                             )}
                         </div>
                         <div className="p-4 bg-white border-t border-slate-50 flex justify-center">
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest">
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest">
                                 <ShieldCheck size={14} weight="fill" className="text-emerald-400" /> Secure
                             </div>
                         </div>

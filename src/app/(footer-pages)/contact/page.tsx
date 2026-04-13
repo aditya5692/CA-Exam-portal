@@ -27,7 +27,7 @@ const CONTACT_CARDS = [
 export default function ContactPage() {
     return (
         <div className="space-y-10">
-            <section className="rounded-[40px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-12">
+            <section className="rounded-lg border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-12">
                 <div className="space-y-4">
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                         Contact and support
@@ -46,9 +46,9 @@ export default function ContactPage() {
                 {CONTACT_CARDS.map((card) => (
                     <div
                         key={card.title}
-                        className="rounded-[32px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm"
+                        className="rounded-lg border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm"
                     >
-                        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--landing-selection-bg)] text-[var(--landing-accent)]">
+                        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-[var(--landing-selection-bg)] text-[var(--landing-accent)]">
                             <card.icon size={28} weight="bold" />
                         </div>
                         <h2 className="  text-2xl font-black tracking-tight text-[var(--landing-text)]">
@@ -68,7 +68,7 @@ export default function ContactPage() {
                 ))}
             </section>
 
-            <section className="rounded-[40px] border border-[var(--landing-border-dark)] bg-gradient-to-br from-[var(--landing-panel-dark)] to-[var(--landing-bg-dark)] p-8 text-white shadow-[var(--landing-shadow-dark-lg)] sm:p-12">
+            <section className="rounded-lg border border-[var(--landing-border-dark)] bg-gradient-to-br from-[var(--landing-panel-dark)] to-[var(--landing-bg-dark)] p-8 text-white shadow-[var(--landing-shadow-dark-lg)] sm:p-12">
                 <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
                     <div className="space-y-4">
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/70">
@@ -84,7 +84,7 @@ export default function ContactPage() {
                         </p>
                     </div>
 
-                    <div className="rounded-[32px] border border-white/10 bg-white/5 p-6">
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-6">
                         <div className="space-y-4 text-sm leading-7 text-white/80">
                             <div>
                                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Legal name</div>

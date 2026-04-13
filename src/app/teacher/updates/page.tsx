@@ -132,7 +132,7 @@ export default function TeacherUpdatesPage() {
                     </p>
                 </div>
                 {isAdminView && (
-                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-indigo-600 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 shrink-0 mb-1">
+                    <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-lg bg-indigo-600 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 shrink-0 mb-1">
                         <ShieldCheck size={18} weight="bold" /> Admin View Active
                     </div>
                 )}
@@ -140,13 +140,13 @@ export default function TeacherUpdatesPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-8">
                 {/* Create Update Form */}
-                <form onSubmit={handlePost} className="bg-white/80 backdrop-blur-md border border-slate-100 p-6 rounded-[24px] shadow-sm space-y-6 h-fit relative overflow-hidden group">
+                <form onSubmit={handlePost} className="bg-white/80 backdrop-blur-md border border-slate-100 p-6 rounded-lg shadow-sm space-y-6 h-fit relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
                         <Megaphone size={120} weight="bold" className="text-indigo-600" />
                     </div>
 
                     <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm border border-indigo-100/50">
+                        <div className="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm border border-indigo-100/50">
                             <Megaphone size={24} weight="bold" />
                         </div>
                         <div>
@@ -158,10 +158,10 @@ export default function TeacherUpdatesPage() {
                     <div className="space-y-6 relative z-10">
                         {/* Send to All Toggle */}
                         <label className={cn(
-                            "flex items-center gap-4 p-5 rounded-2xl border transition-all cursor-pointer",
+                            "flex items-center gap-4 p-5 rounded-lg border transition-all cursor-pointer",
                             sendToAll ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-slate-50 border-slate-100 text-slate-600 hover:bg-white"
                         )}>
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", sendToAll ? "bg-white/10" : "bg-white border border-slate-100")}>
+                            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", sendToAll ? "bg-white/10" : "bg-white border border-slate-100")}>
                                 <Sparkle size={20} weight={sendToAll ? "fill" : "bold"} />
                             </div>
                             <div className="flex-1">
@@ -194,7 +194,7 @@ export default function TeacherUpdatesPage() {
                                             type="button"
                                             onClick={() => toggleBatch(batch.id)}
                                             className={cn(
-                                                "rounded-2xl border p-4 text-left transition-all relative overflow-hidden group/btn",
+                                                "rounded-lg border p-4 text-left transition-all relative overflow-hidden group/btn",
                                                 isSelected ? "border-indigo-200 bg-indigo-50 shadow-sm" : "border-slate-100 bg-white hover:border-indigo-100"
                                             )}
                                         >
@@ -227,13 +227,13 @@ export default function TeacherUpdatesPage() {
                                 onChange={(e) => setContent(e.target.value)}
                                 rows={6}
                                 placeholder="Type your update here. Be clear and concise..."
-                                className="w-full rounded-[24px] bg-slate-50/50 border border-slate-100 px-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/20 transition-all   font-medium leading-relaxed resize-none shadow-inner"
+                                className="w-full rounded-lg bg-slate-50/50 border border-slate-100 px-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/20 transition-all   font-medium leading-relaxed resize-none shadow-inner"
                             />
                         </div>
 
                         {statusMessage && (
                             <div className={cn(
-                                "rounded-xl px-5 py-4 text-[11px] font-bold text-center uppercase tracking-widest border transition-all animate-in fade-in zoom-in-95",
+                                "rounded-lg px-5 py-4 text-[11px] font-bold text-center uppercase tracking-widest border transition-all animate-in fade-in zoom-in-95",
                                 statusMessage.includes("success") ? "bg-emerald-50 border-emerald-100 text-emerald-600" : "bg-rose-50 border-rose-100 text-rose-600"
                             )}>
                                 {statusMessage}
@@ -243,7 +243,7 @@ export default function TeacherUpdatesPage() {
                         <button
                             type="submit"
                             disabled={isPosting || !content.trim() || (!sendToAll && selectedBatchIds.length === 0)}
-                            className="w-full flex items-center justify-center gap-3 rounded-[20px] bg-slate-900 px-6 py-4.5 text-[10px] font-black text-white hover:bg-indigo-600 disabled:opacity-40 disabled:hover:bg-slate-900 uppercase tracking-[0.2em] shadow-lg shadow-indigo-900/10 transition-all active:scale-95"
+                            className="w-full flex items-center justify-center gap-3 rounded-lg bg-slate-900 px-6 py-4.5 text-[10px] font-black text-white hover:bg-indigo-600 disabled:opacity-40 disabled:hover:bg-slate-900 uppercase tracking-[0.2em] shadow-lg shadow-indigo-900/10 transition-all active:scale-95"
                         >
                             {isPosting ? (
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -256,10 +256,10 @@ export default function TeacherUpdatesPage() {
                 </form>
 
                 {/* History Section */}
-                <div className="bg-white/80 backdrop-blur-md border border-slate-100 p-6 rounded-[24px] shadow-sm space-y-6 flex flex-col">
+                <div className="bg-white/80 backdrop-blur-md border border-slate-100 p-6 rounded-lg shadow-sm space-y-6 flex flex-col">
                     <div className="flex items-center justify-between relative z-10">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shadow-sm border border-slate-100/50">
+                            <div className="w-12 h-12 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center shadow-sm border border-slate-100/50">
                                 <Bell size={24} weight="bold" />
                             </div>
                             <div>
@@ -282,7 +282,7 @@ export default function TeacherUpdatesPage() {
                             </div>
                         ) : (
                             announcements.map((ann) => (
-                                <div key={ann.id} className="rounded-[24px] bg-slate-50/50 border border-slate-100/50 p-6 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100 group">
+                                <div key={ann.id} className="rounded-lg bg-slate-50/50 border border-slate-100/50 p-6 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100 group">
                                     <div className="flex items-start justify-between gap-4 mb-4">
                                         <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-indigo-50 text-[10px] font-black uppercase tracking-widest text-indigo-600">
                                             <Users size={14} weight="bold" />
@@ -312,7 +312,7 @@ export default function TeacherUpdatesPage() {
                     </div>
 
                     {announcements.length > 0 && (
-                        <button className="w-full py-4 mt-4 text-[10px] font-bold tracking-[0.2em] uppercase text-slate-400 hover:text-slate-900 transition-all border border-slate-100 rounded-[16px] hover:bg-white shadow-sm active:scale-95 group flex items-center justify-center gap-2">
+                        <button className="w-full py-4 mt-4 text-[10px] font-bold tracking-[0.2em] uppercase text-slate-400 hover:text-slate-900 transition-all border border-slate-100 rounded-lg hover:bg-white shadow-sm active:scale-95 group flex items-center justify-center gap-2">
                             Load Older Updates <CaretRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                     )}

@@ -54,9 +54,9 @@ export function PricingFAQ() {
                 {faqs.map((faq, index) => (
                     <div 
                         key={index}
-                        className="group p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col items-start gap-5 hover:-translate-y-1"
+                        className="group p-8 rounded-lg bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col items-start gap-5 hover:-translate-y-1"
                     >
-                        <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                        <div className="p-3 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                             {faq.icon}
                         </div>
                         <div className="space-y-3">
@@ -71,7 +71,7 @@ export function PricingFAQ() {
                 ))}
             </div>
 
-            <div className="mt-20 p-12 rounded-[40px] bg-slate-950 text-white relative overflow-hidden group">
+            <div className="mt-20 p-12 rounded-lg bg-slate-950 text-white relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-1000"></div>
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="space-y-4 max-w-2xl text-center md:text-left">
@@ -84,7 +84,7 @@ export function PricingFAQ() {
                         href="https://wa.me/91XXXXXXXXXX" 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="px-8 py-4 rounded-2xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg transition-all flex items-center gap-3 shadow-[0_0_20px_rgba(37,211,102,0.3)] hover:scale-105 active:scale-95"
+                        className="px-8 py-4 rounded-lg bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg transition-all flex items-center gap-3 shadow-[0_0_20px_rgba(37,211,102,0.3)] hover:scale-105 active:scale-95"
                     >
                         Chat on WhatsApp
                     </a>

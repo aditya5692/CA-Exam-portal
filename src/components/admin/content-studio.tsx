@@ -167,14 +167,14 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
     };
 
     return (
-        <div className="student-surface overflow-hidden rounded-[40px]">
+        <div className="student-surface overflow-hidden rounded-lg">
             {/* Control Bar */}
             <div className="flex flex-col border-b border-[var(--student-border)] p-8 lg:flex-row lg:items-center lg:justify-between lg:p-10 gap-6">
-                <div className="flex bg-[var(--student-panel-muted)] p-1.5 rounded-2xl border border-[var(--student-border)]">
+                <div className="flex bg-[var(--student-panel-muted)] p-1.5 rounded-lg border border-[var(--student-border)]">
                     <button 
                         onClick={() => setContentType("materials")}
                         className={cn(
-                            "flex items-center gap-2.5 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                            "flex items-center gap-2.5 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                             contentType === "materials" ? "bg-white text-[var(--student-text)] shadow-sm" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
                         )}
                     >
@@ -183,7 +183,7 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
                     <button 
                         onClick={() => setContentType("exams")}
                         className={cn(
-                            "flex items-center gap-2.5 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                            "flex items-center gap-2.5 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                             contentType === "exams" ? "bg-white text-[var(--student-text)] shadow-sm" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
                         )}
                     >
@@ -198,7 +198,7 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search content or educators..."
-                        className="w-full rounded-[20px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:bg-white sm:w-80"
+                        className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:bg-white sm:w-80"
                     />
                 </div>
             </div>
@@ -253,7 +253,7 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
             {/* Modals */}
             {editingExam && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-4xl h-[85vh] rounded-[40px] bg-white shadow-2xl animate-in zoom-in-95 flex flex-col overflow-hidden">
+                    <div className="w-full max-w-4xl h-[85vh] rounded-lg bg-white shadow-2xl animate-in zoom-in-95 flex flex-col overflow-hidden">
                         <div className="p-8 border-b flex items-center justify-between shrink-0">
                             <div>
                                 <h3 className="text-2xl font-black tracking-tight">Exam Intelligence</h3>
@@ -268,18 +268,18 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
                                 <input type="hidden" name="examId" value={editingExam.id} />
                                 <div className="md:col-span-2 space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Display Title</label>
-                                    <input name="title" defaultValue={editingExam.title} className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                    <input name="title" defaultValue={editingExam.title} className="w-full rounded-lg border p-4 text-sm font-bold" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assessment Sector</label>
-                                    <input name="category" defaultValue={editingExam.category} className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                    <input name="category" defaultValue={editingExam.category} className="w-full rounded-lg border p-4 text-sm font-bold" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Duration (Min)</label>
-                                    <input name="duration" type="number" defaultValue={editingExam.duration} className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                    <input name="duration" type="number" defaultValue={editingExam.duration} className="w-full rounded-lg border p-4 text-sm font-bold" />
                                 </div>
                                 <div className="md:col-start-4">
-                                    <button disabled={isPending} type="submit" className="w-full h-full rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
+                                    <button disabled={isPending} type="submit" className="w-full h-full rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
                                         Update Metadata
                                     </button>
                                 </div>
@@ -315,7 +315,7 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
 
             {editingMaterial && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-lg rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <div className="mb-8 flex items-center justify-between">
                             <h3 className="  text-2xl font-black tracking-tight">Material Oversight</h3>
                             <button onClick={() => setEditingMaterial(null)} className="p-2"><X size={24} /></button>
@@ -324,25 +324,25 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
                             <input type="hidden" name="materialId" value={editingMaterial.id} />
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Resource Title</label>
-                                <input name="title" defaultValue={editingMaterial.title} className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                <input name="title" defaultValue={editingMaterial.title} className="w-full rounded-lg border p-4 text-sm font-bold" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Visibility</label>
-                                    <select name="isPublic" defaultValue={editingMaterial.isPublic.toString()} className="w-full rounded-2xl border p-4 text-xs font-bold bg-white">
+                                    <select name="isPublic" defaultValue={editingMaterial.isPublic.toString()} className="w-full rounded-lg border p-4 text-xs font-bold bg-white">
                                         <option value="true">Public Access</option>
                                         <option value="false">Private Ledger</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Protection</label>
-                                    <select name="isProtected" defaultValue={editingMaterial.isProtected.toString()} className="w-full rounded-2xl border p-4 text-xs font-bold bg-white">
+                                    <select name="isProtected" defaultValue={editingMaterial.isProtected.toString()} className="w-full rounded-lg border p-4 text-xs font-bold bg-white">
                                         <option value="true">Shield On (Protected)</option>
                                         <option value="false">Shield Off (Raw)</option>
                                     </select>
                                 </div>
                             </div>
-                            <button disabled={isPending} type="submit" className="w-full rounded-3xl bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
+                            <button disabled={isPending} type="submit" className="w-full rounded-lg bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
                                 {isPending ? "Syncing Logic..." : "Recast Material Policy"}
                             </button>
                         </form>
@@ -352,7 +352,7 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
 
             {deletingId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-md rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
+                    <div className="w-full max-w-md rounded-lg bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <Trash size={48} weight="duotone" className="text-rose-500 mb-6" />
                         <h3 className="  text-2xl font-black tracking-tight mb-2">Confirm Destruction?</h3>
                         <p className="text-xs font-bold text-slate-400 leading-relaxed mb-8">
@@ -362,13 +362,13 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
                             <button 
                                 onClick={() => handleDeleteContent(deletingId)}
                                 disabled={isPending}
-                                className="flex-1 rounded-2xl bg-rose-600 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-rose-700"
+                                className="flex-1 rounded-lg bg-rose-600 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-rose-700"
                             >
                                 {isPending ? "Decommissioning..." : "Yes, Destroy"}
                             </button>
                             <button 
                                 onClick={() => setDeletingId(null)}
-                                className="flex-1 rounded-2xl bg-slate-100 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200"
+                                className="flex-1 rounded-lg bg-slate-100 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200"
                             >
                                 Cancel
                             </button>
@@ -381,14 +381,14 @@ export function ContentStudio({ materials, exams }: ContentStudioProps) {
             {(error || success) && (
                 <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-3">
                     {error && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
                             <Info size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
                             <button onClick={() => setError(null)}><X size={16} weight="bold" /></button>
                         </div>
                     )}
                     {success && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
                             <CheckCircle size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{success}</p>
                             <button onClick={() => setSuccess(null)}><X size={16} weight="bold" /></button>
@@ -417,7 +417,7 @@ interface CardProps {
 function ContentCard({ title, author, category, badge, isActive, activeLabel, activeIcon: Icon, onToggle, onEdit, onDelete, isPending }: CardProps) {
     return (
         <div className={cn(
-            "group relative overflow-hidden rounded-[32px] border transition-all duration-300",
+            "group relative overflow-hidden rounded-lg border transition-all duration-300",
             isActive 
                 ? "bg-slate-900 border-slate-800 shadow-2xl scale-[1.02]" 
                 : "bg-[var(--student-panel-muted)] border-[var(--student-border)] hover:bg-white hover:shadow-xl hover:-translate-y-1"
@@ -435,7 +435,7 @@ function ContentCard({ title, author, category, badge, isActive, activeLabel, ac
                             disabled={isPending}
                             onClick={onToggle}
                             className={cn(
-                                "flex h-10 w-10 items-center justify-center rounded-xl transition-all",
+                                "flex h-10 w-10 items-center justify-center rounded-lg transition-all",
                                 isActive 
                                     ? "bg-amber-400 text-slate-900 shadow-[0_0_15px_rgba(251,191,36,0.5)]" 
                                     : "bg-white border border-slate-100 text-slate-400 hover:text-amber-500 hover:border-amber-200"
@@ -445,7 +445,7 @@ function ContentCard({ title, author, category, badge, isActive, activeLabel, ac
                         </button>
                         <button 
                             onClick={onDelete}
-                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all opacity-0 group-hover:opacity-100"
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all opacity-0 group-hover:opacity-100"
                         >
                             <Trash size={18} weight="bold" />
                         </button>
@@ -471,7 +471,7 @@ function ContentCard({ title, author, category, badge, isActive, activeLabel, ac
                     <button 
                         onClick={onEdit}
                         className={cn(
-                            "flex w-full items-center justify-center gap-2 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all",
+                            "flex w-full items-center justify-center gap-2 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                             isActive ? "bg-white/10 text-white hover:bg-white/20" : "bg-slate-900 text-white shadow-xl hover:scale-105"
                         )}
                     >
@@ -515,7 +515,7 @@ function QuestionEditorRow({ index, question, onSave, isPending }: { index: numb
     };
 
     return (
-        <div className="group rounded-3xl border border-slate-100 bg-slate-50/50 p-6 transition-all hover:bg-white hover:border-indigo-100 hover:shadow-lg">
+        <div className="group rounded-lg border border-slate-100 bg-slate-50/50 p-6 transition-all hover:bg-white hover:border-indigo-100 hover:shadow-lg">
             <div className="mb-4 flex items-center justify-between">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white text-[10px] font-black">#{index}</span>
                 <div className="flex items-center gap-3">
@@ -539,7 +539,7 @@ function QuestionEditorRow({ index, question, onSave, isPending }: { index: numb
                 value={text} 
                 onChange={(e) => {setText(e.target.value); setIsEdited(true);}}
                 rows={2}
-                className="w-full bg-white border border-slate-100 rounded-xl p-4 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-200 resize-none mb-4 shadow-sm"
+                className="w-full bg-white border border-slate-100 rounded-lg p-4 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-200 resize-none mb-4 shadow-sm"
             />
 
             <div className="grid grid-cols-2 gap-3">

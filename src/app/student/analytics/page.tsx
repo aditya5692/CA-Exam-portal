@@ -39,20 +39,20 @@ export default async function StudentAnalyticsPage() {
 
             {recommendations && (
                 <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="student-surface rounded-3xl p-8">
+                    <div className="student-surface rounded-lg p-8">
                         <div className="mb-6 flex items-center justify-between gap-4">
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">Study intelligence</p>
                                 <h2 className="mt-2 text-2xl font-black tracking-tight text-[var(--student-text)]">Next Best Actions</h2>
                             </div>
-                            <div className="student-chip-accent rounded-2xl px-4 py-3 text-right">
+                            <div className="student-chip-accent rounded-lg px-4 py-3 text-right">
                                 <div className="text-[10px] font-bold uppercase tracking-widest">Due For Review</div>
                                 <div className="text-2xl font-black">{recommendations.summary.dueForReviewCount}</div>
                             </div>
                         </div>
                         <div className="space-y-4">
                             {recommendations.priorityTopics.map((topic) => (
-                                <div key={`${topic.subject}-${topic.topic}`} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+                                <div key={`${topic.subject}-${topic.topic}`} className="rounded-lg border border-slate-100 bg-slate-50/60 p-5">
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
                                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{topic.subject}</div>
@@ -74,11 +74,11 @@ export default async function StudentAnalyticsPage() {
                     </div>
 
                     <div className="space-y-6">
-                        <div className="student-surface rounded-3xl p-8">
+                        <div className="student-surface rounded-lg p-8">
                             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">Subject focus</p>
                             <div className="mt-5 space-y-4">
                                 {recommendations.subjectFocus.slice(0, 4).map((subject) => (
-                                    <div key={subject.subject} className="rounded-2xl border border-slate-100 p-4">
+                                    <div key={subject.subject} className="rounded-lg border border-slate-100 p-4">
                                         <div className="flex items-center justify-between gap-4">
                                             <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">{subject.subject}</h3>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${subject.trend === "IMPROVING" ? "text-emerald-600" : subject.trend === "NEEDS_ATTENTION" ? "text-rose-600" : "text-slate-500"}`}>
@@ -94,11 +94,11 @@ export default async function StudentAnalyticsPage() {
                             </div>
                         </div>
 
-                        <div className="student-surface-dark rounded-3xl p-8 text-white">
+                        <div className="student-surface-dark rounded-lg p-8 text-white">
                             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Weekly direction</p>
                             <div className="mt-5 space-y-3">
                                 {recommendations.nextActions.map((action) => (
-                                    <div key={action} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm font-medium leading-relaxed text-slate-200">
+                                    <div key={action} className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm font-medium leading-relaxed text-slate-200">
                                         {action}
                                     </div>
                                 ))}
@@ -111,9 +111,9 @@ export default async function StudentAnalyticsPage() {
             <StudentAttemptHistory attempts={result.data.attempts} />
 
             {/* Additional Guidance Section */}
-            <div className="student-surface-dark relative flex flex-col items-center gap-10 overflow-hidden rounded-2xl p-10 text-white lg:flex-row">
-                <div className="student-icon-tile-warm flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl">
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
+            <div className="student-surface-dark relative flex flex-col items-center gap-10 overflow-hidden rounded-lg p-10 text-white lg:flex-row">
+                <div className="student-icon-tile-warm flex h-16 w-16 shrink-0 items-center justify-center rounded-lg">
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-2.5">
                         <Info size={28} weight="bold" />
                     </div>
                 </div>
@@ -123,7 +123,7 @@ export default async function StudentAnalyticsPage() {
                         We use two key metrics to track your progress: <strong className="text-[var(--student-support)]">Performance Benchmark</strong> measures your average accuracy against peers and toppers, while your <strong className="text-[var(--student-support)]">Global Rank</strong> is determined by your total XP earned. Keep practicing to climb the leaderboard!
                     </p>
                 </div>
-                <button className="student-button-secondary relative z-10 shrink-0 rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                <button className="student-button-secondary relative z-10 shrink-0 rounded-lg px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                     Learn More
                 </button>
             </div>

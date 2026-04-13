@@ -35,14 +35,14 @@ export function StudentAttemptHistory({ attempts }: Props) {
             </div>
 
             {attempts.length === 0 ? (
-                <div className="text-center py-20 text-slate-400 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <div className="text-center py-20 text-slate-400 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
                         <span className="text-3xl">📭</span>
                     </div>
                     <div className="font-bold text-slate-800 text-xl   tracking-tight">No attempts yet</div>
                     <p className="text-sm mt-2 mb-8 max-w-xs mx-auto font-medium opacity-70">Start a practice attempt from the Exams section to see your history here.</p>
                     <Link href="/student/exams"
-                        className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95">
+                        className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95">
                         Go to Exams
                     </Link>
                 </div>
@@ -53,10 +53,10 @@ export function StudentAttemptHistory({ attempts }: Props) {
                         const accColor = a.accuracy >= 75 ? "text-emerald-600" : a.accuracy >= 55 ? "text-amber-600" : "text-rose-600";
                         const accBg = a.accuracy >= 75 ? "bg-emerald-50" : a.accuracy >= 55 ? "bg-amber-50" : "bg-rose-50";
                         return (
-                            <div key={a.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:border-indigo-100 transition-all duration-300 group">
+                            <div key={a.id} className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden hover:border-indigo-100 transition-all duration-300 group">
                                 <div className="flex flex-col lg:flex-row lg:items-center gap-8 p-8 md:p-10">
                                     {/* Accuracy badge */}
-                                    <div className={cn("shrink-0 w-20 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 shadow-sm border border-black/5", accBg)}>
+                                    <div className={cn("shrink-0 w-20 h-20 rounded-lg flex flex-col items-center justify-center transition-all duration-300 shadow-sm border border-black/5", accBg)}>
                                         {a.status === "abandoned"
                                             ? <span className="text-3xl opacity-80">💤</span>
                                             : <>
@@ -100,13 +100,13 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                     <div className="flex items-center gap-4 shrink-0">
                                         {a.status === "completed" && (
                                             <Link href={`/student/results/${a.id}`}
-                                                className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 group/btn">
+                                                className="flex items-center gap-2 px-6 py-3.5 rounded-lg bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 group/btn">
                                                 View Results <ArrowRight size={16} weight="bold" className="group-hover/btn:translate-x-1 transition-transform" />
                                             </Link>
                                         )}
                                         {(a.status === "abandoned" || a.status === "in-progress") && (
                                             <Link href={`/exam/war-room?examId=${a.examId}`}
-                                                className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-widest hover:bg-amber-100 transition-all border border-amber-100 shadow-sm active:scale-95">
+                                                className="flex items-center gap-2 px-6 py-3.5 rounded-lg bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-widest hover:bg-amber-100 transition-all border border-amber-100 shadow-sm active:scale-95">
                                                 {a.status === "in-progress" ? "Resume" : "Retry"}
                                             </Link>
                                         )}
@@ -150,7 +150,7 @@ export function StudentAttemptHistory({ attempts }: Props) {
                                                         </div>
                                                         <div className="space-y-3">
                                                             {a.weakTopics.map((topic, i) => (
-                                                                <div key={topic} className="flex items-center gap-4 p-4 rounded-xl bg-white border border-rose-50 shadow-sm hover:border-rose-100 transition-all group/vector">
+                                                                <div key={topic} className="flex items-center gap-4 p-4 rounded-lg bg-white border border-rose-50 shadow-sm hover:border-rose-100 transition-all group/vector">
                                                                     <span className="w-7 h-7 rounded-lg bg-rose-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-sm">{i + 1}</span>
                                                                     <div>
                                                                         <div className="text-sm font-bold text-slate-950 uppercase tracking-tight">{topic}</div>

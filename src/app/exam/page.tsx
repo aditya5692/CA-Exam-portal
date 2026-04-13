@@ -45,7 +45,7 @@ export default async function PublicExamsPage({
             <main className="pt-24 sm:pt-32 pb-20">
                 <div className="max-w-7xl mx-auto px-6 lg:px-10">
                     {/* Standardized Hero Banner - Light Premium */}
-                    <div className="mb-16 bg-white border border-slate-200 rounded-[2.5rem] p-10 lg:p-16 relative overflow-hidden shadow-sm">
+                    <div className="mb-16 bg-white border border-slate-200 rounded-lg p-10 lg:p-16 relative overflow-hidden shadow-sm">
                         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/5 to-transparent"></div>
                         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12 text-center lg:text-left">
                             <div className="max-w-xl space-y-6">
@@ -70,7 +70,7 @@ export default async function PublicExamsPage({
 
                     {/* Sub Navigation & Filters */}
                     <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 border-b border-slate-200 pb-8">
-                        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto no-scrollbar">
+                        <div className="flex bg-slate-100 p-1 rounded-lg w-full sm:w-auto overflow-x-auto no-scrollbar">
                             <Link href={`/exam?filter=all&sort=${sort}`} className={cn("px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors", filter === 'all' ? "bg-white shadow-sm text-[#0f2cbd]" : "text-slate-600 hover:text-[#0f2cbd]")}>All Tests</Link>
                             <Link href={`/exam?filter=practice&sort=${sort}`} className={cn("px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors", filter === 'practice' ? "bg-white shadow-sm text-[#0f2cbd]" : "text-slate-600 hover:text-[#0f2cbd]")}>Practice</Link>
                             <Link href={`/exam?filter=mock&sort=${sort}`} className={cn("px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors", filter === 'mock' ? "bg-white shadow-sm text-[#0f2cbd]" : "text-slate-600 hover:text-[#0f2cbd]")}>Mock Exams</Link>
@@ -78,7 +78,7 @@ export default async function PublicExamsPage({
                         </div>
                         <div className="flex items-center gap-3 self-end sm:self-center">
                             <span className="text-sm text-slate-500 font-medium">Sort by:</span>
-                            <div className="flex bg-slate-100 p-1 rounded-xl">
+                            <div className="flex bg-slate-100 p-1 rounded-lg">
                                 <Link href={`/exam?filter=${filter}&sort=newest`} className={cn("px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors", sort === 'newest' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-900")}>
                                     Newest
                                 </Link>
@@ -148,7 +148,7 @@ export default async function PublicExamsPage({
                         ) : (
                             <div className="col-span-full py-24 text-center space-y-6 glass-surface border-slate-200">
                                 <div className="flex justify-center">
-                                    <div className="size-20 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-300">
+                                    <div className="size-20 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
                                         <span className="material-symbols-outlined text-5xl">inventory_2</span>
                                     </div>
                                 </div>
@@ -166,19 +166,19 @@ export default async function PublicExamsPage({
                     {/* Pagination */}
                     {exams.length > 0 && (
                         <div className="flex items-center justify-center mt-16 gap-3">
-                            <button className="flex size-11 items-center justify-center rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+                            <button className="flex size-11 items-center justify-center rounded-lg bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
                                 <span className="material-symbols-outlined text-lg">chevron_left</span>
                             </button>
-                            <button className="flex size-11 items-center justify-center rounded-xl bg-[#0f2cbd] text-white font-bold shadow-lg shadow-blue-500/20">1</button>
-                            <button className="flex size-11 items-center justify-center rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all font-bold">2</button>
-                            <button className="flex size-11 items-center justify-center rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+                            <button className="flex size-11 items-center justify-center rounded-lg bg-[#0f2cbd] text-white font-bold shadow-lg shadow-blue-500/20">1</button>
+                            <button className="flex size-11 items-center justify-center rounded-lg bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all font-bold">2</button>
+                            <button className="flex size-11 items-center justify-center rounded-lg bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
                                 <span className="material-symbols-outlined text-lg">chevron_right</span>
                             </button>
                         </div>
                     )}
 
                     {/* CTA Section - Harmonized */}
-                    <div className="mt-32 mb-12 bg-white border border-slate-200 rounded-[3rem] p-12 lg:p-24 relative overflow-hidden text-center shadow-sm">
+                    <div className="mt-32 mb-12 bg-white border border-slate-200 rounded-lg p-12 lg:p-24 relative overflow-hidden text-center shadow-sm">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-emerald-50/50 opacity-50"></div>
                         <div className="relative z-10 space-y-8">
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold tracking-widest uppercase">

@@ -92,10 +92,10 @@ export function InfoCards(props: InfoCardsProps) {
                         <p className="text-sm font-bold text-[var(--student-text)]">{props.phone || "Not set"}</p>
                     </div>
                     <div className="flex gap-2 pt-2">
-                        <button className="student-button-secondary flex h-10 w-10 items-center justify-center rounded-xl p-0 text-[var(--student-muted)] transition-colors hover:text-[var(--student-accent-strong)]">
+                        <button className="student-button-secondary flex h-10 w-10 items-center justify-center rounded-lg p-0 text-[var(--student-muted)] transition-colors hover:text-[var(--student-accent-strong)]">
                             <Mail className="h-4 w-4" />
                         </button>
-                        <button className="student-button-secondary flex h-10 w-10 items-center justify-center rounded-xl p-0 text-[var(--student-muted)] transition-colors hover:text-[var(--student-accent-strong)]">
+                        <button className="student-button-secondary flex h-10 w-10 items-center justify-center rounded-lg p-0 text-[var(--student-muted)] transition-colors hover:text-[var(--student-accent-strong)]">
                             <Phone className="h-4 w-4" />
                         </button>
                     </div>
@@ -122,7 +122,7 @@ export function InfoCards(props: InfoCardsProps) {
                     <p className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                         {Math.round(props.storageUsed / 1024 / 1024)}MB / {Math.round(props.storageLimit / 1024 / 1024)}MB Available
                     </p>
-                    <div className="rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-4 py-4">
+                    <div className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-4 py-4">
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Plan Status</p>
@@ -134,7 +134,7 @@ export function InfoCards(props: InfoCardsProps) {
                         </div>
                         <Link
                             href="/pricing"
-                            className="student-button-primary mt-4 inline-flex items-center rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all"
+                            className="student-button-primary mt-4 inline-flex items-center rounded-lg px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all"
                         >
                             {planStatusActionLabel}
                         </Link>
@@ -163,9 +163,9 @@ function Card({
             : "student-icon-tile";
 
     return (
-        <div className="student-surface flex flex-col gap-6 rounded-[32px] p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(55,48,38,0.08)]">
+        <div className="student-surface flex flex-col gap-6 rounded-lg p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(55,48,38,0.08)]">
             <div className="flex items-center gap-4">
-                <div className={`${iconClasses} flex h-10 w-10 items-center justify-center rounded-xl`}>
+                <div className={`${iconClasses} flex h-10 w-10 items-center justify-center rounded-lg`}>
                     {icon}
                 </div>
                 <h3 className="text-lg font-black tracking-tight text-[var(--student-text)]">{title}</h3>

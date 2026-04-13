@@ -26,7 +26,7 @@ export function BatchCard({ batch }: BatchCardProps) {
         .slice(0, 2);
 
     return (
-        <div className="group relative student-surface flex flex-col overflow-hidden rounded-[24px] border border-[var(--student-border)] bg-white transition-all duration-300 hover:shadow-xl hover:border-[var(--student-accent-soft-strong)] hover:-translate-y-1">
+        <div className="group relative student-surface flex flex-col overflow-hidden rounded-lg border border-[var(--student-border)] bg-white transition-all duration-300 hover:shadow-xl hover:border-[var(--student-accent-soft-strong)] hover:-translate-y-1">
             {/* Top Pattern Area */}
             <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-[var(--student-accent-soft)]/20 via-transparent to-transparent -z-10" />
 
@@ -34,7 +34,7 @@ export function BatchCard({ batch }: BatchCardProps) {
                 {/* Header Section */}
                 <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] flex items-center justify-center font-black text-lg shadow-sm border border-[var(--student-accent-soft-strong)]">
+                        <div className="w-12 h-12 rounded-lg bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] flex items-center justify-center font-black text-lg shadow-sm border border-[var(--student-accent-soft-strong)]">
                             {initials}
                         </div>
                         <div className="space-y-1">
@@ -51,17 +51,17 @@ export function BatchCard({ batch }: BatchCardProps) {
 
                 {/* Batch Stats Mesh */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="student-panel-muted rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                    <div className="student-panel-muted rounded-lg p-3 flex flex-col items-center justify-center text-center">
                         <Notification size={16} weight="fill" className="text-indigo-500 mb-1" />
                         <span className="text-sm font-bold text-slate-900">{batch.announcementCount}</span>
                         <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Updates</span>
                     </div>
-                    <div className="student-panel-muted rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                    <div className="student-panel-muted rounded-lg p-3 flex flex-col items-center justify-center text-center">
                         <FileText size={16} weight="fill" className="text-emerald-500 mb-1" />
                         <span className="text-sm font-bold text-slate-900">{batch.materialCount}</span>
                         <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Notes</span>
                     </div>
-                    <div className="student-panel-muted rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                    <div className="student-panel-muted rounded-lg p-3 flex flex-col items-center justify-center text-center">
                         <Exam size={16} weight="fill" className="text-amber-500 mb-1" />
                         <span className="text-sm font-bold text-slate-900">{batch.examCount}</span>
                         <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Exams</span>
@@ -89,7 +89,7 @@ export function BatchCard({ batch }: BatchCardProps) {
             <div className="p-4 bg-slate-50 border-t border-slate-100 mt-auto">
                 <Link
                     href={`/student/updates?batch=${batch.id}`}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)] hover:bg-[var(--student-accent-strong)] hover:text-white hover:border-[var(--student-accent-strong)] transition-all shadow-sm active:scale-95 group/btn"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)] hover:bg-[var(--student-accent-strong)] hover:text-white hover:border-[var(--student-accent-strong)] transition-all shadow-sm active:scale-95 group/btn"
                 >
                     Enter Batch Hub
                     <ArrowRight size={14} weight="bold" className="transition-transform group-hover/btn:translate-x-1" />

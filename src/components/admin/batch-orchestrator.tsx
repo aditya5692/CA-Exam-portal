@@ -117,7 +117,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
     };
 
     return (
-        <div className="student-surface overflow-hidden rounded-[40px]">
+        <div className="student-surface overflow-hidden rounded-lg">
             {/* Header */}
             <div className="flex flex-col border-b border-[var(--student-border)] p-10 lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div>
@@ -133,12 +133,12 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search batches or codes..."
-                            className="w-full rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:bg-white sm:w-80"
+                            className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:bg-white sm:w-80"
                         />
                     </div>
                     <button 
                         onClick={() => setIsCreating(true)}
-                        className="flex h-14 items-center gap-3 rounded-[24px] bg-slate-900 px-8 text-[10px] font-black uppercase tracking-widest text-white shadow-xl hover:scale-105 active:scale-95 transition-all"
+                        className="flex h-14 items-center gap-3 rounded-lg bg-slate-900 px-8 text-[10px] font-black uppercase tracking-widest text-white shadow-xl hover:scale-105 active:scale-95 transition-all"
                     >
                         <Plus size={18} weight="bold" /> Initialize Batch
                     </button>
@@ -149,9 +149,9 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
             <div className="p-8 lg:p-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredBatches.map(batch => (
-                        <div key={batch.id} className="group relative overflow-hidden rounded-[32px] border border-[var(--student-border)] bg-white p-8 transition-all hover:shadow-2xl hover:-translate-y-1">
+                        <div key={batch.id} className="group relative overflow-hidden rounded-lg border border-[var(--student-border)] bg-white p-8 transition-all hover:shadow-2xl hover:-translate-y-1">
                             <div className="mb-6 flex items-start justify-between">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]">
                                     <Stack size={24} weight="bold" />
                                 </div>
                                 <div className="text-right">
@@ -175,19 +175,19 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                             <div className="mt-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all">
                                 <button 
                                     onClick={() => setEditingBatch(batch)}
-                                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 py-3 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100"
+                                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-slate-100 bg-slate-50 py-3 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100"
                                 >
                                     <PencilSimple size={16} weight="bold" /> Configure
                                 </button>
                                 <button 
                                     onClick={() => setAnnouncingBatch(batch)}
-                                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-[9px] font-black uppercase tracking-widest text-white shadow-xl hover:scale-105"
+                                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-slate-900 py-3 text-[9px] font-black uppercase tracking-widest text-white shadow-xl hover:scale-105"
                                 >
                                     <Broadcast size={16} weight="bold" /> Broadcast
                                 </button>
                                 <button 
                                     onClick={() => setDeletingId(batch.id)}
-                                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all"
+                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all"
                                 >
                                     <Trash size={18} weight="bold" />
                                 </button>
@@ -200,7 +200,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
             {/* Modals */}
             {editingBatch && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-lg rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <div className="mb-8 flex items-center justify-between">
                             <h3 className="  text-2xl font-black tracking-tight">Batch Governance</h3>
                             <button onClick={() => setEditingBatch(null)} className="p-2"><X size={24} /></button>
@@ -209,19 +209,19 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                             <input type="hidden" name="batchId" value={editingBatch.id} />
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cluster Name</label>
-                                <input name="name" defaultValue={editingBatch.name} className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                <input name="name" defaultValue={editingBatch.name} className="w-full rounded-lg border p-4 text-sm font-bold" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assigned Educator</label>
-                                <select name="teacherId" defaultValue={editingBatch.teacherId} className="w-full rounded-2xl border p-4 text-sm font-bold">
+                                <select name="teacherId" defaultValue={editingBatch.teacherId} className="w-full rounded-lg border p-4 text-sm font-bold">
                                     {teachers.map(t => <option key={t.id} value={t.id}>{t.fullName || t.email}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Unique Identifier (Join Code)</label>
-                                <input name="uniqueJoinCode" defaultValue={editingBatch.uniqueJoinCode} className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                <input name="uniqueJoinCode" defaultValue={editingBatch.uniqueJoinCode} className="w-full rounded-lg border p-4 text-sm font-bold" />
                             </div>
-                            <button disabled={isPending} type="submit" className="w-full rounded-3xl bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
+                            <button disabled={isPending} type="submit" className="w-full rounded-lg bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
                                 {isPending ? "Syncing..." : "Apply Reconfiguration"}
                             </button>
                         </form>
@@ -231,7 +231,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
 
             {announcingBatch && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-lg rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <div className="mb-8 flex items-center justify-between">
                             <h3 className="  text-2xl font-black tracking-tight">Direct Broadcast</h3>
                             <button onClick={() => setAnnouncingBatch(null)} className="p-2"><X size={24} /></button>
@@ -240,15 +240,15 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                             <input type="hidden" name="batchId" value={announcingBatch.id} />
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Message Content</label>
-                                <textarea name="content" rows={4} placeholder="What would you like to broadcast to this cluster?" className="w-full rounded-2xl border p-5 text-sm font-bold" />
+                                <textarea name="content" rows={4} placeholder="What would you like to broadcast to this cluster?" className="w-full rounded-lg border p-5 text-sm font-bold" />
                             </div>
-                            <div className="rounded-2xl bg-amber-50 p-4 flex gap-3">
+                            <div className="rounded-lg bg-amber-50 p-4 flex gap-3">
                                 <Info size={20} weight="fill" className="text-amber-500 shrink-0" />
                                 <p className="text-[10px] font-medium text-amber-900 leading-relaxed uppercase tracking-wider">
                                     This message will be visible to all {announcingBatch._count.students} students in {announcingBatch.name}.
                                 </p>
                             </div>
-                            <button disabled={isPending} type="submit" className="w-full rounded-3xl bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
+                            <button disabled={isPending} type="submit" className="w-full rounded-lg bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
                                 {isPending ? "Transmitting..." : "Send Announcement"}
                             </button>
                         </form>
@@ -258,7 +258,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
 
             {isCreating && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-lg rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <div className="mb-8 flex items-center justify-between">
                             <h3 className="  text-2xl font-black tracking-tight">Initialize Cluster</h3>
                             <button onClick={() => setIsCreating(false)} className="p-2"><X size={24} /></button>
@@ -266,20 +266,20 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                         <form onSubmit={handleCreateBatch} className="space-y-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cluster Name</label>
-                                <input name="name" required placeholder="Session 2024-25..." className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                <input name="name" required placeholder="Session 2024-25..." className="w-full rounded-lg border p-4 text-sm font-bold" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assign Head Educator</label>
-                                <select name="teacherId" required className="w-full rounded-2xl border p-4 text-sm font-bold appearance-none">
+                                <select name="teacherId" required className="w-full rounded-lg border p-4 text-sm font-bold appearance-none">
                                     <option value="">Select an educator...</option>
                                     {teachers.map(t => <option key={t.id} value={t.id}>{t.fullName || t.email}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Custom Join Code (Optional)</label>
-                                <input name="uniqueJoinCode" placeholder="LEAVE BLANK FOR AUTO-GEN" className="w-full rounded-2xl border p-4 text-sm font-bold" />
+                                <input name="uniqueJoinCode" placeholder="LEAVE BLANK FOR AUTO-GEN" className="w-full rounded-lg border p-4 text-sm font-bold" />
                             </div>
-                            <button disabled={isPending} type="submit" className="w-full rounded-3xl bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
+                            <button disabled={isPending} type="submit" className="w-full rounded-lg bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white">
                                 {isPending ? "Initializing..." : "Confirm Provisioning"}
                             </button>
                         </form>
@@ -289,7 +289,7 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
 
             {deletingId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-md rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
+                    <div className="w-full max-w-md rounded-lg bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <X size={48} weight="duotone" className="text-rose-500 mb-6" />
                         <h3 className="  text-2xl font-black tracking-tight mb-2">Decommission Batch?</h3>
                         <p className="text-xs font-bold text-slate-400 leading-relaxed mb-8">
@@ -299,13 +299,13 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
                             <button 
                                 onClick={() => handleDeleteBatch(deletingId)}
                                 disabled={isPending}
-                                className="flex-1 rounded-2xl bg-rose-600 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-rose-700"
+                                className="flex-1 rounded-lg bg-rose-600 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-rose-700"
                             >
                                 {isPending ? "Dissolving..." : "Yes, Dissolve"}
                             </button>
                             <button 
                                 onClick={() => setDeletingId(null)}
-                                className="flex-1 rounded-2xl bg-slate-100 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200"
+                                className="flex-1 rounded-lg bg-slate-100 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200"
                             >
                                 Cancel
                             </button>
@@ -318,14 +318,14 @@ export function BatchOrchestrator({ batches, teachers }: BatchOrchestratorProps)
             {(error || success) && (
                 <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-3">
                     {error && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
                             <Info size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
                             <button onClick={() => setError(null)}><X size={16} weight="bold" /></button>
                         </div>
                     )}
                     {success && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
                             <CheckCircle size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{success}</p>
                             <button onClick={() => setSuccess(null)}><X size={16} weight="bold" /></button>

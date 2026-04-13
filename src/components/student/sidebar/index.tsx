@@ -71,14 +71,14 @@ function SidebarNavItem({
             href={item.href}
             title={isCollapsed ? item.label : ""}
             className={cn(
-                "group/item relative flex items-center gap-3 rounded-xl px-4 py-2.5 transition-all duration-200",
+                "group/item relative flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200",
                 isActive
                     ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)] shadow-sm"
                     : "text-[var(--student-muted)] hover:bg-[var(--student-panel)]/80 hover:text-[var(--student-text)]"
             )}
         >
             {isActive && (
-                <div className="absolute bottom-2 left-0 top-2 w-1 rounded-r-full bg-[var(--student-accent-strong)]" />
+                <div className="absolute bottom-2 left-0 top-2 w-1 rounded-lg-r-full bg-[var(--student-accent-strong)]" />
             )}
             <div className={cn(
                 "flex h-8 w-8 shrink-0 items-center justify-center transition-colors",
@@ -114,13 +114,13 @@ function UserProfile({
                     type="button"
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className={cn(
-                        "w-full rounded-xl p-2 transition-all duration-200",
+                        "w-full rounded-lg p-2 transition-all duration-200",
                         isCollapsed ? "flex justify-center" : "flex items-center gap-3 hover:bg-[var(--student-panel)]/80",
                         isProfileOpen && "bg-[var(--student-panel)]/90 shadow-sm"
                     )}
                 >
                     <div className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-xl transition-colors",
+                        "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
                         isProfileOpen
                             ? "bg-[var(--student-accent-strong)] text-white"
                             : "border border-[var(--student-border)] bg-[var(--student-panel-muted)] text-[var(--student-muted-strong)]"
@@ -144,7 +144,7 @@ function UserProfile({
                 </button>
 
                 {!isCollapsed && isProfileOpen && (
-                    <div className="absolute bottom-full left-0 right-0 mb-2 animate-in rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-1 shadow-[0_18px_32px_rgba(55,48,38,0.08)] fade-in slide-in-from-bottom-2 duration-200">
+                    <div className="absolute bottom-full left-0 right-0 mb-2 animate-in rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-1 shadow-[0_18px_32px_rgba(55,48,38,0.08)] fade-in slide-in-from-bottom-2 duration-200">
                         <Link
                             href="/student/profile"
                             className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-bold text-[var(--student-muted-strong)] transition-all hover:bg-[var(--student-accent-soft)] hover:text-[var(--student-accent-strong)]"
@@ -244,7 +244,7 @@ export function StudentSidebar({
             {onClose && (
                 <button
                     onClick={onClose}
-                    className="absolute -right-12 top-4 rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-2 text-[var(--student-muted-strong)] shadow-md md:hidden"
+                    className="absolute -right-12 top-4 rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-2 text-[var(--student-muted-strong)] shadow-md md:hidden"
                 >
                     <X size={20} weight="bold" />
                 </button>
@@ -253,7 +253,7 @@ export function StudentSidebar({
             {/* Branding */}
             <div className="p-6 transition-all duration-300">
                 <Link href="/student/dashboard" className="flex items-center gap-3 outline-none">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--student-accent-strong)] shadow-[0_12px_28px_rgba(31,92,80,0.18)]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--student-accent-strong)] shadow-[0_12px_28px_rgba(31,92,80,0.18)]">
                         <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>

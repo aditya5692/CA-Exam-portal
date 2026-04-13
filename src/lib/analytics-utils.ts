@@ -4,7 +4,7 @@ import { logEvent as firebaseLogEvent, setUserId as firebaseSetUserId, setUserPr
 /**
  * Logs a custom event to Firebase Analytics
  */
-export const logEvent = async (eventName: string, params?: Record<string, any>) => {
+export const logEvent = async (eventName: string, params?: Record<string, unknown>) => {
   try {
     const analytics = await initAnalytics();
     if (analytics) {
@@ -35,7 +35,7 @@ export const setUserId = async (userId: string | null) => {
 /**
  * Sets user properties for analytics
  */
-export const setUserProperties = async (properties: Record<string, any>) => {
+export const setUserProperties = async (properties: Record<string, unknown>) => {
   try {
     const analytics = await initAnalytics();
     if (analytics) {

@@ -51,8 +51,8 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
 
     if (!hasItems) {
         return (
-            <div className="text-center py-24 bg-white rounded-3xl border border-slate-100 shadow-sm mx-auto max-w-2xl shadow-slate-200/50">
-                <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <div className="text-center py-24 bg-white rounded-lg border border-slate-100 shadow-sm mx-auto max-w-2xl shadow-slate-200/50">
+                <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
                     <BookmarkSimple size={32} weight="duotone" className="text-slate-300" />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-950   mb-3 tracking-tight">No saved items</h3>
@@ -61,7 +61,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                 </p>
                 <Link 
                     href="/student/dashboard"
-                    className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                    className="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
                 >
                     Go to Dashboard <ArrowRight weight="bold" size={16} />
                 </Link>
@@ -72,7 +72,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
     return (
         <div className="space-y-8 pb-20">
             {/* Professional Category Switcher */}
-            <div className="inline-flex rounded-xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1.5">
+            <div className="inline-flex rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-1.5">
                 {TABS.map((tab) => (
                     <button
                         key={tab.id}
@@ -92,9 +92,9 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                 {/* Materials */}
                 {(activeTab === "ALL" || activeTab === "MATERIAL") && materials.map((item) => (
-                    <div key={item.id} className="student-surface group relative flex flex-col overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                    <div key={item.id} className="student-surface group relative flex flex-col overflow-hidden rounded-lg p-8 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                         <div className="flex items-start justify-between mb-8 relative z-10">
-                            <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300">
+                            <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-lg transition-all duration-300">
                                 <BookOpen size={24} weight="bold" />
                             </div>
                             <button 
@@ -122,7 +122,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 opacity-60">Uploaded By</span>
                                 <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight   opacity-80">{item.uploadedBy?.fullName || "Verified Faculty"}</span>
                             </div>
-                            <Link href={item.fileUrl ?? "#"} target="_blank" className="student-button-secondary flex h-10 items-center justify-center rounded-xl px-6 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                            <Link href={item.fileUrl ?? "#"} target="_blank" className="student-button-secondary flex h-10 items-center justify-center rounded-lg px-6 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                 View File
                             </Link>
                         </div>
@@ -131,9 +131,9 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
 
                 {/* Exams */}
                 {(activeTab === "ALL" || activeTab === "EXAM") && exams.map((item) => (
-                    <div key={item.id} className="student-surface group relative flex flex-col overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                    <div key={item.id} className="student-surface group relative flex flex-col overflow-hidden rounded-lg p-8 transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                         <div className="flex items-start justify-between mb-8 relative z-10">
-                            <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300">
+                            <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-lg transition-all duration-300">
                                 <ClipboardText size={24} weight="bold" />
                             </div>
                             <button 
@@ -161,7 +161,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 opacity-60">Educator</span>
                                 <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight   opacity-80">{item.teacher?.fullName || "Verified Expert"}</span>
                             </div>
-                            <Link href={`/exam/war-room?examId=${item.id}`} className="student-button-primary flex h-10 items-center justify-center rounded-xl px-6 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                            <Link href={`/exam/war-room?examId=${item.id}`} className="student-button-primary flex h-10 items-center justify-center rounded-lg px-6 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                 Start Exam
                             </Link>
                         </div>

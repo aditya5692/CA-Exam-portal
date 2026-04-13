@@ -271,7 +271,7 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
         <div className="space-y-10">
             {!userRole && (
                 <div className="flex flex-col items-center gap-6">
-                    <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1">
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1">
                         <button
                             onClick={() => setView("student")}
                             className={cn(
@@ -311,14 +311,14 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                             <span className={cn("text-xs font-bold transition-colors", billingCycle === "annual" ? "text-slate-900" : "text-slate-400")}>
                                 Annual
                             </span>
-                            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                            <span className="rounded-lg bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                                 Save 25%
                             </span>
                         </div>
                     )}
 
                     {view === "student" && !supportsMonthlyBilling && (
-                        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-700">
+                        <div className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-700">
                             Monthly student plans will appear here once Razorpay recurring plan IDs are saved in admin integrations.
                         </div>
                     )}
@@ -351,13 +351,13 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                         <div
                             key={plan.id}
                             className={cn(
-                                "relative flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300",
+                                "relative flex flex-col rounded-lg border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300",
                                 "hover:-translate-y-1 hover:shadow-md",
                                 plan.highlight && "border-emerald-500/20 ring-2 ring-emerald-500/10",
                             )}
                         >
                             {plan.highlight && (
-                                <div className="absolute left-1/2 top-0 -translate-x-1/2 rounded-b-lg bg-emerald-500 px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                                <div className="absolute left-1/2 top-0 -translate-x-1/2 rounded-lg-b-lg bg-emerald-500 px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                                     Recommended
                                 </div>
                             )}
@@ -365,7 +365,7 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                             <div className="mb-8">
                                 <div
                                     className={cn(
-                                        "mb-6 flex h-12 w-12 items-center justify-center rounded-xl",
+                                        "mb-6 flex h-12 w-12 items-center justify-center rounded-lg",
                                         plan.highlight
                                             ? "bg-emerald-500 text-white shadow-lg shadow-emerald-100"
                                             : "bg-slate-100 text-slate-500",
@@ -424,7 +424,7 @@ export function PricingCards({ userPlan, userRole }: { userPlan?: string; userRo
                                 disabled={isDisabled}
                                 onClick={() => handlePlanClick(plan)}
                                 className={cn(
-                                    "flex w-full items-center justify-center gap-2 rounded-xl py-4 text-sm font-bold transition-all",
+                                    "flex w-full items-center justify-center gap-2 rounded-lg py-4 text-sm font-bold transition-all",
                                     isDisabled
                                         ? "cursor-not-allowed border border-slate-100 bg-slate-50 text-slate-400"
                                         : plan.highlight

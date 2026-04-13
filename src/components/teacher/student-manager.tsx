@@ -95,12 +95,12 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
                 <div className="bg-white p-6 md:p-10 text-slate-900 shrink-0 relative border-b border-slate-100">
                     <div className="flex items-center justify-between mb-8 relative z-10">
                         <div className="flex items-center gap-3">
-                             <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                             <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center border border-indigo-100">
                                  <ChartLineUp size={18} weight="bold" className="text-indigo-600" />
                              </div>
                              <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Performance Profile</div>
                         </div>
-                        <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-200 flex items-center justify-center group active:scale-95 text-slate-500">
+                        <button onClick={onClose} className="w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 transition-all border border-slate-200 flex items-center justify-center group active:scale-95 text-slate-500">
                             <X size={16} weight="bold" className="group-hover:rotate-90 transition-transform" />
                         </button>
                     </div>
@@ -129,7 +129,7 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
                     )}
                     
                     {error && (
-                        <div className="p-6 rounded-2xl bg-rose-50 border border-rose-100 text-sm text-rose-600 font-bold flex items-center gap-4">
+                        <div className="p-6 rounded-lg bg-rose-50 border border-rose-100 text-sm text-rose-600 font-bold flex items-center gap-4">
                              <X size={20} weight="bold" />
                              {error}
                         </div>
@@ -147,8 +147,8 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
                                             { label: "Accuracy", value: `${data.profile.avgAccuracy}%`, icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-50" },
                                             { label: "Momentum", value: `${data.profile.streak}D`, icon: ChartLineUp, color: "text-rose-600", bg: "bg-rose-50" },
                                         ].map((m) => (
-                                            <div key={m.label} className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-                                                <div className={cn("w-9 h-9 rounded-xl mb-3 flex items-center justify-center group-hover:scale-110", m.bg, m.color)}>
+                                            <div key={m.label} className="p-5 rounded-lg bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                                                <div className={cn("w-9 h-9 rounded-lg mb-3 flex items-center justify-center group-hover:scale-110", m.bg, m.color)}>
                                                     <m.icon size={18} weight="bold" />
                                                 </div>
                                                 <div className="text-xl font-bold text-slate-900 mb-0.5">{m.value}</div>
@@ -157,7 +157,7 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="py-12 flex flex-col items-center justify-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                                    <div className="py-12 flex flex-col items-center justify-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
                                         <IdentificationBadge size={40} weight="light" className="text-slate-300 mb-3" />
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No Assessment Data Available</p>
                                     </div>
@@ -188,7 +188,7 @@ function PerformancePanel({ studentId, studentName, onClose }: { studentId: stri
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Recent Attempts</h3>
                                     <div className="space-y-3">
                                         {data.recentAttempts.slice(0, 5).map((a) => (
-                                            <div key={a.id} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-slate-50/30 transition-all">
+                                            <div key={a.id} className="flex items-center gap-4 p-4 rounded-lg border border-slate-100 hover:border-indigo-100 hover:bg-slate-50/30 transition-all">
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-xs font-bold text-slate-900 truncate">{a.title}</div>
                                                     <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">{a.date} · {a.category}</div>
@@ -223,9 +223,9 @@ function RemoveModal({
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
-            <div className="relative z-10 w-full max-w-lg bg-white rounded-[32px] border border-slate-100 shadow-2xl p-8 md:p-10 animate-in zoom-in-95 duration-300">
+            <div className="relative z-10 w-full max-w-lg bg-white rounded-lg border border-slate-100 shadow-2xl p-8 md:p-10 animate-in zoom-in-95 duration-300">
                 <div className="flex items-center gap-4 mb-8">
-                     <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
+                     <div className="w-12 h-12 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
                          <Trash size={24} weight="bold" />
                      </div>
                      <div>
@@ -242,12 +242,12 @@ function RemoveModal({
                     <div className="mb-6 space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Select Batch</label>
                         <select value={batchId} onChange={(e) => setBatchId(e.target.value)}
-                            className="w-full h-12 border border-slate-100 rounded-xl px-4 text-sm bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-bold text-slate-700">
+                            className="w-full h-12 border border-slate-100 rounded-lg px-4 text-sm bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-bold text-slate-700">
                             {batches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                     </div>
                 ) : (
-                    <div className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 flex justify-between items-center">
+                    <div className="mb-6 p-4 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 flex justify-between items-center">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Batch</span>
                         <span className="text-indigo-600">{batches[0]?.name}</span>
                     </div>
@@ -255,11 +255,11 @@ function RemoveModal({
 
                 <div className="flex gap-3">
                     <button onClick={onClose}
-                        className="flex-1 h-11 rounded-xl border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95">
+                        className="flex-1 h-11 rounded-lg border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95">
                         Cancel
                     </button>
                     <button onClick={() => onConfirm(batchId)} disabled={saving}
-                        className="flex-1 h-11 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all active:scale-95">
+                        className="flex-1 h-11 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all active:scale-95">
                         {saving ? "Removing..." : "Remove Student"}
                     </button>
                 </div>
@@ -295,8 +295,17 @@ export function StudentManager() {
     }, []);
 
     useEffect(() => {
-        reload();
-    }, [reload]);
+        let isMounted = true;
+        const load = async () => {
+            const res = await getTeacherStudents();
+            if (isMounted && res.success) {
+                setStudents((res.data.students ?? []) as StudentDirectoryRow[]);
+                setIsAdminView(Boolean(res.data.isAdminView));
+            }
+        };
+        void load();
+        return () => { isMounted = false; };
+    }, []);
 
     const showToast = (msg: string) => {
         setToast(msg);
@@ -347,7 +356,7 @@ export function StudentManager() {
     return (
         <div className="space-y-6 pb-20 w-full max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-6">
             {toast && (
-                <div className="fixed bottom-10 right-10 z-[120] px-6 py-3 rounded-xl bg-slate-900 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest shadow-2xl animate-in slide-in-from-right-8">
+                <div className="fixed bottom-10 right-10 z-[120] px-6 py-3 rounded-lg bg-slate-900 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest shadow-2xl animate-in slide-in-from-right-8">
                     <div className="flex items-center gap-3">
                          <ShieldCheck size={18} weight="bold" className="text-emerald-400" />
                          {toast}
@@ -406,15 +415,15 @@ export function StudentManager() {
                         <MagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} weight="bold" />
                         <input type="text" value={globalQuery} onChange={(e) => setGlobalQuery(e.target.value)}
                             placeholder="Search by name, email, batch or ID..."
-                            className="w-full h-11 bg-slate-50 border border-slate-100 rounded-xl pl-11 pr-4 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:bg-white focus:border-indigo-400 transition-all" />
+                            className="w-full h-11 bg-slate-50 border border-slate-100 rounded-lg pl-11 pr-4 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:bg-white focus:border-indigo-400 transition-all" />
                     </div>
-                    <button className="h-11 px-5 rounded-xl bg-white border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 hover:text-slate-800 transition-all active:scale-95 flex items-center gap-2">
+                    <button className="h-11 px-5 rounded-lg bg-white border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 hover:text-slate-800 transition-all active:scale-95 flex items-center gap-2">
                         <DotsThreeVertical size={18} weight="bold" /> Export
                     </button>
                 </div>
 
                 {/* TABLE VIEW (Desktop Large) */}
-                <div className="hidden lg:block overflow-x-auto scrollbar-thin border border-slate-100 rounded-2xl">
+                <div className="hidden lg:block overflow-x-auto scrollbar-thin border border-slate-100 rounded-lg">
                     <table className="min-w-full text-left border-collapse">
                         <thead className="bg-slate-50">
                             <tr>
@@ -453,9 +462,9 @@ export function StudentManager() {
                             ) : (
                                 visibleStudents.map((student) => (
                                     <tr key={student.id} className="group hover:bg-slate-50 transition-colors duration-200">
-                                        <td className="p-4 rounded-l-2xl">
+                                        <td className="p-4 rounded-lg-l-2xl">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-[10px] border border-indigo-100 transition-all group-hover:bg-indigo-600 group-hover:text-white">
+                                                <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-[10px] border border-indigo-100 transition-all group-hover:bg-indigo-600 group-hover:text-white">
                                                     {student.name.substring(0, 2).toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
@@ -469,14 +478,14 @@ export function StudentManager() {
                                              <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Registry ID</div>
                                         </td>
                                         <td className="p-4">
-                                            <span className="px-2 py-1 rounded-md bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                            <span className="px-2 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-500 uppercase tracking-widest">
                                                 {student.department}
                                             </span>
                                         </td>
                                         <td className="p-4">
                                             <div className="flex flex-wrap gap-1">
                                                 {student.batchNames.map((name, i) => (
-                                                    <span key={i} className="px-2 py-1 rounded-md bg-indigo-50/50 text-[9px] font-bold text-indigo-600 border border-indigo-100 whitespace-nowrap">
+                                                    <span key={i} className="px-2 py-1 rounded-lg bg-indigo-50/50 text-[9px] font-bold text-indigo-600 border border-indigo-100 whitespace-nowrap">
                                                         {name}
                                                     </span>
                                                 ))}
@@ -491,7 +500,7 @@ export function StudentManager() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-[10px] font-bold text-slate-400">{formatDate(student.joinedAt)}</td>
-                                        <td className="p-4 rounded-r-2xl">
+                                        <td className="p-4 rounded-lg-r-2xl">
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                 <button onClick={() => setPerformanceStudent({ id: student.id, name: student.name })}
                                                     className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center border border-indigo-100 shadow-sm" title="Performance">
@@ -519,10 +528,10 @@ export function StudentManager() {
                         </div>
                     ) : (
                         visibleStudents.map((student) => (
-                            <div key={student.id} className="rounded-2xl p-5 md:p-6 space-y-5 transition-all bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200">
+                            <div key={student.id} className="rounded-lg p-5 md:p-6 space-y-5 transition-all bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-4 min-w-0">
-                                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0 border border-indigo-50">
+                                        <div className="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0 border border-indigo-50">
                                             {student.name.substring(0,2).toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
@@ -537,13 +546,13 @@ export function StudentManager() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1">
+                                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 flex flex-col gap-1">
                                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                                             <IdentificationBadge size={12} weight="bold" /> ID Registry
                                         </span>
                                         <span className="text-[10px] font-bold text-slate-700 truncate">{student.registrationNumber}</span>
                                     </div>
-                                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1">
+                                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 flex flex-col gap-1">
                                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                                             <Buildings size={12} weight="bold" /> Division
                                         </span>
@@ -566,11 +575,11 @@ export function StudentManager() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button onClick={() => setPerformanceStudent({ id: student.id, name: student.name })}
-                                            className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                                            className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
                                             <ChartLineUp size={20} weight="bold" />
                                         </button>
                                         <button onClick={() => setRemoveStudent(student)}
-                                            className="w-10 h-10 rounded-xl bg-white border border-slate-100 text-rose-500 flex items-center justify-center hover:bg-rose-50 hover:border-rose-100 transition-all">
+                                            className="w-10 h-10 rounded-lg bg-white border border-slate-100 text-rose-500 flex items-center justify-center hover:bg-rose-50 hover:border-rose-100 transition-all">
                                             <Trash size={20} weight="bold" />
                                         </button>
                                     </div>

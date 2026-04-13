@@ -45,7 +45,7 @@ export async function FeatureRouteGate({
 
   return (
     <div className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
-      <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur">
+      <div className="mx-auto max-w-2xl rounded-lg border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">
           Access Restricted
         </p>
@@ -56,13 +56,13 @@ export async function FeatureRouteGate({
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={homeHref}
-            className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
+            className="rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
           >
             {homeLabel}
           </Link>
           <Link
             href="/admin/dashboard"
-            className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            className="rounded-lg border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
           >
             Open Admin Center
           </Link>

@@ -28,7 +28,7 @@ export default async function TeacherAnalyticsPage() {
         return (
             <div className="flex items-center justify-center py-40 text-center">
                 <div className="space-y-3">
-                    <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 mx-auto">
+                    <div className="w-16 h-16 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 mx-auto">
                         <Warning size={32} weight="fill" />
                     </div>
                     <h2 className="text-lg font-bold text-slate-900">Analytics Unavailable</h2>
@@ -55,7 +55,7 @@ export default async function TeacherAnalyticsPage() {
         <div className="w-full max-w-7xl mx-auto pb-12   animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
 
             {/* ── Header ─────────────────────────────────────────────── */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 md:p-10 relative overflow-hidden">
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-8 md:p-10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-[400px] h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
                     <div className="space-y-2">
@@ -69,10 +69,10 @@ export default async function TeacherAnalyticsPage() {
                         </p>
                     </div>
                     <div className="flex gap-3">
-                        <Link href="/teacher/students" className="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 font-semibold text-sm hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center gap-2 shadow-sm">
+                        <Link href="/teacher/students" className="h-11 px-5 rounded-lg bg-white border border-slate-200 text-slate-600 font-semibold text-sm hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center gap-2 shadow-sm">
                             <UserFocus size={16} weight="fill" /> View Students
                         </Link>
-                        <button className="h-11 px-5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md shadow-indigo-600/20 active:scale-95">
+                        <button className="h-11 px-5 rounded-lg bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md shadow-indigo-600/20 active:scale-95">
                             <Export size={16} weight="bold" /> Export Report
                         </button>
                     </div>
@@ -80,7 +80,7 @@ export default async function TeacherAnalyticsPage() {
             </div>
 
             {isEmpty && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 flex items-center gap-3 text-amber-700 text-sm font-medium">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 flex items-center gap-3 text-amber-700 text-sm font-medium">
                     <Warning size={20} weight="fill" className="shrink-0" />
                     No submitted exam attempts yet — analytics will populate as students complete your tests.
                 </div>
@@ -89,8 +89,8 @@ export default async function TeacherAnalyticsPage() {
             {/* ── Stat Cards ─────────────────────────────────────────── */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {statCards.map(stat => (
-                    <div key={stat.label} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 flex items-center gap-4 hover:border-indigo-200 transition-all group">
-                        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border border-slate-100 group-hover:scale-105 transition-transform", stat.bg, stat.color)}>
+                    <div key={stat.label} className="bg-white border border-slate-200 shadow-sm rounded-lg p-5 flex items-center gap-4 hover:border-indigo-200 transition-all group">
+                        <div className={cn("w-11 h-11 rounded-lg flex items-center justify-center shrink-0 border border-slate-100 group-hover:scale-105 transition-transform", stat.bg, stat.color)}>
                             <stat.icon size={22} weight="fill" />
                         </div>
                         <div>
@@ -106,9 +106,9 @@ export default async function TeacherAnalyticsPage() {
             <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
 
                 {/* 7-Day Attempt Trend */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-5">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                             <ChartLine size={20} weight="fill" />
                         </div>
                         <div>
@@ -129,7 +129,7 @@ export default async function TeacherAnalyticsPage() {
                                     <div className="w-full flex items-end" style={{ height: "80px" }}>
                                         <div
                                             className={cn(
-                                                "w-full rounded-t-lg transition-all duration-500",
+                                                "w-full rounded-lg-t-lg transition-all duration-500",
                                                 day.attempts === 0 ? "opacity-30" : "",
                                                 isToday ? "bg-indigo-600" : "bg-indigo-200 group-hover/bar:bg-indigo-400"
                                             )}
@@ -149,10 +149,10 @@ export default async function TeacherAnalyticsPage() {
                 </div>
 
                 {/* At-Risk Students */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+                            <div className="w-10 h-10 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
                                 <Warning size={20} weight="fill" />
                             </div>
                             <div>
@@ -167,7 +167,7 @@ export default async function TeacherAnalyticsPage() {
 
                     {atRiskStudents.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
-                            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                            <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500">
                                 <CheckCircle size={24} weight="fill" />
                             </div>
                             <p className="text-sm font-semibold text-slate-700">All students on track</p>
@@ -176,7 +176,7 @@ export default async function TeacherAnalyticsPage() {
                     ) : (
                         <div className="space-y-2.5">
                             {atRiskStudents.map((student, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-rose-100 hover:bg-rose-50/30 transition-all group">
+                                <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-rose-100 hover:bg-rose-50/30 transition-all group">
                                     <div className="flex items-center gap-3">
                                         <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[11px] font-black text-slate-500 group-hover:bg-rose-600 group-hover:text-white group-hover:border-rose-600 transition-all">
                                             {student.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
@@ -211,9 +211,9 @@ export default async function TeacherAnalyticsPage() {
             <div className="grid lg:grid-cols-[1fr_1fr_0.8fr] gap-6">
 
                 {/* Subject Accuracy Bars */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-5">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                        <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
                             <Target size={20} weight="fill" />
                         </div>
                         <div>
@@ -254,9 +254,9 @@ export default async function TeacherAnalyticsPage() {
                 </div>
 
                 {/* Exam Performance Breakdown */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                             <Stack size={20} weight="fill" />
                         </div>
                         <div>
@@ -270,7 +270,7 @@ export default async function TeacherAnalyticsPage() {
                     ) : (
                         <div className="space-y-2">
                             {examPerformance.map((exam, i) => (
-                                <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-100 hover:bg-slate-50/60 transition-all group">
+                                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-indigo-100 hover:bg-slate-50/60 transition-all group">
                                     <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[11px] font-black text-indigo-600 shrink-0">
                                         {i + 1}
                                     </div>
@@ -291,9 +291,9 @@ export default async function TeacherAnalyticsPage() {
                 </div>
 
                 {/* Top Students */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600">
+                        <div className="w-10 h-10 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600">
                             <UserFocus size={20} weight="fill" />
                         </div>
                         <div>
@@ -309,7 +309,7 @@ export default async function TeacherAnalyticsPage() {
                             {topStudents.map((s, i) => {
                                 const medalColors = ["text-amber-500", "text-slate-400", "text-amber-700"];
                                 return (
-                                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-violet-100 transition-all group">
+                                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-violet-100 transition-all group">
                                         <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0", i < 3 ? "bg-amber-50 border border-amber-100" : "bg-slate-50 border border-slate-200", medalColors[i] ?? "text-slate-400")}>
                                             {s.rank}
                                         </div>

@@ -167,7 +167,7 @@ export function FreeResourcesDashboard({
 
                     <div className="flex items-center gap-3 flex-wrap">
                         {daysToExam > 0 && (
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs border border-blue-100 shadow-sm">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold text-xs border border-blue-100 shadow-sm">
                                 <Calendar size={14} weight="bold" />
                                 {daysToExam} days to exam
                             </div>
@@ -175,7 +175,7 @@ export function FreeResourcesDashboard({
                         {isTeacher && (
                             <Link
                                 href="/teacher/free-resources/materials"
-                                className="h-10 px-4 rounded-xl bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2"
+                                className="h-10 px-4 rounded-lg bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2"
                             >
                                 <Upload size={14} weight="bold" /> Upload Material
                             </Link>
@@ -192,7 +192,7 @@ export function FreeResourcesDashboard({
                             placeholder="Search subjects, topics, or papers…"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all"
+                            className="w-full pl-10 pr-10 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-800 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all"
                         />
                         {searchQuery && (
                             <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
@@ -265,7 +265,7 @@ export function FreeResourcesDashboard({
 
                 ) : resources.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 text-center space-y-5">
-                        <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                        <div className="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
                             <FilePdf size={36} weight="duotone" />
                         </div>
                         <div>
@@ -276,7 +276,7 @@ export function FreeResourcesDashboard({
                         </div>
                         <button
                             onClick={resetFilters}
-                            className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-indigo-600 transition-all shadow-sm"
+                            className="px-6 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-indigo-600 transition-all shadow-sm"
                         >
                             Reset Filters
                         </button>
@@ -287,7 +287,7 @@ export function FreeResourcesDashboard({
                     <div className="overflow-hidden mt-4">
 
                         {/* List header */}
-                        <div className="grid grid-cols-[1fr_120px_80px_80px_100px] items-center px-5 py-3 bg-slate-50 border border-slate-100 rounded-t-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest border-b-0">
+                        <div className="grid grid-cols-[1fr_120px_80px_80px_100px] items-center px-5 py-3 bg-slate-50 border border-slate-100 rounded-lg-t-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest border-b-0">
                             <span>Material</span>
                             <span>Level</span>
                             <span className="text-center">Format</span>
@@ -295,7 +295,7 @@ export function FreeResourcesDashboard({
                             <span className="text-right">Action</span>
                         </div>
 
-                        <div className="divide-y divide-slate-100 border border-slate-100 rounded-b-2xl overflow-hidden bg-white">
+                        <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg-b-2xl overflow-hidden bg-white">
                             {resources.map(res => {
                                 const cfg = getTypeConfig(res.subType);
                                 const isSaved = canSave && visibleSaved.has(res.id);
@@ -308,7 +308,7 @@ export function FreeResourcesDashboard({
                                     >
                                         {/* Title */}
                                         <div className="flex items-center gap-3 min-w-0 pr-4">
-                                            <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-slate-100", cfg.bg, cfg.accent)}>
+                                            <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border border-slate-100", cfg.bg, cfg.accent)}>
                                                 {cfg.icon}
                                             </div>
                                             <div className="min-w-0">

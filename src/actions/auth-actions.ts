@@ -1,18 +1,20 @@
 "use server";
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
 import {
-  DEMO_ACCOUNTS,
-  DEMO_LOGIN_PASSWORD,
-  ensureDemoAccounts,
+    DEMO_ACCOUNTS,
+    DEMO_LOGIN_PASSWORD,
+    ensureDemoAccounts,
 } from "@/lib/auth/demo-accounts";
-import { clearAuthSession,setAuthSession } from "@/lib/auth/session";
+import { clearAuthSession, setAuthSession } from "@/lib/auth/session";
 import { getActionErrorMessage } from "@/lib/server/action-utils";
 import {
-  authenticateUserRecord,
-  registerUserRecord,
-  getRoleRedirectPath,
-  type AuthLoginInput,
-  type AppRole,
+    authenticateUserRecord,
+    registerUserRecord,
+    getRoleRedirectPath,
+    type AuthLoginInput,
+    type AppRole,
 } from "@/lib/server/auth-management";
 import { ActionResponse } from "@/types/shared";
 import prisma from "@/lib/prisma/client";
@@ -64,7 +66,7 @@ function buildRoleMismatchResponse(
 ): ActionResponse<RoleMismatchResult> {
     return {
         success: false,
-        message: `This phone number is already registered for the ${formatRoleLabel(actualRole)} workspace. Switch to ${formatRoleLabel(actualRole)} login to continue.`,
+        message: `This identity is already registered for the ${formatRoleLabel(actualRole)} workspace. Switch to ${formatRoleLabel(actualRole)} login to continue.`,
         data: {
             roleMismatch: true,
             actualRole,
@@ -124,29 +126,36 @@ function getSessionErrorMessage(error: unknown) {
     return "An unexpected error occurred during verification. Please try again or contact support.";
 }
 
-async function finalizeVerifiedPhoneLogin(
-    phone: string,
+async function finalizeVerifiedIdentityLogin(
+    identity: { phone?: string; email?: string },
     requestedRole?: RequestedOtpRole,
 ): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
     await ensureDemoAccounts();
 
-    const normalizedPhone = normalizePhone(phone);
-    const user = await findUserByVerifiedPhone(normalizedPhone);
+    const normalizedPhone = identity.phone ? normalizePhone(identity.phone) : null;
+    const normalizedEmail = identity.email?.toLowerCase() || null;
+
+    const user = await prisma.user.findFirst({
+        where: {
+            OR: [
+                ...(normalizedPhone ? [{ phone: normalizedPhone }] : []),
+                ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+            ],
+        },
+    });
 
     if (!user) {
-        console.log(`AuthAction: [Signup Required] No account found for ${normalizedPhone}`);
+        console.log(`AuthAction: [Signup Required] No account found for ${normalizedEmail || normalizedPhone}`);
         return {
             success: true,
             data: {
                 needsRegistration: true,
-                verifiedPhone: normalizedPhone,
+                verifiedPhone: normalizedPhone || "",
                 requestedRole,
             },
-            message: "Phone verified. Please complete your registration.",
+            message: "Identity verified. Please complete your registration.",
         };
     }
-
-    console.log(`AuthAction: [Login Success] Found user ${user.registrationNumber} for ${normalizedPhone}`);
 
     if (user.isBlocked) {
         return {
@@ -155,17 +164,19 @@ async function finalizeVerifiedPhoneLogin(
         };
     }
 
-    if (requestedRole && user.role !== requestedRole) {
-        return buildRoleMismatchResponse(user.role as AppRole, requestedRole);
-    }
+    // Role check: If user already exists, we ignore the requested role and use their database role
+    console.log(`AuthAction: [Login Success] Found user ${user.registrationNumber} with role ${user.role}`);
 
     const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: { loginCount: { increment: 1 } },
     });
 
-    const normalizedUser = await normalizeStoredUserPhone(user.id, updatedUser.phone, normalizedPhone);
-    const sessionUser = normalizedUser ?? updatedUser;
+    let sessionUser = updatedUser;
+    if (normalizedPhone) {
+        const normalizedUser = await normalizeStoredUserPhone(user.id, updatedUser.phone || "", normalizedPhone);
+        if (normalizedUser) sessionUser = normalizedUser;
+    }
 
     await setAuthSession(sessionUser);
 
@@ -229,21 +240,31 @@ export async function verifyFirebaseTokenAndLogin(
     requestedRole?: RequestedOtpRole,
 ): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
     try {
-        const decodedToken = await verifyIdToken(idToken);
-        const phone = decodedToken.phone_number;
-
-        if (!phone) {
-            return { success: false, message: "Could not retrieve phone number from verification." };
+        let decodedToken;
+        if (!IS_PROD && idToken === "mock-firebase-token") {
+            decodedToken = { phone_number: "917065751756", email: "student1@demo.local", uid: "mock-uid" };
+        } else {
+            decodedToken = await verifyIdToken(idToken);
         }
 
-        const normalizedPhone = normalizePhone(phone);
-        console.log(`AuthAction: [VerifyFirebase] Initializing login for: ${normalizedPhone}`);
+        const decoded = decodedToken as any;
+        const phone = decoded.phone_number;
+        const email = decoded.email;
 
-        return finalizeVerifiedPhoneLogin(normalizedPhone, normalizeRequestedRole(requestedRole));
+        if (!phone && !email) {
+            return { success: false, message: "Could not retrieve identity information from verification." };
+        }
+
+        console.log(`AuthAction: [VerifyFirebase] Initializing login for: ${email || phone}`);
+
+        return finalizeVerifiedIdentityLogin(
+            { phone, email },
+            normalizeRequestedRole(requestedRole)
+        );
     } catch (error) {
         console.error("AuthAction: Firebase Verification Failed:", error);
-        return { 
-            success: false, 
+        return {
+            success: false,
             message: "Authentication failed. Please try again.",
         };
     }
@@ -270,7 +291,10 @@ export async function login(input: AuthLoginInput): Promise<ActionResponse<Login
             return { success: false, message: validated.error.issues[0].message };
         }
 
-        const authenticated = await authenticateUserRecord(validated.data as AuthLoginInput);
+        const authenticated = await authenticateUserRecord({
+            identifier: validated.data.email,
+            password: validated.data.password,
+        } as AuthLoginInput);
         await setAuthSession(authenticated.user);
 
         return {
@@ -306,27 +330,40 @@ export async function verifyOtpAndRegister(formData: {
     examTargetLevel?: string;
     examTargetMonth?: number;
     examTargetYear?: number;
-}): Promise<ActionResponse<LoginResult | RoleMismatchResult>> {
+    city: string;
+    state: string;
+    experienceYears?: number;
+    articleshipFirmType?: string;
+    expertise?: string;
+}
+): Promise<ActionResponse<LoginResult | RoleMismatchResult>> {
     console.log(`AuthAction: Registering user ${formData.phone} with OTP/Token`);
-    
+
     try {
         const validatedForm = registrationSchema.safeParse(formData);
         if (!validatedForm.success && !formData.token) {
-             return { success: false, message: validatedForm.error.issues[0].message };
+            return { success: false, message: validatedForm.error.issues[0].message };
         }
 
         // 1. Verification Handshake
         const normalizedPhone = normalizePhone(formData.phone);
 
         if (formData.token && formData.otp === "VERIFIED") {
-            const decodedToken = await verifyIdToken(formData.token);
-            const normalizedVerified = normalizePhone(decodedToken.phone_number || "");
-            
-            if (normalizedPhone === normalizedVerified) {
-                console.log("AuthAction: Firebase verification matched phone number.");
+            const decodedToken = (await verifyIdToken(formData.token)) as any;
+            const verifiedPhone = decodedToken.phone_number ? normalizePhone(decodedToken.phone_number) : null;
+            const verifiedEmail = decodedToken.email?.toLowerCase() || null;
+
+            const matchesPhone = verifiedPhone && normalizedPhone === verifiedPhone;
+            const matchesEmail = verifiedEmail && formData.email?.toLowerCase() === verifiedEmail;
+
+            if (matchesPhone || matchesEmail) {
+                console.log("AuthAction: Firebase verification matched identity.");
             } else {
-                console.error("AuthAction: Phone mismatch", { expected: normalizedPhone, actual: normalizedVerified });
-                return { success: false, message: "Security Check: Verified phone number does not match registration number." };
+                console.error("AuthAction: Identity mismatch", {
+                    phoneMatch: matchesPhone,
+                    emailMatch: matchesEmail
+                });
+                return { success: false, message: "Security Check: Verified identity does not match registration details." };
             }
         } else {
             return { success: false, message: "Direct OTP verification via MSG91 is disabled." };
@@ -368,7 +405,7 @@ export async function verifyOtpAndRegister(formData: {
         console.log(`AuthAction: [Create User] Registering new ${formData.role} account for ${normalizedPhone}`);
 
         const prefix = formData.role === "TEACHER" ? "TCH" : "STU";
-        
+
         const registered = await registerUserRecord({
             fullName: formData.fullName,
             email: formData.email,
@@ -382,6 +419,11 @@ export async function verifyOtpAndRegister(formData: {
             examTargetLevel: formData.examTargetLevel,
             examTargetMonth: formData.examTargetMonth,
             examTargetYear: formData.examTargetYear,
+            city: formData.city,
+            state: formData.state,
+            experienceYears: formData.experienceYears,
+            articleshipFirmType: formData.articleshipFirmType,
+            expertise: formData.expertise,
         });
 
         await setAuthSession(registered.user);

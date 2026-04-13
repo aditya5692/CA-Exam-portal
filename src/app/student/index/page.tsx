@@ -49,7 +49,7 @@ export default async function GlobalIndexPage() {
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-12 animate-in fade-in duration-700">
             {/* Platform Hero Area */}
-            <div className="relative overflow-hidden bg-slate-900 rounded-3xl p-10 text-white shadow-xl border border-slate-800">
+            <div className="relative overflow-hidden bg-slate-900 rounded-lg p-10 text-white shadow-xl border border-slate-800">
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
                     <div className="space-y-6 max-w-2xl">
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-[10px] font-bold uppercase tracking-widest">
@@ -63,10 +63,10 @@ export default async function GlobalIndexPage() {
                             compete in simulated exams, and track your progress with accuracy.
                         </p>
                         <div className="flex gap-4">
-                            <Link href="/student/exams" className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:shadow-lg active:scale-95">
+                            <Link href="/student/exams" className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase tracking-widest transition-all hover:shadow-lg active:scale-95">
                                 Start Practice
                             </Link>
-                            <Link href="/student/analytics" className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95">
+                            <Link href="/student/analytics" className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold uppercase tracking-widest transition-all active:scale-95">
                                 View Progress
                             </Link>
                         </div>
@@ -123,10 +123,10 @@ export default async function GlobalIndexPage() {
                         <Link 
                             key={idx} 
                             href={section.href}
-                            className="group bg-white border border-slate-100 p-8 rounded-2xl hover:border-indigo-500/20 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+                            className="group bg-white border border-slate-100 p-8 rounded-lg hover:border-indigo-500/20 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
                         >
                             <div className="relative z-10 space-y-6">
-                                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 transition-all group-hover:scale-110 group-hover:bg-white group-hover:shadow-sm">
+                                <div className="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 transition-all group-hover:scale-110 group-hover:bg-white group-hover:shadow-sm">
                                     {section.icon}
                                 </div>
                                 <div className="space-y-2">
@@ -171,11 +171,11 @@ export default async function GlobalIndexPage() {
                         { code: "IDT", name: "Indirect Tax Laws", group: "II" },
                         { code: "IBS", name: "Integrated Solutions", group: "II" },
                     ].map((subject, idx) => (
-                        <div key={idx} className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-indigo-500/20 transition-all group cursor-pointer hover:shadow-lg hover:-translate-y-1">
+                        <div key={idx} className="p-6 rounded-lg bg-white border border-slate-100 hover:border-indigo-500/20 transition-all group cursor-pointer hover:shadow-lg hover:-translate-y-1">
                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-600/80">Paper {idx + 1}</div>
                             <div className="text-sm font-bold text-slate-900   leading-tight mb-4 group-hover:text-indigo-600/80">{subject.name}</div>
                             <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
-                                <span className="px-2 py-0.5 rounded-md bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Group {subject.group}</span>
+                                <span className="px-2 py-0.5 rounded-lg bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Group {subject.group}</span>
                                 <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 opacity-0 group-hover:opacity-100 transition-all">
                                     <ArrowRight size={12} weight="bold" />
                                 </div>
@@ -186,7 +186,7 @@ export default async function GlobalIndexPage() {
             </div>
 
             {/* Platform Status Bar */}
-            <div className="flex items-center gap-6 px-8 py-5 bg-white border border-slate-100 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-6 px-8 py-5 bg-white border border-slate-100 rounded-lg shadow-sm">
                 <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
                     <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Platform Live</span>
@@ -220,8 +220,8 @@ function MetricWidget({ label, value, icon, color }: { label: string, value: str
     };
 
     return (
-        <div className="bg-slate-800/40 border border-slate-800 p-6 rounded-2xl space-y-3 min-w-[140px] backdrop-blur-sm transition-all hover:bg-slate-800 active:scale-95">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center border", colors[color])}>
+        <div className="bg-slate-800/40 border border-slate-800 p-6 rounded-lg space-y-3 min-w-[140px] backdrop-blur-sm transition-all hover:bg-slate-800 active:scale-95">
+            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center border", colors[color])}>
                 {icon}
             </div>
             <div className="space-y-1">

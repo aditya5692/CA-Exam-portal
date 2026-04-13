@@ -48,7 +48,7 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
                         {/* Profile Details / Right Column */}
                         <div className="flex-1 space-y-6 lg:pt-4">
                             <div>
-                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[12px] bg-[var(--landing-selection-bg)] border border-[var(--landing-border)] mb-4 backdrop-blur-sm">
+                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-[var(--landing-selection-bg)] border border-[var(--landing-border)] mb-4 backdrop-blur-sm">
                                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--landing-accent)]">Official CA Partner</span>
                                 </div>
 
@@ -57,12 +57,12 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
                                 </h1>
 
                                 <div className="mt-4 flex flex-wrap items-center gap-3 md:gap-6 text-sm md:text-base font-medium text-[var(--landing-text)]/70">
-                                    <span className="flex items-center gap-1.5 px-3 py-1 bg-[var(--landing-panel)] rounded-[12px] text-[var(--landing-text)] border border-[var(--landing-border)] backdrop-blur-sm shadow-[var(--landing-shadow-sm)]"><ShieldCheck className="w-4 h-4" /> {designation}</span>
+                                    <span className="flex items-center gap-1.5 px-3 py-1 bg-[var(--landing-panel)] rounded-lg text-[var(--landing-text)] border border-[var(--landing-border)] backdrop-blur-sm shadow-[var(--landing-shadow-sm)]"><ShieldCheck className="w-4 h-4" /> {designation}</span>
                                     <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-[var(--landing-accent)]" /> {expertise}</span>
                                 </div>
                             </div>
 
-                             <div className="bg-[var(--landing-panel)] rounded-[32px] p-8 shadow-[var(--landing-shadow)] border border-[var(--landing-border)] mt-8 relative overflow-hidden">
+                             <div className="bg-[var(--landing-panel)] rounded-lg p-8 shadow-[var(--landing-shadow)] border border-[var(--landing-border)] mt-8 relative overflow-hidden">
                                 <h2 className="text-xl font-bold text-[var(--landing-text)] mb-4 flex items-center gap-2">About the Educator</h2>
                                 <p className="text-[var(--landing-muted)] leading-relaxed text-sm md:text-base whitespace-pre-wrap">
                                     {bio || "This educator hasn't written a biography yet, but their materials speak for themselves!"}
@@ -71,21 +71,21 @@ export default async function PublicEducatorProfilePage({ params }: { params: Pr
 
                             {/* Key Metrics */}
                             <div className="grid grid-cols-2 gap-6 mt-6">
-                                <div className="bg-[var(--landing-panel)] rounded-[32px] p-8 border border-[var(--landing-border)] shadow-[var(--landing-shadow)] flex items-center justify-between group hover:shadow-[var(--landing-shadow-lg)] hover:-translate-y-1 transition-all duration-300">
+                                <div className="bg-[var(--landing-panel)] rounded-lg p-8 border border-[var(--landing-border)] shadow-[var(--landing-shadow)] flex items-center justify-between group hover:shadow-[var(--landing-shadow-lg)] hover:-translate-y-1 transition-all duration-300">
                                     <div>
                                         <p className="text-3xl font-black text-[var(--landing-text)]">{totalMaterials}</p>
                                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--landing-muted)] mt-2">Free Resources</p>
                                     </div>
-                                    <div className="w-14 h-14 bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] rounded-[20px] flex items-center justify-center shrink-0">
+                                    <div className="w-14 h-14 bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] rounded-lg flex items-center justify-center shrink-0">
                                         <BookOpen className="w-7 h-7" />
                                     </div>
                                 </div>
-                                <div className="bg-[var(--landing-panel)] rounded-[32px] p-8 border border-[var(--landing-border)] shadow-[var(--landing-shadow)] flex items-center justify-between group hover:shadow-[var(--landing-shadow-lg)] hover:-translate-y-1 transition-all duration-300">
+                                <div className="bg-[var(--landing-panel)] rounded-lg p-8 border border-[var(--landing-border)] shadow-[var(--landing-shadow)] flex items-center justify-between group hover:shadow-[var(--landing-shadow-lg)] hover:-translate-y-1 transition-all duration-300">
                                     <div>
                                         <p className="text-3xl font-black text-[var(--landing-text)]">{totalBatches}</p>
                                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--landing-muted)] mt-2">Active Batches</p>
                                     </div>
-                                    <div className="w-14 h-14 bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] rounded-[20px] flex items-center justify-center shrink-0">
+                                    <div className="w-14 h-14 bg-[var(--landing-selection-bg)] text-[var(--landing-accent)] rounded-lg flex items-center justify-center shrink-0">
                                         <UsersRound className="w-7 h-7" />
                                     </div>
                                 </div>

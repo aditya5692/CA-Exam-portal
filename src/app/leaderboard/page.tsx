@@ -49,7 +49,7 @@ export default async function LeaderboardPage() {
             <main className="student-shell flex-grow px-6 pb-16 pt-28 sm:px-12">
                 <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 lg:grid-cols-[1fr_320px]">
                     <div className="space-y-12">
-                        <section className="student-surface rounded-[36px] px-7 py-8 md:px-9 md:py-9">
+                        <section className="student-surface rounded-lg px-7 py-8 md:px-9 md:py-9">
                             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--student-border)] bg-[var(--student-panel-solid)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                 <Star size={12} weight="fill" className="text-[var(--student-support)]" />
                                 Leaderboard
@@ -76,7 +76,7 @@ export default async function LeaderboardPage() {
                                         <div className="pl-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                             Full Rankings
                                         </div>
-                                        <div className="student-surface overflow-hidden rounded-[30px]">
+                                        <div className="student-surface overflow-hidden rounded-lg">
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-left">
                                                     <thead>
@@ -102,7 +102,7 @@ export default async function LeaderboardPage() {
                                                                     <td className="px-6 py-4">
                                                                         <div
                                                                             className={cn(
-                                                                                "flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black",
+                                                                                "flex h-9 w-9 items-center justify-center rounded-lg text-xs font-black",
                                                                                 isMe
                                                                                     ? "bg-[var(--student-accent-strong)] text-white shadow-[0_14px_26px_rgba(31,92,80,0.18)]"
                                                                                     : "bg-[var(--student-panel-muted)] text-[var(--student-muted)]"
@@ -143,7 +143,7 @@ export default async function LeaderboardPage() {
                                 )}
                             </div>
                         ) : (
-                            <div className="student-surface rounded-[36px] border-dashed py-20 text-center">
+                            <div className="student-surface rounded-lg border-dashed py-20 text-center">
                                 <Trophy size={48} weight="duotone" className="mx-auto mb-4 text-[var(--student-muted)]/45" />
                                 <h2 className="text-xl font-black tracking-tight text-[var(--student-text)]">Leaderboard opening soon</h2>
                                 <p className="mt-2 text-sm font-medium text-[var(--student-muted)]">
@@ -155,7 +155,7 @@ export default async function LeaderboardPage() {
 
                     <aside className="space-y-6 pt-1">
                         {user && myRankData && !isTeacherOrAdmin && (
-                            <div className="student-surface-dark relative overflow-hidden rounded-[34px] p-6 text-white">
+                            <div className="student-surface-dark relative overflow-hidden rounded-lg p-6 text-white">
                                 <div className="absolute -right-14 -top-12 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(220,235,230,0.42),transparent_66%)]" />
                                 <div className="relative z-10 space-y-6">
                                     <div className="flex items-center justify-between">
@@ -175,7 +175,7 @@ export default async function LeaderboardPage() {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                                        <div className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4">
                                             <div className="flex items-center justify-between text-[10px] font-black uppercase text-white/55">
                                                 <span>Level Milestone</span>
                                                 <span>Lvl {myRankData.level} to {myRankData.level + 1}</span>
@@ -189,7 +189,7 @@ export default async function LeaderboardPage() {
                                         </div>
                                     </div>
 
-                                    <button className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--student-accent-strong)] text-xs font-black uppercase tracking-widest transition-all hover:bg-[var(--student-accent)]">
+                                    <button className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[var(--student-accent-strong)] text-xs font-black uppercase tracking-widest transition-all hover:bg-[var(--student-accent)]">
                                         <ShareNetwork size={18} weight="bold" />
                                         Share My Rank
                                     </button>
@@ -198,7 +198,7 @@ export default async function LeaderboardPage() {
                         )}
 
                         {isTeacherOrAdmin && (
-                            <div className="student-surface-dark relative overflow-hidden rounded-[34px] p-6 text-white">
+                            <div className="student-surface-dark relative overflow-hidden rounded-lg p-6 text-white">
                                 <div className="absolute -right-16 -top-14 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(242,227,192,0.28),transparent_66%)]" />
                                 <div className="relative z-10 space-y-6">
                                     <div className="flex items-center justify-between">
@@ -218,14 +218,14 @@ export default async function LeaderboardPage() {
                                             </div>
                                         </div>
 
-                                        <p className="rounded-xl border border-white/10 bg-white/5 p-4 text-[11px] font-medium text-white/75">
+                                        <p className="rounded-lg border border-white/10 bg-white/5 p-4 text-[11px] font-medium text-white/75">
                                             Your students are most active on mock exams during weekend evenings from 6 PM to 9 PM.
                                         </p>
                                     </div>
 
                                     <Link
                                         href="/teacher/dashboard"
-                                        className="flex h-12 w-full items-center justify-center rounded-xl border border-white/15 bg-white/10 text-xs font-black uppercase tracking-widest transition-all hover:bg-white/20"
+                                        className="flex h-12 w-full items-center justify-center rounded-lg border border-white/15 bg-white/10 text-xs font-black uppercase tracking-widest transition-all hover:bg-white/20"
                                     >
                                         View All Batches
                                     </Link>
@@ -233,9 +233,9 @@ export default async function LeaderboardPage() {
                             </div>
                         )}
 
-                        <div className="student-surface rounded-[34px] p-6">
+                        <div className="student-surface rounded-lg p-6">
                             <div className="flex items-center gap-3">
-                                <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl">
+                                <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-lg">
                                     <Lightbulb size={22} weight="fill" />
                                 </div>
                                 <h3 className="font-black tracking-tight text-[var(--student-text)]">Success Tips</h3>
@@ -261,7 +261,7 @@ export default async function LeaderboardPage() {
 
                             <Link
                                 href={isTeacherOrAdmin ? "/teacher/dashboard" : "/student/dashboard"}
-                                className="student-button-secondary mt-6 flex h-11 w-full items-center justify-center rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
+                                className="student-button-secondary mt-6 flex h-11 w-full items-center justify-center rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all"
                             >
                                 Go to Dashboard
                             </Link>
@@ -322,7 +322,7 @@ function ChampionCard({
     return (
         <div
             className={cn(
-                "student-surface relative rounded-[34px] p-6 transition-all duration-700",
+                "student-surface relative rounded-lg p-6 transition-all duration-700",
                 style.border,
                 style.halo,
                 featured && "md:-mt-2 md:scale-105 ring-4 ring-[var(--student-support-soft)]/60"
@@ -337,7 +337,7 @@ function ChampionCard({
                 </div>
 
                 <div className="flex flex-col items-center space-y-3 text-center">
-                    <div className={cn("flex h-20 w-20 items-center justify-center rounded-[2rem] shadow-inner", style.tileBg)}>
+                    <div className={cn("flex h-20 w-20 items-center justify-center rounded-lg shadow-inner", style.tileBg)}>
                         <Icon size={46} weight="duotone" className={style.iconColor} />
                     </div>
                     <div>
@@ -347,13 +347,13 @@ function ChampionCard({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-center">
-                    <div className="rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-3">
+                    <div className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-3">
                         <div className="mb-1 text-[8px] font-black uppercase tracking-widest text-[var(--student-muted)]">Total XP</div>
                         <div className="font-mono text-base font-black tracking-tighter text-[var(--student-text)]">
                             {student.totalXP.toLocaleString()}
                         </div>
                     </div>
-                    <div className="rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-3">
+                    <div className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-3">
                         <div className="mb-1 text-[8px] font-black uppercase tracking-widest text-[var(--student-muted)]">Level</div>
                         <div className="text-base font-black text-[var(--student-text)]">Lvl {student.level}</div>
                     </div>
@@ -365,9 +365,9 @@ function ChampionCard({
 
 function SuggestionItem({ icon, title, desc }: { icon: ReactNode; title: string; desc: string }) {
     return (
-        <div className="rounded-2xl p-3 transition-colors hover:bg-[var(--student-panel-muted)]/70">
+        <div className="rounded-lg p-3 transition-colors hover:bg-[var(--student-panel-muted)]/70">
             <div className="flex gap-4">
-                <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+                <div className="student-icon-tile flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
                     {icon}
                 </div>
                 <div className="space-y-1">

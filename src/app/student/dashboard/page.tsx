@@ -365,12 +365,12 @@ export default async function StudentDashboardPage() {
                 <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[var(--student-accent-soft)] via-transparent to-[var(--student-support-soft)] blur-3xl opacity-50" />
 
                 {/* MCQ Progress */}
-                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-xl">
+                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-lg transition-all duration-300 hover:border-[var(--student-accent-soft-strong)] hover:shadow-xl">
                     <div className="flex items-start justify-between mb-6 px-5 pt-8">
                         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                             Practice Coverage
                         </span>
-                        <div className="student-icon-tile flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300">
+                        <div className="student-icon-tile flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300">
                             <ChartLineUp size={20} weight="fill" />
                         </div>
                     </div>
@@ -386,12 +386,12 @@ export default async function StudentDashboardPage() {
                 </div>
 
                 {/* Total Study Time */}
-                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center rounded-2xl p-6 transition-all duration-300 hover:shadow-xl">
+                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center rounded-lg p-6 transition-all duration-300 hover:shadow-xl">
                     <div className="flex items-start justify-between mb-6">
                         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                             Focus Time
                         </span>
-                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl">
+                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-lg">
                             <Clock size={20} weight="fill" />
                         </div>
                     </div>
@@ -400,12 +400,12 @@ export default async function StudentDashboardPage() {
                 </div>
 
                 {/* Total MCQ Score */}
-                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-xl">
+                <div className="student-surface group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-lg p-6 transition-all duration-300 hover:shadow-xl">
                     <div className="flex items-start justify-between mb-6 relative z-10">
                         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">
                             Unit Experience
                         </span>
-                        <div className="student-icon-tile-success flex h-10 w-10 items-center justify-center rounded-xl">
+                        <div className="student-icon-tile-success flex h-10 w-10 items-center justify-center rounded-lg">
                             <Target size={20} weight="fill" />
                         </div>
                     </div>
@@ -414,12 +414,12 @@ export default async function StudentDashboardPage() {
                 </div>
 
                 {/* Current Ranking */}
-                <div className="student-surface-dark group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl">
+                <div className="student-surface-dark group relative flex min-h-[160px] flex-col justify-center overflow-hidden rounded-lg p-6 transition-all duration-300 hover:shadow-2xl">
                     <div className="flex items-start justify-between relative z-10">
                         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--student-ink-muted)] opacity-60">
                             Global Position
                         </span>
-                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-xl">
+                        <div className="student-icon-tile-warm flex h-10 w-10 items-center justify-center rounded-lg">
                             <Medal size={20} weight="fill" />
                         </div>
                     </div>
@@ -446,7 +446,7 @@ export default async function StudentDashboardPage() {
                         </div>
 
                         {myEducators.length === 0 ? (
-                            <div className="student-surface rounded-2xl p-12 text-center bg-gray-50/30 border-dashed border-gray-200">
+                            <div className="student-surface rounded-lg p-12 text-center bg-gray-50/30 border-dashed border-gray-200">
                                 <Users size={32} className="mx-auto mb-4 text-gray-300" weight="bold" />
                                 <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">Join a batch to unlock faculties</p>
                             </div>
@@ -482,19 +482,19 @@ export default async function StudentDashboardPage() {
 
                         <div className="space-y-4">
                             {dailyTargets.length === 0 ? (
-                                <div className="student-surface rounded-2xl p-16 text-center border-dashed">
+                                <div className="student-surface rounded-lg p-16 text-center border-dashed">
                                     <CheckCircle size={40} className="mx-auto mb-4 text-emerald-400" weight="fill" />
                                     <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600">All targets clear!</p>
                                 </div>
                             ) : (
                                 dailyTargets.map((target) => (
-                                    <div key={target.id} className="student-surface group relative flex gap-6 overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-lg border-l-4 border-l-orange-500">
+                                    <div key={target.id} className="student-surface group relative flex gap-6 overflow-hidden rounded-lg p-6 transition-all duration-300 hover:shadow-lg border-l-4 border-l-orange-500">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="text-[10px] font-black uppercase tracking-widest text-orange-500">
                                                     {target.reason} <span className="px-1 opacity-20">|</span> {target.mcq?.subject?.name || "Topic"}
                                                 </div>
-                                                <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[9px] font-bold">Category {target.mcq?.icaiCategory || "Gen"}</span>
+                                                <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg text-[9px] font-bold">Category {target.mcq?.icaiCategory || "Gen"}</span>
                                             </div>
                                             <h3 className="mb-2   text-md font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 leading-tight">
                                                 {target.mcq?.questionText || "Question Content Hidden"}
@@ -520,21 +520,21 @@ export default async function StudentDashboardPage() {
                         <p className="pl-8 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted-strong)] opacity-60">Your standing in the elite cohort</p>
                     </div>
 
-                    <div className="student-surface rounded-2xl p-6 shadow-sm border-[var(--student-border)]">
+                    <div className="student-surface rounded-lg p-6 shadow-sm border-[var(--student-border)]">
                         {leaderboard.length === 0 ? (
                             <div className="py-24 text-center text-[11px] font-black uppercase tracking-widest text-slate-300">Synchronizing Data...</div>
                         ) : (
                             <div className="space-y-2">
                                 {leaderboard.map((item, i) => (
                                     <div key={i} className={cn(
-                                        "flex items-center justify-between p-4 rounded-xl transition-all duration-300",
+                                        "flex items-center justify-between p-4 rounded-lg transition-all duration-300",
                                         item.isMe ? "bg-[var(--student-accent-strong)] text-white shadow-lg" : "hover:bg-slate-50 border border-transparent hover:border-slate-100"
                                     )}>
                                         <div className="flex items-center gap-4">
                                             <div className={cn("w-5 text-center text-[11px] font-black", item.isMe ? "text-white/60" : "text-slate-300")}>
                                                 {item.rank}
                                             </div>
-                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-black uppercase border",
+                                            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-black uppercase border",
                                                 item.isMe ? "bg-white/10 border-white/20 text-white" : "bg-white border-slate-100 text-slate-400")}>
                                                 {item.name.charAt(0)}
                                             </div>
@@ -554,11 +554,11 @@ export default async function StudentDashboardPage() {
                                 ))}
                             </div>
                         )}
-                        <Link href="/leaderboard" className="block w-full mt-6 py-3.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] text-center hover:bg-slate-800 transition-all active:scale-[0.98]">Full Directory Index</Link>
+                        <Link href="/leaderboard" className="block w-full mt-6 py-3.5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] text-center hover:bg-slate-800 transition-all active:scale-[0.98]">Full Directory Index</Link>
                     </div>
 
                     {/* Quick Resources / Tips */}
-                    <div className="student-surface rounded-2xl p-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden group">
+                    <div className="student-surface rounded-lg p-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden group">
                         <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
                         <div className="relative z-10 space-y-4">
                             <Sparkle size={24} weight="fill" className="text-indigo-200" />
@@ -588,14 +588,14 @@ export default async function StudentDashboardPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                         {freeResources.length === 0 ? (
-                            <div className="lg:col-span-4 py-16 text-center border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-300">No Archives Found</div>
+                            <div className="lg:col-span-4 py-16 text-center border-2 border-dashed border-slate-100 rounded-lg text-[11px] font-black uppercase tracking-widest text-slate-300">No Archives Found</div>
                         ) : freeResources.map((res) => (
-                            <Link href="/student/free-resources" key={res.id} className="student-surface group p-6 rounded-2xl transition-all hover:shadow-lg">
+                            <Link href="/student/free-resources" key={res.id} className="student-surface group p-6 rounded-lg transition-all hover:shadow-lg">
                                 <div className="flex items-start justify-between mb-5">
-                                    <div className="student-icon-tile h-10 w-10 rounded-xl flex items-center justify-center">
+                                    <div className="student-icon-tile h-10 w-10 rounded-lg flex items-center justify-center">
                                         <FilePdf size={20} weight="fill" />
                                     </div>
-                                    <span className="text-[9px] font-black uppercase tracking-widest bg-slate-50 px-2.5 py-1.5 rounded text-slate-400">{res.type}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest bg-slate-50 px-2.5 py-1.5 rounded-lg text-slate-400">{res.type}</span>
                                 </div>
                                 <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 uppercase leading-tight mb-2 transition-colors">{res.title}</h4>
                                 <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">{res.category}</div>
@@ -618,11 +618,11 @@ export default async function StudentDashboardPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                         {topPracticeExams.length === 0 ? (
-                            <div className="lg:col-span-4 py-16 text-center border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-300">Modules Offline</div>
+                            <div className="lg:col-span-4 py-16 text-center border-2 border-dashed border-slate-100 rounded-lg text-[11px] font-black uppercase tracking-widest text-slate-300">Modules Offline</div>
                         ) : topPracticeExams.map((exam) => (
-                            <Link href={`/exam/war-room?examId=${exam.id}`} key={exam.id} className="student-surface group p-6 rounded-2xl transition-all hover:shadow-lg border-l-4 border-l-indigo-500">
+                            <Link href={`/exam/war-room?examId=${exam.id}`} key={exam.id} className="student-surface group p-6 rounded-lg transition-all hover:shadow-lg border-l-4 border-l-indigo-500">
                                 <div className="flex items-start justify-between mb-5">
-                                    <div className="student-icon-tile h-10 w-10 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-600">
+                                    <div className="student-icon-tile h-10 w-10 rounded-lg flex items-center justify-center bg-indigo-50 text-indigo-600">
                                         <Play size={18} weight="fill" />
                                     </div>
                                     <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />

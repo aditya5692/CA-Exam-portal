@@ -28,7 +28,7 @@ export default async function SavedItemsPage() {
             />
 
             {!res.success && (
-                <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
+                <div className="p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm font-medium">
                     Error loading saved items: {res.message}. Please check your database connection.
                 </div>
             )}

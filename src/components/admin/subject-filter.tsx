@@ -36,7 +36,7 @@ export function SubjectFilter({ subjects }: { subjects: Subject[] }) {
         <div className="relative">
             <button 
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 rounded-xl border border-[var(--student-border)] bg-[var(--student-panel)]/90 px-3 py-2 text-xs font-bold text-[var(--student-text)] shadow-sm transition-all hover:bg-white active:scale-95"
+                className="flex items-center gap-2 rounded-lg border border-[var(--student-border)] bg-[var(--student-panel)]/90 px-3 py-2 text-xs font-bold text-[var(--student-text)] shadow-sm transition-all hover:bg-white active:scale-95"
             >
                 <Funnel size={14} className="text-[var(--student-muted)]" />
                 <span className="max-w-[120px] truncate">{activeSubject ? activeSubject.name : "All Subjects"}</span>
@@ -46,7 +46,7 @@ export function SubjectFilter({ subjects }: { subjects: Subject[] }) {
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 z-50 w-48 rounded-xl border border-[var(--student-border)] bg-white p-2 shadow-xl">
+                    <div className="absolute right-0 top-full mt-2 z-50 w-48 rounded-lg border border-[var(--student-border)] bg-white p-2 shadow-xl">
                         <button
                             onClick={() => handleSelect("")}
                             className={`w-full rounded-lg px-3 py-2 text-left text-xs font-bold transition-colors ${

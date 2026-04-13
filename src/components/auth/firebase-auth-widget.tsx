@@ -109,7 +109,7 @@ export default function FirebaseAuthWidget({ onSuccess, onFailure, phoneNumber }
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm space-y-6 relative overflow-hidden">
+    <div className="w-full flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-lg shadow-sm space-y-6 relative overflow-hidden">
       {/* Recaptcha Anchor */}
       <div ref={recaptchaContainerRef}></div>
       
@@ -130,13 +130,13 @@ export default function FirebaseAuthWidget({ onSuccess, onFailure, phoneNumber }
               onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()}
               placeholder="••••••"
               maxLength={6}
-              className="w-full bg-white border-2 border-slate-200 rounded-2xl py-5 text-center text-3xl font-black tracking-[0.5em] text-slate-900 focus:border-blue-600 focus:outline-none transition-all placeholder:text-slate-100 shadow-sm disabled:opacity-50"
+              className="w-full bg-white border-2 border-slate-200 rounded-lg py-5 text-center text-3xl font-black tracking-[0.5em] text-slate-900 focus:border-blue-600 focus:outline-none transition-all placeholder:text-slate-100 shadow-sm disabled:opacity-50"
               disabled={isVerifying}
               autoFocus
             />
 
             {error && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 text-[10px] font-bold text-rose-500 text-center animate-in fade-in zoom-in duration-300">
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-100 text-[10px] font-bold text-rose-500 text-center animate-in fade-in zoom-in duration-300">
                 {error}
               </div>
             )}
@@ -145,7 +145,7 @@ export default function FirebaseAuthWidget({ onSuccess, onFailure, phoneNumber }
               type="button"
               onClick={() => handleVerifyOtp()}
               disabled={isVerifying || otpValue.length < 6}
-              className="w-full py-4 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 active:scale-95 flex items-center justify-center gap-3"
+              className="w-full py-4 rounded-lg bg-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 active:scale-95 flex items-center justify-center gap-3"
             >
               {isVerifying ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -170,7 +170,7 @@ export default function FirebaseAuthWidget({ onSuccess, onFailure, phoneNumber }
           <div className="flex flex-col items-center py-6 space-y-4">
             <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
             {error && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 text-[10px] font-bold text-rose-500 text-center">
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-100 text-[10px] font-bold text-rose-500 text-center">
                 {error}
               </div>
             )}

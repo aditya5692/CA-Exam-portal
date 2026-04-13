@@ -83,7 +83,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
 
     return (
         <div className="space-y-8">
-            <div className="flex gap-2 p-1.5 student-surface-dark inline-flex rounded-2xl">
+            <div className="flex gap-2 p-1.5 student-surface-dark inline-flex rounded-lg">
                 {[
                     { id: "exams", label: "Featured Exams", icon: Monitor },
                     { id: "resources", label: "Free Resources", icon: Notebook },
@@ -93,7 +93,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={cn(
-                            "flex items-center gap-2.5 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                            "flex items-center gap-2.5 rounded-lg px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all",
                             activeTab === tab.id 
                                 ? "bg-white text-[var(--student-ink)] shadow-lg" 
                                 : "text-white/60 hover:text-white hover:bg-white/5"
@@ -105,7 +105,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                 ))}
             </div>
 
-            <div className="student-surface min-h-[500px] overflow-hidden rounded-[40px]">
+            <div className="student-surface min-h-[500px] overflow-hidden rounded-lg">
                 {activeTab === "exams" && (
                     <div className="p-8 space-y-6">
                         <div className="flex items-center justify-between px-2">
@@ -119,9 +119,9 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                                 <div className="col-span-full py-20 text-center text-sm font-medium text-[var(--student-muted)]">No published exams found.</div>
                             ) : (
                                 exams.map(exam => (
-                                    <div key={exam.id} className="group relative flex flex-col justify-between rounded-3xl border border-[var(--student-border)] bg-[var(--student-panel-muted)]/40 p-6 transition-all hover:border-[var(--student-accent-soft-strong)] hover:bg-white">
+                                    <div key={exam.id} className="group relative flex flex-col justify-between rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)]/40 p-6 transition-all hover:border-[var(--student-accent-soft-strong)] hover:bg-white">
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className="rounded-xl bg-white p-3 shadow-sm group-hover:bg-[var(--student-accent-soft)] transition-colors">
+                                            <div className="rounded-lg bg-white p-3 shadow-sm group-hover:bg-[var(--student-accent-soft)] transition-colors">
                                                 <Monitor size={20} className="text-[var(--student-accent-strong)]" weight="bold" />
                                             </div>
                                             <button 
@@ -165,9 +165,9 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                                 <div className="col-span-full py-20 text-center text-sm font-medium text-[var(--student-muted)]">No public resources found.</div>
                             ) : (
                                 materials.map(mat => (
-                                    <div key={mat.id} className="group relative flex flex-col justify-between rounded-3xl border border-[var(--student-border)] bg-[var(--student-panel-muted)]/40 p-6 transition-all hover:border-[var(--student-accent-soft-strong)] hover:bg-white">
+                                    <div key={mat.id} className="group relative flex flex-col justify-between rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)]/40 p-6 transition-all hover:border-[var(--student-accent-soft-strong)] hover:bg-white">
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className="rounded-xl bg-white p-3 shadow-sm group-hover:bg-emerald-50 transition-colors">
+                                            <div className="rounded-lg bg-white p-3 shadow-sm group-hover:bg-emerald-50 transition-colors">
                                                 <Notebook size={20} className="text-emerald-500" weight="bold" />
                                             </div>
                                             <button 
@@ -209,9 +209,9 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                                 <div className="py-20 text-center text-sm font-medium text-[var(--student-muted)]">No active announcements.</div>
                             ) : (
                                 announcements.map(announce => (
-                                    <div key={announce.id} className="group relative flex items-center justify-between rounded-3xl border border-[var(--student-border)] bg-[var(--student-panel-muted)]/20 p-6 transition-all hover:border-[var(--student-border-strong)] hover:bg-[var(--student-panel-muted)]/40">
+                                    <div key={announce.id} className="group relative flex items-center justify-between rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)]/20 p-6 transition-all hover:border-[var(--student-border-strong)] hover:bg-[var(--student-panel-muted)]/40">
                                         <div className="flex items-center gap-6">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-indigo-500 shadow-sm">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white text-indigo-500 shadow-sm">
                                                 <Megaphone size={24} weight="bold" />
                                             </div>
                                             <div>
@@ -227,7 +227,7 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
                                         </div>
                                         <button 
                                             onClick={() => handleDeleteAnnouncement(announce.id)}
-                                            className="rounded-xl p-3 text-rose-500 opacity-0 transition-all hover:bg-rose-50 group-hover:opacity-100"
+                                            className="rounded-lg p-3 text-rose-500 opacity-0 transition-all hover:bg-rose-50 group-hover:opacity-100"
                                         >
                                             <Trash size={20} weight="bold" />
                                         </button>
@@ -243,14 +243,14 @@ export function StudentSectionsManager({ exams, materials, announcements }: Stud
             {(error || success) && (
                 <div className="fixed bottom-10 right-10 z-[100] flex animate-in slide-in-from-right-full flex-col gap-3">
                     {error && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-lg">
+                        <div className="flex items-center gap-4 rounded-lg border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-lg">
                             <Info size={20} weight="fill" />
                             <p className="text-xs font-bold uppercase tracking-wider">{error}</p>
                             <button onClick={() => setError(null)}><X size={16} weight="bold" /></button>
                         </div>
                     )}
                     {success && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-lg">
+                        <div className="flex items-center gap-4 rounded-lg border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-lg">
                             <CheckCircle size={20} weight="fill" />
                             <p className="text-xs font-bold uppercase tracking-wider">{success}</p>
                             <button onClick={() => setSuccess(null)}><X size={16} weight="bold" /></button>

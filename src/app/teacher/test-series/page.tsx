@@ -58,13 +58,13 @@ export default async function TeacherExamsPage() {
                     <div className="flex flex-wrap gap-3 items-center">
                         <Link
                             href="/teacher/analytics"
-                            className="h-12 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-xs hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 transition-all active:scale-95 flex items-center gap-2 px-5 shadow-sm"
+                            className="h-12 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold text-xs hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 transition-all active:scale-95 flex items-center gap-2 px-5 shadow-sm"
                         >
                             <Monitor size={16} weight="fill" className="text-amber-500" /> View Analytics
                         </Link>
                         <Link
                             href="/teacher/test-series/create"
-                            className="h-12 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2 px-6 shadow-md shadow-indigo-600/20"
+                            className="h-12 rounded-lg bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2 px-6 shadow-md shadow-indigo-600/20"
                         >
                             <Plus size={18} weight="bold" /> Build New Series
                         </Link>
@@ -79,8 +79,8 @@ export default async function TeacherExamsPage() {
                     { label: "Total Submissions", value: totalAttempts.toLocaleString(), icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", subtitle: "Evaluated attempts" },
                     { label: "Asset Inventory", value: exams.reduce((s, e) => s + e._count.questions, 0).toLocaleString(), icon: Sparkle, color: "text-amber-600", bg: "bg-amber-50", subtitle: "Indexed test items" },
                 ].map((stat) => (
-                    <div key={stat.label} className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 relative overflow-hidden transition-all duration-300 hover:border-indigo-200 group flex items-center gap-5">
-                        <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border border-slate-100 group-hover:scale-105", stat.bg, stat.color)}>
+                    <div key={stat.label} className="bg-white border border-slate-100 shadow-sm rounded-lg p-6 relative overflow-hidden transition-all duration-300 hover:border-indigo-200 group flex items-center gap-5">
+                        <div className={cn("w-14 h-14 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm border border-slate-100 group-hover:scale-105", stat.bg, stat.color)}>
                             <stat.icon size={24} weight="fill" />
                         </div>
                         <div>

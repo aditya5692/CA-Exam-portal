@@ -51,7 +51,7 @@ export function NotificationBell() {
         <div className="relative" ref={dropdownRef}>
             <button 
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 text-[var(--student-muted)] hover:text-[var(--student-text)] hover:bg-[var(--student-panel-muted)] transition-colors rounded-xl outline-none"
+                className="relative p-2 text-[var(--student-muted)] hover:text-[var(--student-text)] hover:bg-[var(--student-panel-muted)] transition-colors rounded-lg outline-none"
             >
                 <Bell size={22} weight={unreadCount > 0 ? "fill" : "bold"} className={unreadCount > 0 ? "text-[var(--student-text)]" : ""} />
                 {unreadCount > 0 && (
@@ -60,7 +60,7 @@ export function NotificationBell() {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[var(--student-panel-solid)] rounded-2xl shadow-xl border border-[var(--student-border)] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[var(--student-panel-solid)] rounded-lg shadow-xl border border-[var(--student-border)] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                     <div className="p-4 border-b border-[var(--student-border)] flex items-center justify-between bg-[var(--student-panel-muted)]/50">
                         <div className="flex items-center gap-2">
                             <h3 className="font-bold text-[var(--student-text)] text-sm tracking-tight   uppercase">Notifications</h3>

@@ -23,7 +23,7 @@ export function BatchMigrationTool({ batchId, nextAttemptStr }: { batchId: strin
     };
 
     return (
-        <div className="rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel)] p-6 shadow-sm flex items-center justify-between">
+        <div className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel)] p-6 shadow-sm flex items-center justify-between">
             <div className="flex gap-4 items-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600">
                     <MagicWand size={24} weight="fill" />
@@ -40,7 +40,7 @@ export function BatchMigrationTool({ batchId, nextAttemptStr }: { batchId: strin
             <button
                 onClick={handleMigration}
                 disabled={isMigrating || isSuccess}
-                className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md transition-all hover:bg-indigo-700 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                className="rounded-lg bg-indigo-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md transition-all hover:bg-indigo-700 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
             >
                 {isMigrating ? "Migrating..." : isSuccess ? "Done" : "1-Click Migrate"}
             </button>

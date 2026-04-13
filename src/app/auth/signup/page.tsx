@@ -1,7 +1,6 @@
 "use client";
 
 import { verifyOtpAndRegister } from "@/actions/auth-actions";
-import FirebaseAuthWidget from "@/components/auth/firebase-auth-widget";
 import { 
     getGlobalLeaderboard, 
     LeaderboardEntry 
@@ -23,14 +22,28 @@ import {
     Users,
     CaretRight,
     Certificate,
-    Lightbulb
+    Lightbulb,
+    Calendar,
+    GoogleLogo,
+    MapPin,
+    Briefcase,
+    Atom,
+    Buildings
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { trackSignUp, setUserId } from "@/lib/analytics-utils";
-
+import { 
+    auth, 
+    googleProvider, 
+} from "@/lib/firebase";
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithPopup,
+    sendEmailVerification
+} from "firebase/auth";
 import { Lexend } from "next/font/google";
 
 const lexend = Lexend({
@@ -38,48 +51,31 @@ const lexend = Lexend({
     display: "swap",
 });
 
-const SIGNUP_POINTS = [
-    "Start with full-length mock access and a cleaner exam rhythm.",
-    "Keep revision material, PYQs, and progress in one place.",
-    "Upgrade only when you need deeper analytics or more libraries."
-];
-
 function SignupFormContent() {
     const searchParams = useSearchParams();
-    const searchPhone = searchParams.get("phone") ?? "";
+    const searchEmail = searchParams.get("email") ?? "";
     const searchRole = searchParams.get("role")?.toUpperCase();
-    const searchVerified = searchParams.get("verified") === "true";
     const initialRole = searchRole === "TEACHER" || searchRole === "STUDENT" ? searchRole : "STUDENT";
-    const storageToken = typeof window !== "undefined"
-        ? window.sessionStorage.getItem("pending-firebase-token") ?? ""
-        : "";
-    // Only accept cached tokens that look like real Firebase ID tokens
-    const initialToken = storageToken.length > 50 && storageToken.includes(".") ? storageToken : "";
     
-    const initialStep = searchVerified
-        ? initialToken
-            ? "details"
-            : searchPhone
-                ? "verify"
-                : "phone"
-        : "phone";
-
-    const [step, setStep] = useState<"phone" | "verify" | "details">(initialStep);
-    const [phone, setPhone] = useState(searchPhone);
-    const [firebaseToken, setFirebaseToken] = useState(initialToken);
     const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(searchEmail);
+    const [phone, setPhone] = useState("");
+    const [dob, setDob] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState<"STUDENT" | "TEACHER">(initialRole);
     const [department, setDepartment] = useState("");
     const [caLevel, setCaLevel] = useState<"foundation" | "ipc" | "final">("final");
-    const [attemptMonth, setAttemptMonth] = useState("5"); // Default to May
+    const [attemptMonth, setAttemptMonth] = useState("5"); 
     const [attemptYear, setAttemptYear] = useState(new Date().getFullYear().toString());
+    const [city, setCity] = useState("");
+    const [state, setState] = useState("");
+    const [experienceYears, setExperienceYears] = useState("");
+    const [articleshipFirmType, setArticleshipFirmType] = useState("");
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
-    const [trendingExams, setTrendingExams] = useState<any[]>([]);
+    const [trendingExams, setTrendingExams] = useState<{ id: string; title: string; attemptCount: number }[]>([]);
     const [topAspirants, setTopAspirants] = useState<LeaderboardEntry[]>([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
 
@@ -102,94 +98,107 @@ function SignupFormContent() {
     }, []);
 
     function clearPendingVerification() {
-        setFirebaseToken("");
         if (typeof window !== "undefined") {
             window.sessionStorage.removeItem("pending-firebase-token");
         }
     }
 
-    async function handleStartVerification(event: React.FormEvent) {
-        event.preventDefault();
+    async function handleGoogleSignup() {
+        if (!auth) return;
         setErrorMessage("");
-        clearPendingVerification();
+        setIsSubmitting(true);
+        trackSignUp("google_auth_attempt");
 
-        const digitsOnly = phone.replace(/\D/g, "");
-        if (digitsOnly.length < 10) {
-            setErrorMessage("Please enter a valid 10-digit phone number.");
-            return;
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            
+            // Pre-fill some fields if possible
+            if (user.displayName) setFullName(user.displayName);
+            if (user.email) setEmail(user.email);
+            
+            setIsSubmitting(false);
+            setErrorMessage("Google account linked. Please complete the remaining fields below.");
+        } catch (err: unknown) {
+            const error = err as Error;
+            console.error("SignupPage: Google Signup Error", error);
+            setErrorMessage(error.message || "Google authentication failed.");
+            setIsSubmitting(false);
         }
-
-        trackSignUp("otp_request");
-        setStep("verify");
-    }
-
-    function handleWidgetSuccess(accessToken: string) {
-        if (!accessToken) {
-            setErrorMessage("Security token acquisition failed. Please retry verification.");
-            return;
-        }
-
-        console.log("SignupPage: Widget verified successfully. Received token.");
-        setFirebaseToken(accessToken);
-        window.sessionStorage.setItem("pending-firebase-token", accessToken);
-        setErrorMessage("");
-        trackSignUp("otp_verify_success");
-        setStep("details");
-    }
-
-    function handleVerificationSubmit(event: React.FormEvent) {
-        event.preventDefault();
     }
 
     async function handleRegister(event: React.FormEvent) {
         event.preventDefault();
-        console.log("SignupPage: Starting registration for phone:", phone);
+        if (!auth) return;
+        
+        console.log("SignupPage: Starting manual registration...");
         setIsSubmitting(true);
         setErrorMessage("");
 
-        if (!firebaseToken) {
-            console.warn("SignupPage: Registration attempted without verified token.");
-            setIsSubmitting(false);
-            setErrorMessage("Please verify your phone number before creating the account.");
-            setStep("verify");
-            return;
-        }
-
-        const result = await verifyOtpAndRegister({
-            phone,
-            otp: "VERIFIED",
-            token: firebaseToken,
-            fullName,
-            email,
-            password,
-            role,
-            department: role === "TEACHER" ? department : undefined,
-            examTargetLevel: role === "STUDENT" ? caLevel : undefined,
-            examTargetMonth: role === "STUDENT" ? parseInt(attemptMonth) : undefined,
-            examTargetYear: role === "STUDENT" ? parseInt(attemptYear) : undefined
-        });
-
-        console.log("SignupPage: Registration server response received:", result.success ? "SUCCESS" : "FAILED", result.message);
-        setIsSubmitting(false);
-
-        if (!result.success) {
-            if (result.data && "roleMismatch" in result.data && result.data.roleMismatch) {
-                if (result.data.actualRole === "STUDENT" || result.data.actualRole === "TEACHER") {
-                    setRole(result.data.actualRole);
+        try {
+            // 1. Create User in Firebase
+            let firebaseToken: string;
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await sendEmailVerification(userCredential.user);
+                firebaseToken = await userCredential.user.getIdToken();
+            } catch (err: unknown) {
+                const firebaseError = err as { code: string; message: string };
+                if (firebaseError.code === "auth/email-already-in-use") {
+                    // Maybe they just need to log in, but let's try to get a token if they are currently logged in
+                    if (auth.currentUser && auth.currentUser.email === email) {
+                        firebaseToken = await auth.currentUser.getIdToken();
+                    } else {
+                        throw err;
+                    }
+                } else {
+                    throw err;
                 }
             }
-            setErrorMessage(result.message);
-            return;
-        }
 
-        if (result.success && result.data && 'user' in result.data) {
-            setUserId(result.data.user.registrationNumber);
-            trackSignUp("registration_complete");
-        }
+            // 2. Register in our Database
+            const result = await verifyOtpAndRegister({
+                phone,
+                otp: "VERIFIED",
+                token: firebaseToken,
+                fullName,
+                email,
+                password,
+                role,
+                dob,
+                department: role === "TEACHER" ? department : undefined,
+                examTargetLevel: role === "STUDENT" ? caLevel : undefined,
+                examTargetMonth: role === "STUDENT" ? parseInt(attemptMonth) : undefined,
+                examTargetYear: role === "STUDENT" ? parseInt(attemptYear) : undefined,
+                city,
+                state,
+                experienceYears: role === "TEACHER" ? parseInt(experienceYears) : undefined,
+                articleshipFirmType: (role === "STUDENT" && caLevel === "final") ? articleshipFirmType : undefined,
+                expertise: role === "TEACHER" ? department : undefined
+            });
 
-        clearPendingVerification();
-        console.log("SignupPage: Redirecting to:", result.data?.redirectTo || "/student/dashboard");
-        window.location.assign(result.data?.redirectTo || "/student/dashboard");
+            setIsSubmitting(false);
+
+            if (!result.success) {
+                setErrorMessage(result.message);
+                return;
+            }
+
+            if (result.success && result.data && 'user' in result.data) {
+                setUserId(result.data.user.registrationNumber);
+                trackSignUp("registration_complete");
+            }
+
+            window.location.assign(result.data?.redirectTo || "/student/dashboard");
+        } catch (err: unknown) {
+            const error = err as { code?: string; message: string };
+            console.error("SignupPage: Registration Error", error);
+            let msg = "Failed to create account. Please check your details.";
+            if (error.code === "auth/weak-password") msg = "Password is too weak.";
+            if (error.code === "auth/email-already-in-use") msg = "This email is already registered.";
+            setErrorMessage(msg);
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -204,7 +213,7 @@ function SignupFormContent() {
 
                 <div className="mb-16">
                     <Link href="/" className="flex items-center gap-4 group">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-900/20 group-hover:scale-105 transition-transform">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xl shadow-blue-900/20 group-hover:scale-105 transition-transform">
                             <GraduationCap size={28} weight="bold" />
                         </div>
                         <div>
@@ -239,13 +248,13 @@ function SignupFormContent() {
                             <div className="grid gap-3">
                                 {isDataLoading ? (
                                     [1, 2].map(i => (
-                                        <div key={i} className="h-16 rounded-2xl bg-white/5 animate-pulse" />
+                                        <div key={i} className="h-16 rounded-lg bg-white/5 animate-pulse" />
                                     ))
                                 ) : (
                                     trendingExams.map((exam) => (
-                                        <div key={exam.id} className="group flex items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 p-4 rounded-2xl transition-all cursor-default">
+                                        <div key={exam.id} className="group flex items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 p-4 rounded-lg transition-all cursor-default">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400">
+                                                <div className="h-10 w-10 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-400">
                                                     < Sparkle size={20} weight="bold" />
                                                 </div>
                                                 <div>
@@ -274,7 +283,7 @@ function SignupFormContent() {
                             <div className="flex -space-x-3 overflow-hidden p-1">
                                 {topAspirants.map((asp, i) => (
                                     <div key={asp.studentId} className={cn(
-                                        "inline-block h-10 w-10 rounded-xl ring-4 ring-[#020617] bg-white/10 flex items-center justify-center text-[11px] font-extrabold text-white border border-white/10",
+                                        "inline-block h-10 w-10 rounded-lg ring-4 ring-[#020617] bg-white/10 flex items-center justify-center text-[11px] font-extrabold text-white border border-white/10",
                                         i === 0 && "bg-blue-600 border-blue-400",
                                         i === 1 && "bg-emerald-600 border-emerald-400",
                                         i === 2 && "bg-amber-600 border-amber-400"
@@ -282,7 +291,7 @@ function SignupFormContent() {
                                         {asp.fullName.charAt(0)}
                                     </div>
                                 ))}
-                                <div className="h-10 w-10 rounded-xl ring-4 ring-[#020617] bg-white/5 border border-white/5 flex items-center justify-center text-[9px] font-bold text-slate-500">
+                                <div className="h-10 w-10 rounded-lg ring-4 ring-[#020617] bg-white/5 border border-white/5 flex items-center justify-center text-[9px] font-bold text-slate-500">
                                     +12k
                                 </div>
                             </div>
@@ -309,7 +318,7 @@ function SignupFormContent() {
                 
                 {/* Mobile Header Branding */}
                 <div className="lg:hidden mb-12 flex flex-col items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <Link href="/" className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-[#0f2cbd] text-white shadow-2xl shadow-blue-600/30">
+                    <Link href="/" className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#0f2cbd] text-white shadow-2xl shadow-blue-600/30">
                         <GraduationCap size={28} weight="bold" />
                     </Link>
                     <div className="text-center">
@@ -321,239 +330,305 @@ function SignupFormContent() {
                 <div className="w-full max-w-lg animate-in fade-in zoom-in-95 duration-1000">
                     <div className="mb-10 space-y-3">
                         <h2 className="text-3xl font-extrabold text-slate-950 tracking-tighter">
-                            {step === "phone" ? "Create Workspace" : step === "verify" ? "Security Check" : "Finalize Profile"}
+                            Create Workspace
                         </h2>
                         <p className="text-sm font-medium text-slate-500">
-                            {step === "details" ? `Identify yourself as a ${role.toLowerCase()} to stay aligned.` : "Join the high-integrity prep ecosystem."}
+                           Identify yourself as a aspirant  to stay aligned.
                         </p>
                     </div>
 
-                    <div className="mb-10 p-6 bg-[#0f2cbd]/5 rounded-3xl border border-[#0f2cbd]/10 flex items-start gap-5 shadow-sm">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0f2cbd] shadow-sm border border-[#0f2cbd]/10">
-                            <Sparkle size={20} weight="fill" />
-                        </div>
-                        <div>
-                            <h4 className="text-[10px] font-extrabold text-[#0f2cbd] uppercase tracking-[0.3em]">Flagship Onboarding</h4>
-                            <p className="mt-1.5 text-xs font-semibold leading-relaxed text-slate-600 opacity-90">
-                                Your free account includes unlimited mock simulation and archive access. Upgrade only for advanced subject analytics.
-                            </p>
+                    <div className="mb-12">
+                         <button
+                            type="button"
+                            onClick={handleGoogleSignup}
+                            className="w-full py-4.5 rounded-lg border border-slate-200 font-bold text-slate-700 flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                        >
+                            <GoogleLogo size={22} weight="bold" className="text-[#4285F4]" />
+                            <span>Quick Join with Google</span>
+                        </button>
+                        
+                        <div className="relative mt-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-slate-100"></div>
+                            </div>
+                            <div className="relative flex justify-center text-[10px] font-extrabold uppercase tracking-widest">
+                                <span className="bg-white px-4 text-slate-400">Or establish credentials</span>
+                            </div>
                         </div>
                     </div>
 
-                    <form className="space-y-8" onSubmit={step === "phone" ? handleStartVerification : step === "verify" ? handleVerificationSubmit : handleRegister}>
-                        {step === "phone" && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <form className="space-y-8" onSubmit={handleRegister}>
+                        {/* Mandatory Role Identification */}
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#0f2cbd] px-1">I am registering as a...</label>
+                            <div className="grid grid-cols-2 gap-4">
+                                {(["STUDENT", "TEACHER"] as const).map((r) => (
+                                    <button
+                                        key={r}
+                                        type="button"
+                                        onClick={() => setRole(r)}
+                                        className={cn(
+                                            "flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all font-bold text-sm",
+                                            role === r
+                                                ? "border-[#0f2cbd] bg-blue-50 text-[#0f2cbd]"
+                                                : "border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200"
+                                        )}
+                                    >
+                                        <div className={cn("size-2.5 rounded-full", role === r ? "bg-[#0f2cbd] shadow-[0_0_10px_rgba(15,44,189,0.4)]" : "bg-slate-200")}></div>
+                                        {r.charAt(0) + r.slice(1).toLowerCase()}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Full Name</label>
+                                <div className="relative group">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                        <User size={20} weight="bold" />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={fullName}
+                                        onChange={(event) => setFullName(event.target.value)}
+                                        placeholder="Enter your name"
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Email Address</label>
+                                <div className="relative group">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                        <Envelope size={20} weight="bold" />
+                                    </span>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(event) => setEmail(event.target.value)}
+                                        placeholder="Enter your email"
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Mobile Number</label>
+                                <div className="relative group">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors text-sm font-bold">
+                                        +91
+                                    </span>
+                                    <input
+                                        type="tel"
+                                        value={phone}
+                                        onChange={(event) => setPhone(event.target.value)}
+                                        placeholder="Enter 10-digit number"
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Date of Birth</label>
+                                <div className="relative group">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                        <Calendar size={20} weight="bold" />
+                                    </span>
+                                    <input
+                                        type="date"
+                                        value={dob}
+                                        onChange={(event) => setDob(event.target.value)}
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">City</label>
+                                <div className="relative group">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                        <MapPin size={20} weight="bold" />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={city}
+                                        onChange={(event) => setCity(event.target.value)}
+                                        placeholder="e.g. Mumbai"
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">State</label>
+                                <div className="relative group">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                        <MapPin size={20} weight="bold" />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={state}
+                                        onChange={(event) => setState(event.target.value)}
+                                        placeholder="e.g. Maharashtra"
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {role === "STUDENT" ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Verification Number</label>
+                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">CA Level</label>
+                                    <select
+                                        value={caLevel}
+                                        onChange={(e) => setCaLevel(e.target.value as "foundation" | "ipc" | "final")}
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    >
+                                        <option value="foundation">CA Foundation</option>
+                                        <option value="ipc">CA Intermediate</option>
+                                        <option value="final">CA Final</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Attempt Target</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <select
+                                            value={attemptMonth}
+                                            onChange={(e) => setAttemptMonth(e.target.value)}
+                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
+                                            required
+                                        >
+                                            <option value="5">May</option>
+                                            <option value="11">Nov</option>
+                                        </select>
+                                        <select
+                                            value={attemptYear}
+                                            onChange={(e) => setAttemptYear(e.target.value)}
+                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
+                                            required
+                                        >
+                                            {[2024, 2025, 2026, 2027].map(year => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Subject Expertise</label>
                                     <div className="relative group">
                                         <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
-                                            <DeviceMobile size={22} weight="bold" />
+                                            <Atom size={20} weight="bold" />
                                         </span>
-                                        <input
-                                            type="tel"
-                                            value={phone}
-                                            onChange={(event) => setPhone(event.target.value)}
-                                            placeholder="Enter 10-digit number"
-                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-5 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="brand-button-primary w-full !py-4.5 shadow-[0_25px_60px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
-                                >
-                                    <span>Proceed to Verification</span>
-                                    <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-1" />
-                                </button>
-                            </div>
-                        )}
-
-                        {step === "verify" && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/50 px-5 py-4 shadow-sm">
-                                    <div>
-                                        <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#0f2cbd]">Active Channel</p>
-                                        <p className="mt-1 text-sm font-bold text-slate-900">+91 {phone.replace(/\D/g, "").slice(-10)}</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            clearPendingVerification();
-                                            setStep("phone");
-                                        }}
-                                        className="px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-widest text-[#0f2cbd] hover:text-rose-600 transition-colors border border-blue-200 bg-white"
-                                    >
-                                        Change
-                                    </button>
-                                </div>
-
-                                <FirebaseAuthWidget
-                                    phoneNumber={phone.replace(/\D/g, "").length === 10 ? `91${phone.replace(/\D/g, "")}` : phone.replace(/\D/g, "")}
-                                    onSuccess={handleWidgetSuccess}
-                                    onFailure={(message) => {
-                                        clearPendingVerification();
-                                        setErrorMessage(message);
-                                    }}
-                                />
-                            </div>
-                        )}
-
-                        {step === "details" && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                {/* Role Selection - Industrial Toggle */}
-                                <div className="p-1.5 bg-slate-100 rounded-3xl flex w-full shadow-inner border border-slate-200/50">
-                                    {(["STUDENT", "TEACHER"] as const).map((r) => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            onClick={() => setRole(r)}
-                                            className={cn(
-                                                "flex-1 py-3.5 px-6 rounded-2xl text-[11px] font-extrabold uppercase tracking-widest transition-all",
-                                                role === r 
-                                                    ? "bg-white text-[#0f2cbd] shadow-md shadow-black/5" 
-                                                    : "text-slate-400 hover:text-slate-600"
-                                            )}
-                                        >
-                                            {r} Portal
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Identity Name</label>
-                                        <div className="relative group">
-                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
-                                                <User size={20} weight="bold" />
-                                            </span>
-                                            <input
-                                                type="text"
-                                                value={fullName}
-                                                onChange={(event) => setFullName(event.target.value)}
-                                                placeholder="Full Name"
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Email Node</label>
-                                        <div className="relative group">
-                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
-                                                <Envelope size={20} weight="bold" />
-                                            </span>
-                                            <input
-                                                type="email"
-                                                value={email}
-                                                onChange={(event) => setEmail(event.target.value)}
-                                                placeholder="Professional Email"
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {role === "STUDENT" ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Aspirant Level</label>
-                                            <select
-                                                value={caLevel}
-                                                onChange={(e) => setCaLevel(e.target.value as "foundation" | "ipc" | "final")}
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
-                                                required
-                                            >
-                                                <option value="foundation">CA Foundation</option>
-                                                <option value="ipc">CA Intermediate</option>
-                                                <option value="final">CA Final</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Attempt Target</label>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <select
-                                                    value={attemptMonth}
-                                                    onChange={(e) => setAttemptMonth(e.target.value)}
-                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
-                                                    required
-                                                >
-                                                    <option value="5">May</option>
-                                                    <option value="11">Nov</option>
-                                                    <option value="1">Jan</option>
-                                                </select>
-                                                <select
-                                                    value={attemptYear}
-                                                    onChange={(e) => setAttemptYear(e.target.value)}
-                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
-                                                    required
-                                                >
-                                                    {[2024, 2025, 2026, 2027].map(year => (
-                                                        <option key={year} value={year}>{year}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Academic Department</label>
                                         <input
                                             type="text"
                                             value={department}
                                             onChange={(e) => setDepartment(e.target.value)}
-                                            placeholder="Direct Tax, Audit, Financial Reporting, etc."
-                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-5 px-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white transition-all shadow-sm focus:ring-4 focus:ring-blue-100/50"
+                                            placeholder="e.g. Taxation"
+                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white transition-all shadow-sm focus:ring-4 focus:ring-blue-100/50"
                                             required={role === "TEACHER"}
                                         />
                                     </div>
-                                )}
+                                </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Secure Password</label>
+                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Experience (Years)</label>
                                     <div className="relative group">
                                         <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
-                                            <Lock size={20} weight="bold" />
+                                            <Briefcase size={20} weight="bold" />
                                         </span>
                                         <input
-                                            type="password"
-                                            value={password}
-                                            onChange={(event) => setPassword(event.target.value)}
-                                            placeholder="Minimum 8 characters"
-                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
-                                            required
+                                            type="number"
+                                            value={experienceYears}
+                                            onChange={(e) => setExperienceYears(e.target.value)}
+                                            placeholder="e.g. 5"
+                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white transition-all shadow-sm focus:ring-4 focus:ring-blue-100/50"
+                                            required={role === "TEACHER"}
                                         />
                                     </div>
                                 </div>
                             </div>
                         )}
 
+                        {role === "STUDENT" && caLevel === "final" && (
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Articleship at</label>
+                                <div className="relative group">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors pointer-events-none z-10">
+                                        <Buildings size={20} weight="bold" />
+                                    </span>
+                                    <select
+                                        value={articleshipFirmType}
+                                        onChange={(e) => setArticleshipFirmType(e.target.value)}
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none focus:border-[#0f2cbd] focus:bg-white cursor-pointer appearance-none shadow-sm focus:ring-4 focus:ring-blue-100/50"
+                                        required
+                                    >
+                                        <option value="">Select Firm Tier</option>
+                                        <option value="BIG4">Big 4</option>
+                                        <option value="BIG6">Big 6</option>
+                                        <option value="TOP10">Top 10</option>
+                                        <option value="TOP30">Top 30</option>
+                                        <option value="OTHERS">Others</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Secure Password</label>
+                            <div className="relative group">
+                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                    <Lock size={20} weight="bold" />
+                                </span>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    placeholder="Minimum 8 characters"
+                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                    required
+                                />
+                            </div>
+                        </div>
+
                         {errorMessage && (
-                            <div className="rounded-2xl bg-rose-50 border border-rose-100 p-5 text-xs font-bold text-rose-600 animate-in shake duration-300 flex items-center gap-3 shadow-sm">
+                            <div className="rounded-lg bg-rose-50 border border-rose-100 p-5 text-xs font-bold text-rose-600 animate-in shake duration-300 flex items-center gap-3 shadow-sm">
                                 <div className="size-2 rounded-full bg-rose-600 animate-pulse"></div>
                                 {errorMessage}
                             </div>
                         )}
 
-                        {step !== "verify" && (
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="brand-button-primary w-full !py-5 !text-base shadow-[0_25px_60_px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
-                            >
-                                {isSubmitting ? (
-                                    <Spinner className="animate-spin" size={24} weight="bold" />
-                                ) : (
-                                    <>
-                                        <span>{step === "phone" ? "Secure My Access" : "Establish Profile Node"}</span>
-                                        <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-1" />
-                                    </>
-                                )}
-                            </button>
-                        )}
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="brand-button-primary w-full !py-5 !text-base shadow-[0_25px_60px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
+                        >
+                            {isSubmitting ? (
+                                <Spinner className="animate-spin" size={24} weight="bold" />
+                            ) : (
+                                <>
+                                    <span>Establish Profile Node</span>
+                                    <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-1" />
+                                </>
+                            )}
+                        </button>
                     </form>
 
                     <p className="mt-12 text-center text-xs font-bold text-slate-400 tracking-tight">

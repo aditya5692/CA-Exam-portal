@@ -37,7 +37,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                         {feedItems.map((item: any) => (
-                            <div key={item.id} className="student-surface rounded-xl p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div key={item.id} className="student-surface rounded-lg p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-[var(--student-accent-strong)] opacity-20 group-hover:opacity-100 transition-opacity"></div>
                                 <div className="flex items-start justify-between mb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)]">
                                     <span>{new Date(item.createdAt).toLocaleDateString()}</span>
@@ -63,7 +63,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {materials.map((material: any) => (
-                            <div key={material.id} className="group student-surface p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full bg-white relative overflow-hidden">
+                            <div key={material.id} className="group student-surface p-6 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full bg-white relative overflow-hidden">
                                 {material.isTrending && (
                                     <div className="absolute top-4 left-4 z-10">
                                         <span className="bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
@@ -74,7 +74,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
                                 
                                 <div className="flex items-start justify-between relative z-10 mb-6 gap-3 pt-6">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 text-indigo-500/80 rounded-xl">
+                                        <div className="w-12 h-12 flex items-center justify-center bg-indigo-50 text-indigo-500/80 rounded-lg">
                                             {material.isProtected ? <Lock className="w-6 h-6" /> : <Unlock className="w-6 h-6" />}
                                         </div>
                                         <div>
@@ -117,7 +117,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
             )}
             
             {feedItems.length === 0 && materials.length === 0 && mockTests.length === 0 && (
-                <div className="student-surface py-20 rounded-2xl flex flex-col items-center justify-center text-center">
+                <div className="student-surface py-20 rounded-lg flex flex-col items-center justify-center text-center">
                     <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                         <Lock className="w-8 h-8 text-slate-300" />
                     </div>

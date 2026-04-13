@@ -4,7 +4,6 @@ import {
     loginAsDemoUser, 
     verifyFirebaseTokenAndLogin 
 } from "@/actions/auth-actions";
-import FirebaseAuthWidget from "@/components/auth/firebase-auth-widget";
 import { 
     getGlobalLeaderboard, 
     LeaderboardEntry 
@@ -17,7 +16,8 @@ import {
     ChalkboardTeacher, 
     GraduationCap, 
     IdentificationBadge, 
-    Phone, 
+    Envelope,
+    Lock,
     Spinner, 
     CheckCircle,
     TrendUp,
@@ -25,7 +25,8 @@ import {
     Sparkle,
     CaretRight,
     Certificate,
-    Lightbulb
+    Lightbulb,
+    GoogleLogo
 } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import Link from "next/link";
@@ -33,6 +34,14 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { Lexend } from "next/font/google";
 import { trackLogin, setUserId } from "@/lib/analytics-utils";
+import { 
+    auth, 
+    googleProvider, 
+} from "@/lib/firebase";
+import { 
+    signInWithEmailAndPassword, 
+    signInWithPopup,
+} from "firebase/auth";
 
 
 const lexend = Lexend({
@@ -49,31 +58,15 @@ const DEMO_ACCOUNT_CARDS = [
     { label: "student2", registrationNumber: "STUD002", email: "student2@demo.local", role: "student" as LoginRole },
 ];
 
-const ROLE_META: Record<LoginRole, { title: string; description: string; icon: typeof IdentificationBadge }> = {
-    student: {
-        title: "Student Workspace",
-        description: "Practice timed papers, revisit weak chapters, and track progress.",
-        icon: IdentificationBadge
-    },
-    teacher: {
-        title: "Teacher Workspace",
-        description: "Manage batches, monitor student attempts, and publish materials.",
-        icon: ChalkboardTeacher
-    }
-};
-
 type AuthState = "IDLE" | "VERIFYING" | "FINALIZING" | "SUCCESS";
 
 export default function LoginPage() {
-    const [role, setRole] = useState<LoginRole>("student");
-    const [phone, setPhone] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [authState, setAuthState] = useState<AuthState>("IDLE");
     const [errorMessage, setErrorMessage] = useState("");
 
-    const activeCards = useMemo(
-        () => DEMO_ACCOUNT_CARDS.filter((account) => account.role === role),
-        [role]
-    );
+    const activeCards = DEMO_ACCOUNT_CARDS;
 
     const [trendingExams, setTrendingExams] = useState<any[]>([]);
     const [topAspirants, setTopAspirants] = useState<LeaderboardEntry[]>([]);
@@ -102,24 +95,48 @@ export default function LoginPage() {
         }
         void loadPulseData();
     }, []);
-    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
 
-    const normalizedPhone = useMemo(() => {
-        const digits = phone.replace(/\D/g, "");
-        if (digits.length === 10) return `91${digits}`;
-        return digits;
-    }, [phone]);
+    async function handleGoogleLogin() {
+        if (!auth) return;
+        setErrorMessage("");
+        setAuthState("VERIFYING");
+        trackLogin("google_auth_attempt");
 
-    async function handleStartVerification(event: React.FormEvent) {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const idToken = await result.user.getIdToken();
+            await handleAuthSuccess(idToken);
+        } catch (err: any) {
+            console.error("LoginPage: Google Login Error", err);
+            setErrorMessage(err.message || "Google authentication failed.");
+            setAuthState("IDLE");
+        }
+    }
+
+    async function handleEmailLogin(event: React.FormEvent) {
         event.preventDefault();
-        if (!phone || phone.length < 10) {
-            setErrorMessage("Please enter a valid 10-digit phone number.");
+        if (!auth) return;
+        if (!email || !password) {
+            setErrorMessage("Please enter both email and password.");
             return;
         }
 
         setErrorMessage("");
         setAuthState("VERIFYING");
-        trackLogin("otp_request");
+        trackLogin("email_login_attempt");
+
+        try {
+            const result = await signInWithEmailAndPassword(auth, email, password);
+            const idToken = await result.user.getIdToken();
+            await handleAuthSuccess(idToken);
+        } catch (err: any) {
+            console.error("LoginPage: Email Login Error", err);
+            let msg = "Invalid email or password.";
+            if (err.code === "auth/user-not-found") msg = "No account found with this email.";
+            if (err.code === "auth/wrong-password") msg = "Incorrect password.";
+            setErrorMessage(msg);
+            setAuthState("IDLE");
+        }
     }
 
     async function handleAuthSuccess(accessToken: string) {
@@ -133,15 +150,10 @@ export default function LoginPage() {
         console.log("LoginPage: Starting server-side verification...");
 
         try {
-            const requestedRole = role.toUpperCase() as "STUDENT" | "TEACHER";
-            const result = await verifyFirebaseTokenAndLogin(accessToken, requestedRole);
+            const result = await verifyFirebaseTokenAndLogin(accessToken);
+            console.log("LoginPage: Server verification result:", result);
             
             if (!result.success) {
-                if (result.data && "roleMismatch" in result.data && result.data.roleMismatch) {
-                    if (result.data.actualRole === "STUDENT" || result.data.actualRole === "TEACHER") {
-                        setRole(result.data.actualRole.toLowerCase() as LoginRole);
-                    }
-                }
                 setErrorMessage(result.message);
                 setAuthState("IDLE");
                 return;
@@ -157,22 +169,20 @@ export default function LoginPage() {
             if ('needsRegistration' in result.data! && result.data.needsRegistration) {
                 window.sessionStorage.setItem("pending-firebase-token", accessToken);
                 console.log("LoginPage: New user detected. Redirecting to signup.");
-                window.location.assign(`/auth/signup?phone=${encodeURIComponent(phone)}&role=${encodeURIComponent(role)}&verified=true`);
+                window.location.assign(`/auth/signup?email=${encodeURIComponent(email)}&verified=true`);
                 return;
             }
 
             const redirectTo = "redirectTo" in result.data
                 ? result.data.redirectTo
-                : role === "teacher"
-                    ? "/teacher/dashboard"
-                    : "/student/dashboard";
+                : "/student/dashboard";
 
             console.log(`LoginPage: Login successful. Redirecting to ${redirectTo}`);
             window.location.assign(redirectTo);
-        } catch (err) {
+        } catch (err: any) {
             console.error("LoginPage: Finalization Error", err);
-            setErrorMessage("An unexpected error occurred during finalization.");
-            setAuthState("VERIFYING");
+            setErrorMessage(err.message || "An unexpected error occurred during finalization.");
+            setAuthState("IDLE");
         }
     }
 
@@ -188,7 +198,7 @@ export default function LoginPage() {
 
                 <div className="mb-16">
                     <Link href="/" className="flex items-center gap-4 group">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-900/20 group-hover:scale-105 transition-transform">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xl shadow-blue-900/20 group-hover:scale-105 transition-transform">
                             <GraduationCap size={28} weight="bold" />
                         </div>
                         <div>
@@ -223,13 +233,13 @@ export default function LoginPage() {
                             <div className="grid gap-3">
                                 {isDataLoading ? (
                                     [1, 2].map(i => (
-                                        <div key={i} className="h-16 rounded-2xl bg-white/5 animate-pulse" />
+                                        <div key={i} className="h-16 rounded-lg bg-white/5 animate-pulse" />
                                     ))
                                 ) : (
                                     trendingExams.map((exam) => (
-                                        <div key={exam.id} className="group flex items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 p-4 rounded-2xl transition-all cursor-default">
+                                        <div key={exam.id} className="group flex items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 p-4 rounded-lg transition-all cursor-default">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400">
+                                                <div className="h-10 w-10 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-400">
                                                     < Sparkle size={20} weight="bold" />
                                                 </div>
                                                 <div>
@@ -258,7 +268,7 @@ export default function LoginPage() {
                             <div className="flex -space-x-3 overflow-hidden p-1">
                                 {topAspirants.map((asp, i) => (
                                     <div key={asp.studentId} className={cn(
-                                        "inline-block h-10 w-10 rounded-xl ring-4 ring-[#020617] bg-white/10 flex items-center justify-center text-[11px] font-extrabold text-white border border-white/10",
+                                        "inline-block h-10 w-10 rounded-lg ring-4 ring-[#020617] bg-white/10 flex items-center justify-center text-[11px] font-extrabold text-white border border-white/10",
                                         i === 0 && "bg-blue-600 border-blue-400",
                                         i === 1 && "bg-emerald-600 border-emerald-400",
                                         i === 2 && "bg-amber-600 border-amber-400"
@@ -266,7 +276,7 @@ export default function LoginPage() {
                                         {asp.fullName.charAt(0)}
                                     </div>
                                 ))}
-                                <div className="h-10 w-10 rounded-xl ring-4 ring-[#020617] bg-white/5 border border-white/5 flex items-center justify-center text-[9px] font-bold text-slate-500">
+                                <div className="h-10 w-10 rounded-lg ring-4 ring-[#020617] bg-white/5 border border-white/5 flex items-center justify-center text-[9px] font-bold text-slate-500">
                                     +12k
                                 </div>
                             </div>
@@ -293,7 +303,7 @@ export default function LoginPage() {
                 
                 {/* Mobile Header Branding */}
                 <div className="lg:hidden mb-12 flex flex-col items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <Link href="/" className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-[#0f2cbd] text-white shadow-2xl shadow-blue-600/30">
+                    <Link href="/" className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#0f2cbd] text-white shadow-2xl shadow-blue-600/30">
                         <GraduationCap size={28} weight="bold" />
                     </Link>
                     <div className="text-center">
@@ -312,85 +322,83 @@ export default function LoginPage() {
                         </p>
                     </div>
 
-                    {/* Role Selector - Industrial Toggle */}
-                    <div className="mb-10 p-1.5 bg-slate-100 rounded-3xl flex items-center w-full shadow-inner border border-slate-200/50">
-                        {([
-                            { value: "student", label: "Student", icon: IdentificationBadge },
-                            { value: "teacher", label: "Teacher", icon: ChalkboardTeacher }
-                        ] as const).map((item) => {
-                            const Icon = item.icon;
-                            const isActive = role === item.value;
-
-                            return (
-                                <button
-                                    key={item.value}
-                                    type="button"
-                                    disabled={authState !== "IDLE"}
-                                    onClick={() => setRole(item.value)}
-                                    className={cn(
-                                        "flex-1 flex items-center justify-center gap-3 py-3.5 rounded-2xl text-[11px] font-extrabold uppercase tracking-widest transition-all",
-                                        isActive
-                                            ? "bg-white text-[#0f2cbd] shadow-md shadow-black/5"
-                                            : "text-slate-400 hover:text-slate-600 disabled:opacity-50"
-                                    )}
-                                >
-                                    <Icon size={18} weight="bold" />
-                                    {item.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-
                     <div className="min-h-[200px] flex flex-col">
                         {authState === "IDLE" ? (
-                            <form className="space-y-8" onSubmit={handleStartVerification}>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Verification Channel</label>
-                                    <div className="relative group">
-                                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
-                                            <Phone size={22} weight="bold" />
-                                        </span>
-                                        <input
-                                            type="tel"
-                                            value={phone}
-                                            onChange={(event) => setPhone(event.target.value)}
-                                            placeholder="Enter phone number"
-                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-5 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
-                                            required
-                                        />
+                            <div className="space-y-8">
+                                <form className="space-y-6" onSubmit={handleEmailLogin}>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Email Address</label>
+                                            <div className="relative group">
+                                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                                    <Envelope size={22} weight="bold" />
+                                                </span>
+                                                <input
+                                                    type="email"
+                                                    value={email}
+                                                    onChange={(event) => setEmail(event.target.value)}
+                                                    placeholder="Enter your email"
+                                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 py-5 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 px-1">Password</label>
+                                            <div className="relative group">
+                                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0f2cbd] transition-colors">
+                                                    <Lock size={22} weight="bold" />
+                                                </span>
+                                                <input
+                                                    type="password"
+                                                    value={password}
+                                                    onChange={(event) => setPassword(event.target.value)}
+                                                    placeholder="Enter your password"
+                                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 py-5 pl-14 pr-6 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#0f2cbd] focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="brand-button-primary w-full !py-4.5 !text-base shadow-[0_25px_60px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
-                                >
-                                    <span>Request Secure OTP</span>
-                                    <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-1" />
-                                </button>
-                            </form>
-                        ) : authState === "VERIFYING" ? (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                <div className="flex items-center gap-4 p-5 bg-blue-50/50 rounded-2xl border border-blue-100/50 shadow-sm">
-                                    <div className="flex-1">
-                                        <div className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#0f2cbd] leading-none mb-2">Verifying Identity</div>
-                                        <div className="text-sm font-bold text-slate-900 tracking-tight">+91 {phone}</div>
-                                    </div>
-                                    <button 
-                                        type="button"
-                                        onClick={() => setAuthState("IDLE")}
-                                        className="px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-widest text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-200 bg-white"
+
+                                    <button
+                                        type="submit"
+                                        className="brand-button-primary w-full !py-4.5 !text-base shadow-[0_25px_60px_-15px_rgba(15,44,189,0.3)] flex items-center justify-center gap-3"
                                     >
-                                        Change
+                                        <span>Sign In Now</span>
+                                        <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-1" />
                                     </button>
+                                </form>
+
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-slate-100"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-[10px] font-extrabold uppercase tracking-widest">
+                                        <span className="bg-white px-4 text-slate-400">Or continue with</span>
+                                    </div>
                                 </div>
-                                <FirebaseAuthWidget
-                                    phoneNumber={normalizedPhone}
-                                    onSuccess={handleAuthSuccess}
-                                    onFailure={(err) => {
-                                        setErrorMessage(err);
-                                        setAuthState("IDLE");
-                                    }}
-                                />
+
+                                <button
+                                    type="button"
+                                    onClick={handleGoogleLogin}
+                                    className="w-full py-4.5 rounded-lg border border-slate-200 font-bold text-slate-700 flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                                >
+                                    <GoogleLogo size={22} weight="bold" className="text-[#4285F4]" />
+                                    <span>Google Sign In</span>
+                                </button>
+                            </div>
+                        ) : authState === "VERIFYING" ? (
+                            <div className="flex flex-col items-center justify-center space-y-6 py-12 animate-in fade-in duration-500">
+                                <div className="relative">
+                                    <div className="h-20 w-20 rounded-full border-4 border-slate-100 border-t-[#0f2cbd] animate-spin" />
+                                    <Lock className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#0f2cbd]" size={28} weight="fill" />
+                                </div>
+                                <div className="text-center">
+                                    <h3 className="text-xl font-extrabold text-slate-950 tracking-tight">Securing Session</h3>
+                                    <p className="text-sm font-medium text-slate-500 mt-2">Authenticating credentials with Firebase...</p>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center space-y-6 py-12 animate-in fade-in duration-500">
@@ -406,7 +414,7 @@ export default function LoginPage() {
                         )}
 
                         {errorMessage && (
-                            <div className="mt-8 rounded-2xl bg-rose-50 border border-rose-100 p-5 text-xs font-bold text-rose-600 animate-in shake duration-300 flex items-center gap-3">
+                            <div className="mt-8 rounded-lg bg-rose-50 border border-rose-100 p-5 text-xs font-bold text-rose-600 animate-in shake duration-300 flex items-center gap-3">
                                 <div className="size-2 rounded-full bg-rose-600 animate-pulse"></div>
                                 {errorMessage}
                             </div>
@@ -432,10 +440,10 @@ export default function LoginPage() {
                                                 setAuthState("IDLE");
                                             }
                                         }}
-                                        className="group flex items-center justify-between bg-slate-50 border border-slate-200/50 p-4 rounded-2xl hover:border-[#0f2cbd] hover:bg-[#0f2cbd]/5 transition-all text-left"
+                                        className="group flex items-center justify-between bg-slate-50 border border-slate-200/50 p-4 rounded-lg hover:border-[#0f2cbd] hover:bg-[#0f2cbd]/5 transition-all text-left"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="size-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-[#0f2cbd] font-bold shadow-sm group-hover:bg-[#0f2cbd] group-hover:text-white transition-all text-xs">
+                                            <div className="size-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-[#0f2cbd] font-bold shadow-sm group-hover:bg-[#0f2cbd] group-hover:text-white transition-all text-xs">
                                                 {account.label.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
@@ -452,7 +460,7 @@ export default function LoginPage() {
 
                     <p className="mt-10 text-center text-xs font-bold text-slate-400 tracking-tight">
                         Don&apos;t have an account?{" "}
-                        <Link href={`/auth/signup?role=${role}`} className="text-[#0f2cbd] hover:underline underline-offset-4 decoration-blue-100 font-extrabold decoration-4">
+                        <Link href="/auth/signup" className="text-[#0f2cbd] hover:underline underline-offset-4 decoration-blue-100 font-extrabold decoration-4">
                             Claim access for free
                         </Link>
                     </p>

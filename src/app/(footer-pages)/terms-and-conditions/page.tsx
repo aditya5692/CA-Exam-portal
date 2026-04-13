@@ -24,7 +24,7 @@ const TERMS = [
 export default function TermsAndConditionsPage() {
     return (
         <div className="space-y-8">
-            <section className="rounded-[40px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-12">
+            <section className="rounded-lg border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-12">
                 <div className="space-y-4">
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                         Terms and conditions
@@ -38,7 +38,7 @@ export default function TermsAndConditionsPage() {
                 </div>
             </section>
 
-            <section className="rounded-[36px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-10">
+            <section className="rounded-lg border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-10">
                 <div className="space-y-8">
                     {TERMS.map((term, index) => (
                         <div key={term.title} className="space-y-3">

@@ -20,7 +20,7 @@ export function Footer() {
                 <div className="grid grid-cols-1 gap-12 pb-16 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr]">
                     <div className="space-y-6">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f2cbd] text-white shadow-lg shadow-blue-500/20 transition-transform duration-300 group-hover:scale-110">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0f2cbd] text-white shadow-lg shadow-blue-500/20 transition-transform duration-300 group-hover:scale-110">
                                 <GraduationCap size={22} weight="bold" />
                             </div>
                             <div>
@@ -38,7 +38,7 @@ export function Footer() {
                                 <Link
                                     key={index}
                                     href="#"
-                                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition-all hover:bg-[#0f2cbd] hover:text-white hover:border-[#0f2cbd] hover:shadow-lg hover:shadow-blue-500/10"
+                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-all hover:bg-[#0f2cbd] hover:text-white hover:border-[#0f2cbd] hover:shadow-lg hover:shadow-blue-500/10"
                                 >
                                     <Icon size={18} weight="fill" />
                                 </Link>
@@ -74,9 +74,9 @@ export function Footer() {
                             <input
                                 type="email"
                                 placeholder="Enter your email"
-                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-5 pr-14 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-4 pl-5 pr-14 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                             />
-                            <button className="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white transition-all active:scale-95 hover:bg-blue-700 shadow-md">
+                            <button className="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-950 text-white transition-all active:scale-95 hover:bg-blue-700 shadow-md">
                                 <PaperPlaneTilt size={20} weight="bold" />
                             </button>
                         </div>

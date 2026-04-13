@@ -98,7 +98,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
     };
 
     return (
-        <div className="student-surface overflow-hidden rounded-[32px]">
+        <div className="student-surface overflow-hidden rounded-lg">
             <div className="flex flex-col justify-between gap-6 border-b border-[var(--student-border)] p-10 sm:flex-row sm:items-center">
                 <h3 className="  text-2xl font-black tracking-tighter text-[var(--student-text)]">System Directory</h3>
                 <div className="relative">
@@ -108,7 +108,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search users..."
-                        className="w-full rounded-[20px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)]/55 focus:border-[var(--student-accent-soft-strong)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 focus:ring-[var(--student-accent-soft)]/70 sm:w-96"
+                        className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)]/55 focus:border-[var(--student-accent-soft-strong)] focus:bg-[var(--student-panel-solid)] focus:outline-none focus:ring-4 focus:ring-[var(--student-accent-soft)]/70 sm:w-96"
                     />
                 </div>
             </div>
@@ -137,7 +137,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                 <tr key={user.id} className="group transition-all duration-300 hover:bg-[var(--student-panel-muted)]/70">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-5">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] border border-[var(--student-border)] bg-[var(--student-panel-solid)] text-sm font-black text-[var(--student-muted)] shadow-sm transition-all">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-solid)] text-sm font-black text-[var(--student-muted)] shadow-sm transition-all">
                                                 {user.fullName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
                                             </div>
                                             <div>
@@ -181,7 +181,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                         <button 
                                             onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
                                             className={cn(
-                                                "rounded-[14px] border border-transparent p-3 text-[var(--student-muted)] transition-all hover:border-[var(--student-border)] hover:bg-[var(--student-panel-solid)] hover:text-[var(--student-accent-strong)]",
+                                                "rounded-lg border border-transparent p-3 text-[var(--student-muted)] transition-all hover:border-[var(--student-border)] hover:bg-[var(--student-panel-solid)] hover:text-[var(--student-accent-strong)]",
                                                 activeMenu === user.id ? "border-[var(--student-border)] bg-[var(--student-panel-solid)] text-[var(--student-accent-strong)] opacity-100" : "opacity-0 group-hover:opacity-100"
                                             )}
                                         >
@@ -189,16 +189,16 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                         </button>
 
                                         {activeMenu === user.id && (
-                                            <div className="absolute right-20 top-6 z-50 w-56 rounded-2xl border border-[var(--student-border)] bg-white p-2 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="absolute right-20 top-6 z-50 w-56 rounded-lg border border-[var(--student-border)] bg-white p-2 shadow-xl animate-in fade-in zoom-in-95 duration-200">
                                                 <button 
                                                     onClick={() => { setEditingUser(user); setActiveMenu(null); }}
-                                                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--student-text)] transition-all hover:bg-[var(--student-panel-muted)]"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--student-text)] transition-all hover:bg-[var(--student-panel-muted)]"
                                                 >
                                                     <PencilSimple size={18} weight="bold" /> Edit Profile
                                                 </button>
                                                 <button 
                                                     onClick={() => { setBlockingUser({ user, status: !user.isBlocked }); setActiveMenu(null); }}
-                                                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--student-text)] transition-all hover:bg-[var(--student-panel-muted)]"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--student-text)] transition-all hover:bg-[var(--student-panel-muted)]"
                                                 >
                                                     <Prohibit size={18} weight="bold" className={user.isBlocked ? "text-emerald-500" : "text-amber-500"} /> 
                                                     {user.isBlocked ? "Revoke Suspension" : "Suspend User"}
@@ -206,14 +206,14 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                                 <div className="my-1 border-t border-[var(--student-border)]" />
                                                 <button 
                                                     onClick={() => { setManagingUser(user); setActiveMenu(null); }}
-                                                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)] transition-all hover:bg-[var(--student-accent-soft)]"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--student-accent-strong)] transition-all hover:bg-[var(--student-accent-soft)]"
                                                 >
                                                     <ShieldCheck size={18} weight="bold" /> Manage Governance
                                                 </button>
                                                 <div className="my-1 border-t border-[var(--student-border)]" />
                                                 <button 
                                                     onClick={() => { setDeletingUser(user); setActiveMenu(null); }}
-                                                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-50"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-50"
                                                 >
                                                     <Trash size={18} weight="bold" /> Permanent Delete
                                                 </button>
@@ -231,14 +231,14 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
             {(error || success) && (
                 <div className="fixed bottom-10 right-10 z-[100] flex animate-in slide-in-from-right-full flex-col gap-3">
                     {error && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-lg">
+                        <div className="flex items-center gap-4 rounded-lg border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-lg">
                             <Info size={20} weight="fill" />
                             <p className="text-xs font-bold uppercase tracking-wider">{error}</p>
                             <button onClick={() => setError(null)}><X size={16} weight="bold" /></button>
                         </div>
                     )}
                     {success && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-lg">
+                        <div className="flex items-center gap-4 rounded-lg border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-lg">
                             <CheckCircle size={20} weight="fill" />
                             <p className="text-xs font-bold uppercase tracking-wider">{success}</p>
                             <button onClick={() => setSuccess(null)}><X size={16} weight="bold" /></button>
@@ -250,13 +250,13 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
             {/* Edit Modal */}
             {editingUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--student-ink)]/40 p-6 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="w-full max-w-xl rounded-[40px] border border-[var(--student-border)] bg-white p-10 shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="w-full max-w-xl rounded-lg border border-[var(--student-border)] bg-white p-10 shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="mb-8 flex items-center justify-between">
                             <div className="space-y-1">
                                 <h3 className="  text-2xl font-black tracking-tight text-[var(--student-text)]">Edit Platform Member</h3>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)]">Configuration for {editingUser.email}</p>
                             </div>
-                            <button onClick={() => setEditingUser(null)} className="rounded-2xl border border-[var(--student-border)] p-3 text-[var(--student-muted)] transition-all hover:bg-[var(--student-panel-muted)]">
+                            <button onClick={() => setEditingUser(null)} className="rounded-lg border border-[var(--student-border)] p-3 text-[var(--student-muted)] transition-all hover:bg-[var(--student-panel-muted)]">
                                 <X size={24} weight="bold" />
                             </button>
                         </div>
@@ -270,7 +270,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                     <input 
                                         name="fullName" 
                                         defaultValue={editingUser.fullName || ""} 
-                                        className="w-full rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
+                                        className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -278,7 +278,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                     <select 
                                         name="role" 
                                         defaultValue={editingUser.role}
-                                        className="w-full rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
+                                        className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
                                     >
                                         <option value="STUDENT">STUDENT</option>
                                         <option value="TEACHER">TEACHER</option>
@@ -293,7 +293,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                     <input 
                                         name="registrationNumber" 
                                         defaultValue={editingUser.registrationNumber || ""} 
-                                        className="w-full rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
+                                        className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -301,7 +301,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                     <input 
                                         name="department" 
                                         defaultValue={editingUser.department || ""} 
-                                        className="w-full rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
+                                        className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-5 py-4 text-xs font-bold text-[var(--student-text)] outline-none focus:border-[var(--student-accent-soft-strong)] focus:bg-white"
                                     />
                                 </div>
                             </div>
@@ -310,7 +310,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                 <button 
                                     disabled={isPending}
                                     type="submit" 
-                                    className="w-full rounded-3xl bg-[var(--student-accent-strong)] py-5 text-[10px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-[var(--student-accent-strong)]/20 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+                                    className="w-full rounded-lg bg-[var(--student-accent-strong)] py-5 text-[10px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-[var(--student-accent-strong)]/20 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
                                 >
                                     {isPending ? "Syncing Platform..." : "Update Credentials"}
                                 </button>
@@ -323,9 +323,9 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
             {/* Delete Modal */}
             {deletingUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-rose-950/20 p-6 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-md rounded-[40px] border border-rose-100 bg-white p-10 shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="w-full max-w-md rounded-lg border border-rose-100 bg-white p-10 shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="mb-8 flex flex-col items-center text-center">
-                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[24px] bg-rose-50 text-rose-500">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-rose-50 text-rose-500">
                                 <Trash size={40} weight="fill" />
                             </div>
                             <h3 className="mb-2   text-2xl font-black tracking-tight text-slate-900">Irreversible Action</h3>
@@ -337,14 +337,14 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                         <div className="flex gap-4">
                             <button 
                                 onClick={() => setDeletingUser(null)}
-                                className="flex-1 rounded-2xl border border-[var(--student-border)] bg-white py-4 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] transition-all hover:bg-slate-50"
+                                className="flex-1 rounded-lg border border-[var(--student-border)] bg-white py-4 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={() => handleDelete(deletingUser.id)}
                                 disabled={isPending}
-                                className="flex-1 rounded-2xl bg-rose-500 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-500/20 transition-all hover:bg-rose-600 active:scale-95 disabled:opacity-50"
+                                className="flex-1 rounded-lg bg-rose-500 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-500/20 transition-all hover:bg-rose-600 active:scale-95 disabled:opacity-50"
                             >
                                 {isPending ? "Erasing..." : "Delete User"}
                             </button>
@@ -356,10 +356,10 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
             {/* Block Modal */}
             {blockingUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-amber-950/10 p-6 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-md rounded-[40px] border border-amber-100 bg-white p-10 shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="w-full max-w-md rounded-lg border border-amber-100 bg-white p-10 shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="mb-8 flex flex-col items-center text-center">
                             <div className={cn(
-                                "mb-6 flex h-20 w-20 items-center justify-center rounded-[24px]",
+                                "mb-6 flex h-20 w-20 items-center justify-center rounded-lg",
                                 blockingUser.status ? "bg-amber-50 text-amber-500" : "bg-emerald-50 text-emerald-500"
                             )}>
                                 <Prohibit size={40} weight="fill" />
@@ -378,7 +378,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                         <div className="flex gap-4">
                             <button 
                                 onClick={() => setBlockingUser(null)}
-                                className="flex-1 rounded-2xl border border-[var(--student-border)] bg-white py-4 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] transition-all hover:bg-slate-50"
+                                className="flex-1 rounded-lg border border-[var(--student-border)] bg-white py-4 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
@@ -386,7 +386,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                 onClick={() => handleBlock(blockingUser.user.id, blockingUser.status)}
                                 disabled={isPending}
                                 className={cn(
-                                    "flex-1 rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 disabled:opacity-50",
+                                    "flex-1 rounded-lg py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 disabled:opacity-50",
                                     blockingUser.status ? "bg-amber-500 shadow-amber-500/20 hover:bg-amber-600" : "bg-emerald-500 shadow-emerald-500/20 hover:bg-emerald-600"
                                 )}
                             >

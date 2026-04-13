@@ -159,7 +159,7 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                     color="text-amber-600"
                     bg="bg-amber-50"
                 />
-                <div className="group relative overflow-hidden rounded-[32px] bg-slate-900 p-8 shadow-2xl transition-all hover:scale-[1.02]">
+                <div className="group relative overflow-hidden rounded-lg bg-slate-900 p-8 shadow-2xl transition-all hover:scale-[1.02]">
                     <div className="relative z-10 flex flex-col h-full justify-between">
                         <div className="flex items-center justify-between">
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Manual Operations</p>
@@ -167,7 +167,7 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                         </div>
                         <button 
                             onClick={() => setIsGranting(true)}
-                            className="mt-6 w-full rounded-2xl bg-white py-4 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-indigo-400 hover:text-white"
+                            className="mt-6 w-full rounded-lg bg-white py-4 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-indigo-400 hover:text-white"
                         >
                             Provision New License
                         </button>
@@ -177,7 +177,7 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
             </div>
 
             {/* Transaction Ledger */}
-            <div className="student-surface overflow-hidden rounded-[40px] border border-[var(--student-border)]">
+            <div className="student-surface overflow-hidden rounded-lg border border-[var(--student-border)]">
                 <div className="flex flex-col border-b border-[var(--student-border)] p-8 lg:flex-row lg:items-center lg:justify-between lg:p-10 gap-6">
                     <div>
                         <h3 className="text-2xl font-black tracking-tight text-[var(--student-text)]">Revenue Ledger</h3>
@@ -192,12 +192,12 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search customers..."
-                                className="w-full rounded-[20px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:bg-white sm:w-80"
+                                className="w-full rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-4 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-text)] transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:bg-white sm:w-80"
                             />
                         </div>
                         <button 
                             onClick={handleExportCsv}
-                            className="flex h-12 items-center gap-3 rounded-[20px] bg-white border border-[var(--student-border)] px-6 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
+                            className="flex h-12 items-center gap-3 rounded-lg bg-white border border-[var(--student-border)] px-6 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
                         >
                             <DownloadSimple size={18} weight="bold" /> Export CSV
                         </button>
@@ -221,7 +221,7 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                                 <tr key={s.id} className="group hover:bg-[var(--student-panel-muted)]/20 transition-all">
                                     <td className="p-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/5 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900/5 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all">
                                                 <IdentificationBadge size={20} weight="bold" />
                                             </div>
                                             <div>
@@ -272,7 +272,7 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
             {/* Manual Grant Modal */}
             {isGranting && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-xl rounded-[40px] bg-white p-10 shadow-2xl animate-in zoom-in-95">
+                    <div className="w-full max-w-xl rounded-lg bg-white p-10 shadow-2xl animate-in zoom-in-95">
                         <div className="mb-8 flex items-center justify-between">
                             <h3 className="  text-2xl font-black tracking-tight">Manual Provisioning</h3>
                             <button onClick={() => {setIsGranting(false); setSelectedUser(null);}} className="p-2"><X size={24} /></button>
@@ -288,11 +288,11 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                                             value={userSearch}
                                             onChange={(e) => setUserSearch(e.target.value)}
                                             placeholder="Search name, email or phone..." 
-                                            className="w-full rounded-2xl border p-4 pl-14 text-sm font-bold" 
+                                            className="w-full rounded-lg border p-4 pl-14 text-sm font-bold" 
                                         />
                                     </div>
                                     
-                                    <div className="max-h-60 overflow-y-auto rounded-2xl border border-slate-50 space-y-1">
+                                    <div className="max-h-60 overflow-y-auto rounded-lg border border-slate-50 space-y-1">
                                         {searchResults.map(user => (
                                             <button 
                                                 key={user.id}
@@ -313,9 +313,9 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                                 </div>
                             ) : (
                                 <form onSubmit={handleGrantPlan} className="space-y-6">
-                                    <div className="rounded-[24px] bg-slate-50 p-6 flex items-center justify-between border border-slate-100">
+                                    <div className="rounded-lg bg-slate-50 p-6 flex items-center justify-between border border-slate-100">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white">
+                                            <div className="h-12 w-12 rounded-lg bg-slate-900 flex items-center justify-center text-white">
                                                 <IdentificationBadge size={24} weight="fill" />
                                             </div>
                                             <div>
@@ -332,7 +332,7 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                                             <select 
                                                 value={grantPlan}
                                                 onChange={(e) => setGrantPlan(e.target.value)}
-                                                className="w-full rounded-2xl border p-4 text-xs font-bold appearance-none bg-white"
+                                                className="w-full rounded-lg border p-4 text-xs font-bold appearance-none bg-white"
                                             >
                                                 <option value="PRO">Pro Plan</option>
                                                 <option value="ENTERPRISE">Enterprise</option>
@@ -345,19 +345,19 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
                                                 type="number" 
                                                 value={grantDuration}
                                                 onChange={(e) => setGrantDuration(parseInt(e.target.value))}
-                                                className="w-full rounded-2xl border p-4 text-xs font-bold" 
+                                                className="w-full rounded-lg border p-4 text-xs font-bold" 
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="rounded-2xl bg-amber-50 p-4 flex gap-3">
+                                    <div className="rounded-lg bg-amber-50 p-4 flex gap-3">
                                         <Info size={20} weight="fill" className="text-amber-500 shrink-0" />
                                         <p className="text-[10px] font-medium text-amber-900 leading-relaxed uppercase tracking-wider">
                                             Granting this plan will bypass payment gateways. Record will be marked as "GRANTED_BY_ADMIN" in the registry.
                                         </p>
                                     </div>
 
-                                    <button disabled={isPending} type="submit" className="w-full rounded-3xl bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white shadow-xl hover:scale-[1.02] transition-all">
+                                    <button disabled={isPending} type="submit" className="w-full rounded-lg bg-slate-900 py-5 text-[10px] font-black uppercase tracking-widest text-white shadow-xl hover:scale-[1.02] transition-all">
                                         {isPending ? "Injecting Entitlement..." : "Confirm Provisioning"}
                                     </button>
                                 </form>
@@ -371,14 +371,14 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
             {(error || success) && (
                 <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-3">
                     {error && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
                             <Info size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
                             <button onClick={() => setError(null)}><X size={16} weight="bold" /></button>
                         </div>
                     )}
                     {success && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
                             <CheckCircle size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{success}</p>
                             <button onClick={() => setSuccess(null)}><X size={16} weight="bold" /></button>
@@ -392,9 +392,9 @@ export function TreasuryPortal({ initialSubscriptions }: TreasuryPortalProps) {
 
 function StatCard({ label, value, sub, icon: Icon, trend, color, bg }: any) {
     return (
-        <div className="student-surface rounded-[32px] border border-[var(--student-border)] p-8 transition-all hover:shadow-xl group">
+        <div className="student-surface rounded-lg border border-[var(--student-border)] p-8 transition-all hover:shadow-xl group">
             <div className="mb-6 flex items-center justify-between">
-                <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm transition-all group-hover:scale-110", bg, color)}>
+                <div className={cn("flex h-12 w-12 items-center justify-center rounded-lg shadow-sm transition-all group-hover:scale-110", bg, color)}>
                     <Icon size={24} weight="bold" />
                 </div>
                 <span className={cn(
@@ -441,20 +441,20 @@ function AdminSubActions({ subId, currentStatus, onUpdate }: { subId: string, cu
         <div className="relative inline-block text-left">
             <button 
                 onClick={() => setShow(!show)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 hover:text-slate-900 transition-all hover:shadow-md"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-100 bg-white text-slate-400 hover:text-slate-900 transition-all hover:shadow-md"
             >
                 <ArrowClockwise size={18} weight="bold" className={cn(show && "rotate-180 transition-transform")} />
             </button>
             
             {show && (
-                <div className="absolute right-0 z-10 mt-2 w-48 rounded-2xl bg-white p-2 shadow-2xl border border-slate-100 animate-in fade-in slide-in-from-top-2">
+                <div className="absolute right-0 z-10 mt-2 w-48 rounded-lg bg-white p-2 shadow-2xl border border-slate-100 animate-in fade-in slide-in-from-top-2">
                     {["ACTIVE", "CANCELLED", "EXPIRED"].map(s => (
                         <button 
                             key={s}
                             disabled={currentStatus === s}
                             onClick={() => {onUpdate(s); setShow(false);}}
                             className={cn(
-                                "w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                "w-full text-left px-4 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                                 currentStatus === s ? "bg-slate-50 text-slate-300" : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"
                             )}
                         >

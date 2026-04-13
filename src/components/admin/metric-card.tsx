@@ -20,9 +20,9 @@ export function MetricCard({ label, value, trend, icon: Icon, color }: MetricCar
     };
 
     return (
-        <div className="group relative overflow-hidden rounded-[32px] border border-[var(--student-border)] bg-white p-6 transition-all hover:-translate-y-1 hover:border-[var(--student-accent-soft-strong)] hover:shadow-xl">
+        <div className="group relative overflow-hidden rounded-lg border border-[var(--student-border)] bg-white p-6 transition-all hover:-translate-y-1 hover:border-[var(--student-accent-soft-strong)] hover:shadow-xl">
             <div className="flex items-start justify-between">
-                <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-110", colorClasses[color])}>
+                <div className={cn("flex h-12 w-12 items-center justify-center rounded-lg transition-transform group-hover:scale-110", colorClasses[color])}>
                     <Icon size={24} weight="bold" />
                 </div>
                 <div className="text-right">

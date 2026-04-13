@@ -60,13 +60,13 @@ export function ManagementHub({
                 </div>
 
                 {/* Tab Switcher */}
-                <div className="flex p-1.5 bg-[var(--student-panel-muted)]/50 rounded-[24px] border border-[var(--student-border)]">
+                <div className="flex p-1.5 bg-[var(--student-panel-muted)]/50 rounded-lg border border-[var(--student-border)]">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                "flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                "flex items-center gap-2.5 px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                                 activeTab === tab.id 
                                     ? "bg-white text-[var(--student-text)] shadow-lg scale-[1.02]" 
                                     : "text-[var(--student-muted)] hover:text-[var(--student-text)] hover:bg-white/40"
@@ -88,7 +88,7 @@ export function ManagementHub({
                 )}
                 {activeTab === "identity" && (
                     <div className="animate-in fade-in zoom-in-95 duration-500">
-                        <div className="student-surface rounded-[40px] overflow-hidden">
+                        <div className="student-surface rounded-lg overflow-hidden">
                             {usersView}
                         </div>
                     </div>
@@ -100,21 +100,21 @@ export function ManagementHub({
                 )}
                 {activeTab === "studio" && (
                     <div className="animate-in fade-in zoom-in-95 duration-500">
-                        <div className="student-surface rounded-[40px] p-6 lg:p-10">
+                        <div className="student-surface rounded-lg p-6 lg:p-10">
                             {marketplaceView}
                         </div>
                     </div>
                 )}
                 {activeTab === "treasury" && (
                     <div className="animate-in fade-in zoom-in-95 duration-500">
-                        <div className="student-surface rounded-[40px] p-6 lg:p-10">
+                        <div className="student-surface rounded-lg p-6 lg:p-10">
                             {subscriptionView}
                         </div>
                     </div>
                 )}
                 {activeTab === "integrations" && (
                     <div className="animate-in fade-in zoom-in-95 duration-500">
-                        <div className="student-surface rounded-[40px] p-6 lg:p-10">
+                        <div className="student-surface rounded-lg p-6 lg:p-10">
                             {integrationView}
                         </div>
                     </div>

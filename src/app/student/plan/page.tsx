@@ -80,31 +80,31 @@ export default async function StudentPlanPage() {
             </div>
 
             {planStatusNotice && (
-                <div className="rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
+                <div className="rounded-lg border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
                     {planStatusNotice}
                 </div>
             )}
 
             {latestSubscription?.status === "FAILED" && (
-                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
+                <div className="rounded-lg border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
                     Your last payment attempt failed. You can retry below without creating a new account.
                 </div>
             )}
 
             {latestSubscription?.status === "PENDING" && (
-                <div className="rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-sm font-semibold text-sky-700">
+                <div className="rounded-lg border border-sky-100 bg-sky-50 px-5 py-4 text-sm font-semibold text-sky-700">
                     Payment authorization is still in progress. If you closed checkout midway, you can retry below.
                 </div>
             )}
 
             {isCancellationScheduled && currentPeriodEndDate && (
-                <div className="rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
+                <div className="rounded-lg border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
                     Your subscription will cancel at the end of the current billing cycle. Premium access remains active until {currentPeriodEndDate}.
                 </div>
             )}
 
             <div
-                className={`rounded-2xl border p-6 ${
+                className={`rounded-lg border p-6 ${
                     hasPremiumAccess
                         ? "border-indigo-200 bg-gradient-to-br from-indigo-50 to-violet-50"
                         : "border-gray-200 bg-gray-50"
@@ -113,7 +113,7 @@ export default async function StudentPlanPage() {
                 <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
                     <div className="flex items-center gap-4">
                         <div
-                            className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${
+                            className={`flex h-14 w-14 items-center justify-center rounded-lg shadow-md ${
                                 hasPremiumAccess ? "bg-indigo-600 text-white" : "bg-gray-400 text-white"
                             }`}
                         >
@@ -158,7 +158,7 @@ export default async function StudentPlanPage() {
 
                     <div className="flex flex-wrap items-center gap-3">
                         {hasPremiumAccess && (
-                            <div className="flex items-center gap-2 rounded-xl border border-indigo-100 bg-white px-5 py-2.5 text-sm font-bold text-indigo-700 shadow-sm">
+                            <div className="flex items-center gap-2 rounded-lg border border-indigo-100 bg-white px-5 py-2.5 text-sm font-bold text-indigo-700 shadow-sm">
                                 <CheckCircle className="h-4 w-4" /> {hasProAccess ? "Full Access Active" : "Premium Access Active"}
                             </div>
                         )}
@@ -166,7 +166,7 @@ export default async function StudentPlanPage() {
                         {showRetryPayment && (
                             <a
                                 href="#plans"
-                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
+                                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
                             >
                                 <RefreshCw className="h-4 w-4" />
                                 Retry Payment
@@ -176,7 +176,7 @@ export default async function StudentPlanPage() {
                         {!showRetryPayment && (
                             <a
                                 href="#plans"
-                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
+                                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
                             >
                                 <RefreshCw className="h-4 w-4" />
                                 {!hasPremiumAccess
@@ -191,7 +191,7 @@ export default async function StudentPlanPage() {
                             <form action={cancelAction.bind(null, recurringSubscriptionId)}>
                                 <button
                                     type="submit"
-                                    className="rounded-xl border border-rose-200 bg-white px-6 py-2.5 text-sm font-bold text-rose-600 transition-all hover:bg-rose-50"
+                                    className="rounded-lg border border-rose-200 bg-white px-6 py-2.5 text-sm font-bold text-rose-600 transition-all hover:bg-rose-50"
                                 >
                                     Cancel Subscription
                                 </button>
@@ -202,22 +202,22 @@ export default async function StudentPlanPage() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Plan Summary</p>
                     <div className="mt-5 grid grid-cols-2 gap-4">
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Storage Used</div>
                             <div className="mt-2 text-2xl font-bold text-slate-900">{Math.round(planSummary.storageUsed / 1024 / 1024)} MB</div>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Plan Limit</div>
                             <div className="mt-2 text-2xl font-bold text-slate-900">{Math.round(planSummary.storageLimit / 1024 / 1024)} MB</div>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Support Tier</div>
                             <div className="mt-2 text-lg font-bold text-slate-900">{planSummary.supportTier}</div>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="rounded-lg bg-slate-50 p-4">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Entitled Storage</div>
                             <div className="mt-2 text-lg font-bold text-slate-900">{Math.round(planSummary.entitledStorageLimit / 1024 / 1024)} MB</div>
                         </div>
@@ -233,16 +233,16 @@ export default async function StudentPlanPage() {
                     </div>
                 </div>
 
-                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-500">What This Plan Unlocks</p>
                     <div className="mt-5 space-y-3">
                         {planSummary.featureHighlights.map((feature) => (
-                            <div key={feature} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                            <div key={feature} className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
                                 {feature}
                             </div>
                         ))}
                         {planSummary.restrictions.length > 0 && planSummary.restrictions.map((restriction) => (
-                            <div key={restriction} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                            <div key={restriction} className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
                                 {restriction}
                             </div>
                         ))}
@@ -252,7 +252,7 @@ export default async function StudentPlanPage() {
 
             <div id="plans">
                 <h3 className="mb-6 text-xl font-bold text-gray-900">Available Plans</h3>
-                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:p-10">
+                <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm md:p-10">
                     <PricingCards userPlan={planSummary.plan} userRole={session.role} />
                 </div>
             </div>

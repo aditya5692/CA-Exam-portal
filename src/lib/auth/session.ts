@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma/client";
 import type { User } from "@prisma/client";
 import { signAccessToken, verifyAccessToken } from "@/lib/server/jwt";
 import { cookies } from "next/headers";
-import { ensureDemoAccounts, getDefaultDemoUser, type AppRole } from "./demo-accounts";
+import { ensureDemoAccounts, type AppRole } from "./demo-accounts";
 import { randomUUID } from "crypto";
 import {
     ACCESS_COOKIE_NAME,
@@ -20,19 +20,7 @@ import { buildAuthCookieOptions } from "./cookie-options";
 const REFRESH_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 let demoAccountsPromise: Promise<unknown> | null = null;
 
-async function ensureDemoAccountsReady() {
-    if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_LOGIN !== "true") {
-        return; // Do not ensure demo accounts in production unless explicitly allowed
-    }
 
-    if (!demoAccountsPromise) {
-        demoAccountsPromise = ensureDemoAccounts().catch((error) => {
-            demoAccountsPromise = null;
-            throw error;
-        });
-    }
-    await demoAccountsPromise;
-}
 
 async function expireAuthCookies() {
     const cookieStore = await cookies();

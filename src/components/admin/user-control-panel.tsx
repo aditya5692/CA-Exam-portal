@@ -151,7 +151,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
             <div className="student-surface-dark p-8 text-white">
                 <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-5">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-white/10 text-2xl font-black backdrop-blur-md">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-white/10 text-2xl font-black backdrop-blur-md">
                             {user.fullName?.[0] || user.email?.[0]?.toUpperCase()}
                         </div>
                         <div className="space-y-1">
@@ -159,7 +159,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">{user.email}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="rounded-2xl bg-white/5 p-3 text-white/60 transition-all hover:bg-white/10 hover:text-white">
+                    <button onClick={onClose} className="rounded-lg bg-white/5 p-3 text-white/60 transition-all hover:bg-white/10 hover:text-white">
                         <X size={28} weight="bold" />
                     </button>
                 </div>
@@ -174,7 +174,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={cn(
-                                "flex items-center gap-3 rounded-2xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                                "flex items-center gap-3 rounded-lg px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all",
                                 activeTab === tab.id 
                                     ? "bg-white text-[var(--student-accent-strong)] shadow-lg" 
                                     : "text-white/60 hover:bg-white/5 hover:text-white"
@@ -235,7 +235,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
 
                 {activeTab === "permissions" && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="rounded-3xl border border-blue-100 bg-blue-50/50 p-6 flex items-start gap-4">
+                        <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-6 flex items-start gap-4">
                             <Info size={24} weight="fill" className="text-blue-500 shrink-0 mt-1" />
                             <div className="space-y-1">
                                 <p className="text-sm font-bold text-blue-900">Permission Overrides Active</p>
@@ -250,10 +250,10 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                             {FEATURE_DEFINITIONS.filter(f => f.audience === user.role || user.role === "ADMIN").map(feature => {
                                 const override = data.featureOverrides.find((o: any) => o.featureKey === feature.key);
                                 return (
-                                    <div key={feature.key} className="student-surface group relative overflow-hidden rounded-[28px] p-6 transition-all hover:bg-slate-50">
+                                    <div key={feature.key} className="student-surface group relative overflow-hidden rounded-lg p-6 transition-all hover:bg-slate-50">
                                         <div className="flex items-center justify-between mb-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-100 text-[var(--student-accent-strong)] shadow-sm">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-100 text-[var(--student-accent-strong)] shadow-sm">
                                                     <ShieldCheck size={20} weight="bold" />
                                                 </div>
                                                 <div>
@@ -264,7 +264,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                                             {override && (
                                                 <button 
                                                     onClick={() => handleResetPermissions(feature.key)}
-                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
                                                 >
                                                     <ArrowCounterClockwise size={14} weight="bold" /> Reset
                                                 </button>
@@ -309,14 +309,14 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                             </h4>
                             <div className="grid grid-cols-1 gap-4">
                                 {data.materialAccess.length === 0 ? (
-                                    <div className="p-8 text-center rounded-3xl border-2 border-dashed border-slate-100 text-xs font-bold text-slate-300">
+                                    <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-100 text-xs font-bold text-slate-300">
                                         No manual access rules defined for this user.
                                     </div>
                                 ) : (
                                     data.materialAccess.map((acc: any) => (
-                                        <div key={acc.id} className="flex items-center justify-between p-5 rounded-3xl bg-emerald-50/50 border border-emerald-100">
+                                        <div key={acc.id} className="flex items-center justify-between p-5 rounded-lg bg-emerald-50/50 border border-emerald-100">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white text-emerald-500 shadow-sm border border-emerald-100">
+                                                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-white text-emerald-500 shadow-sm border border-emerald-100">
                                                     <CloudArrowUp size={20} weight="bold" />
                                                 </div>
                                                 <div>
@@ -326,7 +326,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                                             </div>
                                             <button 
                                                 onClick={() => handleRevokeAccess(acc.materialId)}
-                                                className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-all"
+                                                className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-all"
                                             >
                                                 <Minus size={20} weight="bold" />
                                             </button>
@@ -345,9 +345,9 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                                 {data.availableMaterials
                                     .filter((m: any) => !data.materialAccess.find((acc: any) => acc.materialId === m.id))
                                     .map((m: any) => (
-                                        <div key={m.id} className="flex items-center justify-between p-5 rounded-3xl bg-slate-50 border border-slate-100">
+                                        <div key={m.id} className="flex items-center justify-between p-5 rounded-lg bg-slate-50 border border-slate-100">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm border border-slate-100">
+                                                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm border border-slate-100">
                                                     <CloudArrowUp size={20} weight="bold" />
                                                 </div>
                                                 <div>
@@ -357,7 +357,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                                             </div>
                                             <button 
                                                 onClick={() => handleGrantAccess(m.id)}
-                                                className="p-2 rounded-xl text-emerald-500 hover:bg-emerald-50 transition-all"
+                                                className="p-2 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-all"
                                             >
                                                 <Plus size={20} weight="bold" />
                                             </button>
@@ -374,14 +374,14 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
             {(error || success) && (
                 <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-3">
                     {error && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-rose-100 bg-rose-50 px-6 py-4 text-rose-600 shadow-xl backdrop-blur-md">
                             <Info size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
                             <button onClick={() => setError(null)}><X size={16} weight="bold" /></button>
                         </div>
                     )}
                     {success && (
-                        <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 rounded-lg border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-600 shadow-xl backdrop-blur-md">
                             <CheckCircle size={20} weight="fill" />
                             <p className="text-[10px] font-black uppercase tracking-widest">{success}</p>
                             <button onClick={() => setSuccess(null)}><X size={16} weight="bold" /></button>
@@ -414,7 +414,7 @@ function ActionButton({ label, icon: Icon, color, onClick }: any) {
         <button 
             onClick={onClick}
             className={cn(
-                "flex items-center gap-2.5 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                "flex items-center gap-2.5 rounded-lg border px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
                 variants[color as keyof typeof variants]
             )}
         >
@@ -429,7 +429,7 @@ function PermissionToggle({ label, active, onToggle }: { label: string; active: 
         <button 
             onClick={() => onToggle(!active)}
             className={cn(
-                "flex items-center gap-2.5 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all",
+                "flex items-center gap-2.5 rounded-lg border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all",
                 active 
                     ? "bg-indigo-50 text-indigo-700 border-indigo-100 shadow-sm" 
                     : "bg-white text-slate-400 border-slate-100"

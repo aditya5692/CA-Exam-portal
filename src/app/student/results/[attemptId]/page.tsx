@@ -76,7 +76,7 @@ function SpeedBenchmarkPanel({
     const SpeedIcon = isFaster ? TrendUp : isSlower ? TrendDown : Minus;
 
     return (
-        <div className={cn("rounded-[28px] border p-6 shadow-sm", speedBg)}>
+        <div className={cn("rounded-lg border p-6 shadow-sm", speedBg)}>
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                     <Timer size={16} weight="fill" />
@@ -113,7 +113,7 @@ function SpeedBenchmarkPanel({
             </div>
 
             {/* Verdict */}
-            <div className={cn("mt-5 flex items-center gap-2 rounded-2xl border px-4 py-3", speedBg)}>
+            <div className={cn("mt-5 flex items-center gap-2 rounded-lg border px-4 py-3", speedBg)}>
                 <SpeedIcon size={18} weight="fill" className={speedColor} />
                 <span className={cn("text-sm font-black", speedColor)}>{speedLabel}</span>
             </div>
@@ -229,13 +229,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                         <div className="flex flex-wrap gap-3">
                             <Link
                                 href={`/exam/war-room?examId=${attempt.examId}`}
-                                className="student-button-primary rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em]"
+                                className="student-button-primary rounded-lg px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em]"
                             >
                                 Retake exam
                             </Link>
                             <Link
                                 href="/student/exams"
-                                className="student-button-secondary rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em]"
+                                className="student-button-secondary rounded-lg px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em]"
                             >
                                 More exams
                             </Link>
@@ -278,7 +278,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                         ].map((item) => (
                             <div
                                 key={item.label}
-                                className="rounded-[28px] border border-[var(--student-border)] bg-white p-5 shadow-sm"
+                                className="rounded-lg border border-[var(--student-border)] bg-white p-5 shadow-sm"
                             >
                                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                     {item.icon}
@@ -307,12 +307,12 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 </div>
 
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-                    <div className="min-w-0 rounded-[32px] border border-[var(--student-border)] bg-white p-5 md:p-8">
+                    <div className="min-w-0 rounded-lg border border-[var(--student-border)] bg-white p-5 md:p-8">
                         <SolutionReview answers={answers} benchmarks={benchmarks as BenchmarkMap} />
                     </div>
 
                     <aside className="space-y-5 lg:sticky lg:top-6">
-                        <div className="rounded-[28px] border border-[var(--student-border)] bg-white p-6 shadow-sm">
+                        <div className="rounded-lg border border-[var(--student-border)] bg-white p-6 shadow-sm">
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                 Attempt snapshot
                             </div>
@@ -361,7 +361,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                             </div>
                         </div>
 
-                        <div className="rounded-[28px] border border-[var(--student-border)] bg-white p-6 shadow-sm">
+                        <div className="rounded-lg border border-[var(--student-border)] bg-white p-6 shadow-sm">
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                 Question legend
                             </div>
@@ -381,7 +381,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                             </div>
                         </div>
 
-                        <div className="rounded-[28px] border border-[var(--student-border)] bg-white p-6 shadow-sm">
+                        <div className="rounded-lg border border-[var(--student-border)] bg-white p-6 shadow-sm">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
                                     Question navigator
@@ -397,7 +397,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                                         key={item.number}
                                         href={`#review-question-${item.number}`}
                                         className={cn(
-                                            "flex h-11 items-center justify-center rounded-xl border text-sm font-black transition-all hover:-translate-y-0.5",
+                                            "flex h-11 items-center justify-center rounded-lg border text-sm font-black transition-all hover:-translate-y-0.5",
                                             item.status === "correct" && "border-emerald-200 bg-emerald-50 text-emerald-700",
                                             item.status === "wrong" && "border-rose-200 bg-rose-50 text-rose-700",
                                             item.status === "skipped" && "border-amber-200 bg-amber-50 text-amber-700",

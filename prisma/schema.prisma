@@ -46,6 +46,10 @@ model User {
   firmRole            String?
   articleshipYear     Int?
   articleshipTotal    Int?
+  articleshipFirmType String? // BIG4, BIG6, TOP10, TOP30, OTHERS
+  city                String?
+  state               String?
+  experienceYears     Int?
   foundationCleared   Boolean @default(false)
   intermediateCleared Boolean @default(false)
   finalCleared        Boolean @default(false)

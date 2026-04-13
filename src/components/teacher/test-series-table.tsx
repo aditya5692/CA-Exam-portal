@@ -134,7 +134,7 @@ export function TestSeriesTable({ initialExams }: Props) {
                             placeholder="Search by title, subject…"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full sm:w-72 pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all"
+                            className="w-full sm:w-72 pl-10 pr-4 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all"
                         />
                         {searchQuery && (
                             <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
@@ -191,7 +191,7 @@ export function TestSeriesTable({ initialExams }: Props) {
             {/* ── PROCESS + OUTPUT zone: cards ────────────────────────────── */}
             {filteredExams.length === 0 ? (
                 <div className="py-24 text-center space-y-4 px-8">
-                    <div className="w-20 h-20 bg-slate-50 rounded-2xl mx-auto flex items-center justify-center text-slate-300">
+                    <div className="w-20 h-20 bg-slate-50 rounded-lg mx-auto flex items-center justify-center text-slate-300">
                         <Stack size={36} weight="duotone" />
                     </div>
                     <div>
@@ -206,14 +206,14 @@ export function TestSeriesTable({ initialExams }: Props) {
                     </div>
                 </div>
             ) : (
-                <div className="space-y-2 mt-4 bg-white border border-slate-100 rounded-2xl p-2 pb-4">
+                <div className="space-y-2 mt-4 bg-white border border-slate-100 rounded-lg p-2 pb-4">
                     {/* Select all row */}
                     {filteredExams.length > 1 && (
                         <div className="flex items-center gap-3 px-3 py-2">
                             <button
                                 onClick={toggleSelectAll}
                                 className={cn(
-                                    "w-4 h-4 rounded border-2 transition-all flex items-center justify-center shrink-0",
+                                    "w-4 h-4 rounded-lg border-2 transition-all flex items-center justify-center shrink-0",
                                     selectedIds.size === filteredExams.length && filteredExams.length > 0
                                         ? "bg-indigo-600 border-indigo-600 text-white"
                                         : "border-slate-300 hover:border-indigo-400"
@@ -238,7 +238,7 @@ export function TestSeriesTable({ initialExams }: Props) {
                             <div
                                 key={exam.id}
                                 className={cn(
-                                    "group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                                    "group flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 cursor-pointer",
                                     isSelected
                                         ? "bg-indigo-50/60 border-indigo-200"
                                         : "bg-white border-transparent hover:bg-slate-50"
@@ -248,7 +248,7 @@ export function TestSeriesTable({ initialExams }: Props) {
                                 <button
                                     onClick={() => toggleSelect(exam.id)}
                                     className={cn(
-                                        "w-4 h-4 rounded border-2 transition-all flex items-center justify-center shrink-0",
+                                        "w-4 h-4 rounded-lg border-2 transition-all flex items-center justify-center shrink-0",
                                         isSelected
                                             ? "bg-indigo-600 border-indigo-600 text-white"
                                             : "border-slate-200 group-hover:border-slate-300"
@@ -259,7 +259,7 @@ export function TestSeriesTable({ initialExams }: Props) {
 
                                 {/* Icon */}
                                 <div className={cn(
-                                    "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-300",
+                                    "w-11 h-11 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-300",
                                     isSelected ? "bg-indigo-100 border-indigo-200 text-indigo-600" : "bg-slate-50 border-slate-200 text-slate-400 group-hover:bg-indigo-50 group-hover:border-indigo-200 group-hover:text-indigo-500"
                                 )}>
                                     <FileText size={20} weight="duotone" />
@@ -335,21 +335,21 @@ export function TestSeriesTable({ initialExams }: Props) {
                                 <div className="flex items-center gap-2 shrink-0">
                                     <button
                                         onClick={() => setShowConfirm({ type: "single", id: exam.id })}
-                                        className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-300 hover:text-rose-500 hover:border-rose-200 transition-all flex items-center justify-center"
+                                        className="w-9 h-9 rounded-lg bg-white border border-slate-200 text-slate-300 hover:text-rose-500 hover:border-rose-200 transition-all flex items-center justify-center"
                                         title="Delete"
                                     >
                                         <Trash size={16} weight="bold" />
                                     </button>
                                     <Link
                                         href={`/teacher/test-series/${exam.id}`}
-                                        className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all flex items-center justify-center"
+                                        className="w-9 h-9 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all flex items-center justify-center"
                                         title="Edit"
                                     >
                                         <PencilSimple size={16} weight="bold" />
                                     </Link>
                                     <Link
                                         href={`/teacher/test-series/${exam.id}`}
-                                        className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all active:scale-95 shadow-sm shadow-indigo-600/20 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 duration-200"
+                                        className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all active:scale-95 shadow-sm shadow-indigo-600/20 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 duration-200"
                                         title="Open"
                                     >
                                         <CaretRight size={16} weight="bold" />
@@ -364,8 +364,8 @@ export function TestSeriesTable({ initialExams }: Props) {
             {/* ── Confirm Delete Modal ──────────────────────────────────────── */}
             {showConfirm && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-5 animate-in zoom-in-95 duration-200">
-                        <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 mx-auto">
+                    <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-5 animate-in zoom-in-95 duration-200">
+                        <div className="w-16 h-16 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 mx-auto">
                             <WarningCircle size={32} weight="fill" />
                         </div>
                         <div className="space-y-2">
@@ -381,14 +381,14 @@ export function TestSeriesTable({ initialExams }: Props) {
                             <button
                                 disabled={isDeleting}
                                 onClick={() => setShowConfirm(null)}
-                                className="flex-1 h-12 rounded-xl border border-slate-200 text-sm font-semibold text-slate-400 hover:bg-slate-50 transition-all disabled:opacity-50"
+                                className="flex-1 h-12 rounded-lg border border-slate-200 text-sm font-semibold text-slate-400 hover:bg-slate-50 transition-all disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 disabled={isDeleting}
                                 onClick={handleDelete}
-                                className="flex-1 h-12 rounded-xl bg-rose-600 text-sm font-bold text-white shadow-md shadow-rose-600/20 hover:bg-rose-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="flex-1 h-12 rounded-lg bg-rose-600 text-sm font-bold text-white shadow-md shadow-rose-600/20 hover:bg-rose-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 {isDeleting
                                     ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

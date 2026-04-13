@@ -25,7 +25,7 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                 <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar mb-2">
                     <button
                         onClick={() => setSelectedEducator("ALL")}
-                        className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === "ALL" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                        className={cn("px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === "ALL" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
                     >
                         All Educators
                     </button>
@@ -33,7 +33,7 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                         <button
                             key={ed}
                             onClick={() => setSelectedEducator(ed)}
-                            className={cn("px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === ed ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
+                            className={cn("px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all", selectedEducator === ed ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100")}
                         >
                             {ed}
                         </button>
@@ -45,7 +45,7 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                 {displayedTests.length > 0 ? (
                     displayedTests.map((test) => (
                         <div key={test.id} className={cn(
-                            "student-surface group flex flex-col gap-4 rounded-xl p-5 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)] md:flex-row md:items-center",
+                            "student-surface group flex flex-col gap-4 rounded-lg p-5 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)] md:flex-row md:items-center",
                             test.isLocked && "opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
                         )}>
                             <div className="flex items-center gap-4 flex-1">
@@ -116,7 +116,7 @@ export function MockTestSection({ hubData }: { hubData: ExamHubData | null }) {
                         </div>
                     ))
                 ) : (
-                    <div className="student-surface flex flex-col items-center justify-center rounded-xl p-12 text-center">
+                    <div className="student-surface flex flex-col items-center justify-center rounded-lg p-12 text-center">
                         <span className="material-symbols-outlined mb-3 text-4xl text-slate-200">content_paste_off</span>
                         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No mock tests found for your CA level</p>
                         <p className="mt-1 text-xs text-slate-500">Try changing your CA level in the profile or header to see more available tests.</p>

@@ -136,7 +136,7 @@ export function SeriesCreator() {
                 <div className="flex items-center gap-4">
                     <Link
                         href="/teacher/test-series"
-                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95"
+                        className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95"
                     >
                         <CaretLeft size={20} weight="bold" />
                     </Link>
@@ -149,7 +149,7 @@ export function SeriesCreator() {
                 <button
                     onClick={handlePublish}
                     disabled={isSubmitting}
-                    className="h-14 px-8 rounded-2xl bg-indigo-600 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center gap-3 disabled:opacity-50"
+                    className="h-14 px-8 rounded-lg bg-indigo-600 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center gap-3 disabled:opacity-50"
                 >
                     {isSubmitting ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -179,7 +179,7 @@ export function SeriesCreator() {
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="e.g. CA Final Audit Mock #04"
-                                    className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-5 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/30 transition-all placeholder:text-slate-300"
+                                    className="w-full h-14 bg-white border border-slate-100 rounded-lg px-5 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/30 transition-all placeholder:text-slate-300"
                                 />
                             </div>
 
@@ -189,7 +189,7 @@ export function SeriesCreator() {
                                     <select
                                         value={caLevel}
                                         onChange={(e) => setCaLevel(e.target.value as any)}
-                                        className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-4 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all"
+                                        className="w-full h-14 bg-white border border-slate-100 rounded-lg px-4 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all"
                                     >
                                         <option value="foundation">CA Foundation</option>
                                         <option value="ipc">CA Inter</option>
@@ -201,7 +201,7 @@ export function SeriesCreator() {
                                     <select
                                         value={examType}
                                         onChange={(e) => setExamType(e.target.value)}
-                                        className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-4 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all"
+                                        className="w-full h-14 bg-white border border-slate-100 rounded-lg px-4 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all"
                                     >
                                         <option value="MOCK">Mock Test</option>
                                         <option value="PRACTICE">Practice</option>
@@ -218,7 +218,7 @@ export function SeriesCreator() {
                                         value={subject}
                                         onChange={(e) => setSubject(e.target.value)}
                                         placeholder="e.g. Audit"
-                                        className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-5 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-300"
+                                        className="w-full h-14 bg-white border border-slate-100 rounded-lg px-5 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-300"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -227,7 +227,7 @@ export function SeriesCreator() {
                                         type="number"
                                         value={duration}
                                         onChange={(e) => setDuration(e.target.value)}
-                                        className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-5 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all"
+                                        className="w-full h-14 bg-white border border-slate-100 rounded-lg px-5 text-sm font-semibold focus:outline-none focus:border-indigo-500/30 transition-all"
                                     />
                                 </div>
                             </div>
@@ -242,11 +242,11 @@ export function SeriesCreator() {
                             <h2 className="text-lg font-bold text-slate-900 tracking-tight">Distribution</h2>
                         </div>
 
-                        <div className="flex p-1.5 rounded-2xl bg-white border border-slate-100 gap-1">
+                        <div className="flex p-1.5 rounded-lg bg-white border border-slate-100 gap-1">
                             <button
                                 onClick={() => setTargetType("ALL")}
                                 className={cn(
-                                    "flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2",
+                                    "flex-1 py-3 rounded-lg text-[10px] font-bold uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2",
                                     targetType === "ALL" ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
                                 )}
                             >
@@ -255,7 +255,7 @@ export function SeriesCreator() {
                             <button
                                 onClick={() => setTargetType("BATCH")}
                                 className={cn(
-                                    "flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2",
+                                    "flex-1 py-3 rounded-lg text-[10px] font-bold uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2",
                                     targetType === "BATCH" ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
                                 )}
                             >
@@ -270,7 +270,7 @@ export function SeriesCreator() {
                                         key={b.id}
                                         onClick={() => setSelectedBatchId(b.id)}
                                         className={cn(
-                                            "w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between",
+                                            "w-full p-4 rounded-lg border text-left transition-all flex items-center justify-between",
                                             selectedBatchId === b.id ? "bg-indigo-50 border-indigo-200" : "bg-white border-slate-100 hover:border-slate-200"
                                         )}
                                     >
@@ -282,7 +282,7 @@ export function SeriesCreator() {
                                     </button>
                                 ))}
                                 {batches.length === 0 && (
-                                    <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-lg">
                                         <p className="text-xs font-semibold text-slate-400 italic">No batches found</p>
                                     </div>
                                 )}
@@ -292,10 +292,10 @@ export function SeriesCreator() {
                 </div>
 
                 {/* Right side: Question Bank Selection */}
-                <div className="flex flex-col h-full min-h-[600px] bg-white border border-slate-100 rounded-[32px] p-8">
+                <div className="flex flex-col h-full min-h-[600px] bg-white border border-slate-100 rounded-lg p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400">
+                            <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400">
                                 <Stack size={22} weight="bold" />
                             </div>
                             <div>
@@ -305,7 +305,7 @@ export function SeriesCreator() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="px-4 py-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-black">
+                            <div className="px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-black">
                                 {selectedQuestionIds.size} Selected
                             </div>
                             <button
@@ -328,7 +328,7 @@ export function SeriesCreator() {
                             placeholder="Search your question bank by content or subject…"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full h-14 pl-12 pr-6 rounded-2xl bg-slate-50 border border-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-medium"
+                            className="w-full h-14 pl-12 pr-6 rounded-lg bg-slate-50 border border-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-medium"
                         />
                     </div>
 
@@ -340,14 +340,14 @@ export function SeriesCreator() {
                                     key={q.id}
                                     onClick={() => toggleSelection(q.id)}
                                     className={cn(
-                                        "p-5 rounded-2xl border transition-all cursor-pointer group flex items-start gap-5",
+                                        "p-5 rounded-lg border transition-all cursor-pointer group flex items-start gap-5",
                                         isSelected
                                             ? "bg-indigo-50/50 border-indigo-200"
                                             : "bg-white border-transparent hover:bg-slate-50/50 hover:border-slate-100"
                                     )}
                                 >
                                     <div className={cn(
-                                        "w-5 h-5 rounded border-2 transition-all flex items-center justify-center shrink-0 mt-0.5",
+                                        "w-5 h-5 rounded-lg border-2 transition-all flex items-center justify-center shrink-0 mt-0.5",
                                         isSelected ? "bg-indigo-600 border-indigo-600 text-white" : "border-slate-200 group-hover:border-slate-300"
                                     )}>
                                         {isSelected && <Check size={12} weight="bold" />}
@@ -383,7 +383,7 @@ export function SeriesCreator() {
 
                         {filteredVault.length === 0 && (
                             <div className="py-20 text-center space-y-4">
-                                <div className="w-16 h-16 bg-slate-50 rounded-2xl mx-auto flex items-center justify-center text-slate-200">
+                                <div className="w-16 h-16 bg-slate-50 rounded-lg mx-auto flex items-center justify-center text-slate-200">
                                     <Stack size={32} weight="duotone" />
                                 </div>
                                 <p className="text-sm font-bold text-slate-400 italic">No matching questions in your vault</p>

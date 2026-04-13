@@ -48,7 +48,7 @@ export function LoginForm() {
                         name="registrationNumber"
                         required
                         placeholder="Enter ICAI Reg No."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[var(--auth-accent)]/50 transition-all uppercase"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[var(--auth-accent)]/50 transition-all uppercase"
                         value={formData.registrationNumber}
                         onChange={(e) => setFormData(prev => ({ ...prev, registrationNumber: e.target.value.toUpperCase() }))}
                     />
@@ -66,7 +66,7 @@ export function LoginForm() {
                         name="password"
                         required
                         placeholder="••••••••"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[var(--auth-accent)]/50 transition-all"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[var(--auth-accent)]/50 transition-all"
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     />
@@ -76,7 +76,7 @@ export function LoginForm() {
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-linear-to-r from-[var(--auth-accent)] to-[#06b6d4] hover:from-[var(--auth-accent-hover)] hover:to-[#0891b2] text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70"
+                className="w-full bg-linear-to-r from-[var(--auth-accent)] to-[#06b6d4] hover:from-[var(--auth-accent-hover)] hover:to-[#0891b2] text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70"
             >
                 {isSubmitting ? "Signing in..." : (
                     <>
@@ -96,7 +96,7 @@ export function LoginForm() {
 
             <button
                 type="button"
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-3 transition-all"
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-3 transition-all"
             >
                 <Chrome className="w-5 h-5 text-[var(--auth-accent)]" />
                 Google Workspace

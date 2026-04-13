@@ -115,7 +115,7 @@ export function GlobalSearch({ role }: { role: string }) {
         <div className="relative w-full max-w-md lg:block" ref={dropdownRef}>
             {/* Desktop / Large Viewport Search */}
             <div className={cn(
-                "group relative flex items-center rounded-2xl border border-[var(--student-border)] bg-[rgba(255,253,249,0.72)] px-4 py-2.5 transition-all focus-within:border-[var(--student-border-strong)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[rgba(31,92,80,0.08)] md:px-5 md:py-3 text-[var(--student-text)]",
+                "group relative flex items-center rounded-lg border border-[var(--student-border)] bg-[rgba(255,253,249,0.72)] px-4 py-2.5 transition-all focus-within:border-[var(--student-border-strong)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[rgba(31,92,80,0.08)] md:px-5 md:py-3 text-[var(--student-text)]",
                 isMobile && "hidden"
             )}>
                 {loading ? (
@@ -144,7 +144,7 @@ export function GlobalSearch({ role }: { role: string }) {
                 {query && (
                     <button 
                         onClick={() => { setQuery(""); setResults([]); }}
-                        className="p-1 hover:bg-[var(--student-panel-muted)] rounded-md text-[var(--student-muted)]"
+                        className="p-1 hover:bg-[var(--student-panel-muted)] rounded-lg text-[var(--student-muted)]"
                     >
                         <X size={16} weight="bold" />
                     </button>
@@ -155,7 +155,7 @@ export function GlobalSearch({ role }: { role: string }) {
             {isMobile && (
                 <button 
                     onClick={() => setIsMobileSearchOpen(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--student-border)] bg-[rgba(255,253,249,0.72)] text-[var(--student-muted)] active:scale-95 transition-all"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--student-border)] bg-[rgba(255,253,249,0.72)] text-[var(--student-muted)] active:scale-95 transition-all"
                 >
                     <MagnifyingGlass size={20} weight="bold" />
                 </button>
@@ -163,7 +163,7 @@ export function GlobalSearch({ role }: { role: string }) {
 
             {/* Desktop Dropdown */}
             {!isMobile && isOpen && query.trim().length >= 2 && (
-                <div className="absolute top-full left-0 right-0 mt-3 max-h-[420px] overflow-y-auto rounded-3xl border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-2 shadow-[0_24px_48px_rgba(55,48,38,0.12)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200 z-[100]">
+                <div className="absolute top-full left-0 right-0 mt-3 max-h-[420px] overflow-y-auto rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-solid)] p-2 shadow-[0_24px_48px_rgba(55,48,38,0.12)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200 z-[100]">
                     <ResultsList 
                         results={results} 
                         loading={loading} 
@@ -188,7 +188,7 @@ export function GlobalSearch({ role }: { role: string }) {
                         <div className="relative flex-1 flex items-center">
                             <input
                                 autoFocus
-                                className="w-full border-none bg-[var(--student-panel-muted)] rounded-xl px-4 py-3 text-base font-medium placeholder:text-[var(--student-muted)] outline-none focus:ring-0 text-[var(--student-text)]"
+                                className="w-full border-none bg-[var(--student-panel-muted)] rounded-lg px-4 py-3 text-base font-medium placeholder:text-[var(--student-muted)] outline-none focus:ring-0 text-[var(--student-text)]"
                                 placeholder="Search..."
                                 type="text"
                                 value={query}
@@ -265,11 +265,11 @@ function ResultsList({
                         onClick={() => onSelect(res.id)}
                         onMouseEnter={() => setSelectedIndex(index)}
                         className={cn(
-                            "flex items-center gap-4 rounded-xl px-4 py-3 transition-all",
+                            "flex items-center gap-4 rounded-lg px-4 py-3 transition-all",
                             selectedIndex === index ? "bg-[var(--student-accent-soft)]" : "hover:bg-[var(--student-panel-muted)]"
                         )}
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--student-border)] bg-white shadow-sm">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--student-border)] bg-white shadow-sm">
                             {getIcon(res.type)}
                         </div>
                         <div className="flex-1 overflow-hidden">

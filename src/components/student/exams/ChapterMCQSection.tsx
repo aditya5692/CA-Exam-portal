@@ -32,7 +32,7 @@ export function ChapterMCQSection({ hubData, selectedSubject, setSelectedSubject
                         const icon = subject.color === "emerald" ? "account_balance" : subject.color === "amber" ? "gavel" : "payments";
 
                         return (
-                            <div key={subject.id} className="student-surface overflow-hidden rounded-xl transition-all hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                            <div key={subject.id} className="student-surface overflow-hidden rounded-lg transition-all hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                                 {/* Main Subject Header */}
                                 <div
                                     className={cn("group flex cursor-pointer items-center justify-between p-4 transition-colors", isExpanded ? "border-b border-[var(--student-border)] bg-[rgba(255,253,249,0.88)]" : "hover:bg-white/80")}
@@ -106,7 +106,7 @@ export function ChapterMCQSection({ hubData, selectedSubject, setSelectedSubject
                         );
                     })
                 ) : (
-                    <div className="student-surface flex flex-col items-center justify-center rounded-xl p-12 text-center">
+                    <div className="student-surface flex flex-col items-center justify-center rounded-lg p-12 text-center">
                         <span className="material-symbols-outlined mb-3 text-4xl text-slate-200">auto_stories</span>
                         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No chapter-wise MCQs available</p>
                         <p className="mt-1 text-xs text-slate-500">Check your CA level settings in the profile or header to ensure you are viewing relevant content.</p>

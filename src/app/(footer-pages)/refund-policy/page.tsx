@@ -8,7 +8,7 @@ const POLICY_POINTS = [
 export default function RefundPolicyPage() {
     return (
         <div className="space-y-8">
-            <section className="rounded-[40px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-12">
+            <section className="rounded-lg border border-[var(--landing-border)] bg-[var(--landing-panel)] p-8 shadow-sm sm:p-12">
                 <div className="space-y-4">
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                         Refund and cancellation policy
@@ -26,7 +26,7 @@ export default function RefundPolicyPage() {
                 {POLICY_POINTS.map((point, index) => (
                     <div
                         key={point}
-                        className="rounded-[32px] border border-[var(--landing-border)] bg-[var(--landing-panel)] p-6 shadow-sm sm:p-8"
+                        className="rounded-lg border border-[var(--landing-border)] bg-[var(--landing-panel)] p-6 shadow-sm sm:p-8"
                     >
                         <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--landing-muted)]">
                             Clause {index + 1}

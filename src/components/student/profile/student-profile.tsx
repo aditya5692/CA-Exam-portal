@@ -45,7 +45,7 @@ export function StudentProfile() {
 
     if (!profile) {
         return (
-            <div className="student-surface rounded-3xl p-10 text-center text-[var(--student-muted)]">
+            <div className="student-surface rounded-lg p-10 text-center text-[var(--student-muted)]">
                 Failed to load profile. Please try again.
             </div>
         );

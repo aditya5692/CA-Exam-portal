@@ -85,9 +85,9 @@ export function PlatformIntegrationsPanel({
     return (
         <div className="space-y-8">
             <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-[32px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-6 lg:p-8">
+                <div className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-6 lg:p-8">
                     <div className="flex items-start gap-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]">
                             <PlugsConnected size={28} weight="bold" />
                         </div>
                         <div className="space-y-3">
@@ -106,7 +106,7 @@ export function PlatformIntegrationsPanel({
                     </div>
                 </div>
 
-                <div className="rounded-[32px] border border-[var(--student-border)] bg-white p-6 lg:p-8">
+                <div className="rounded-lg border border-[var(--student-border)] bg-white p-6 lg:p-8">
                     <div className="flex items-center gap-3">
                         <ShieldCheck size={24} weight="fill" className="text-[var(--student-support)]" />
                         <div>
@@ -133,13 +133,13 @@ export function PlatformIntegrationsPanel({
             {(error || success) && (
                 <div className="space-y-3">
                     {error && (
-                        <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
+                        <div className="flex items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
                             <WarningCircle size={18} weight="fill" />
                             <span>{error}</span>
                         </div>
                     )}
                     {success && (
-                        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
+                        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
                             <CheckCircle size={18} weight="fill" />
                             <span>{success}</span>
                         </div>
@@ -152,7 +152,7 @@ export function PlatformIntegrationsPanel({
                     const fields = groupedFields[groupKey];
 
                     return (
-                        <section key={groupKey} className="rounded-[36px] border border-[var(--student-border)] bg-white p-6 lg:p-8">
+                        <section key={groupKey} className="rounded-lg border border-[var(--student-border)] bg-white p-6 lg:p-8">
                             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                                 <div className="space-y-2">
                                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--student-muted)]">
@@ -175,7 +175,7 @@ export function PlatformIntegrationsPanel({
                                     return (
                                         <div
                                             key={field.key}
-                                            className="rounded-[28px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5"
+                                            className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5"
                                         >
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="space-y-2">
@@ -214,7 +214,7 @@ export function PlatformIntegrationsPanel({
                                                     <button
                                                         type="button"
                                                         onClick={() => toggleSecretVisibility(field.key)}
-                                                        className="rounded-xl border border-[var(--student-border)] bg-white p-2 text-[var(--student-muted)] transition-colors hover:text-[var(--student-text)]"
+                                                        className="rounded-lg border border-[var(--student-border)] bg-white p-2 text-[var(--student-muted)] transition-colors hover:text-[var(--student-text)]"
                                                     >
                                                         {isSecretVisible ? <EyeSlash size={18} weight="bold" /> : <Eye size={18} weight="bold" />}
                                                     </button>
@@ -228,7 +228,7 @@ export function PlatformIntegrationsPanel({
                                                     type={inputType}
                                                     defaultValue={field.value}
                                                     placeholder={`Enter ${field.label}`}
-                                                    className="w-full rounded-2xl border border-[var(--student-border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--student-text)] outline-none transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:ring-4 focus:ring-[var(--student-accent-soft)]/60"
+                                                    className="w-full rounded-lg border border-[var(--student-border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--student-text)] outline-none transition-all placeholder:text-[var(--student-muted)] focus:border-[var(--student-accent-soft-strong)] focus:ring-4 focus:ring-[var(--student-accent-soft)]/60"
                                                     autoComplete="off"
                                                 />
                                             </div>
@@ -240,7 +240,7 @@ export function PlatformIntegrationsPanel({
                     );
                 })}
 
-                <div className="flex flex-col gap-4 rounded-[32px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-4 rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-6 lg:flex-row lg:items-center lg:justify-between">
                     <p className="max-w-3xl text-sm leading-7 text-[var(--student-muted-strong)]">
                         Saving here stores the current values into the application database. Once that row exists,
                         Dokploy no longer needs separate MSG91 and Razorpay runtime env entries for normal operation.
@@ -249,7 +249,7 @@ export function PlatformIntegrationsPanel({
                     <button
                         type="submit"
                         disabled={isPending}
-                        className="rounded-2xl bg-[var(--student-accent-strong)] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-lg shadow-[var(--student-accent-strong)]/20 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-60"
+                        className="rounded-lg bg-[var(--student-accent-strong)] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-lg shadow-[var(--student-accent-strong)]/20 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-60"
                     >
                         {isPending ? "Saving Runtime Config..." : "Save Runtime Config"}
                     </button>

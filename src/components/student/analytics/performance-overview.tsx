@@ -14,13 +14,13 @@ export function StudentAnalyticsOverview({ data }: Props) {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {/* Score Trend Card */}
-                <div className="student-surface lg:col-span-2 relative flex h-[320px] md:h-[400px] flex-col overflow-hidden rounded-2xl p-6 md:p-10  ">
+                <div className="student-surface lg:col-span-2 relative flex h-[320px] md:h-[400px] flex-col overflow-hidden rounded-lg p-6 md:p-10  ">
                     <div className="flex items-center justify-between mb-4 md:mb-8">
                         <div className="space-y-1">
                             <h3 className="text-lg md:text-xl  ">Performance Trend</h3>
                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Progress over time</p>
                         </div>
-                        <div className="student-chip hidden sm:flex items-center gap-2.5 rounded-xl px-4 py-2 transition-all active:scale-95">
+                        <div className="student-chip hidden sm:flex items-center gap-2.5 rounded-lg px-4 py-2 transition-all active:scale-95">
                             <TrendUp size={16} weight="bold" className="text-[var(--student-accent-strong)]" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">Improving</span>
                         </div>
@@ -50,7 +50,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                     content={({ active, payload }) => {
                                         if (active && payload && payload.length) {
                                             return (
-                                                <div className="bg-[var(--student-panel)] p-4 rounded-xl shadow-xl border border-[var(--student-border)] animate-in zoom-in-95 duration-200">
+                                                <div className="bg-[var(--student-panel)] p-4 rounded-lg shadow-xl border border-[var(--student-border)] animate-in zoom-in-95 duration-200">
                                                     <p className="text-[10px] font-bold text-[var(--student-muted)] uppercase tracking-widest mb-1">{payload[0].payload.date}</p>
                                                     <p className="text-2xl font-bold text-[var(--student-text)]  ">{payload[0].value}%</p>
                                                 </div>
@@ -75,7 +75,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
 
                 {/* Error Distribution (Conditional) */}
                 {data.errorDistribution && data.errorDistribution.length > 0 ? (
-                    <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                    <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-lg p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                         <div className="mb-6 md:mb-8">
                             <h3 className="text-lg md:text-xl  ">Error Distribution</h3>
                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Self-Diagnosis Insights</p>
@@ -113,7 +113,7 @@ export function StudentAnalyticsOverview({ data }: Props) {
                     </div>
                 ) : (
                     /* Fallback to Performance Benchmark if no sub-tags yet */
-                    <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-2xl p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
+                    <div className="student-surface flex h-[350px] md:h-[400px] flex-col rounded-lg p-6 md:p-10 transition-all duration-300 hover:shadow-[0_18px_30px_rgba(55,48,38,0.08)]">
                         <div className="mb-6 md:mb-8">
                             <h3 className="text-lg md:text-xl  ">Performance Benchmark</h3>
                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 md:mt-2">Accuracy vs Peers</p>
@@ -154,17 +154,17 @@ export function StudentAnalyticsOverview({ data }: Props) {
 
             {/* Personalized AI Insights */}
             <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
-                <div className="student-surface-dark lg:col-span-2 relative overflow-hidden rounded-2xl p-6 md:p-10 text-white">
+                <div className="student-surface-dark lg:col-span-2 relative overflow-hidden rounded-lg p-6 md:p-10 text-white">
                     <div className="relative z-10 w-full space-y-8">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="student-icon-tile-warm flex h-12 w-12 items-center justify-center rounded-xl">
+                                <div className="student-icon-tile-warm flex h-12 w-12 items-center justify-center rounded-lg">
                                     <Sparkle size={24} weight="fill" className="text-[var(--student-support)]" />
                                 </div>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/65">Performance Notes</span>
                             </div>
                             {(profile?.rank ?? 0) > 0 && (
-                                <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 text-right">
+                                <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-2 border border-white/10 text-right">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-0.5 whitespace-nowrap">Global Rank</p>
                                     <p className="text-xl font-bold   text-[var(--student-support)]">#{profile.rank}</p>
                                 </div>
@@ -193,16 +193,16 @@ export function StudentAnalyticsOverview({ data }: Props) {
                                 )}
                             </p>
                         </div>
-                        <button className="student-button-secondary group/btn flex items-center gap-3 rounded-xl px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                        <button className="student-button-secondary group/btn flex items-center gap-3 rounded-lg px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
                             Detailed Breakdown <ArrowRight size={18} weight="bold" className="group-hover/btn:translate-x-1.5 transition-transform" />
                         </button>
                     </div>
                 </div>
 
-                <div className="student-surface relative flex flex-col justify-between overflow-hidden rounded-2xl p-10">
+                <div className="student-surface relative flex flex-col justify-between overflow-hidden rounded-lg p-10">
                     <div className="relative z-10">
                         <div className="flex items-center gap-4 mb-8">
-                            <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300">
+                            <div className="student-icon-tile flex h-12 w-12 items-center justify-center rounded-lg transition-all duration-300">
                                 <Target size={24} weight="bold" />
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Exam Deadline</span>

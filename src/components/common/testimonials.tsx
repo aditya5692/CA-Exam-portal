@@ -55,9 +55,9 @@ export function Testimonials() {
                     {TESTIMONIALS.map((testimonial) => (
                         <div
                             key={testimonial.name}
-                            className="rounded-[32px] border border-[var(--landing-border)] bg-[var(--landing-panel)]/94 p-9 shadow-[var(--landing-shadow)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--landing-shadow-lg)]"
+                            className="rounded-lg border border-[var(--landing-border)] bg-[var(--landing-panel)]/94 p-9 shadow-[var(--landing-shadow)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--landing-shadow-lg)]"
                         >
-                            <div className={`mb-8 flex h-12 w-12 items-center justify-center rounded-2xl ${testimonial.tone.icon}`}>
+                            <div className={`mb-8 flex h-12 w-12 items-center justify-center rounded-lg ${testimonial.tone.icon}`}>
                                 <Quotes size={24} weight="fill" />
                             </div>
 

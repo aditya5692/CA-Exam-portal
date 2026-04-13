@@ -24,7 +24,7 @@ export default async function PastYearQuestionsPage() {
             <main className="pt-24 sm:pt-32 pb-20">
                 <div className="max-w-7xl mx-auto px-6">
                     {/* High-Impact Hero Banner */}
-                    <div className="mb-16 bg-white border border-slate-200 rounded-[2.5rem] p-10 lg:p-16 relative overflow-hidden shadow-sm">
+                    <div className="mb-16 bg-white border border-slate-200 rounded-lg p-10 lg:p-16 relative overflow-hidden shadow-sm">
                         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/5 to-transparent"></div>
                         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
                             <div className="max-w-2xl space-y-6 text-center lg:text-left">

@@ -89,20 +89,20 @@ export function QuestionBankViewer() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search questions or tags..."
-                            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm"
+                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm"
                         />
                     </div>
                 </div>
 
                 {/* Table Header */}
-                <div className="grid grid-cols-[1fr_200px_80px] items-center px-6 py-3 bg-slate-50 border border-slate-100 rounded-t-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 border-b-0">
+                <div className="grid grid-cols-[1fr_200px_80px] items-center px-6 py-3 bg-slate-50 border border-slate-100 rounded-lg-t-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 border-b-0">
                     <span>Question Details</span>
                     <span>Meta Tags</span>
                     <span className="text-right">Actions</span>
                 </div>
 
                 {/* Rows */}
-                <div className="divide-y divide-slate-100 flex-1 overflow-x-auto border border-slate-100 rounded-b-2xl bg-white mb-8">
+                <div className="divide-y divide-slate-100 flex-1 overflow-x-auto border border-slate-100 rounded-lg-b-2xl bg-white mb-8">
                     {loading ? (
                         <div className="py-20 flex flex-col items-center justify-center">
                             <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -130,7 +130,7 @@ export function QuestionBankViewer() {
                                         </h3>
                                         <div className="flex items-start gap-2 max-w-full">
                                             <span className="text-emerald-600 font-black text-[10px] uppercase tracking-widest shrink-0 mt-0.5">Answer:</span>
-                                            <span className="text-xs font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md truncate max-w-md">
+                                            <span className="text-xs font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg truncate max-w-md">
                                                 {correctOption?.text || "None selected"}
                                             </span>
                                         </div>
@@ -139,13 +139,13 @@ export function QuestionBankViewer() {
                                     {/* Tags */}
                                     <div className="flex flex-col gap-2 justify-center">
                                         {q.subject && (
-                                            <span className="inline-flex px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wide self-start truncate max-w-full">
+                                            <span className="inline-flex px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wide self-start truncate max-w-full">
                                                 {q.subject}
                                             </span>
                                         )}
                                         {q.difficulty && (
                                             <span className={cn(
-                                                "inline-flex px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest self-start",
+                                                "inline-flex px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest self-start",
                                                 q.difficulty.toLowerCase() === "hard" ? "bg-rose-50 text-rose-600" :
                                                     q.difficulty.toLowerCase() === "medium" ? "bg-amber-50 text-amber-600" :
                                                         "bg-emerald-50 text-emerald-600"

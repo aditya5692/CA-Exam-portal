@@ -201,14 +201,14 @@ export function QuestionBulkUploadReview() {
     if (!report) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-6 animate-in fade-in duration-700">
-                <div className="w-20 h-20 rounded-[28px] bg-slate-50 flex items-center justify-center text-slate-300">
+                <div className="w-20 h-20 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300">
                     <Info size={40} weight="light" />
                 </div>
                 <div className="space-y-2">
                     <h2 className="text-2xl font-bold text-slate-900 leading-tight">Session Expired or Missing</h2>
                     <p className="text-slate-500 font-medium text-sm max-w-xs mx-auto">We couldn&apos;t find your uploaded data modules. Please return to the vault and re-initialize the ingestion pipeline.</p>
                 </div>
-                <Link href="/teacher/questions" className="inline-flex items-center justify-center px-8 py-4 rounded-[20px] bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95">
+                <Link href="/teacher/questions" className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95">
                     Return to MCQ Vault
                 </Link>
             </div>
@@ -220,7 +220,7 @@ export function QuestionBulkUploadReview() {
             <div className="flex flex-col items-center justify-center min-h-[500px] animate-in fade-in zoom-in-95 duration-700 text-center space-y-8 max-w-2xl mx-auto  ">
                 <div className="relative">
                     <div className="absolute inset-0 bg-emerald-500/20 blur-[40px] rounded-full animate-pulse" />
-                    <div className="relative w-24 h-24 rounded-[32px] bg-slate-900 text-emerald-400 flex items-center justify-center shadow-2xl">
+                    <div className="relative w-24 h-24 rounded-lg bg-slate-900 text-emerald-400 flex items-center justify-center shadow-2xl">
                         <Rocket size={44} weight="fill" className="animate-bounce" />
                     </div>
                 </div>
@@ -236,7 +236,7 @@ export function QuestionBulkUploadReview() {
                     </h2>
                     <div className="text-slate-500 font-medium text-lg leading-relaxed max-w-md mx-auto space-y-2">
                         {publishResult.examTitles && publishResult.examTitles.length > 1 ? (
-                            <div className="max-h-32 overflow-y-auto scrollbar-thin px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div className="max-h-32 overflow-y-auto scrollbar-thin px-4 py-2 bg-slate-50 rounded-lg border border-slate-100">
                                 {publishResult.examTitles.map((t, idx) => (
                                     <p key={idx} className="text-indigo-600 font-bold text-sm text-left">
                                         • {t}
@@ -257,13 +257,13 @@ export function QuestionBulkUploadReview() {
                 <div className="grid grid-cols-2 gap-4 w-full pt-4">
                     <Link
                         href="/teacher/test-series"
-                        className="h-16 rounded-[24px] bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-slate-900/10 hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 active:scale-95"
+                        className="h-16 rounded-lg bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-slate-900/10 hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 active:scale-95"
                     >
                         View Registry <CaretRight size={18} weight="bold" />
                     </Link>
                     <Link
                         href="/teacher/questions"
-                        className="h-16 rounded-[24px] bg-white border border-slate-100 text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-slate-900 hover:border-slate-200 transition-all flex items-center justify-center gap-3 active:scale-95"
+                        className="h-16 rounded-lg bg-white border border-slate-100 text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-slate-900 hover:border-slate-200 transition-all flex items-center justify-center gap-3 active:scale-95"
                     >
                         Return to Vault
                     </Link>
@@ -288,7 +288,7 @@ export function QuestionBulkUploadReview() {
                 </div>
                 <Link
                     href="/teacher/questions"
-                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-[20px] bg-white border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-slate-900 hover:border-slate-200 transition-all active:scale-95 shadow-sm"
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg bg-white border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-slate-900 hover:border-slate-200 transition-all active:scale-95 shadow-sm"
                 >
                     <ArrowLeft size={18} weight="bold" /> Abandon Session
                 </Link>
@@ -297,9 +297,9 @@ export function QuestionBulkUploadReview() {
             <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] gap-8">
                 {/* ── Left Side: Analysis Reprot ──────────────────────────── */}
                 <div className="space-y-6">
-                    <div className="bg-white/80 backdrop-blur-md rounded-[32px] border border-slate-100 shadow-sm p-8 space-y-8">
+                    <div className="bg-white/80 backdrop-blur-md rounded-lg border border-slate-100 shadow-sm p-8 space-y-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 transition-all">
+                            <div className="w-14 h-14 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 transition-all">
                                 {stage === "processing"
                                     ? <SpinnerGap size={28} className="animate-spin" />
                                     : <FileArrowUp size={28} weight="bold" />}
@@ -313,7 +313,7 @@ export function QuestionBulkUploadReview() {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="rounded-[24px] bg-slate-50/50 border border-slate-100 p-6">
+                            <div className="rounded-lg bg-slate-50/50 border border-slate-100 p-6">
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">MAPPED SCHEMA</p>
                                 <div className="flex flex-wrap gap-2">
                                     {TEMPLATE_COLUMNS.map((col) => (
@@ -325,12 +325,12 @@ export function QuestionBulkUploadReview() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/50 p-6">
+                                <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-6">
                                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-2">Valid MCQs</p>
                                     <div className="text-3xl font-bold text-emerald-700 tracking-tight">{report.importedCount}</div>
                                 </div>
                                 <div className={cn(
-                                    "rounded-[24px] border p-6 transition-all",
+                                    "rounded-lg border p-6 transition-all",
                                     report.skippedCount > 0 ? "border-amber-100 bg-amber-50/50" : "border-slate-100 bg-slate-50/30"
                                 )}>
                                     <p className={cn("text-[9px] font-black uppercase tracking-[0.2em] mb-2", report.skippedCount > 0 ? "text-amber-600" : "text-slate-400")}>Skipped Rows</p>
@@ -339,13 +339,13 @@ export function QuestionBulkUploadReview() {
                             </div>
 
                             {report.errors.length > 0 && (
-                                <div className="rounded-[24px] border border-rose-100 bg-rose-50/30 p-6">
+                                <div className="rounded-lg border border-rose-100 bg-rose-50/30 p-6">
                                     <p className="text-[9px] font-black text-rose-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                                         <WarningCircle size={14} weight="fill" /> Formatting Issues Detected
                                     </p>
                                     <div className="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
                                         {report.errors.map((err: string, i: number) => (
-                                            <div key={i} className="text-[11px] font-medium text-rose-600 bg-white border border-rose-100/50 px-3 py-2 rounded-xl flex items-start gap-2">
+                                            <div key={i} className="text-[11px] font-medium text-rose-600 bg-white border border-rose-100/50 px-3 py-2 rounded-lg flex items-start gap-2">
                                                 <span className="opacity-40 font-black shrink-0">{i + 1}</span>
                                                 {err}
                                             </div>
@@ -358,7 +358,7 @@ export function QuestionBulkUploadReview() {
                                 type="button"
                                 onClick={handleSaveToBank}
                                 disabled={isSaving || report.questions.length === 0}
-                                className="w-full h-14 rounded-2xl bg-white border border-slate-100 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:text-slate-900 hover:border-slate-300 transition-all flex items-center justify-center gap-3 disabled:opacity-40 shadow-sm"
+                                className="w-full h-14 rounded-lg bg-white border border-slate-100 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:text-slate-900 hover:border-slate-300 transition-all flex items-center justify-center gap-3 disabled:opacity-40 shadow-sm"
                             >
                                 {isSaving ? <SpinnerGap size={18} className="animate-spin" /> : <Database size={18} weight="bold" />}
                                 {isSaving ? "Archiving..." : "Archive to Vault Only"}
@@ -368,10 +368,10 @@ export function QuestionBulkUploadReview() {
                 </div>
 
                 {/* ── Right Side: Deploy Panel ───────────────────────────── */}
-                <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden flex flex-col p-8   relative">
+                <div className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden flex flex-col p-8   relative">
                     {stage === "processing" ? (
                         <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-                            <div className="w-20 h-20 rounded-[28px] bg-slate-50 flex items-center justify-center text-indigo-500">
+                            <div className="w-20 h-20 rounded-lg bg-slate-50 flex items-center justify-center text-indigo-500">
                                 <TerminalWindow size={40} weight="light" className="animate-pulse" />
                             </div>
                             <div className="space-y-2">
@@ -382,7 +382,7 @@ export function QuestionBulkUploadReview() {
                     ) : (
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                             <div className="flex items-center gap-4 border-b border-slate-50 pb-8">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg shadow-slate-900/10">
+                                <div className="w-14 h-14 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-lg shadow-slate-900/10">
                                     <Rocket size={28} weight="bold" />
                                 </div>
                                 <div className="space-y-1">
@@ -400,7 +400,7 @@ export function QuestionBulkUploadReview() {
                                         value={seriesTitle}
                                         onChange={(e) => setSeriesTitle(e.target.value)}
                                         placeholder="e.g. Corporate Law — Final Mock 01"
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold placeholder:text-slate-300"
+                                        className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold placeholder:text-slate-300"
                                     />
                                 </div>
 
@@ -410,7 +410,7 @@ export function QuestionBulkUploadReview() {
                                     <select
                                         value={caLevel}
                                         onChange={(e) => setCaLevel(e.target.value as typeof caLevel)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         {CA_LEVELS.map((l) => (
                                             <option key={l.value} value={l.value}>{l.label}</option>
@@ -424,7 +424,7 @@ export function QuestionBulkUploadReview() {
                                     <select
                                         value={subject}
                                         onChange={(e) => setSubject(e.target.value)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         <option value="" disabled>Select Subject</option>
                                         {availableSubjects.map((s) => (
@@ -439,7 +439,7 @@ export function QuestionBulkUploadReview() {
                                     <select
                                         value={examType}
                                         onChange={(e) => setExamType(e.target.value)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         <option value="GENERAL">General Practice</option>
                                         <option value="RPT">RPT (Revision Test Paper)</option>
@@ -497,7 +497,7 @@ export function QuestionBulkUploadReview() {
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 flex justify-between">
                                                     Questions per test <span>{questionsPerTest} MCQs</span>
                                                 </label>
-                                                <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-2xl px-4 h-14">
+                                                <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-lg px-4 h-14">
                                                     <ListNumbers size={20} className="text-slate-400" />
                                                     <input
                                                         type="number"
@@ -509,12 +509,12 @@ export function QuestionBulkUploadReview() {
                                             </div>
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Question Order</label>
-                                                <div className="flex p-1 bg-slate-50 border border-slate-100 rounded-2xl h-14">
+                                                <div className="flex p-1 bg-slate-50 border border-slate-100 rounded-lg h-14">
                                                     <button
                                                         type="button"
                                                         onClick={() => setBreakdownMode("FIFO")}
                                                         className={cn(
-                                                            "flex-1 flex items-center justify-center gap-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                            "flex-1 flex items-center justify-center gap-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                                                             breakdownMode === "FIFO" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
                                                         )}
                                                     >
@@ -524,7 +524,7 @@ export function QuestionBulkUploadReview() {
                                                         type="button"
                                                         onClick={() => setBreakdownMode("RANDOM")}
                                                         className={cn(
-                                                            "flex-1 flex items-center justify-center gap-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                            "flex-1 flex items-center justify-center gap-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                                                             breakdownMode === "RANDOM" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
                                                         )}
                                                     >
@@ -544,7 +544,7 @@ export function QuestionBulkUploadReview() {
                                             type="button"
                                             onClick={() => setAudienceMode("all")}
                                             className={cn(
-                                                "p-6 rounded-[28px] border-2 transition-all flex flex-col gap-3 group/btn relative overflow-hidden",
+                                                "p-6 rounded-lg border-2 transition-all flex flex-col gap-3 group/btn relative overflow-hidden",
                                                 audienceMode === "all" ? "border-indigo-600 bg-indigo-50 text-indigo-900" : "border-slate-50 bg-slate-50/50 text-slate-400 hover:border-slate-200"
                                             )}
                                         >
@@ -559,7 +559,7 @@ export function QuestionBulkUploadReview() {
                                             type="button"
                                             onClick={() => setAudienceMode("batch")}
                                             className={cn(
-                                                "p-6 rounded-[28px] border-2 transition-all flex flex-col gap-3 group/btn relative overflow-hidden",
+                                                "p-6 rounded-lg border-2 transition-all flex flex-col gap-3 group/btn relative overflow-hidden",
                                                 audienceMode === "batch" ? "border-indigo-600 bg-indigo-50 text-indigo-900" : "border-slate-50 bg-slate-50/50 text-slate-400 hover:border-slate-200"
                                             )}
                                         >
@@ -577,7 +577,7 @@ export function QuestionBulkUploadReview() {
                                 {audienceMode === "batch" && (
                                     <div className="md:col-span-2 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                         {batches.length === 0 ? (
-                                            <div className="p-8 rounded-[28px] bg-amber-50/50 border border-amber-100 text-center space-y-2">
+                                            <div className="p-8 rounded-lg bg-amber-50/50 border border-amber-100 text-center space-y-2">
                                                 <Info size={24} weight="fill" className="text-amber-500 mx-auto" />
                                                 <p className="text-xs font-bold text-amber-700 uppercase tracking-widest leading-relaxed">No Segments identified in the cloud registry.</p>
                                                 <Link href="/teacher/batches" className="inline-block text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline pt-2">Initialize Segments Here</Link>
@@ -588,7 +588,7 @@ export function QuestionBulkUploadReview() {
                                                     <label
                                                         key={b.id}
                                                         className={cn(
-                                                            "flex items-center gap-3 px-5 py-4 rounded-[20px] border transition-all cursor-pointer group/bi",
+                                                            "flex items-center gap-3 px-5 py-4 rounded-lg border transition-all cursor-pointer group/bi",
                                                             selectedBatchId === b.id ? "bg-white border-indigo-600 shadow-md ring-4 ring-indigo-500/5" : "bg-white border-slate-100 hover:border-indigo-200"
                                                         )}
                                                     >
@@ -620,7 +620,7 @@ export function QuestionBulkUploadReview() {
                                         report.questions.length === 0 ||
                                         (audienceMode === "batch" && batches.length === 0)
                                     }
-                                    className="w-full h-16 bg-slate-900 hover:bg-indigo-600 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-[0.3em] rounded-[24px] shadow-lg shadow-indigo-900/10 transition-all active:scale-[0.98] flex items-center justify-center gap-4 group"
+                                    className="w-full h-16 bg-slate-900 hover:bg-indigo-600 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-[0.3em] rounded-lg shadow-lg shadow-indigo-900/10 transition-all active:scale-[0.98] flex items-center justify-center gap-4 group"
                                 >
                                     {isPublishing ? (
                                         <SpinnerGap size={20} className="animate-spin" />

@@ -49,7 +49,7 @@ export function StudyMaterialDashboard() {
                 </div>
 
                 {/* Filter Bar */}
-                <div className="bg-white border border-slate-200 p-2 rounded-xl flex flex-wrap items-center gap-2 mb-8 shadow-sm">
+                <div className="bg-white border border-slate-200 p-2 rounded-lg flex flex-wrap items-center gap-2 mb-8 shadow-sm">
                     <div className="flex items-center gap-1.5 px-2 text-slate-400 text-[10px] font-bold border-r border-slate-100 pr-3">
                         <Funnel size={14} weight="bold" /> FILTERS
                     </div>
@@ -92,7 +92,7 @@ export function StudyMaterialDashboard() {
                             date: "New"
                         }
                     ].map((item, i) => (
-                        <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 hover:border-blue-400 transition-all group flex flex-col h-full">
+                        <div key={i} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-blue-400 transition-all group flex flex-col h-full">
                             <div className="flex items-start justify-between mb-3">
                                 <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", item.iconBg)}>
                                     {item.icon}

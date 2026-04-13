@@ -31,7 +31,7 @@ export function JourneySection({
     );
 
     return (
-        <div className="student-surface relative mb-8 overflow-hidden rounded-[32px] p-8   md:p-10">
+        <div className="student-surface relative mb-8 overflow-hidden rounded-lg p-8   md:p-10">
             <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(220,235,230,0.68),transparent_62%)]" />
             <div className="absolute -bottom-24 left-0 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(242,227,192,0.52),transparent_60%)]" />
 

@@ -64,8 +64,8 @@
   --border: oklch(0.92 0.005 260);
   --input: oklch(0.92 0.005 260);
   --ring: oklch(0.50 0.07 260);
-  --radius: 0.75rem;
-  --radius-xl: 1rem;
+  --radius: 0.5rem;
+  --radius-xl: 0.75rem;
 
   /* Landing & Auth Theme Variables — white/dark-navy (matches student portal) */
   --landing-bg: #ffffff;
@@ -503,7 +503,7 @@
 
   /* High-Impact Design Utilities */
   .premium-card {
-    @apply rounded-2xl border border-slate-200 bg-white transition-all duration-300;
+    @apply rounded-xl border border-slate-200 bg-white transition-all duration-300;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
   }
 
@@ -521,6 +521,6 @@
   }
 
   .brand-button-primary {
-    @apply bg-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-700/20 hover:brightness-110;
+    @apply bg-blue-700 text-white font-bold py-4 px-8 rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-700/20 hover:brightness-110;
   }
 }

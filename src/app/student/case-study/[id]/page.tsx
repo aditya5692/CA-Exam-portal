@@ -101,7 +101,7 @@ export default function CaseStudySplitScreen({ params }: { params: Promise<{ id:
             {/* LEFT PANE: Mobile Stacked (Flex) / Desktop Locked (40%) */}
             <div className="flex-[0.4] border-b border-slate-200 md:border-b-0 md:border-r bg-slate-50 pt-20 p-6 md:p-10 overflow-y-auto">
                 <div className="max-w-2xl mx-auto">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded bg-indigo-100 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-700">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-indigo-100 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-700">
                         <Question size={14} weight="fill" />
                         Integrated Case Scenario
                     </div>
@@ -125,7 +125,7 @@ export default function CaseStudySplitScreen({ params }: { params: Promise<{ id:
                         const isCorrect = selected === q.correct;
 
                         return (
-                            <div key={q.id} className={`rounded-3xl border p-6 md:p-8 transition-colors ${
+                            <div key={q.id} className={`rounded-lg border p-6 md:p-8 transition-colors ${
                                 isAnswered 
                                     ? isCorrect 
                                         ? "bg-emerald-50/50 border-emerald-200" 
@@ -156,9 +156,9 @@ export default function CaseStudySplitScreen({ params }: { params: Promise<{ id:
                                                 key={opt.id}
                                                 onClick={() => handleSelect(q.id, opt.id)}
                                                 disabled={isAnswered}
-                                                className={`w-full flex items-start text-left p-4 rounded-xl border transition-all ${btnClass}`}
+                                                className={`w-full flex items-start text-left p-4 rounded-lg border transition-all ${btnClass}`}
                                             >
-                                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-white shadow-sm ring-1 ring-slate-200 mr-4 text-xs font-bold uppercase pointer-events-none">
+                                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200 mr-4 text-xs font-bold uppercase pointer-events-none">
                                                     {opt.id}
                                                 </div>
                                                 <span className="font-medium text-sm leading-snug pt-0.5">{opt.text}</span>
@@ -170,14 +170,14 @@ export default function CaseStudySplitScreen({ params }: { params: Promise<{ id:
                                 {!isAnswered && selected && (
                                     <button 
                                         onClick={() => handleSubmit(q.id)}
-                                        className="mt-6 flex items-center justify-center gap-2 w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white transition hover:bg-black"
+                                        className="mt-6 flex items-center justify-center gap-2 w-full rounded-lg bg-slate-900 py-3 text-sm font-bold text-white transition hover:bg-black"
                                     >
                                         Lock Answer
                                     </button>
                                 )}
 
                                 {isAnswered && (
-                                    <div className={`mt-6 rounded-xl p-4 text-sm font-medium leading-relaxed ${
+                                    <div className={`mt-6 rounded-lg p-4 text-sm font-medium leading-relaxed ${
                                         isCorrect ? "bg-emerald-100/50 text-emerald-800" : "bg-rose-100/50 text-rose-800"
                                     }`}>
                                         <div className="flex items-center gap-2 font-bold mb-1">

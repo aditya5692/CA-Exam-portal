@@ -156,7 +156,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                         key={tab.key}
                         onClick={() => setFilter(tab.key)}
                         className={cn(
-                            "rounded-xl border px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95",
+                            "rounded-lg border px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95",
                             filter === tab.key ? tab.active : `${tab.inactive} border-[var(--student-border)]`,
                         )}
                     >
@@ -166,7 +166,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
             </div>
 
             {displayed.length === 0 && (
-                <div className="rounded-[28px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-14 text-center">
+                <div className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] py-14 text-center">
                     <div className="text-lg font-black text-[var(--student-text)]">Nothing in this filter.</div>
                     <div className="mt-2 text-sm text-[var(--student-muted-strong)]">
                         Switch filters to review another set of questions.
@@ -183,12 +183,12 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                             id={`review-question-${questionNumber}`}
                             key={answer.id}
                             className={cn(
-                                "scroll-mt-24 rounded-[28px] border bg-white p-6 shadow-sm",
+                                "scroll-mt-24 rounded-lg border bg-white p-6 shadow-sm",
                                 status.cardClass,
                             )}
                         >
                             <div className="flex items-start gap-4">
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--student-border)] bg-[var(--student-panel-muted)] text-sm font-black text-[var(--student-text)]">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] text-sm font-black text-[var(--student-text)]">
                                     {questionNumber}
                                 </div>
 
@@ -256,7 +256,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                                     </p>
 
                                     {answer.question.caseStudy && (
-                                        <div className="rounded-[24px] border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
+                                        <div className="rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] p-5">
                                             <div className="mb-3 flex flex-wrap items-center gap-2">
                                                 <span className="rounded-full bg-[var(--student-accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-accent-strong)]">
                                                     Case study
@@ -282,7 +282,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                                                 <div
                                                     key={option.id}
                                                     className={cn(
-                                                        "rounded-2xl border p-4 transition-all",
+                                                        "rounded-lg border p-4 transition-all",
                                                         isCorrectOption
                                                             ? "border-emerald-200 bg-emerald-50"
                                                             : isChosen
@@ -338,13 +338,13 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                                     </div>
 
                                     {!answer.selectedOptionId && (
-                                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
                                             You did not mark an option for this question.
                                         </div>
                                     )}
 
                                     {answer.question.explanation && (
-                                        <div className="rounded-2xl border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-5">
+                                        <div className="rounded-lg border border-[var(--student-accent-soft-strong)] bg-[var(--student-accent-soft)] p-5">
                                             <div className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--student-accent-strong)]">
                                                 Explanation
                                             </div>
@@ -355,7 +355,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                                     )}
 
                                     {!answer.isCorrect && answer.selectedOptionId && (
-                                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 space-y-3">
                                             <div className="flex items-center justify-between gap-3">
                                                 <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
                                                     Why did this go wrong?
@@ -398,7 +398,7 @@ export function SolutionReview({ answers, benchmarks = {} }: { answers: Solution
                                                         key={tag.id}
                                                         onClick={() => handleTagUpdate(answer.id, tag.id)}
                                                         className={cn(
-                                                            "flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all active:scale-95",
+                                                            "flex items-center gap-2 rounded-lg border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all active:scale-95",
                                                             answer.gapTag === tag.id
                                                                 ? tag.active
                                                                 : `${tag.inactive} hover:shadow-sm`,

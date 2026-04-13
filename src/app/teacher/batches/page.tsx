@@ -318,13 +318,13 @@ export default function TeacherBatchesPage() {
                 </div>
                 <div className="flex gap-4 mb-1">
                     {isAdminView && (
-                        <div className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl bg-white border border-slate-100 text-slate-400 font-bold text-[10px] uppercase tracking-widest shadow-sm shrink-0 transition-all">
+                        <div className="inline-flex items-center gap-2 px-6 py-4 rounded-lg bg-white border border-slate-100 text-slate-400 font-bold text-[10px] uppercase tracking-widest shadow-sm shrink-0 transition-all">
                              <ShieldCheck size={20} weight="bold" className="text-indigo-400" /> Admin Oversight
                         </div>
                     )}
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] tracking-[0.2em] uppercase px-8 py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-95 group"
+                        className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] tracking-[0.2em] uppercase px-8 py-4 rounded-lg shadow-xl shadow-indigo-600/20 transition-all active:scale-95 group"
                     >
                         <Plus size={20} weight="bold" className="group-hover:rotate-90 transition-transform" /> Start New Batch
                     </button>
@@ -338,8 +338,8 @@ export default function TeacherBatchesPage() {
                     { label: "Total Students", value: batches.reduce((acc, b) => acc + b._count.enrollments, 0), icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
                     { label: "Open Invitations", value: pendingInvites.length, icon: PaperPlaneRight, color: "text-amber-500", bg: "bg-amber-50" },
                 ].map((stat) => (
-                    <div key={stat.label} className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-5 group hover:shadow-md transition-all">
-                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+                    <div key={stat.label} className="p-6 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center gap-5 group hover:shadow-md transition-all">
+                        <div className={cn("w-14 h-14 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
                             <stat.icon size={26} weight="bold" />
                         </div>
                         <div>
@@ -354,7 +354,7 @@ export default function TeacherBatchesPage() {
                 /* Batch Grid View */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 lg:px-0 pb-10">
                     {batches.length === 0 ? (
-                        <div className="col-span-full py-32 text-center space-y-6 bg-white/50 rounded-[48px] border border-dashed border-slate-200">
+                        <div className="col-span-full py-32 text-center space-y-6 bg-white/50 rounded-lg border border-dashed border-slate-200">
                             <div className="w-20 h-20 bg-slate-50 rounded-full mx-auto flex items-center justify-center text-slate-200">
                                 <Users size={40} weight="light" />
                             </div>
@@ -367,17 +367,17 @@ export default function TeacherBatchesPage() {
                         batches.map((batch) => (
                             <div
                                 key={batch.id}
-                                className="group relative bg-white rounded-[40px] border border-slate-100 p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 hover:border-slate-200 hover:-translate-y-1.5"
+                                className="group relative bg-white rounded-lg border border-slate-100 p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 hover:border-slate-200 hover:-translate-y-1.5"
                             >
                                 <div className="flex items-start justify-between gap-4 mb-8">
-                                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 transition-all duration-500 group-hover:scale-110 group-hover:border-indigo-200">
+                                    <div className="w-14 h-14 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 transition-all duration-500 group-hover:scale-110 group-hover:border-indigo-200">
                                         <GraduationCap size={28} weight="bold" />
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <button onClick={(e) => { e.stopPropagation(); openEditModal(batch); }} className="p-2.5 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100">
+                                        <button onClick={(e) => { e.stopPropagation(); openEditModal(batch); }} className="p-2.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100">
                                             <PencilLine size={18} weight="bold" />
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); void handleDeleteBatch(batch.id); }} className="p-2.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100">
+                                        <button onClick={(e) => { e.stopPropagation(); void handleDeleteBatch(batch.id); }} className="p-2.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100">
                                             <Trash size={18} weight="bold" />
                                         </button>
                                     </div>
@@ -397,7 +397,7 @@ export default function TeacherBatchesPage() {
                                     </div>
                                 </div>
 
-                                <div className="p-5 bg-slate-50/50 rounded-3xl border border-slate-50 mb-8 flex items-center justify-between transition-all duration-500 group-hover:border-slate-100 group-hover:bg-slate-50/80">
+                                <div className="p-5 bg-slate-50/50 rounded-lg border border-slate-50 mb-8 flex items-center justify-between transition-all duration-500 group-hover:border-slate-100 group-hover:bg-slate-50/80">
                                     <div>
                                         <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Class Join Code</p>
                                         <code className="text-base font-mono font-black tracking-widest text-indigo-600">{batch.uniqueJoinCode}</code>
@@ -405,7 +405,7 @@ export default function TeacherBatchesPage() {
                                     <button
                                         onClick={(e) => { e.stopPropagation(); copyCode(batch.uniqueJoinCode); }}
                                         className={cn(
-                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-sm",
+                                            "w-10 h-10 rounded-lg flex items-center justify-center transition-all active:scale-95 shadow-sm",
                                             copiedCode === batch.uniqueJoinCode ? "bg-emerald-500 text-white" : "bg-white text-slate-400 hover:text-indigo-600 border border-slate-100"
                                         )}
                                     >
@@ -415,7 +415,7 @@ export default function TeacherBatchesPage() {
 
                                 <button 
                                     onClick={() => setSelectedBatchId(batch.id)}
-                                    className="w-full py-4 bg-slate-900 text-white rounded-[20px] text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 hover:bg-indigo-600 transition-all active:scale-95"
+                                    className="w-full py-4 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 hover:bg-indigo-600 transition-all active:scale-95"
                                 >
                                     Manage Students & Invites
                                 </button>
@@ -436,39 +436,39 @@ export default function TeacherBatchesPage() {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to All Batches</span>
                     </button>
 
-                    <div className="bg-white rounded-[48px] border border-slate-100 shadow-sm p-10 lg:p-14 space-y-12">
+                    <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-10 lg:p-14 space-y-12">
                         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
                             <div className="space-y-4">
                                 <h2 className="text-4xl font-bold tracking-tighter text-slate-900  ">{selectedBatch?.name}</h2>
                                 <div className="flex flex-wrap gap-3">
-                                    <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
+                                    <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
                                         <Calendar size={16} weight="bold" /> Created {selectedBatch && formatDate(selectedBatch.createdAt)}
                                     </div>
-                                    <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                    <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                         <ShieldCheck size={16} weight="bold" /> Joined by {selectedBatch?._count.enrollments} Students
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <button onClick={() => setShowInviteModal(true)} className="px-8 py-4 bg-white border border-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
+                                <button onClick={() => setShowInviteModal(true)} className="px-8 py-4 bg-white border border-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
                                     Invite Student
                                 </button>
-                                <button onClick={() => setShowBulkModal(true)} className="px-8 py-4 bg-white border border-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
+                                <button onClick={() => setShowBulkModal(true)} className="px-8 py-4 bg-white border border-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
                                     Bulk CSV Invite
                                 </button>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-1 px-1 py-1 bg-slate-50 border border-slate-100 rounded-[32px]">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-1 px-1 py-1 bg-slate-50 border border-slate-100 rounded-lg">
                             <button 
                                 onClick={() => setActiveTab("enrolled")}
-                                className={cn("py-4 rounded-[28px] text-[10px] font-black uppercase tracking-widest transition-all", activeTab === "enrolled" ? "bg-white text-indigo-600 shadow-md" : "text-slate-400 hover:text-slate-600")}
+                                className={cn("py-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", activeTab === "enrolled" ? "bg-white text-indigo-600 shadow-md" : "text-slate-400 hover:text-slate-600")}
                             >
                                 Enrolled Students ({selectedBatch?.enrollments.length || 0})
                             </button>
                             <button 
                                 onClick={() => setActiveTab("pending")}
-                                className={cn("py-4 rounded-[28px] text-[10px] font-black uppercase tracking-widest transition-all", activeTab === "pending" ? "bg-white text-indigo-600 shadow-md" : "text-slate-400 hover:text-slate-600")}
+                                className={cn("py-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", activeTab === "pending" ? "bg-white text-indigo-600 shadow-md" : "text-slate-400 hover:text-slate-600")}
                             >
                                 Pending Invitations ({pendingInvites.length})
                             </button>
@@ -477,15 +477,15 @@ export default function TeacherBatchesPage() {
                         {activeTab === "enrolled" ? (
                             <div className="space-y-4">
                                 {selectedBatch?.enrollments.length === 0 ? (
-                                    <div className="py-32 text-center bg-slate-50/50 rounded-[40px] border border-dashed border-slate-100 space-y-4">
+                                    <div className="py-32 text-center bg-slate-50/50 rounded-lg border border-dashed border-slate-100 space-y-4">
                                         <Users size={40} className="mx-auto text-slate-200" weight="light" />
                                         <p className="text-xs font-black text-slate-300 uppercase tracking-widest">No Active Enrollments</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {selectedBatch?.enrollments.map((enr) => (
-                                            <div key={enr.id} className="p-6 rounded-[32px] bg-white border border-slate-100 hover:shadow-xl hover:shadow-indigo-600/5 transition-all flex items-center gap-5 group">
-                                                <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                            <div key={enr.id} className="p-6 rounded-lg bg-white border border-slate-100 hover:shadow-xl hover:shadow-indigo-600/5 transition-all flex items-center gap-5 group">
+                                                <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
                                                     <User size={22} weight="bold" />
                                                 </div>
                                                 <div className="min-w-0">
@@ -503,7 +503,7 @@ export default function TeacherBatchesPage() {
                                     <button 
                                         onClick={handleSendInvites}
                                         disabled={isSending}
-                                        className="w-full py-6 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all flex items-center justify-center gap-4 group disabled:opacity-50 active:scale-95"
+                                        className="w-full py-6 bg-indigo-600 text-white rounded-lg text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all flex items-center justify-center gap-4 group disabled:opacity-50 active:scale-95"
                                     >
                                         <PaperPlaneRight size={20} weight="bold" className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /> 
                                         {isSending ? "Handing over to Mailchimp..." : `Send Invites to All ${pendingInvites.filter(i => !i.isEmailed).length} Students`}
@@ -511,16 +511,16 @@ export default function TeacherBatchesPage() {
                                 )}
 
                                 {pendingInvites.length === 0 ? (
-                                    <div className="py-32 text-center bg-slate-50/50 rounded-[40px] border border-dashed border-slate-100 space-y-4">
+                                    <div className="py-32 text-center bg-slate-50/50 rounded-lg border border-dashed border-slate-100 space-y-4">
                                         <ShieldCheck size={40} className="mx-auto text-slate-200" weight="light" />
                                         <p className="text-xs font-black text-slate-300 uppercase tracking-widest">No Pending Invitations</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {pendingInvites.map((invite) => (
-                                            <div key={invite.id} className="p-6 rounded-[32px] bg-white border border-slate-100 hover:shadow-xl hover:shadow-indigo-600/5 transition-all space-y-6 group">
+                                            <div key={invite.id} className="p-6 rounded-lg bg-white border border-slate-100 hover:shadow-xl hover:shadow-indigo-600/5 transition-all space-y-6 group">
                                                 <div className="flex items-center justify-between">
-                                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-[10px] group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-[10px] group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                                         INV
                                                     </div>
                                                     <div className={cn("px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest", invite.status === "VERIFIED" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600")}>
@@ -551,10 +551,10 @@ export default function TeacherBatchesPage() {
             {/* Create/Edit Batch Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 z-[120] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[48px] shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 overflow-hidden">
+                    <div className="bg-white w-full max-w-lg rounded-lg shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 overflow-hidden">
                         <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                                <div className="w-12 h-12 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
                                     {editingBatch ? <PencilLine size={24} weight="bold" /> : <Plus size={24} weight="bold" />}
                                 </div>
                                 <div>
@@ -562,7 +562,7 @@ export default function TeacherBatchesPage() {
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Define your learning environment</p>
                                 </div>
                             </div>
-                            <button onClick={closeModal} className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all">
+                            <button onClick={closeModal} className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all">
                                 <X size={20} weight="bold" />
                             </button>
                         </div>
@@ -574,7 +574,7 @@ export default function TeacherBatchesPage() {
                                     <select
                                         value={selectedOwnerId}
                                         onChange={(e) => setSelectedOwnerId(e.target.value)}
-                                        className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
+                                        className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                     >
                                         <option value="">Select educator</option>
                                         {availableTeachers.map((t) => (
@@ -593,9 +593,9 @@ export default function TeacherBatchesPage() {
                                     value={batchName}
                                     onChange={(e) => setBatchName(e.target.value)}
                                     placeholder="e.g. CA Final Audit May 2026"
-                                    className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
+                                    className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold"
                                 />
-                                <div className="flex items-start gap-2 p-4 rounded-2xl bg-indigo-50 border border-indigo-100/50 mt-4">
+                                <div className="flex items-start gap-2 p-4 rounded-lg bg-indigo-50 border border-indigo-100/50 mt-4">
                                      <Info size={16} weight="fill" className="text-indigo-400 mt-0.5 shrink-0" />
                                      <p className="text-[10px] font-bold text-indigo-700 leading-relaxed">
                                          {editingBatch ? "Students will see the updated name immediately. The join code remains the same." : "This will create a new batch and generate a unique join code for your students."}
@@ -606,7 +606,7 @@ export default function TeacherBatchesPage() {
                             <button
                                 type="submit"
                                 disabled={isSaving || !batchName.trim() || (isAdminView && !selectedOwnerId)}
-                                className="w-full h-16 bg-slate-900 hover:bg-indigo-600 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-900/10 transition-all active:scale-95 flex items-center justify-center gap-3"
+                                className="w-full h-16 bg-slate-900 hover:bg-indigo-600 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-lg shadow-xl shadow-indigo-900/10 transition-all active:scale-95 flex items-center justify-center gap-3"
                             >
                                 {isSaving ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -623,10 +623,10 @@ export default function TeacherBatchesPage() {
             {/* Individual Invite Modal */}
             {showInviteModal && (
                 <div className="fixed inset-0 z-[120] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-md rounded-[48px] shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden border border-slate-100">
+                    <div className="bg-white w-full max-w-md rounded-lg shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden border border-slate-100">
                         <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                                <div className="w-12 h-12 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
                                     <Plus size={22} weight="bold" />
                                 </div>
                                 <div>
@@ -634,30 +634,30 @@ export default function TeacherBatchesPage() {
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Personal accession invite</p>
                                 </div>
                             </div>
-                            <button onClick={() => setShowInviteModal(false)} className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all">
+                            <button onClick={() => setShowInviteModal(false)} className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all">
                                 <X size={20} weight="bold" />
                             </button>
                         </div>
                         <form onSubmit={handleCreateInvite} className="p-10 space-y-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Full Name</label>
-                                <input required type="text" value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="e.g. Jane Doe" className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
+                                <input required type="text" value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="e.g. Jane Doe" className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email Address</label>
-                                <input required type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="student@example.com" className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
+                                <input required type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="student@example.com" className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">CA Level</label>
-                                    <input placeholder="e.g. Inter" type="text" value={inviteLevel} onChange={e => setInviteLevel(e.target.value)} className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
+                                    <input placeholder="e.g. Inter" type="text" value={inviteLevel} onChange={e => setInviteLevel(e.target.value)} className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Subject</label>
-                                    <input placeholder="e.g. Audit" type="text" value={inviteSubject} onChange={e => setInviteSubject(e.target.value)} className="w-full h-14 border border-slate-100 rounded-2xl px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
+                                    <input placeholder="e.g. Audit" type="text" value={inviteSubject} onChange={e => setInviteSubject(e.target.value)} className="w-full h-14 border border-slate-100 rounded-lg px-5 py-3 text-sm bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all   font-semibold" />
                                 </div>
                             </div>
-                            <button type="submit" disabled={isInviting} className="w-full h-16 bg-slate-900 hover:bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-900/10 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
+                            <button type="submit" disabled={isInviting} className="w-full h-16 bg-slate-900 hover:bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-lg shadow-xl shadow-indigo-900/10 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
                                 {isInviting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <HandPointing size={20} weight="bold" />}
                                 Generate Invite
                             </button>
@@ -669,10 +669,10 @@ export default function TeacherBatchesPage() {
             {/* Bulk Upload Modal */}
             {showBulkModal && (
                 <div className="fixed inset-0 z-[120] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[48px] shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden border border-slate-100">
+                    <div className="bg-white w-full max-w-lg rounded-lg shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden border border-slate-100">
                         <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                                <div className="w-12 h-12 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
                                     <UploadSimple size={22} weight="bold" />
                                 </div>
                                 <div>
@@ -680,7 +680,7 @@ export default function TeacherBatchesPage() {
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Quick enrollment sequence</p>
                                 </div>
                             </div>
-                            <button onClick={() => setShowBulkModal(false)} className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all">
+                            <button onClick={() => setShowBulkModal(false)} className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all">
                                 <X size={20} weight="bold" />
                             </button>
                         </div>
@@ -692,10 +692,10 @@ export default function TeacherBatchesPage() {
                                     value={csvContent} 
                                     onChange={e => setCsvContent(e.target.value)} 
                                     placeholder="Jane Doe, jane@example.com, Inter, Audit&#10;John Smith, john@example.com, Final, Law" 
-                                    className="w-full h-44 border border-slate-100 rounded-2xl px-5 py-4 text-xs bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-mono whitespace-pre" 
+                                    className="w-full h-44 border border-slate-100 rounded-lg px-5 py-4 text-xs bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:bg-white focus:border-indigo-500/30 transition-all font-mono whitespace-pre" 
                                 />
                             </div>
-                            <button onClick={handleBulkInvite} disabled={isInviting || !csvContent.trim()} className="w-full h-16 bg-slate-900 hover:bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-900/10 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
+                            <button onClick={handleBulkInvite} disabled={isInviting || !csvContent.trim()} className="w-full h-16 bg-slate-900 hover:bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-lg shadow-xl shadow-indigo-900/10 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
                                 {isInviting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <ShieldCheck size={20} weight="bold" />}
                                 Create Invitations
                             </button>

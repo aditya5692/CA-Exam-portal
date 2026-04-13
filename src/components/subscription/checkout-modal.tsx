@@ -194,11 +194,11 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
             <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
                 <Dialog.Portal>
                     <Dialog.Overlay className="fixed inset-0 z-50 animate-in fade-in duration-200 bg-black/60" />
-                    <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 fade-in duration-300">
+                    <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg bg-white shadow-2xl animate-in zoom-in-95 fade-in duration-300">
                         <div className="bg-slate-900 px-8 py-8 text-white">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/10">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-white/10 bg-white/10">
                                         <ShieldCheck size={28} weight="bold" className="text-emerald-400" />
                                     </div>
                                     <div className="space-y-0.5">
@@ -223,12 +223,12 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                 <ActivationSuccess planName={plan.name} />
                             ) : (
                                 <>
-                                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-6">
+                                    <div className="rounded-lg border border-slate-100 bg-slate-50 p-6">
                                         <div className="mb-4 flex items-center justify-between">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                                 Selected Plan
                                             </span>
-                                            <span className="rounded border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                                            <span className="rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
                                                 {plan.isRecurring ? "Recurring" : "Full Term"}
                                             </span>
                                         </div>
@@ -258,7 +258,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                     </div>
 
                                     <div className="space-y-3">
-                                        <div className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                        <div className="flex items-center gap-4 rounded-lg border border-slate-100 bg-slate-50/50 p-4">
                                             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-100 bg-white text-emerald-500 shadow-sm">
                                                 <CreditCard size={18} weight="bold" />
                                             </div>
@@ -267,7 +267,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                                 <p className="text-[10px] font-medium text-slate-400">UPI, Cards, Netbanking</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                        <div className="flex items-center gap-4 rounded-lg border border-slate-100 bg-slate-50/50 p-4">
                                             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-100 bg-white text-emerald-500 shadow-sm">
                                                 <Sparkle size={18} weight="bold" />
                                             </div>
@@ -279,7 +279,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                     </div>
 
                                     {errorMsg && (
-                                        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-600">
+                                        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-600">
                                             {errorMsg}
                                         </div>
                                     )}
@@ -288,7 +288,7 @@ export function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
                                         <button
                                             onClick={handleActivate}
                                             disabled={status === "processing"}
-                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             {status === "processing" ? (
                                                 <>

@@ -17,7 +17,7 @@ export default async function StudentFreeResourcesPage({
 
     return (
         <div className="mx-auto max-w-[1600px] p-6 md:p-8 animate-in fade-in duration-500">
-            <div className="mb-8 rounded-[32px] border border-slate-100 bg-white p-6 shadow-sm md:p-8">
+            <div className="mb-8 rounded-lg border border-slate-100 bg-white p-6 shadow-sm md:p-8">
                 <div className="space-y-3">
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                         Student resources
