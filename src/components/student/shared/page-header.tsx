@@ -29,29 +29,46 @@ export function StudentPageHeader({
 
     const sideContent = aside ?? milestone;
 
+    const breadcrumbs = eyebrow.split(">").map(s => s.trim());
+
     return (
         <div
-            className={cn("flex flex-col gap-6 md:flex-row md:items-end md:justify-between transition-all duration-300 tuner-heading-container", className)}
+            className={cn("flex flex-col gap-1 md:gap-2 transition-all duration-300 tuner-heading-container pb-10", className)}
         >
-            <div className="space-y-4">
-                <div className="student-chip inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.18em]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--student-accent)]" />
-                    {eyebrow}
-                </div>
-                <h1 className="  text-3xl font-black leading-tight tracking-[-0.04em] text-[var(--student-text)] md:text-4xl">
-                    {title}
-                    {accent && <span className="text-[var(--student-accent-strong)]"> {accent}</span>}
-                </h1>
-                <div className="max-w-2xl   text-base font-medium leading-relaxed text-[var(--student-muted)]">
-                    {description}
-                </div>
-            </div>
+            {/* Breadcrumb Layer */}
+            <nav className="flex items-center select-none mb-3">
+                {breadcrumbs.map((crumb, idx) => (
+                    <div key={idx} className="flex items-center">
+                        <span className="breadcrumb-item">
+                            {crumb}
+                        </span>
+                        {idx < breadcrumbs.length - 1 && (
+                            <span className="breadcrumb-separator">/</span>
+                        )}
+                    </div>
+                ))}
+            </nav>
 
-            {sideContent && (
-                <div className="flex flex-wrap items-center gap-3 shrink-0">
-                    {sideContent}
-                </div>
-            )}
+            {/* Title Layer */}
+            <h1 className="text-2xl font-semibold tracking-tight text-[#111827] md:text-[32px] font-sans">
+                {title}
+                {accent && <span className="text-[var(--student-accent)]"> {accent}</span>}
+            </h1>
+
+            {/* Content & Action Layer */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
+                {description && (
+                    <div className="max-w-3xl text-base font-normal leading-relaxed text-[#4B5563]">
+                        {description}
+                    </div>
+                )}
+
+                {sideContent && (
+                    <div className="shrink-0">
+                        {sideContent}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

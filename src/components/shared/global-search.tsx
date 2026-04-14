@@ -115,17 +115,17 @@ export function GlobalSearch({ role }: { role: string }) {
         <div className="relative w-full max-w-md lg:block" ref={dropdownRef}>
             {/* Desktop / Large Viewport Search */}
             <div className={cn(
-                "group relative flex items-center rounded-lg border border-[var(--student-border)] bg-[rgba(255,253,249,0.72)] px-4 py-2.5 transition-all focus-within:border-[var(--student-border-strong)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[rgba(31,92,80,0.08)] md:px-5 md:py-3 text-[var(--student-text)]",
+                "group premium-search-container",
                 isMobile && "hidden"
             )}>
                 {loading ? (
-                    <CircleNotch size={20} weight="bold" className="mr-3 shrink-0 animate-spin text-[var(--student-accent)]" />
+                    <CircleNotch size={18} weight="bold" className="mr-2.5 shrink-0 animate-spin text-[var(--student-accent)]" />
                 ) : (
-                    <MagnifyingGlass size={20} weight="bold" className="mr-3 shrink-0 text-[var(--student-muted)] transition-colors group-focus-within:text-[var(--student-accent)]" />
+                    <MagnifyingGlass size={18} weight="bold" className="mr-2.5 shrink-0 text-slate-400 transition-colors group-focus-within:text-[var(--student-accent)]" />
                 )}
                 <input
                     ref={inputRef}
-                    className="w-full border-none bg-transparent text-sm font-medium placeholder:text-[var(--student-muted)] outline-none focus:ring-0"
+                    className="w-full border-none bg-transparent text-[13px] font-semibold text-slate-700 placeholder:text-slate-400 outline-none focus:ring-0"
                     placeholder="Search anything..."
                     type="text"
                     value={query}
@@ -136,17 +136,17 @@ export function GlobalSearch({ role }: { role: string }) {
                     onFocus={() => query.trim().length >= 2 && setIsOpen(true)}
                 />
                 {!query && (
-                    <div className="hidden items-center gap-1 rounded-lg border border-[var(--student-border)] bg-[var(--student-panel-muted)] px-2 py-1 text-[10px] font-bold text-[var(--student-muted)] sm:flex">
-                        <Keyboard size={12} weight="bold" />
-                        <span>Ctrl+K</span>
+                    <div className="hidden items-center gap-1 rounded-md border border-slate-200/60 bg-slate-50/50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400/80 sm:flex">
+                        <span className="text-[11px]">⌘</span>
+                        <span>K</span>
                     </div>
                 )}
                 {query && (
                     <button 
                         onClick={() => { setQuery(""); setResults([]); }}
-                        className="p-1 hover:bg-[var(--student-panel-muted)] rounded-lg text-[var(--student-muted)]"
+                        className="p-1 hover:bg-slate-200/50 rounded-full text-slate-400 transition-colors"
                     >
-                        <X size={16} weight="bold" />
+                        <X size={14} weight="bold" />
                     </button>
                 )}
             </div>
@@ -155,9 +155,9 @@ export function GlobalSearch({ role }: { role: string }) {
             {isMobile && (
                 <button 
                     onClick={() => setIsMobileSearchOpen(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--student-border)] bg-[rgba(255,253,249,0.72)] text-[var(--student-muted)] active:scale-95 transition-all"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50/50 text-slate-500 active:scale-95 transition-all shadow-sm"
                 >
-                    <MagnifyingGlass size={20} weight="bold" />
+                    <MagnifyingGlass size={18} weight="bold" />
                 </button>
             )}
 

@@ -81,24 +81,14 @@ function SidebarSubItem({
         <Link
             href={item.href}
             className={cn(
-                "group/sub relative flex items-center gap-3 py-2 pl-9 pr-4 transition-all duration-200",
-                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] hover:text-[var(--student-text)]"
+                "group/sub relative flex items-center gap-3 py-3 pl-4 pr-4 transition-all duration-200 rounded-lg mx-2",
+                isActive ? "bg-white text-[var(--student-accent-strong)] shadow-sm border border-[var(--student-border)]" : "text-[var(--student-muted)] hover:bg-[var(--student-panel-muted)] hover:text-[var(--student-text)]"
             )}
         >
-            {/* Timeline Line */}
-            <div className="absolute left-[23px] top-0 bottom-0 w-px bg-[var(--student-border-strong)] opacity-20" />
-            
-            {/* Timeline Dot */}
-            <div className={cn(
-                "absolute left-[20px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all duration-300 z-10",
-                isActive 
-                    ? "bg-[var(--student-accent-strong)] border-[var(--student-accent-strong)] scale-110 shadow-[0_0_8px_rgba(31,92,80,0.4)]" 
-                    : "bg-white border-[var(--student-border-strong)] group-hover/sub:border-[var(--student-muted)]"
-            )} />
-
+            <item.icon size={18} weight={isActive ? "fill" : "bold"} className={cn("shrink-0", isActive ? "text-[var(--student-accent-strong)]" : "opacity-70 group-hover/sub:opacity-100")} />
             <span className={cn(
-                "text-xs font-bold transition-colors",
-                isActive ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)] group-hover/sub:text-[var(--student-text)]"
+                "text-[13px] font-medium transition-colors",
+                isActive ? "font-bold" : ""
             )}>
                 {item.label}
             </span>
@@ -136,45 +126,21 @@ function SidebarNavGroup({
     }
 
     return (
-        <div className="py-2">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={cn(
-                    "flex w-full items-center justify-between px-4 py-2 rounded-lg transition-all duration-200 group/group",
-                    hasActiveChild ? "text-[var(--student-text)]" : "text-[var(--student-muted)] hover:bg-[var(--student-panel)]/50 hover:text-[var(--student-text)]"
-                )}
-            >
-                <div className="flex items-center gap-3">
-                    <div className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-                        hasActiveChild ? "bg-[var(--student-accent-soft)] text-[var(--student-accent-strong)]" : "bg-transparent text-[var(--student-muted)] group-hover/group:text-[var(--student-text)]"
-                    )}>
-                        <Icon size={20} weight={hasActiveChild ? "fill" : "bold"} />
-                    </div>
-                    <span className="text-xs font-black uppercase tracking-[0.15em]">{label}</span>
-                </div>
-                <CaretDown
-                    size={12}
-                    weight="bold"
-                    className={cn("transition-transform duration-300", isOpen ? "rotate-0" : "-rotate-90", hasActiveChild ? "text-[var(--student-accent-strong)]" : "text-[var(--student-muted)]")}
-                />
-            </button>
+        <div className="py-1">
+            <div className="px-4 py-3 mb-1">
+                <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--student-muted)]/50">{label}</span>
+            </div>
 
-            <div className={cn(
-                "grid transition-all duration-300 ease-in-out",
-                isOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0"
-            )}>
-                <div className="overflow-hidden">
-                    {items.map((item, idx) => (
-                        <SidebarSubItem
-                            key={item.href}
-                            item={item}
-                            isActive={pathname === item.href}
-                            isFirst={idx === 0}
-                            isLast={idx === items.length - 1}
-                        />
-                    ))}
-                </div>
+            <div className="space-y-0.5">
+                {items.map((item, idx) => (
+                    <SidebarSubItem
+                        key={item.href}
+                        item={item}
+                        isActive={pathname === item.href}
+                        isFirst={idx === 0}
+                        isLast={idx === items.length - 1}
+                    />
+                ))}
             </div>
         </div>
     );
@@ -311,7 +277,7 @@ export function StudentSidebar({
     return (
         <aside
             className={cn(
-                "group/sidebar sticky top-0 z-50 flex h-screen flex-col overflow-hidden border-r border-[var(--student-border)] bg-[var(--student-panel)]/90 shadow-[16px_0_40px_rgba(55,48,38,0.04)] backdrop-blur-xl transition-all duration-300 ease-in-out",
+                "group/sidebar sticky top-0 z-50 flex h-full flex-col overflow-hidden border-r border-[var(--student-border)] bg-[var(--student-panel-muted)] transition-all duration-300 ease-in-out pt-4",
                 isCollapsed ? "w-20" : "w-64"
             )}
             role="navigation"
@@ -336,27 +302,7 @@ export function StudentSidebar({
                 </button>
             )}
 
-            {/* Branding */}
-            <div className="p-6 transition-all duration-300">
-                <Link href="/student/dashboard" className="flex items-center gap-3 outline-none">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--student-accent-strong)] shadow-[0_12px_28px_rgba(31,92,80,0.18)]">
-                        <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
 
-                    {!isCollapsed && (
-                        <div className="flex flex-col">
-                            <h1 className="text-xl font-bold tracking-tight leading-none text-[var(--student-text)]">
-                                Financly
-                            </h1>
-                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--student-muted)]">
-                                Student Portal
-                            </p>
-                        </div>
-                    )}
-                </Link>
-            </div>
 
             <nav className={cn("flex-1 px-3 space-y-1 mt-2 overflow-y-auto custom-scrollbar", isCollapsed && "px-2")}>
                 <SidebarNavGroup
