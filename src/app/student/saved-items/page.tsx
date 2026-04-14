@@ -1,6 +1,6 @@
 import { getSavedItems } from "@/actions/student-actions";
 import { SavedItemsList } from "@/components/student/saved/saved-items-list";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { redirect } from "next/navigation";
@@ -19,7 +19,7 @@ export default async function SavedItemsPage() {
 
     return (
         <div className="space-y-12 pb-20  ">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow="My collection"
                 title="Saved"
                 accent="Items"

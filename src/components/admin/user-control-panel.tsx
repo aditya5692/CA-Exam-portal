@@ -155,8 +155,8 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                             {user.fullName?.[0] || user.email?.[0]?.toUpperCase()}
                         </div>
                         <div className="space-y-1">
-                            <h2 className="  text-3xl font-black tracking-tight">{user.fullName || "Unnamed"}</h2>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">{user.email}</p>
+                            <h2 className="text-3xl font-bold tracking-tight">{user.fullName || "Unnamed"}</h2>
+                            <p className="text-[10px] font-semibold uppercase tracking-widest text-white/50">{user.email}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="rounded-lg bg-white/5 p-3 text-white/60 transition-all hover:bg-white/10 hover:text-white">
@@ -174,7 +174,7 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={cn(
-                                "flex items-center gap-3 rounded-lg px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                                "flex items-center gap-3 rounded-lg px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all",
                                 activeTab === tab.id 
                                     ? "bg-white text-[var(--student-accent-strong)] shadow-lg" 
                                     : "text-white/60 hover:bg-white/5 hover:text-white"
@@ -197,8 +197,8 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
                                 Core Credentials
                             </h4>
                             <div className="grid grid-cols-2 gap-8">
-                                <DetailField label="System Role" value={user.role} />
-                                <DetailField label="Account Status" value={user.isBlocked ? "Suspended" : "Active"} color={user.isBlocked ? "text-rose-500" : "text-emerald-500"} />
+                                <DetailField label="System Role" value={user.role} badge />
+                                <DetailField label="Account Status" value={user.isBlocked ? "Suspended" : "Active"} badge />
                                 <DetailField label="Plan Level" value={user.plan} />
                                 <DetailField label="Registration #" value={user.registrationNumber || "Not Set"} />
                             </div>
@@ -393,11 +393,40 @@ export function UserControlPanel({ userId, onClose, onUpdate }: UserControlPanel
     );
 }
 
-function DetailField({ label, value, color }: { label: string; value: string; color?: string }) {
+function DetailField({ label, value, color, badge }: { label: string; value: string; color?: string, badge?: boolean }) {
+    if (badge) {
+        return (
+            <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
+                <StatusBadge value={value} />
+            </div>
+        );
+    }
     return (
         <div className="space-y-1.5">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</p>
-            <p className={cn("text-base font-black tracking-tight", color || "text-slate-800")}>{value}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
+            <p className={cn("text-base font-bold tracking-tight", color || "text-slate-800")}>{value}</p>
+        </div>
+    );
+}
+
+function StatusBadge({ value }: { value: string }) {
+    const v = value.toUpperCase();
+    
+    const configs: Record<string, { class: string, dot: string }> = {
+        "ACTIVE": { class: "bg-emerald-50 text-emerald-600 border-emerald-100", dot: "bg-emerald-400" },
+        "SUSPENDED": { class: "bg-rose-50 text-rose-600 border-rose-100", dot: "bg-rose-400" },
+        "ADMIN": { class: "bg-indigo-50 text-indigo-600 border-indigo-100", dot: "bg-indigo-400" },
+        "TEACHER": { class: "bg-amber-50 text-amber-600 border-amber-100", dot: "bg-amber-400" },
+        "STUDENT": { class: "bg-blue-50 text-blue-600 border-blue-100", dot: "bg-blue-400" },
+    };
+
+    const config = configs[v] || { class: "bg-slate-50 text-slate-600 border-slate-100", dot: "bg-slate-400" };
+
+    return (
+        <div className={cn("badge-pill w-fit", config.class)}>
+            <div className={cn("h-1.5 w-1.5 rounded-full", config.dot)} />
+            {value}
         </div>
     );
 }
@@ -414,7 +443,7 @@ function ActionButton({ label, icon: Icon, color, onClick }: any) {
         <button 
             onClick={onClick}
             className={cn(
-                "flex items-center gap-2.5 rounded-lg border px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                "flex items-center gap-2.5 rounded-lg border px-5 py-3 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95",
                 variants[color as keyof typeof variants]
             )}
         >
@@ -429,7 +458,7 @@ function PermissionToggle({ label, active, onToggle }: { label: string; active: 
         <button 
             onClick={() => onToggle(!active)}
             className={cn(
-                "flex items-center gap-2.5 rounded-lg border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all",
+                "flex items-center gap-2.5 rounded-lg border px-3 py-2 text-[9px] font-bold uppercase tracking-widest transition-all",
                 active 
                     ? "bg-indigo-50 text-indigo-700 border-indigo-100 shadow-sm" 
                     : "bg-white text-slate-400 border-slate-100"

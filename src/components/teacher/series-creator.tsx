@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { VaultFilterSuite } from "./vault-filter-suite";
 import { getVaultIntel, harvestQuestions, type VaultIntel } from "@/actions/vault-intel-actions";
+import { SharedPageHeader } from "@/components/shared/page-header";
 
 type VaultQuestion = {
     id: string;
@@ -90,7 +91,7 @@ export function SeriesCreator() {
     }, [vaultQuestions, searchQuery, activeFilters]);
 
     // Grouping for the harvester
-    const groupedHarvester = useMemo(() => {
+    const groupedHarvester = useMemo<Record<string, Record<string, VaultQuestion[]>>>(() => {
         const groups: Record<string, Record<string, VaultQuestion[]>> = {};
         filteredVault.forEach((q: VaultQuestion) => {
             const sub = q.subject || "Uncategorized";
@@ -105,7 +106,7 @@ export function SeriesCreator() {
     // Initially expand all when harvester groups change
     useEffect(() => {
         const all: string[] = [];
-        Object.values(groupedHarvester).forEach(chapters => {
+        Object.values(groupedHarvester).forEach((chapters: Record<string, VaultQuestion[]>) => {
             Object.keys(chapters).forEach(c => all.push(c));
         });
         if (all.length > 0 && expandedChapters.size === 0) {
@@ -233,39 +234,30 @@ export function SeriesCreator() {
 
     return (
         <div className="w-full max-w-7xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-10 px-4">
-                <div className="flex items-center gap-4">
-                    <Link
-                        href="/teacher/test-series"
-                        className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95"
-                    >
-                        <CaretLeft size={20} weight="bold" />
-                    </Link>
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Build Test Series</h1>
-                        <p className="text-sm text-slate-500 font-medium">Configure metadata and harvest questions from your vault</p>
+            <SharedPageHeader
+                eyebrow="Academy Workspace > Test Series > Create"
+                title="Build Test Series"
+                description="Configure metadata and harvest questions from your vault to create a high-quality assessment."
+                aside={
+                    <div className="flex items-center gap-4">
+                        <div className="px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-black">
+                            {selectedQuestionIds.size} Selected
+                        </div>
+                        <button
+                            onClick={handlePublish}
+                            disabled={isSubmitting}
+                            className="h-12 px-6 rounded-lg bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center gap-3 disabled:opacity-50"
+                        >
+                            {isSubmitting ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <RocketLaunch size={18} weight="fill" />
+                            )}
+                            {isSubmitting ? "Building..." : "Publish Series"}
+                        </button>
                     </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <div className="px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-black">
-                        {selectedQuestionIds.size} Selected
-                    </div>
-                    <button
-                        onClick={handlePublish}
-                        disabled={isSubmitting}
-                        className="h-14 px-8 rounded-lg bg-indigo-600 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center gap-3 disabled:opacity-50"
-                    >
-                        {isSubmitting ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <RocketLaunch size={20} weight="fill" />
-                        )}
-                        {isSubmitting ? "Building..." : "Publish Series"}
-                    </button>
-                </div>
-            </div>
+                }
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-10">
                 {/* Left side: Configuration */}

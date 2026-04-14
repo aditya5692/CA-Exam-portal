@@ -4,7 +4,7 @@ import { getStudentSharedMaterials } from "@/actions/educator-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
 import { getSavedItems, toggleSavedItem } from "@/actions/student-actions";
 import { deletePersonalMaterial, getMyVaultMaterials, uploadPersonalMaterial } from "@/actions/vault-actions";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
 import { 
@@ -177,7 +177,7 @@ export default function StudentVaultPage() {
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto space-y-6 animate-in fade-in duration-500  ">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow={isAdminView ? "Admin protocol" : "Scholarly assets"}
                 title={isAdminView ? "Materials" : "Study"}
                 accent={isAdminView ? "Library" : "Notes"}

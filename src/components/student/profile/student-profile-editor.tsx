@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState,type ReactNode } from "react";
-import { StudentPageHeader } from "../shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 
 import { getStudentAttemptMonthOptions,resolveStudentExamTarget } from "@/lib/student-level";
 
@@ -167,7 +167,7 @@ export function StudentProfileEditor({ profile, onCancel, onSaveSuccess }: Stude
                     <ChevronLeft className="w-4 h-4" />
                     Discard Changes
                 </button>
-                <StudentPageHeader
+                <SharedPageHeader
                     eyebrow="Edit Profile"
                     title="Update your"
                     accent="details"

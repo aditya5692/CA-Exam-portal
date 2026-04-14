@@ -1,7 +1,7 @@
 import { getStudentHistory } from "@/actions/student-actions";
 import { StudentAttemptHistory } from "@/components/student/analytics/attempt-history";
 import { StudentAnalyticsOverview } from "@/components/student/analytics/performance-overview";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { getStudentStudyRecommendations } from "@/lib/server/study-intelligence";
@@ -27,7 +27,7 @@ export default async function StudentAnalyticsPage() {
 
     return (
         <div className="space-y-12 pb-20  ">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow="Performance metrics"
                 title="Performance"
                 accent="Insights"

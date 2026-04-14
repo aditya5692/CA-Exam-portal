@@ -6,7 +6,7 @@ import { ResumeCard } from "@/components/student/dashboard/resume-card";
 import { TutorialCards } from "@/components/student/dashboard/tutorial-cards";
 import { PerformanceInsights } from "@/components/student/dashboard/performance-insights";
 import { PeerBenchmarking } from "@/components/student/dashboard/peer-benchmarking";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma/client";
 
@@ -328,7 +328,7 @@ export default async function StudentDashboardPage() {
 
     return (
         <div className="space-y-8 pb-10 w-full max-w-[1400px] mx-auto">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow="Global Workspace > Student Dashboard"
                 title={`Welcome back, ${userName}.`}
                 description={

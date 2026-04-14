@@ -100,7 +100,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
     return (
         <div className="student-surface overflow-hidden rounded-lg">
             <div className="flex flex-col justify-between gap-6 border-b border-[var(--student-border)] p-10 sm:flex-row sm:items-center">
-                <h3 className="  text-2xl font-black tracking-tighter text-[var(--student-text)]">System Directory</h3>
+                <h3 className="text-2xl font-bold tracking-tight text-slate-900">System Directory</h3>
                 <div className="relative">
                     <MagnifyingGlass size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--student-muted)]" weight="bold" />
                     <input
@@ -141,7 +141,7 @@ export function AdminDirectory({ initialUsers }: AdminDirectoryProps) {
                                                 {user.fullName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
                                             </div>
                                             <div>
-                                                <div className="  text-base font-black text-[var(--student-text)]">{user.fullName || "Unnamed User"}</div>
+                                                <div className="text-base font-bold text-slate-900">{user.fullName || "Unnamed User"}</div>
                                                 <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-[var(--student-muted)] opacity-80">{user.email}</div>
                                             </div>
                                         </div>

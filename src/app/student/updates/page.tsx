@@ -2,7 +2,7 @@
 
 import { getStudentFeed, joinBatch } from "@/actions/batch-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { resolveStudentExamTarget } from "@/lib/student-level";
 import { cn } from "@/lib/utils";
 import { 
@@ -131,7 +131,7 @@ export default function StudentUpdatesPage() {
 
     return (
         <div className="max-w-[1400px] mx-auto pb-20   space-y-12">
-            <StudentPageHeader
+            <SharedPageHeader
                 className="px-4"
                 eyebrow="Academy intelligence"
                 title="Academy Updates"

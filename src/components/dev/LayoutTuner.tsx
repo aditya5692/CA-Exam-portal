@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export function LayoutTuner() {
     // Default values
-    const [headerHeight, setHeaderHeight] = useState(80);
+    const [headerHeight, setHeaderHeight] = useState(70);
     const [contentPadding, setContentPadding] = useState(40);
     const [headingMargin, setHeadingMargin] = useState(32);
     const [showHeader, setShowHeader] = useState(true);

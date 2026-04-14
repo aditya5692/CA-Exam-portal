@@ -20,7 +20,8 @@ import {
   Users
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import {
   Area,
   AreaChart,
@@ -92,25 +93,21 @@ export default function DashboardOverview() {
 
     return (
         <div className="space-y-6 pb-10 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Teacher Studio</span>
-                    </div>
-                    <h1 className="  tracking-tighter leading-tight text-2xl font-bold text-slate-900">
-                        Welcome back, {data.teacherName}.
-                    </h1>
-                    <p className="text-slate-500 font-medium text-sm   max-w-2xl leading-relaxed">
+            <SharedPageHeader
+                eyebrow="Academy Workspace > Teacher Studio"
+                title={`Welcome back, ${data.teacherName}.`}
+                description={
+                    <p className="text-base text-[#4B5563]">
                         Your academy is performing <span className="text-emerald-600 font-bold">well above average</span> this week. Keep up the momentum!
                     </p>
-                </div>
-                <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-lg bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0 mb-1">
-                    <Calendar size={18} weight="bold" className="text-indigo-400" />
-                    Target Milestone: CA Final May 2026
-                </div>
-            </div>
+                }
+                aside={
+                    <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/5 hover:bg-slate-800 transition-all active:scale-95 shrink-0">
+                        <Calendar size={18} weight="bold" className="text-indigo-400" />
+                        Target Milestone: CA Final May 2026
+                    </div>
+                }
+            />
 
             {/* Top 4 Metrics Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 px-1 relative">

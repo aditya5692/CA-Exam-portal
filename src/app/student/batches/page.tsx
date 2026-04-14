@@ -1,5 +1,5 @@
 import { getStudentBatches } from "@/actions/batch-actions";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { BatchCard } from "@/components/student/batches/batch-card";
 import { Plus, Users, GraduationCap, IdentificationBadge } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -13,7 +13,7 @@ export default async function StudentBatchesPage() {
 
     return (
         <div className="max-w-[1400px] mx-auto pb-20 space-y-10 px-4">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow="Segment Management"
                 title="My Batches"
                 description="Consolidated overview of your enrolled instructional segments and faculty contexts."

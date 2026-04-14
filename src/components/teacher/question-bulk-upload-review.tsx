@@ -1,5 +1,8 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getTeacherBatchOptions, publishExamFromQuestions } from "@/actions/publish-exam-actions";
 import {
     clearBulkUploadSession,
@@ -9,30 +12,10 @@ import {
     type Question,
 } from "@/lib/question-bank-upload";
 import { saveQuestionsToVault } from "@/actions/mcq-vault-actions";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { cn } from "@/lib/utils";
 import type { BatchOption } from "@/types/publish-exam";
-import {
-    ArrowLeft,
-    CaretRight,
-    CheckCircle,
-    CloudArrowUp,
-    Database,
-    FileArrowUp,
-    Globe,
-    Info,
-    Rocket,
-    Sparkle,
-    SpinnerGap,
-    TerminalWindow,
-    Users,
-    WarningCircle,
-    Selection,
-    ListNumbers,
-    Shuffle
-} from "@phosphor-icons/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CaretRight, CheckCircle, CloudArrowUp, Database, FileArrowUp, Globe, Info, Rocket, Sparkle, SpinnerGap, TerminalWindow, Users, WarningCircle, Selection, ListNumbers, Shuffle, Plus } from "@phosphor-icons/react";
 
 type Stage = "processing" | "ready";
 type AudienceMode = "all" | "batch";
@@ -134,7 +117,7 @@ export function QuestionBulkUploadReview() {
             const res = await saveQuestionsToVault(questionsToSave);
             if (res.success) {
                 clearBulkUploadSession();
-                router.push("/teacher/questions");
+                router.push("/teacher/question-bank");
             } else {
                 alert(`Failed to archive: ${res.message}`);
             }
@@ -214,7 +197,7 @@ export function QuestionBulkUploadReview() {
                     <h2 className="text-2xl font-bold text-slate-900 leading-tight">Session Expired or Missing</h2>
                     <p className="text-slate-500 font-medium text-sm max-w-xs mx-auto">We couldn&apos;t find your uploaded data modules. Please return to the vault and re-initialize the ingestion pipeline.</p>
                 </div>
-                <Link href="/teacher/questions" className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95">
+                <Link href="/teacher/question-bank" className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95">
                     Return to MCQ Vault
                 </Link>
             </div>
@@ -268,7 +251,7 @@ export function QuestionBulkUploadReview() {
                         View Registry <CaretRight size={18} weight="bold" />
                     </Link>
                     <Link
-                        href="/teacher/questions"
+                        href="/teacher/question-bank"
                         className="h-16 rounded-lg bg-white border border-slate-100 text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-slate-900 hover:border-slate-200 transition-all flex items-center justify-center gap-3 active:scale-95"
                     >
                         Return to Vault
@@ -280,25 +263,19 @@ export function QuestionBulkUploadReview() {
 
     return (
         <div className="space-y-8 pb-10 w-full max-w-[1280px] mx-auto   animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-4">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Review & Publish</span>
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tighter text-slate-900">Review Questions</h1>
-                    <p className="text-slate-500 font-medium text-sm   max-w-2xl leading-relaxed">
-                        Verify your uploaded questions and publish them to your students.
-                    </p>
-                </div>
-                <Link
-                    href="/teacher/questions"
-                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg bg-white border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-slate-900 hover:border-slate-200 transition-all active:scale-95 shadow-sm"
-                >
-                    <ArrowLeft size={18} weight="bold" /> Abandon Session
-                </Link>
-            </div>
+            <SharedPageHeader
+                eyebrow="Library > Question Vault > Review"
+                title="Stage Post-Ingestion"
+                description="Verify your uploaded questions and publish them to your students. You can archive them to the vault only or deploy them as a live test series."
+                aside={
+                    <Link
+                        href="/teacher/question-bank"
+                        className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg bg-white border border-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-slate-900 hover:border-slate-200 transition-all active:scale-95 shadow-sm"
+                    >
+                        <ArrowLeft size={18} weight="bold" /> Abandon Session
+                    </Link>
+                }
+            />
 
             <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] gap-8">
                 {/* ── Left Side: Analysis Reprot ──────────────────────────── */}

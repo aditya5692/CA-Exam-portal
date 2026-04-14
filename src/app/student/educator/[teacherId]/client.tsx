@@ -1,6 +1,6 @@
 "use client";
 
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { Megaphone, Download, Star, Flame, Lock, Unlock, BookOpen } from "lucide-react";
 import { MockTestSection } from "@/components/student/exams/MockTestSection";
 import type { ExamHubData } from "@/types/student";
@@ -18,7 +18,7 @@ export default function EducatorPortalClient({ data }: { data: any }) {
 
     return (
         <div className="p-8 max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500 pb-24">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow="Educator space"
                 title={teacher.name}
                 accent="Portal"

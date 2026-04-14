@@ -9,7 +9,7 @@ import { ProfileHeader } from "./avatar-section";
 import { InfoCards } from "./info-cards";
 import { JourneySection } from "./journey-section";
 import { StudentProfileEditor } from "./student-profile-editor";
-import { StudentPageHeader } from "../shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 
 export function StudentProfile() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -69,7 +69,7 @@ export function StudentProfile() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow="Profile Center"
                 title="Your learning"
                 accent="identity"

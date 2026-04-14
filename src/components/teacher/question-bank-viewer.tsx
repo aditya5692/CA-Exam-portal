@@ -1,20 +1,21 @@
 "use client";
 
-import { getVaultQuestions, deleteVaultQuestion } from "@/actions/mcq-vault-actions";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { deleteVaultQuestion, getVaultQuestions } from "@/actions/mcq-vault-actions";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { cn } from "@/lib/utils";
 import {
     Books,
+    CaretDown,
+    CloudArrowUp,
     MagnifyingGlass,
     PencilSimple,
-    Trash,
-    Stack,
+    Plus,
     Sparkle,
-    CloudArrowUp,
-    CaretDown
+    Stack,
+    Trash
 } from "@phosphor-icons/react";
-import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
-
 import { VaultFilterSuite } from "./vault-filter-suite";
 
 interface VaultQuestion {
@@ -52,7 +53,7 @@ export function QuestionBankViewer() {
     }, [questions, searchQuery, activeFilters]);
 
     // Grouping Logic
-    const groupedData = useMemo(() => {
+    const groupedData = useMemo<Record<string, Record<string, VaultQuestion[]>>>(() => {
         const groups: Record<string, Record<string, VaultQuestion[]>> = {};
         filteredQuestions.forEach((q: VaultQuestion) => {
             const sub = q.subject || "Uncategorized";
@@ -73,7 +74,7 @@ export function QuestionBankViewer() {
     const toggleAll = (expand: boolean) => {
         if (expand) {
             const all: string[] = [];
-            Object.values(groupedData).forEach(chapters => {
+            Object.values(groupedData).forEach((chapters: Record<string, VaultQuestion[]>) => {
                 Object.keys(chapters).forEach(c => all.push(c));
             });
             setExpandedChapters(new Set(all));
@@ -114,39 +115,36 @@ export function QuestionBankViewer() {
 
     return (
         <div className="w-full max-w-7xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header */}
-            <div className="mb-8 relative">
-                <div className="absolute top-0 right-0 w-[500px] h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
-                    <div className="space-y-3">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-black uppercase tracking-widest text-indigo-600">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            Asset Library
-                        </div>
-                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">Question Bank</h1>
-                        <p className="text-slate-500 font-medium text-sm max-w-xl leading-relaxed">
-                            Organize and review all generated and uploaded MCQs. These questions can be automatically compiled into mock test series.
-                        </p>
-                    </div>
-
+            <SharedPageHeader
+                eyebrow="Library > Question Vault"
+                title="Question Bank"
+                description="Organize and review all generated and uploaded MCQs. These questions can be automatically compiled into mock test series."
+                aside={
                     <div className="flex flex-wrap gap-4">
                         <Link 
                             href="/teacher/mcq-extract"
                             className="h-12 px-6 rounded-lg bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
                         >
-                            <Sparkle size={18} weight="fill" className="text-indigo-500" />
+                            <Sparkle size={18} weight="fill" className="text-secondary" />
                             AI Studio
                         </Link>
                         <Link 
-                            href="/teacher/questions/bulk-upload"
+                            href="/teacher/question-bank/add"
+                            className="h-12 px-6 rounded-lg bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+                        >
+                            <Plus size={18} weight="bold" className="text-primary" />
+                            Add MCQ
+                        </Link>
+                        <Link 
+                            href="/teacher/question-bank/bulk-upload"
                             className="h-12 px-6 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg"
                         >
                             <CloudArrowUp size={18} weight="bold" />
-                            Bulk Upload
+                            Bulk Ingestion
                         </Link>
                     </div>
-                </div>
-            </div>
+                }
+            />
 
             <VaultFilterSuite 
                 onFilterChange={setActiveFilters} 
@@ -211,7 +209,7 @@ export function QuestionBankViewer() {
                     </div>
                 ) : (
                     <div className="space-y-12">
-                        {Object.entries(groupedData).map(([subject, chapters]) => (
+                        {Object.entries(groupedData).map(([subject, chapters]: [string, Record<string, VaultQuestion[]>]) => (
                             <div key={subject} className="space-y-6">
                                 <div className="flex items-center gap-4">
                                     <h2 className="text-lg font-black uppercase tracking-[0.2em] text-slate-900">{subject}</h2>
@@ -219,7 +217,7 @@ export function QuestionBankViewer() {
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-6">
-                                    {Object.entries(chapters).map(([chapter, items]) => {
+                                    {Object.entries(chapters).map(([chapter, items]: [string, VaultQuestion[]]) => {
                                         const isExpanded = expandedChapters.has(chapter);
                                         return (
                                             <div key={chapter} className={cn(
@@ -255,8 +253,8 @@ export function QuestionBankViewer() {
                                                     )}
                                                 </div>                                                {isExpanded && (
                                                     <div className="divide-y divide-slate-50 animate-in slide-in-from-top-2 duration-300">
-                                                        {items.map((q) => {
-                                                            const correctOption = q.options.find(o => o.isCorrect);
+                                                        {items.map((q: VaultQuestion) => {
+                                                            const correctOption = q.options.find((o: { text: string; isCorrect: boolean }) => o.isCorrect);
                                                             return (
                                                                 <div key={q.id} className="group p-6 hover:bg-slate-50 transition-all duration-200">
                                                                     <div className="flex items-start justify-between gap-6">

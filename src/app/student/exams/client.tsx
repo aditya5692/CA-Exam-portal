@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { ChapterMCQSection } from "@/components/student/exams/ChapterMCQSection";
 import { ExamHubFooter } from "@/components/student/exams/ExamHubFooter";
 import { MockTestSection } from "@/components/student/exams/MockTestSection";
-import { StudentPageHeader } from "@/components/student/shared/page-header";
+import { SharedPageHeader } from "@/components/shared/page-header";
 import { Props } from "@/components/student/exams/types";
 
 // ── Main client component ──────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ export default function StudentExamsClient({ caLevelKey, caLevelLabel, daysToExa
 
     return (
         <div className="space-y-8 w-full pb-12  ">
-            <StudentPageHeader
+            <SharedPageHeader
                 eyebrow="Exam hub"
                 title="Professional"
                 accent="Practice Hub"

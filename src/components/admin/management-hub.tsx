@@ -11,6 +11,7 @@ import {
     TrendUp
 } from "@phosphor-icons/react";
 import { useState, ReactNode } from "react";
+import { SharedPageHeader } from "@/components/shared/page-header";
 
 interface ManagementHubProps {
     statusView: ReactNode;
@@ -44,40 +45,30 @@ export function ManagementHub({
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-3">
-                    <div className="student-chip inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--student-accent)] animate-pulse" />
-                        Governance Suite
+            <SharedPageHeader
+                eyebrow="Platform Operation > Admin Control Center"
+                title="Governance Suite"
+                description="Comprehensive oversight and real-time orchestration of users, content spotlighting, and system health."
+                aside={
+                    <div className="flex p-1.5 bg-[var(--student-panel-muted)]/50 rounded-lg border border-[var(--student-border)]">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={cn(
+                                    "flex items-center gap-2.5 px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                    activeTab === tab.id 
+                                        ? "bg-white text-[var(--student-text)] shadow-lg scale-[1.02]" 
+                                        : "text-[var(--student-muted)] hover:text-[var(--student-text)] hover:bg-white/40"
+                                )}
+                            >
+                                <tab.icon size={20} weight={activeTab === tab.id ? "fill" : "bold"} className={activeTab === tab.id ? tab.color : ""} />
+                                <span className="hidden sm:inline">{tab.label}</span>
+                            </button>
+                        ))}
                     </div>
-                    <h1 className="  text-4xl font-black tracking-tight text-[var(--student-text)]">
-                        Platform <span className="text-[var(--student-accent-strong)]">Management</span>
-                    </h1>
-                    <p className="  font-medium text-[var(--student-muted)] max-w-xl">
-                        Comprehensive oversight and real-time orchestration of users, content spotlighting, and system health.
-                    </p>
-                </div>
-
-                {/* Tab Switcher */}
-                <div className="flex p-1.5 bg-[var(--student-panel-muted)]/50 rounded-lg border border-[var(--student-border)]">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={cn(
-                                "flex items-center gap-2.5 px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                                activeTab === tab.id 
-                                    ? "bg-white text-[var(--student-text)] shadow-lg scale-[1.02]" 
-                                    : "text-[var(--student-muted)] hover:text-[var(--student-text)] hover:bg-white/40"
-                            )}
-                        >
-                            <tab.icon size={20} weight={activeTab === tab.id ? "fill" : "bold"} className={activeTab === tab.id ? tab.color : ""} />
-                            <span className="hidden sm:inline">{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+                }
+            />
 
             {/* Dynamic Content Area */}
             <div className="min-h-[600px] transition-all duration-500">

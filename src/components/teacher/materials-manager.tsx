@@ -20,6 +20,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { SharedPageHeader } from "@/components/shared/page-header";
 
 interface Props {
     initialData: TeacherMaterialsData;
@@ -104,37 +105,32 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
 
     return (
         <div className="space-y-8">
-            {/* Header section with Stats */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-1">
-                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                        Educator Library
-                    </div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Manage Materials</h1>
-                    <p className="text-sm text-slate-400 font-medium">Upload, organize, and distribute study content across your student batches.</p>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-6 px-6 py-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Total Files</p>
-                            <p className="text-lg font-bold text-slate-900 leading-none">{stats.total}</p>
+            <SharedPageHeader
+                eyebrow="Academy Workspace > Study Materials"
+                title="Manage Materials"
+                description="Upload, organize, and distribute study content across your student batches with ease."
+                aside={
+                    <div className="flex items-center gap-4">
+                        <div className="hidden sm:flex items-center gap-6 px-6 py-3 bg-white border border-slate-100 rounded-lg shadow-sm">
+                            <div className="text-center">
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Total Files</p>
+                                <p className="text-lg font-bold text-slate-900 leading-none">{stats.total}</p>
+                            </div>
+                            <div className="w-px h-8 bg-slate-100" />
+                            <div className="text-center">
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Downloads</p>
+                                <p className="text-lg font-bold text-slate-900 leading-none">{stats.downloads}</p>
+                            </div>
                         </div>
-                        <div className="w-px h-8 bg-slate-100" />
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Downloads</p>
-                            <p className="text-lg font-bold text-slate-900 leading-none">{stats.downloads}</p>
-                        </div>
+                        <button
+                            onClick={() => setIsUploadModalOpen(true)}
+                            className="h-12 px-6 rounded-lg bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/10 flex items-center gap-2 active:scale-95"
+                        >
+                            <Plus size={18} weight="bold" /> Upload Material
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setIsUploadModalOpen(true)}
-                        className="h-12 px-6 rounded-lg bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/10 flex items-center gap-2 active:scale-95"
-                    >
-                        <Plus size={18} weight="bold" /> Upload Material
-                    </button>
-                </div>
-            </div>
+                }
+            />
 
             {/* Filter & Search Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 bg-white border border-slate-100 rounded-lg shadow-sm">

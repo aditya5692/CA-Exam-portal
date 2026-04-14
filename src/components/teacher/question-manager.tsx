@@ -1,25 +1,27 @@
 "use client";
 
-import {
-  parseQuestionRows,
-  writeBulkUploadSession
-} from "@/lib/question-bank-upload";
-import { saveQuestionsToVault } from "@/actions/mcq-vault-actions";
-import { cn } from "@/lib/utils";
-import {
-  CaretDown,
-  Check,
-  CloudArrowUp,
-  DownloadSimple,
-  Lightning,
-  PencilSimple,
-  Plus,
-  SpinnerGap,
-  Stack,
-} from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { saveQuestionsToVault } from "@/actions/mcq-vault-actions";
+import { SharedPageHeader } from "@/components/shared/page-header";
+import { parseQuestionRows, writeBulkUploadSession } from "@/lib/question-bank-upload";
+import { cn } from "@/lib/utils";
+import {
+    CaretDown,
+    Check,
+    CloudArrowUp,
+    DownloadSimple,
+    Lightning,
+    PencilSimple,
+    Plus,
+    SpinnerGap,
+    Stack,
+    Sparkle,
+    MagnifyingGlass,
+    Trash,
+    Books
+} from "@phosphor-icons/react";
 import * as XLSX from "xlsx";
 
 export function QuestionManager() {
@@ -72,7 +74,7 @@ export function QuestionManager() {
             const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[firstSheet], { defval: "" });
             const report = parseQuestionRows(rows, file.name);
             writeBulkUploadSession(report);
-            router.push("/teacher/questions/bulk-upload");
+            router.push("/teacher/question-bank/bulk-upload");
         } catch (error) {
             writeBulkUploadSession({
                 fileName: file.name,
@@ -81,7 +83,7 @@ export function QuestionManager() {
                 errors: [error instanceof Error ? error.message : "Unable to parse"],
                 questions: [],
             });
-            router.push("/teacher/questions/bulk-upload");
+            router.push("/teacher/question-bank/bulk-upload");
         } finally {
             event.target.value = "";
             setIsPreparingUpload(false);
@@ -90,7 +92,7 @@ export function QuestionManager() {
 
     const handleManualSave = async () => {
         if (!draft.prompt.trim()) return alert("Prompt is required");
-        if (draft.options.some(opt => !opt.trim())) return alert("All 4 options are required");
+        if (draft.options.some((opt: string) => !opt.trim())) return alert("All 4 options are required");
         if (draft.correct.length === 0) return alert("Select at least one correct answer");
 
         setIsSavingManual(true);
@@ -115,7 +117,7 @@ export function QuestionManager() {
     };
 
     const toggleCorrect = (idx: number) => {
-        setDraft(prev => {
+        setDraft((prev: typeof draft) => {
             const newCorrect = prev.correct.includes(idx)
                 ? prev.correct.filter(i => i !== idx)
                 : [...prev.correct, idx];
@@ -127,21 +129,11 @@ export function QuestionManager() {
         <div className="w-full max-w-4xl mx-auto pb-12   animate-in fade-in slide-in-from-bottom-4 duration-500">
             <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleBulkUpload} />
 
-            {/* Premium Header */}
-            <div className="mb-10 relative">
-                <div className="absolute top-0 right-0 w-[500px] h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
-                    <div className="space-y-3">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-black uppercase tracking-widest text-indigo-600">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            Creation Wizard
-                        </div>
-                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">Add MCQs</h1>
-                        <p className="text-slate-500 font-medium text-sm max-w-xl leading-relaxed">
-                            Upload questions in bulk via Excel, or use the single question manual editor. Generated questions are saved to the Question Bank.
-                        </p>
-                    </div>
-                    
+            <SharedPageHeader
+                eyebrow="Library > Question Vault > Create"
+                title="Add MCQs"
+                description="Upload questions in bulk via Excel, or use the single question manual editor. Generated questions are saved to the Question Bank."
+                aside={
                     <div className="flex flex-wrap gap-3 items-center">
                         <Link
                             href="/teacher/mcq-extract"
@@ -161,11 +153,11 @@ export function QuestionManager() {
                             <button
                                 type="button"
                                 disabled={isPreparingUpload}
-                                onClick={() => setShowDropdown((s) => !s)}
-                                className="h-12 rounded-lg bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2 px-6 shadow-md shadow-indigo-600/20"
+                                onClick={() => setShowDropdown((s: boolean) => !s)}
+                                className="h-12 rounded-lg bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2 px-6 shadow-md shadow-slate-900/10"
                             >
                                 <CloudArrowUp size={18} weight="bold" />
-                                {isPreparingUpload ? "Processing..." : "Bulk Upload"}
+                                {isPreparingUpload ? "Processing..." : "Bulk Ingestion"}
                                 <CaretDown size={12} weight="bold" className={cn("ml-1 transition-transform", showDropdown && "rotate-180")} />
                             </button>
 
@@ -201,8 +193,8 @@ export function QuestionManager() {
                             )}
                         </div>
                     </div>
-                </div>
-            </div>
+                }
+            />
 
             {/* Manual Builder */}
             <div className="pt-8 border-t border-slate-100">
