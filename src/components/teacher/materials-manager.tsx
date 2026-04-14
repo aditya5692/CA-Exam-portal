@@ -1,6 +1,6 @@
 "use client";
 
-import { deletePYQ, publishMaterial } from "@/actions/educator-actions";
+import { deletePYQ, publishMaterial } from "@/actions/teacher/materials";
 import { cn } from "@/lib/utils";
 import type { TeacherMaterialWithRelations, TeacherMaterialsData } from "@/types/educator";
 import {
@@ -16,6 +16,10 @@ import {
     Upload,
     Users,
     X,
+    Faders,
+    ArrowArcLeft as ArrowLeft,
+    CaretUp,
+    CaretDown
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
@@ -38,6 +42,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("All");
+    const [showFilters, setShowFilters] = useState(false);
 
     // Filtered materials
     const filteredMaterials = useMemo(() => {
@@ -111,20 +116,20 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                 description="Upload, organize, and distribute study content across your student batches with ease."
                 aside={
                     <div className="flex items-center gap-4">
-                        <div className="hidden sm:flex items-center gap-6 px-6 py-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                            <div className="text-center">
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Total Files</p>
-                                <p className="text-lg font-bold text-slate-900 leading-none">{stats.total}</p>
+                        <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-100 rounded-full">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Files</span>
+                                <span className="text-sm font-bold text-indigo-600">{stats.total}</span>
                             </div>
-                            <div className="w-px h-8 bg-slate-100" />
-                            <div className="text-center">
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Downloads</p>
-                                <p className="text-lg font-bold text-slate-900 leading-none">{stats.downloads}</p>
+                            <div className="w-px h-3 bg-slate-200" />
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hits</span>
+                                <span className="text-sm font-bold text-slate-700">{stats.downloads}</span>
                             </div>
                         </div>
                         <button
                             onClick={() => setIsUploadModalOpen(true)}
-                            className="h-12 px-6 rounded-lg bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/10 flex items-center gap-2 active:scale-95"
+                            className="h-12 px-6 rounded-xl bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 active:scale-95"
                         >
                             <Plus size={18} weight="bold" /> Upload Material
                         </button>
@@ -132,20 +137,35 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                 }
             />
 
-            {/* Filter & Search Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 bg-white border border-slate-100 rounded-lg shadow-sm">
-                <div className="relative group w-full sm:max-w-sm">
-                    < MagnifyingGlass size={18} weight="bold" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="Search your library..."
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-slate-50/50 border border-transparent text-sm text-slate-800 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-100 focus:bg-white transition-all"
-                    />
+            {/* Search / Filter Row */}
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                <div className="relative flex-1">
+                    <MagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} weight="bold" />
+                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Identify specific files by name or subtype..."
+                        className="w-full h-12 bg-white border border-slate-200/60 rounded-xl pl-11 pr-4 text-[13px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 transition-all shadow-sm" />
                 </div>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={cn(
+                            "h-12 px-6 rounded-xl border font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 shadow-sm",
+                            showFilters ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                        )}
+                    >
+                        <Faders size={18} weight="bold" /> 
+                        {showFilters ? "Hide Filters" : "Filter Settings"}
+                    </button>
+                    <button className="h-12 px-6 rounded-xl bg-white border border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-slate-400 hover:text-slate-900 transition-all active:scale-95 flex items-center gap-2 shadow-sm">
+                        <DownloadSimple size={18} weight="bold" /> Export
+                    </button>
+                </div>
+            </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-hide">
+            {/* Filter Suite Bar (Conditional) */}
+            {showFilters && (
+                <div className="flex flex-wrap items-center gap-2 mb-2 animate-in slide-in-from-top-4 duration-300 p-1 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 px-4 py-3">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Quick Category:</span>
                     <button
                         onClick={() => setSelectedCategory("All")}
                         className={cn(
@@ -155,7 +175,7 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                     >
                         All Levels
                     </button>
-                    {CATEGORIES.slice(1, 4).map(cat => (
+                    {CATEGORIES.slice(1).map(cat => (
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
@@ -168,39 +188,39 @@ export function MaterialsManager({ initialData, batches, currentUserId }: Props)
                         </button>
                     ))}
                 </div>
-            </div>
+            )}
 
             {/* Materials Table */}
-            <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
+            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm custom-scrollbar">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Material</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Category</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Stats</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                            <tr className="bg-[#FBFCFD] border-b border-slate-100">
+                                <th className="px-6 py-5 text-[10px] font-black text-[#6B7280] uppercase tracking-[0.2em]">Material Library Item</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-[#6B7280] uppercase tracking-[0.2em]">Categorization</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-[#6B7280] uppercase tracking-[0.2em]">Status Flag</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-[#6B7280] uppercase tracking-[0.2em] text-center">Engagement</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-[#6B7280] uppercase tracking-[0.2em] text-right pr-10">Administrative Control</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {filteredMaterials.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-24 text-center">
-                                        <div className="flex flex-col items-center justify-center space-y-4">
-                                            <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center text-slate-200">
-                                                <Upload size={32} />
+                                    <td colSpan={5} className="px-6 py-32 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-5 max-w-xs mx-auto">
+                                            <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 flex items-center justify-center text-slate-200 border border-slate-100 shadow-sm">
+                                                <FileText size={40} weight="light" />
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-900">No materials found</p>
-                                                <p className="text-xs text-slate-400 font-medium">Try adjusting your filters or upload some new files.</p>
+                                            <div className="space-y-1">
+                                                <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">No Library Records Matched</p>
+                                                <p className="text-[10px] font-semibold text-slate-400 leading-relaxed italic">Adjust your category scope or search identifiers to locate matching study assets.</p>
                                             </div>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 filteredMaterials.map((m: TeacherMaterialWithRelations) => (
-                                    <tr key={m.id} className="group hover:bg-slate-50/50 transition-colors">
+                                    <tr key={m.id} className="group hover:bg-[#F8FAFC] transition-all duration-200 border-b border-slate-50/50 last:border-0">
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-500 group-hover:border-indigo-100 transition-all">

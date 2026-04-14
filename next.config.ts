@@ -20,6 +20,20 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/past-year-questions",
+        destination: "/study-material",
+        permanent: true,
+      },
+      {
+        source: "/student/past-year-questions",
+        destination: "/student/free-resources?type=PYQ",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -916,8 +916,8 @@ export async function adminSearchUsers(query: string): Promise<ActionResponse<an
     const users = await prisma.user.findMany({
       where: {
         OR: [
-          { fullName: { contains: query, mode: "insensitive" as any } },
-          { email: { contains: query, mode: "insensitive" as any } },
+          { fullName: { contains: query } },
+          { email: { contains: query } },
           { phone: { contains: query } },
         ],
       },

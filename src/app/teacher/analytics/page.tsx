@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { getTeacherAnalyticsData } from "@/actions/educator-actions";
+import { getTeacherAnalyticsData } from "@/actions/teacher/analytics";
 import { cn } from "@/lib/utils";
 import {
     ArrowRight,

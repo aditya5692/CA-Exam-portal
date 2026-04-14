@@ -9,7 +9,7 @@ import {
     ChartBar,
     Clock,
     FileText,
-    Funnel,
+    Faders,
     Globe,
     MagnifyingGlass,
     PencilSimple,
@@ -19,6 +19,8 @@ import {
     Users,
     WarningCircle,
     X,
+    DownloadSimple,
+    Plus
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -62,6 +64,7 @@ export function TestSeriesTable({ initialExams }: Props) {
     const [selectedIds,  setSelectedIds]  = useState<Set<string>>(new Set());
     const [isDeleting,   setIsDeleting]   = useState(false);
     const [showConfirm,  setShowConfirm]  = useState<{ type: "single" | "bulk"; id?: string } | null>(null);
+    const [showFilters,  setShowFilters]  = useState(false);
 
     const filteredExams = useMemo(() => {
         return initialExams.filter((e) => {
@@ -112,120 +115,135 @@ export function TestSeriesTable({ initialExams }: Props) {
 
     return (
         <>
-            {/* ── INPUT zone: search + filter ─────────────────────────────── */}
-            <div className="pb-5 border-b border-slate-100 space-y-4 px-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">All Test Series</h2>
-                        <p className="text-xs text-slate-400 font-medium mt-0.5">
-                            {filteredExams.length} of {initialExams.length} assessments
-                        </p>
+            {/* Hero Section */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
+                <div className="flex items-center gap-6">
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.4)]" />
+                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Assessment Vault</span>
+                        </div>
+                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-none">
+                            All Test Series
+                        </h1>
                     </div>
-
-                    {/* Search */}
-                    <div className="relative group flex-shrink-0">
-                        <MagnifyingGlass
-                            size={16}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"
-                            weight="bold"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Search by title, subject…"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full sm:w-72 pl-10 pr-4 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all"
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
-                                <X size={14} weight="bold" />
-                            </button>
-                        )}
+                    <div className="h-7 px-3 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 self-end mb-1">
+                        <Stack size={12} weight="bold" className="text-indigo-500/60" />
+                        <span>{filteredExams.length} / {initialExams.length} Live Assets</span>
                     </div>
                 </div>
+                
+                <p className="hidden xl:block text-slate-400 font-medium text-xs max-w-sm text-right leading-relaxed opacity-80">
+                    Orchestrate mock assessments and practice modules with high-fidelity control over student grouping.
+                </p>
+            </div>
 
-                {/* Status filter pills */}
-                <div className="flex items-center gap-2 flex-wrap">
-                    <Funnel size={14} className="text-slate-400 shrink-0" weight="bold" />
+            {/* Search / Filter Row */}
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
+                <div className="relative flex-1">
+                    <MagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} weight="bold" />
+                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Locate specific assessments by title, subject or category..."
+                        className="w-full h-12 bg-white border border-slate-200/60 rounded-xl pl-11 pr-4 text-[13px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 transition-all shadow-sm" />
+                </div>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={cn(
+                            "h-12 px-6 rounded-xl border font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 shadow-sm",
+                            showFilters ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                        )}
+                    >
+                        <Faders size={18} weight="bold" /> 
+                        {showFilters ? "Hide Filters" : "Access Filters"}
+                    </button>
+                    <button onClick={() => router.push("/teacher/test-series/create")} className="h-12 px-6 rounded-xl bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 flex items-center gap-2 active:scale-95">
+                        <Plus size={18} weight="bold" /> New Assessment
+                    </button>
+                </div>
+            </div>
+
+            {/* Filter Suite Bar (Conditional) */}
+            {showFilters && (
+                <div className="flex flex-wrap items-center gap-2 mb-6 animate-in slide-in-from-top-4 duration-300 p-1 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 px-4 py-3">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Status Coverage:</span>
                     {(["ALL", "PUBLISHED", "DRAFT"] as const).map((s) => (
                         <button
                             key={s}
                             onClick={() => setFilterStatus(s)}
                             className={cn(
-                                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
-                                filterStatus === s
-                                    ? "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/20"
-                                    : "bg-white text-slate-500 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
+                                "px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap",
+                                filterStatus === s ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20" : "bg-white text-slate-500 border-slate-100 hover:border-slate-300"
                             )}
                         >
-                            {s === "ALL" ? "All" : s === "PUBLISHED" ? "Live" : "Drafts"}
+                            {s === "ALL" ? "Total Library" : s === "PUBLISHED" ? "Live Access" : "Draft Stages"}
                             <span className={cn(
-                                "text-[10px] font-black px-1.5 py-0.5 rounded-full",
+                                "ml-2 text-[9px] font-black px-1.5 py-0.5 rounded-full",
                                 filterStatus === s ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
                             )}>
                                 {statusCounts[s]}
                             </span>
                         </button>
                     ))}
-
-                    {/* Bulk-select bar */}
-                    {selectedIds.size > 0 && (
-                        <div className="ml-auto flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
-                            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                                <SelectionIcon size={13} weight="bold" /> {selectedIds.size} selected
-                            </span>
-                            <button
-                                onClick={() => setShowConfirm({ type: "bulk" })}
-                                className="h-8 px-3 rounded-lg bg-rose-50 border border-rose-100 text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all flex items-center gap-1.5"
-                            >
-                                <Trash size={13} weight="bold" /> Delete
-                            </button>
-                            <button onClick={() => setSelectedIds(new Set())} className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-200 text-slate-400 hover:text-slate-600 transition-all flex items-center justify-center">
-                                <X size={13} weight="bold" />
-                            </button>
-                        </div>
-                    )}
+                    <div className="ml-auto">
+                        <button className="h-9 px-4 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-slate-400 hover:text-slate-900 transition-all flex items-center gap-2">
+                            <DownloadSimple size={14} weight="bold" /> Export Report
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* ── PROCESS + OUTPUT zone: cards ────────────────────────────── */}
             {filteredExams.length === 0 ? (
-                <div className="py-24 text-center space-y-4 px-8">
-                    <div className="w-20 h-20 bg-slate-50 rounded-lg mx-auto flex items-center justify-center text-slate-300">
-                        <Stack size={36} weight="duotone" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-slate-900">
-                            {searchQuery || filterStatus !== "ALL" ? "No Matches Found" : "No Test Series Yet"}
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-1">
-                            {searchQuery || filterStatus !== "ALL"
-                                ? "Try clearing your filters"
-                                : "Create your first series using the button above"}
-                        </p>
+                <div className="py-24 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-5 max-w-xs mx-auto">
+                        <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 flex items-center justify-center text-slate-200 border border-slate-100 shadow-sm">
+                            <Stack size={40} weight="light" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">No matching assessments</p>
+                            <p className="text-[10px] font-semibold text-slate-400 leading-relaxed italic">Try clearing your filters or search identifiers to discover specific test series.</p>
+                        </div>
                     </div>
                 </div>
             ) : (
-                <div className="space-y-2 mt-4 bg-white border border-slate-100 rounded-lg p-2 pb-4">
+                <div className="space-y-3 mt-4">
                     {/* Select all row */}
                     {filteredExams.length > 1 && (
-                        <div className="flex items-center gap-3 px-3 py-2">
-                            <button
-                                onClick={toggleSelectAll}
-                                className={cn(
-                                    "w-4 h-4 rounded-lg border-2 transition-all flex items-center justify-center shrink-0",
-                                    selectedIds.size === filteredExams.length && filteredExams.length > 0
-                                        ? "bg-indigo-600 border-indigo-600 text-white"
-                                        : "border-slate-300 hover:border-indigo-400"
-                                )}
-                            >
-                                {selectedIds.size === filteredExams.length && filteredExams.length > 0 && (
-                                    <Check size={10} weight="bold" />
-                                )}
-                            </button>
-                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-                                Select all
-                            </span>
+                        <div className="flex items-center justify-between px-6 py-3 bg-slate-50/50 rounded-xl border border-dashed border-slate-100">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={toggleSelectAll}
+                                    className={cn(
+                                        "w-5 h-5 rounded-lg border-2 transition-all flex items-center justify-center shrink-0",
+                                        selectedIds.size === filteredExams.length && filteredExams.length > 0
+                                            ? "bg-indigo-600 border-indigo-600 text-white"
+                                            : "bg-white border-slate-200 hover:border-indigo-400"
+                                    )}
+                                >
+                                    {selectedIds.size === filteredExams.length && filteredExams.length > 0 && (
+                                        <Check size={12} weight="bold" />
+                                    )}
+                                </button>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                    Select all records ({filteredExams.length})
+                                </span>
+                            </div>
+
+                            {/* Bulk Actions Indicator */}
+                            {selectedIds.size > 0 && (
+                                <div className="flex items-center gap-3 animate-in slide-in-from-right-2">
+                                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 uppercase tracking-widest">
+                                        {selectedIds.size} Selected
+                                    </span>
+                                    <button
+                                        onClick={() => setShowConfirm({ type: "bulk" })}
+                                        className="h-8 px-4 rounded-lg bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                                    >
+                                        Delete Bulk
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -238,32 +256,33 @@ export function TestSeriesTable({ initialExams }: Props) {
                             <div
                                 key={exam.id}
                                 className={cn(
-                                    "group flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 cursor-pointer",
+                                    "group flex flex-col lg:flex-row lg:items-center gap-6 p-6 rounded-2xl border transition-all duration-300 cursor-default",
                                     isSelected
-                                        ? "bg-indigo-50/60 border-indigo-200"
-                                        : "bg-white border-transparent hover:bg-slate-50"
+                                        ? "bg-indigo-50/40 border-indigo-200 ring-2 ring-indigo-500/5 shadow-lg shadow-indigo-600/5"
+                                        : "bg-white border-slate-100 hover:border-indigo-200 hover:shadow-md hover:bg-white"
                                 )}
                             >
-                                {/* Checkbox */}
-                                <button
-                                    onClick={() => toggleSelect(exam.id)}
-                                    className={cn(
-                                        "w-4 h-4 rounded-lg border-2 transition-all flex items-center justify-center shrink-0",
-                                        isSelected
-                                            ? "bg-indigo-600 border-indigo-600 text-white"
-                                            : "border-slate-200 group-hover:border-slate-300"
-                                    )}
-                                >
-                                    {isSelected && <Check size={10} weight="bold" />}
-                                </button>
+                                <div className="flex items-center gap-6 flex-1 min-w-0">
+                                    {/* Checkbox */}
+                                    <button
+                                        onClick={() => toggleSelect(exam.id)}
+                                        className={cn(
+                                            "w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center shrink-0 shadow-sm",
+                                            isSelected
+                                                ? "bg-indigo-600 border-indigo-600 text-white"
+                                                : "bg-white border-slate-200 group-hover:border-indigo-400"
+                                        )}
+                                    >
+                                        {isSelected && <Check size={14} weight="bold" />}
+                                    </button>
 
-                                {/* Icon */}
-                                <div className={cn(
-                                    "w-11 h-11 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-300",
-                                    isSelected ? "bg-indigo-100 border-indigo-200 text-indigo-600" : "bg-slate-50 border-slate-200 text-slate-400 group-hover:bg-indigo-50 group-hover:border-indigo-200 group-hover:text-indigo-500"
-                                )}>
-                                    <FileText size={20} weight="duotone" />
-                                </div>
+                                    {/* Icon */}
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-300 shadow-sm",
+                                        isSelected ? "bg-indigo-600 border-indigo-600 text-white shadow-indigo-200" : "bg-slate-50 border-slate-100 text-slate-400 group-hover:bg-indigo-50 group-hover:border-indigo-200 group-hover:text-indigo-500"
+                                    )}>
+                                        <FileText size={22} weight="bold" />
+                                    </div>
 
                                 {/* Title & meta */}
                                 <div className="flex-1 min-w-0">
@@ -297,10 +316,11 @@ export function TestSeriesTable({ initialExams }: Props) {
                                             {new Date(exam.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                                         </span>
                                     </div>
+                                    </div>
                                 </div>
 
                                 {/* ── OUTPUT zone: audience + metrics ─────── */}
-                                <div className="hidden md:flex items-center gap-6 shrink-0">
+                                <div className="hidden md:flex items-center gap-6 shrink-0 lg:ml-auto">
                                     {/* Audience */}
                                     {exam.batch ? (
                                         <div className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1.5 rounded-lg border border-indigo-100">

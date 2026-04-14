@@ -558,4 +558,31 @@
   .action-hub {
     @apply flex items-center gap-2.5;
   }
+
+  /* Modern Scrollbar Utility */
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #E2E8F0;
+    border-radius: 10px;
+  }
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+  }
+
+  /* Modern Table Header Utility */
+  .th-saas {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-4 px-6 border-b border-slate-100;
+  }
+
+  /* Modern Dot-Grid Utility */
+  .bg-dot-grid {
+    background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+    background-size: 32px 32px;
+  }
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { assertUserCanAccessFeature } from "@/lib/auth/feature-access";
 import { requireAuth } from "@/lib/auth/session";
 import { CA_FINAL_CONTENT,CA_FOUNDATION_CONTENT,CA_INTER_CONTENT } from "@/lib/constants/chapters";
 import prisma from "@/lib/prisma/client";
@@ -393,11 +394,17 @@ export async function getSavedItems(): Promise<ActionResponse<{ materials: Unifi
             id: m.id,
             title: m.title,
             category: m.category,
-            type: m.subType,
+            subType: m.subType,
+            fileUrl: m.fileUrl,
+            description: m.description ?? undefined,
             isPublic: m.isPublic,
             isProtected: m.isProtected,
             uploadedAt: m.createdAt,
-            sizeInBytes: m.sizeInBytes
+            sizeInBytes: m.sizeInBytes,
+            uploadedBy: {
+                fullName: m.uploadedBy.fullName,
+                email: null
+            }
         }));
 
         const exams: UnifiedExam[] = examsRaw.map(e => ({
@@ -630,5 +637,169 @@ export async function updateStudentLevel(level: "foundation" | "ipc" | "final"):
     } catch (err) {
         console.error("updateStudentLevel error:", err);
         return { success: false, message: "Failed to update level." };
+    }
+}
+/**
+ * Fetches materials shared with the current student or all materials for admins.
+ */
+export async function getStudentSharedMaterials(studentId?: string): Promise<ActionResponse<{ materials: UnifiedMaterial[], isAdminView: boolean }>> {
+    try {
+        const viewer = await requireAuth(["STUDENT", "TEACHER", "ADMIN"]);
+        await assertUserCanAccessFeature(viewer.id, "STUDENT_MATERIALS", "read");
+
+        if (studentId) {
+            if (viewer.role !== "ADMIN" && viewer.id !== studentId) {
+                throw new Error("Unauthorized student lookup.");
+            }
+
+            const accesses = await prisma.materialAccess.findMany({
+                where: { studentId },
+                include: {
+                    material: {
+                        include: {
+                            uploadedBy: { select: { fullName: true, email: true } },
+                        },
+                    },
+                },
+                orderBy: { grantedAt: "desc" },
+            });
+
+            return {
+                success: true,
+                data: {
+                    materials: accesses.map((access) => ({
+                        id: access.material.id,
+                        title: access.material.title,
+                        category: access.material.category,
+                        subType: access.material.subType,
+                        fileUrl: access.material.fileUrl,
+                        description: access.material.description ?? undefined,
+                        isPublic: access.material.isPublic,
+                        isProtected: access.material.isProtected,
+                        uploadedAt: access.material.createdAt,
+                        sizeInBytes: access.material.sizeInBytes,
+                        uploadedBy: {
+                            fullName: access.material.uploadedBy.fullName,
+                            email: access.material.uploadedBy.email
+                        }
+                    })),
+                    isAdminView: viewer.role === "ADMIN",
+                }
+            };
+        }
+
+        if (viewer.role === "ADMIN") {
+            const materials = await prisma.studyMaterial.findMany({
+                where: {
+                    fileUrl: { startsWith: "/uploads/teacher_materials/" },
+                    accessedBy: { some: {} },
+                },
+                include: {
+                    uploadedBy: { select: { id: true, fullName: true, email: true } },
+                },
+                orderBy: { createdAt: "desc" },
+            });
+
+            return { 
+                success: true, 
+                data: { 
+                    materials: materials.map(m => ({
+                        id: m.id,
+                        title: m.title,
+                        category: m.category,
+                        subType: m.subType,
+                        fileUrl: m.fileUrl,
+                        description: m.description ?? undefined,
+                        isPublic: m.isPublic,
+                        isProtected: m.isProtected,
+                        uploadedAt: m.createdAt,
+                        sizeInBytes: m.sizeInBytes,
+                        uploadedBy: {
+                            id: m.uploadedBy.id,
+                            fullName: m.uploadedBy.fullName,
+                            email: m.uploadedBy.email
+                        }
+                    })),
+                    isAdminView: true 
+                } 
+            };
+        }
+
+        const accesses = await prisma.materialAccess.findMany({
+            where: { studentId: viewer.id },
+            include: {
+                material: {
+                    include: {
+                        uploadedBy: { select: { fullName: true, email: true } },
+                    },
+                },
+            },
+            orderBy: { grantedAt: "desc" },
+        });
+
+        const batchMaterials = await prisma.batchMaterial.findMany({
+            where: {
+                batch: {
+                    enrollments: { some: { studentId: viewer.id } }
+                }
+            },
+            include: {
+                material: {
+                    include: {
+                        uploadedBy: { select: { fullName: true, email: true } },
+                    },
+                },
+            }
+        });
+
+        const accessCodes = await prisma.studentAccessCode.findMany({
+            where: { studentId: viewer.id, status: "VERIFIED" },
+            select: { teacherId: true }
+        });
+        const linkedTeacherIds = accessCodes.map((a) => a.teacherId);
+
+        const generalTeacherMaterials = await prisma.studyMaterial.findMany({
+            where: {
+                uploadedById: { in: linkedTeacherIds },
+                batches: { none: {} },
+            },
+            include: {
+                uploadedBy: { select: { fullName: true, email: true } },
+            }
+        });
+
+        const allMaterials = [
+            ...accesses.map((a) => a.material),
+            ...batchMaterials.map((bm) => bm.material),
+            ...generalTeacherMaterials,
+        ];
+
+        const uniqueMaterials = Array.from(new Map(allMaterials.map(m => [m.id, m])).values());
+
+        return { 
+            success: true, 
+            data: { 
+                materials: uniqueMaterials.map(m => ({
+                    id: m.id,
+                    title: m.title,
+                    category: m.category,
+                    subType: m.subType,
+                    fileUrl: m.fileUrl,
+                    description: m.description ?? undefined,
+                    isPublic: m.isPublic,
+                    isProtected: m.isProtected,
+                    uploadedAt: m.createdAt,
+                    sizeInBytes: m.sizeInBytes,
+                    uploadedBy: {
+                        fullName: m.uploadedBy.fullName,
+                        email: m.uploadedBy.email
+                    }
+                })),
+                isAdminView: false 
+            } 
+        };
+    } catch (error: unknown) {
+        console.error("getStudentSharedMaterials failed:", error);
+        return { success: false, message: error instanceof Error ? error.message : "Failed to fetch shared materials." };
     }
 }

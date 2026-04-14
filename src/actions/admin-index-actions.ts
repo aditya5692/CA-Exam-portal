@@ -62,18 +62,11 @@ export async function getAdminMetrics(): Promise<ActionResponse<AdminMetricsData
                 recentUsers,
                 recentSubscriptions: recentSubscriptions.map(s => ({
                     id: s.id,
-                    userId: s.userId,
-                    userFullName: s.user.fullName,
-                    userEmail: s.user.email,
-                    plan: s.plan,
-                    role: s.role,
+                    planName: s.plan,
+                    userName: s.user.fullName || "User",
+                    amount: s.amountPaise / 100, // Convert paise to major unit if needed, or keep as is if amount is paise
                     status: s.status,
-                    amountPaise: s.amountPaise,
-                    razorpayPaymentId: s.razorpayPaymentId,
-                    startedAt: s.startedAt.toISOString(),
-                    expiresAt: s.expiresAt.toISOString(),
-                    createdAt: s.createdAt.toISOString(),
-                    grantedByAdminId: s.grantedByAdminId
+                    createdAt: s.createdAt
                 })),
                 timestamp: new Date().toISOString()
             }

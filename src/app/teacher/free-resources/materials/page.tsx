@@ -1,4 +1,4 @@
-import { getTeacherBatchesForMaterials, getTeacherMaterials } from "@/actions/educator-actions";
+import { getTeacherBatchesForMaterials, getTeacherMaterials } from "@/actions/teacher/materials";
 import { MaterialsManager } from "@/components/teacher/materials-manager";
 import { getCurrentUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";

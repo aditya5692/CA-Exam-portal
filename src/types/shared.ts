@@ -10,11 +10,21 @@ export type UnifiedMaterial = {
     id: string;
     title: string;
     category: string;
-    type: string;
+    subType: string;
+    fileUrl?: string;
+    description?: string;
     isPublic: boolean;
     isProtected: boolean;
     uploadedAt: Date;
-    sizeInBytes?: number;
+    sizeInBytes: number;
+    downloads?: number;
+    rating?: number;
+    isTrending?: boolean;
+    uploadedBy?: {
+        id?: string;
+        fullName: string | null;
+        email: string | null;
+    };
 };
 
 export type UnifiedExam = {

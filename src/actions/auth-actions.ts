@@ -226,6 +226,17 @@ export async function verifyOtpAndLogin(
             return { success: false, message: validated.error.issues[0].message };
         }
 
+        // --- Demo Bypass Logic ---
+        const normalizedPhone = normalizePhone(phone);
+        const isDemoTeacher = normalizedPhone === "917065751756" && otp === "0424";
+        const isDemoStudent = normalizedPhone === "919000010001" && otp === "0424";
+
+        if (!IS_PROD && (isDemoTeacher || isDemoStudent)) {
+            console.log(`AuthAction: [Demo Bypass] Logging in ${normalizedPhone}`);
+            return finalizeVerifiedIdentityLogin({ phone: normalizedPhone }, requestedRole);
+        }
+        // -------------------------
+
         return { success: false, message: "Direct OTP verification via MSG91 is currently disabled." };
     } catch {
         return { success: false, message: "Verification failed." };
@@ -278,6 +289,17 @@ export async function verifyWidgetOtpAndLogin(
     accessToken: string,
     requestedRole?: RequestedOtpRole,
 ): Promise<ActionResponse<LoginResult | RegistrationRequiredResult | RoleMismatchResult>> {
+    // --- Demo Bypass Logic ---
+    if (!IS_PROD && accessToken.startsWith("mock-verified-token")) {
+        let phone = "917065751756"; // Default demo teacher
+        if (accessToken.includes(":")) {
+            phone = accessToken.split(":")[1];
+        }
+        console.log(`AuthAction: [Widget Demo Bypass] Logging in ${phone}`);
+        return finalizeVerifiedIdentityLogin({ phone }, requestedRole);
+    }
+    // -------------------------
+
     return { success: false, message: "MSG91 login is currently disabled. Please use the modern login." };
 }
 

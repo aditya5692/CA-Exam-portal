@@ -85,10 +85,10 @@ export async function trackPYQAction(id: string, action: "DOWNLOAD" | "SHARE"): 
         } else {
             await incrementPublicResourceMetric(id, "shareCount", "PYQ");
         }
-        revalidatePath("/student/past-year-questions");
-        revalidatePath("/past-year-questions");
-        revalidatePath("/teacher/past-year-questions");
-        revalidatePath("/admin/past-year-questions");
+        revalidatePath("/student/free-resources");
+        revalidatePath("/study-material");
+        revalidatePath("/teacher/materials");
+        revalidatePath("/admin/dashboard");
         return { success: true, data: undefined };
     } catch (error) {
         console.error("trackPYQAction error:", error);

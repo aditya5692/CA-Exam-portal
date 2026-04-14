@@ -12,7 +12,6 @@ export function revalidateBatchSurfaces() {
     revalidatePath("/student/exams");
     revalidatePath("/student/materials");
     revalidatePath("/student/free-resources");
-    revalidatePath("/student/past-year-questions");
     revalidatePath("/student/analytics");
 }
 
@@ -24,12 +23,6 @@ export function revalidateMaterialSurfaces() {
     revalidatePath("/student/dashboard");
     revalidatePath("/student/free-resources");
     revalidatePath("/student/materials");
-}
-
-export function revalidatePastYearQuestionSurfaces() {
-    revalidatePath("/teacher/past-year-questions");
-    revalidatePath("/student/past-year-questions");
-    revalidatePath("/past-year-questions");
 }
 
 export function revalidateExamSurfaces(attemptId?: string) {
@@ -96,4 +89,11 @@ export function revalidatePlatformConfigSurfaces() {
     revalidatePath("/pricing");
     revalidatePath("/student/plan");
     revalidatePath("/teacher/plan");
+}
+export function revalidatePastYearQuestionSurfaces() {
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/teacher/materials");
+    revalidatePath("/student/dashboard");
+    revalidatePath("/student/materials");
+    revalidatePath("/", "layout");
 }

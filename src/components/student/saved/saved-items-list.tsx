@@ -110,7 +110,7 @@ export function SavedItemsList({ materials: initialMaterials, exams: initialExam
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-accent-strong)] opacity-80">{item.category}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-80">{item.subType ?? item.type}</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--student-muted)] opacity-80">{item.subType}</span>
                             </div>
                             <h4 className="min-h-[44px] line-clamp-2   text-lg font-bold leading-tight tracking-tight text-[var(--student-text)] transition-colors group-hover:text-[var(--student-accent-strong)]">
                                 {item.title}

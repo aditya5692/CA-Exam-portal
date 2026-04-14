@@ -12,7 +12,6 @@ const NAV_LINKS = [
     { label: "Home", href: "/" },
     { label: "Test Series", href: "/exam" },
     { label: "Study Materials", href: "/study-material" },
-    { label: "PYQ Archives", href: "/past-year-questions" },
     { label: "Plans", href: "/pricing" },
 ];
 

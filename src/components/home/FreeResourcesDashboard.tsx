@@ -2,7 +2,7 @@
 
 import { getPublicResources, incrementDownloadCount } from "@/actions/resource-actions";
 import { getSavedItems, toggleSavedItem } from "@/actions/student-actions";
-import { deletePYQ } from "@/actions/educator-actions";
+import { deletePYQ } from "@/actions/teacher/materials";
 import { cn } from "@/lib/utils";
 import type { PublicResource } from "@/types/resource";
 import {

@@ -25,22 +25,22 @@ export default async function StudyMaterialPage() {
                 <div className="max-w-7xl mx-auto px-6">
                     {/* High-Impact Hero Banner */}
                     <div className="mb-16 bg-white border border-slate-200 rounded-lg p-10 lg:p-16 relative overflow-hidden shadow-sm">
-                        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-500/5 to-transparent"></div>
+                        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-500/5 to-transparent"></div>
                         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
                             <div className="max-w-2xl space-y-6 text-center lg:text-left">
-                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-bold uppercase tracking-widest text-emerald-600">
-                                    Curated Repository
+                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-bold uppercase tracking-widest text-indigo-600">
+                                    Unified Resource Vault
                                 </span>
                                 <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-slate-950">
-                                    Study <span className="text-emerald-600">Vault.</span>
+                                    Study <span className="text-indigo-600">Archives.</span>
                                 </h1>
                                 <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-xl">
-                                    Curated chapter-wise materials, revision notes, and comprehensive theory banks designed specifically for CA Aspirants.
+                                    Access a comprehensive library of Chapter-wise Notes, RTPs, and the complete Archive of Past Year Papers from 2018 to 2024.
                                 </p>
                             </div>
                             <div className="flex flex-col items-center lg:items-end gap-3">
                                 <div className="text-right">
-                                    <div className="text-3xl font-bold text-slate-950 tracking-tight">1,200+</div>
+                                    <div className="text-3xl font-bold text-slate-950 tracking-tight">2,500+</div>
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">Verified Assets</div>
                                 </div>
                             </div>

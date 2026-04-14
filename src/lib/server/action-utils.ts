@@ -2,6 +2,7 @@ import "server-only";
 
 import prisma from "@/lib/prisma/client";
 import { Prisma } from "@prisma/client";
+import { ActionResponse } from "@/types/shared";
 
 const SERIALIZABLE_RETRY_CODE = "P2034";
 const UNIQUE_CONSTRAINT_CODE = "P2002";
@@ -157,4 +158,20 @@ export function getActionErrorMessage(error: unknown, fallbackMessage: string) {
     }
 
     return fallbackMessage;
+}
+
+export async function withErrorHandler<T>(
+    action: () => Promise<T>,
+    fallbackMessage: string = "An unexpected error occurred."
+): Promise<ActionResponse<T>> {
+    try {
+        const data = await action();
+        return { success: true, data };
+    } catch (error) {
+        console.error("Action Error:", error);
+        return { 
+            success: false, 
+            message: getActionErrorMessage(error, fallbackMessage) 
+        };
+    }
 }

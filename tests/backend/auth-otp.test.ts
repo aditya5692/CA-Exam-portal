@@ -319,7 +319,7 @@ before(async () => {
     const globalStore = globalThis as typeof globalThis & {
         modernCaPortalPrismaV2?: unknown;
     };
-    globalStore.modernCaPortalPrismaV2 = createPrismaStub() as unknown;
+    globalStore.modernCaPortalPrismaV2 = createPrismaStub() as any;
 
     nextHeadersStub = (await import("../support/next-headers-stub.cjs")).default as NextHeadersStubModule;
     authActions = await import("../../src/actions/auth-actions");

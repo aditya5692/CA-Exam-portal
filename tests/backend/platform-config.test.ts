@@ -28,7 +28,7 @@ test("platform config validation rejects mismatched widget pair and malformed Ra
     assert.deepEqual(
         validatePlatformConfigInput({
             msg91WidgetId: "366341726377313535353337",
-            msg91TokenAuth: "476487TXs7Ytqw69c753c5P1",
+            // msg91TokenAuth intentionally omitted to test mismatch error
             razorpayKeyId: "bad-key",
             razorpayPlanPro: "recurring_bad",
         }),

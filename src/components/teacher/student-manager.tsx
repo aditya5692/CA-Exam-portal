@@ -23,7 +23,9 @@ import {
   Phone,
   EnvelopeSimple,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  Faders,
+  DownloadSimple
 } from "@phosphor-icons/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type ComponentProps, type ComponentType } from "react";
@@ -282,6 +284,7 @@ export function StudentManager() {
     const [removeSaving, setRemoveSaving] = useState(false);
     const [toast, setToast] = useState("");
     const [expandedCard, setExpandedCard] = useState<string | null>(null);
+    const [showFilters, setShowFilters] = useState(false);
     
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -386,26 +389,26 @@ export function StudentManager() {
                 />
             )}
 
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.4)]" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Student Database</span>
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
+                <div className="flex items-center gap-6">
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.4)]" />
+                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Registry Gateway</span>
+                        </div>
+                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-none">
+                            {isAdminView ? "Student Command Center" : "Student Registry"}
+                        </h1>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        {isAdminView ? "Student Command Center" : "Student Registry"}
-                    </h1>
-                    <p className="text-slate-500 font-medium text-sm max-w-2xl leading-relaxed opacity-80">
-                        Manage your students and view their performance profiles globally across all your active batches.
-                    </p>
+                    <div className="h-7 px-3 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 self-end mb-1">
+                        <Users size={12} weight="bold" className="text-indigo-500/60" />
+                        <span>{visibleStudents.length} / {students.length} Registered</span>
+                    </div>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                    <div className="px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                        <Users size={14} weight="bold" className="text-indigo-600" />
-                        <span>{students.length} Students</span>
-                    </div>
-                </div>
+                <p className="hidden xl:block text-slate-400 font-medium text-xs max-w-sm text-right leading-relaxed opacity-80">
+                    Manage institutional data mapping and verify student credentials across all active batches.
+                </p>
             </div>
 
             <div className="flex flex-col gap-4">
@@ -414,55 +417,89 @@ export function StudentManager() {
                     <div className="relative flex-1">
                         <MagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} weight="bold" />
                         <input type="text" value={globalQuery} onChange={(e) => setGlobalQuery(e.target.value)}
-                            placeholder="Search by name, email, batch or ID..."
-                            className="w-full h-11 bg-slate-50 border border-slate-100 rounded-lg pl-11 pr-4 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:bg-white focus:border-indigo-400 transition-all" />
+                            placeholder="Identify by name, email, batch identifier or registry ID..."
+                            className="w-full h-12 bg-white border border-slate-200/60 rounded-xl pl-11 pr-4 text-[13px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 transition-all shadow-sm" />
                     </div>
-                    <button className="h-11 px-5 rounded-lg bg-white border border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 hover:text-slate-800 transition-all active:scale-95 flex items-center gap-2">
-                        <DotsThreeVertical size={18} weight="bold" /> Export
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={cn(
+                                "h-12 px-6 rounded-xl border font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 shadow-sm",
+                                showFilters ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                            )}
+                        >
+                            <Faders size={18} weight="bold" /> 
+                            {showFilters ? "Hide Filters" : "Advanced Filters"}
+                        </button>
+                        <button className="h-12 px-6 rounded-xl bg-white border border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-slate-400 hover:text-slate-900 transition-all active:scale-95 flex items-center gap-2 shadow-sm">
+                            <DownloadSimple size={18} weight="bold" /> Export
+                        </button>
+                    </div>
                 </div>
 
+                {/* Filter Suite Bar (Conditional) */}
+                {showFilters && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 mb-2 animate-in slide-in-from-top-4 duration-300">
+                        {FILTERABLE_COLUMNS.map((col) => (
+                            <div key={col.key} className="space-y-1.5">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1 ml-0.5">{col.label}</label>
+                                <input 
+                                    type="text" 
+                                    value={columnFilters[col.key] ?? ""} 
+                                    onChange={(e) => setColumnFilters(curr => ({ ...curr, [col.key]: e.target.value }))}
+                                    placeholder={`Filter...`}
+                                    className="w-full h-10 rounded-lg border border-slate-100 bg-white px-4 text-[11px] font-bold text-slate-600 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 outline-none transition-all shadow-sm" 
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
+                
                 {/* TABLE VIEW (Desktop Large) */}
-                <div className="hidden lg:block overflow-x-auto scrollbar-thin border border-slate-100 rounded-lg">
+                <div className="hidden lg:block overflow-x-auto custom-scrollbar border border-slate-100 rounded-2xl bg-white shadow-sm overflow-hidden">
                     <table className="min-w-full text-left border-collapse">
-                        <thead className="bg-slate-50">
+                        <thead className="bg-[#FBFCFD]">
                             <tr>
                                 {FILTERABLE_COLUMNS.map((col) => {
                                     const sk = col.key === "batch" ? "batch" : col.key as SortKey;
                                     const isSorted = sortKey === sk;
-                                    const Icon = col.icon;
                                     return (
-                                        <th key={col.key} className="p-4 min-w-[160px] border-b border-slate-100">
+                                        <th key={col.key} className="px-6 py-5 border-b border-slate-100">
                                             <button type="button" onClick={() => handleSort(sk)}
-                                                className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 hover:text-indigo-600 transition-colors mb-2 ml-1">
-                                                <Icon size={12} weight="bold" className="opacity-50" />
+                                                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#6B7280] hover:text-indigo-600 transition-colors">
                                                 {col.label}
-                                                {isSorted && (sortDirection === "asc" ? <ArrowRight size={10} className="-rotate-90 ml-1" /> : <ArrowRight size={10} className="rotate-90 ml-1" />)}
+                                                {isSorted && (
+                                                    <div className="flex flex-col -gap-1 text-indigo-500">
+                                                        <CaretUp size={10} weight="fill" className={cn(sortDirection === "desc" && "opacity-20")} />
+                                                        <CaretDown size={10} weight="fill" className={cn(sortDirection === "asc" && "opacity-20")} />
+                                                    </div>
+                                                )}
                                             </button>
-                                            <input type="text" value={columnFilters[col.key] ?? ""} onChange={(e) => {
-                                                const v = e.target.value;
-                                                setColumnFilters(curr => ({ ...curr, [col.key]: v }));
-                                            }}
-                                                placeholder={`Filter ${col.label}...`}
-                                                className="w-full h-9 rounded-lg border border-slate-50 bg-white px-3 text-[10px] font-bold text-slate-600 placeholder:text-slate-300 focus:ring-2 focus:ring-indigo-500/5 focus:border-indigo-500/20 outline-none transition-all" />
                                         </th>
                                     );
                                 })}
-                                <th className="p-4 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 border-b border-slate-100">Control</th>
+                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#6B7280] border-b border-slate-100 text-center">Controls</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {visibleStudents.length === 0 ? (
                                 <tr>
-                                    <td colSpan={FILTERABLE_COLUMNS.length + 1} className="py-20 text-center">
-                                        <IdentificationBadge size={32} weight="light" className="text-slate-200 mx-auto mb-3" />
-                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No matching registry entries</p>
+                                    <td colSpan={FILTERABLE_COLUMNS.length + 1} className="py-24 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-4 max-w-xs mx-auto">
+                                            <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-200 border border-slate-100 shadow-sm">
+                                                <IdentificationBadge size={36} weight="light" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">No matching registry entries</p>
+                                                <p className="text-[10px] font-semibold text-slate-400 leading-relaxed italic">Try adjusting your filters or search terms to identify specific student datasets.</p>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
                                 visibleStudents.map((student) => (
-                                    <tr key={student.id} className="group hover:bg-slate-50 transition-colors duration-200">
-                                        <td className="p-4 rounded-lg-l-2xl">
+                                    <tr key={student.id} className="group hover:bg-[#F8FAFC] transition-colors duration-200 border-b border-slate-50 last:border-0">
+                                        <td className="px-6 py-5 rounded-lg-l-2xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-[10px] border border-indigo-100 transition-all group-hover:bg-indigo-600 group-hover:text-white">
                                                     {student.name.substring(0, 2).toUpperCase()}
@@ -473,16 +510,16 @@ export function StudentManager() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="p-4">
+                                        <td className="px-6 py-5">
                                              <div className="text-xs font-bold text-slate-700">{student.registrationNumber}</div>
                                              <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Registry ID</div>
                                         </td>
-                                        <td className="p-4">
+                                        <td className="px-6 py-5">
                                             <span className="px-2 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-500 uppercase tracking-widest">
                                                 {student.department}
                                             </span>
                                         </td>
-                                        <td className="p-4">
+                                        <td className="px-6 py-5">
                                             <div className="flex flex-wrap gap-1">
                                                 {student.batchNames.map((name, i) => (
                                                     <span key={i} className="px-2 py-1 rounded-lg bg-indigo-50/50 text-[9px] font-bold text-indigo-600 border border-indigo-100 whitespace-nowrap">
@@ -491,8 +528,8 @@ export function StudentManager() {
                                                 ))}
                                             </div>
                                         </td>
-                                        <td className="p-4 text-xs font-bold text-slate-900">{student.attemptDue}</td>
-                                        <td className="p-4">
+                                        <td className="px-6 py-5 text-xs font-bold text-slate-900">{student.attemptDue}</td>
+                                        <td className="px-6 py-5">
                                             <span className={cn("px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border inline-flex items-center gap-1.5",
                                                 student.status === "Active" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-50 text-slate-400 border-slate-100")}>
                                                 <div className={cn("w-1 h-1 rounded-full", student.status === "Active" ? "bg-emerald-500" : "bg-slate-300")} />
@@ -500,7 +537,7 @@ export function StudentManager() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-[10px] font-bold text-slate-400">{formatDate(student.joinedAt)}</td>
-                                        <td className="p-4 rounded-lg-r-2xl">
+                                        <td className="px-6 py-5 rounded-lg-r-2xl">
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                 <button onClick={() => setPerformanceStudent({ id: student.id, name: student.name })}
                                                     className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center border border-indigo-100 shadow-sm" title="Performance">

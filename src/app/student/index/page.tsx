@@ -27,7 +27,7 @@ export default async function GlobalIndexPage() {
             title: "Study Material",
             desc: "Access PDFs, Past Year Questions, and RTPs.",
             icon: <FilePdf size={20} weight="duotone" className="text-rose-500" />,
-            href: "/student/past-year-questions",
+            href: "/student/free-resources",
             features: ["Unlimited Downloads", "Teacher Verified", "Search & Filter"]
         },
         {

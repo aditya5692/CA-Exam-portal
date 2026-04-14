@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma/client";
 import { getStudentFeed } from "./batch-actions";
-import { getStudentSharedMaterials } from "./educator-actions";
+import { getStudentSharedMaterials } from "./student-actions";
 import { getExamHubData } from "./student-actions";
 
 export async function getEducatorPortalData(teacherId: string) {

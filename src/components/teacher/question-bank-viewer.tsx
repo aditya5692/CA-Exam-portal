@@ -123,21 +123,21 @@ export function QuestionBankViewer() {
                     <div className="flex flex-wrap gap-4">
                         <Link 
                             href="/teacher/mcq-extract"
-                            className="h-12 px-6 rounded-lg bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+                            className="h-12 px-6 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:border-slate-400 hover:text-slate-900 transition-all flex items-center gap-2 shadow-sm active:scale-95"
                         >
-                            <Sparkle size={18} weight="fill" className="text-secondary" />
+                            <Sparkle size={18} weight="bold" className="text-secondary" />
                             AI Studio
                         </Link>
                         <Link 
                             href="/teacher/question-bank/add"
-                            className="h-12 px-6 rounded-lg bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+                            className="h-12 px-6 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:border-slate-400 hover:text-slate-900 transition-all flex items-center gap-2 shadow-sm active:scale-95"
                         >
                             <Plus size={18} weight="bold" className="text-primary" />
                             Add MCQ
                         </Link>
                         <Link 
                             href="/teacher/question-bank/bulk-upload"
-                            className="h-12 px-6 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg"
+                            className="h-12 px-6 rounded-xl bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-900/10 active:scale-95"
                         >
                             <CloudArrowUp size={18} weight="bold" />
                             Bulk Ingestion
@@ -157,23 +157,23 @@ export function QuestionBankViewer() {
                 <div className="pb-6 flex items-center justify-between gap-4 flex-wrap border-b border-slate-100 mb-8">
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                            <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-indigo-500">
                                 <Stack size={18} weight="bold" />
                             </div>
-                            <span className="text-sm font-bold text-slate-900">{filteredQuestions.length} Matches Found</span>
+                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{filteredQuestions.length} Library Matches Found</span>
                         </div>
                         
-                        <div className="flex items-center gap-2 border-l border-slate-200 pl-6">
+                        <div className="flex items-center gap-3 border-l border-slate-100 pl-6">
                             <button 
                                 onClick={() => toggleAll(true)}
-                                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
+                                className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
                             >
-                                Expand All
+                                Expand List
                             </button>
-                            <span className="text-slate-200">•</span>
+                            <div className="w-1 h-1 rounded-full bg-slate-200" />
                             <button 
                                 onClick={() => toggleAll(false)}
-                                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
+                                className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
                             >
                                 Collapse All
                             </button>
@@ -186,8 +186,8 @@ export function QuestionBankViewer() {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search within filtered results…"
-                            className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 transition-all"
+                            placeholder="Identify specific MCQ identifiers..."
+                            className="w-full h-11 pl-10 pr-4 rounded-xl bg-white border border-slate-200/60 text-[13px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 transition-all shadow-sm"
                         />
                     </div>
                 </div>
@@ -212,7 +212,7 @@ export function QuestionBankViewer() {
                         {Object.entries(groupedData).map(([subject, chapters]: [string, Record<string, VaultQuestion[]>]) => (
                             <div key={subject} className="space-y-6">
                                 <div className="flex items-center gap-4">
-                                    <h2 className="text-lg font-black uppercase tracking-[0.2em] text-slate-900">{subject}</h2>
+                                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#64748B]">{subject}</h2>
                                     <div className="h-px flex-1 bg-slate-100" />
                                 </div>
 
@@ -230,19 +230,19 @@ export function QuestionBankViewer() {
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className={cn(
-                                                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                                                            isExpanded ? "bg-indigo-600 text-white rotate-180" : "bg-slate-100 text-slate-400"
+                                                            "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
+                                                            isExpanded ? "bg-indigo-600 text-white rotate-180" : "bg-slate-50 border border-slate-100 text-slate-300"
                                                         )}>
-                                                            <CaretDown size={18} weight="bold" />
+                                                            <CaretDown size={14} weight="bold" />
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                             <span className={cn(
-                                                                "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap transition-all",
-                                                                isExpanded ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-500"
+                                                                "text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1.5 rounded-lg whitespace-nowrap transition-all border",
+                                                                isExpanded ? "bg-indigo-50 text-indigo-600 border-indigo-100 shadow-sm shadow-indigo-100/10" : "bg-slate-50 text-slate-400 border-slate-100 opacity-60"
                                                             )}>
                                                                 {chapter}
                                                             </span>
-                                                            <span className="text-[10px] font-bold text-slate-400">{items.length} questions matched</span>
+                                                            <span className="text-[10px] font-bold text-slate-300 tracking-tight">{items.length} assessments matched</span>
                                                         </div>
                                                     </div>
                                                     
@@ -262,20 +262,20 @@ export function QuestionBankViewer() {
                                                                             <div className="flex items-center gap-2">
                                                                                 {q.difficulty && (
                                                                                     <span className={cn(
-                                                                                        "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
-                                                                                        q.difficulty.toLowerCase() === "hard" ? "bg-rose-50 text-rose-600" :
-                                                                                        q.difficulty.toLowerCase() === "medium" ? "bg-amber-50 text-amber-600" :
-                                                                                        "bg-emerald-50 text-emerald-600"
+                                                                                        "text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border",
+                                                                                        q.difficulty.toLowerCase() === "hard" ? "bg-rose-50 text-rose-600 border-rose-100 shadow-sm shadow-rose-100/10" :
+                                                                                        q.difficulty.toLowerCase() === "medium" ? "bg-amber-50 text-amber-600 border-amber-100 shadow-sm shadow-amber-100/10" :
+                                                                                        "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm shadow-emerald-100/10"
                                                                                     )}>{q.difficulty}</span>
                                                                                 )}
                                                                             </div>
-                                                                            <h3 className="text-sm font-semibold text-slate-800 leading-relaxed">
+                                                                            <h3 className="text-[14px] font-semibold text-[#1E293B] leading-relaxed max-w-4xl">
                                                                                 {q.text}
                                                                             </h3>
                                                                             <div className="flex items-center gap-3">
-                                                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                                                                    <span className="text-[9px] font-black uppercase tracking-widest">Answer</span>
-                                                                                    <span className="text-xs font-bold truncate max-w-[300px]">{correctOption?.text || "None"}</span>
+                                                                                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-50/50 text-slate-500 border border-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-100 transition-all duration-300">
+                                                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Master Record</span>
+                                                                                    <span className="text-[11px] font-bold truncate max-w-[400px]">{correctOption?.text || "Reference Undefined"}</span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>

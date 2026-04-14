@@ -1,13 +1,14 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import {
-    Funnel,
+    Faders,
     X,
     CaretDown,
     ChartBar,
     BookOpen,
-    Lightning
+    Lightning,
+    MagnifyingGlass as FileMagnifyingGlass
 } from "@phosphor-icons/react";
 import { useState, useEffect } from "react";
 import { getVaultIntel, type VaultIntel } from "@/actions/vault-intel-actions";
@@ -60,13 +61,13 @@ export function VaultFilterSuite({ onFilterChange, className }: VaultFilterSuite
 
     return (
         <div className={cn("bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-300", className, isExpanded ? "ring-4 ring-slate-50 border-slate-300" : "hover:border-slate-300")}>
-            <div className="px-6 py-4 flex items-center justify-between bg-slate-50/50 border-b border-transparent transition-all" style={{ borderBottomColor: isExpanded ? "rgba(226, 232, 240, 0.8)" : "transparent" }}>
+            <div className="px-6 py-4 flex items-center justify-between bg-[#FBFCFD] border-b border-transparent transition-all" style={{ borderBottomColor: isExpanded ? "rgba(226, 232, 240, 0.8)" : "transparent" }}>
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-lg">
-                        <Funnel size={20} weight="fill" />
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20 border border-indigo-500/20">
+                        <Faders size={20} weight="bold" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-slate-900 tracking-tight">Intelligence Filter</h3>
+                        <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">Intelligence Filter</h3>
                         <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Precision Content Harvesting</p>
                     </div>
                 </div>
@@ -84,11 +85,11 @@ export function VaultFilterSuite({ onFilterChange, className }: VaultFilterSuite
                     <button 
                         onClick={() => setIsExpanded(!isExpanded)}
                         className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                            isExpanded ? "bg-slate-200 text-slate-900 rotate-180" : "bg-white border border-slate-200 text-slate-400 hover:text-slate-900"
+                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-90",
+                            isExpanded ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "bg-white border border-slate-200 text-slate-400 hover:text-slate-900"
                         )}
                     >
-                        <CaretDown size={16} weight="bold" />
+                        <CaretDown size={14} weight="bold" className={cn("transition-transform duration-300", isExpanded && "rotate-180")} />
                     </button>
                 </div>
             </div>

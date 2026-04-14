@@ -1,6 +1,6 @@
 "use client";
 
-import { getTeacherOverview } from "@/actions/educator-actions";
+import { getTeacherOverview } from "@/actions/teacher/overview";
 import { cn } from "@/lib/utils";
 import type { TeacherOverviewData } from "@/types/educator";
 import {

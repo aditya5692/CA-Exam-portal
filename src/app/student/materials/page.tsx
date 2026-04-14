@@ -1,6 +1,6 @@
 "use client";
 
-import { getStudentSharedMaterials } from "@/actions/educator-actions";
+import { getStudentSharedMaterials } from "@/actions/student-actions";
 import { getStudentProfile } from "@/actions/profile-actions";
 import { getSavedItems, toggleSavedItem } from "@/actions/student-actions";
 import { deletePersonalMaterial, getMyVaultMaterials, uploadPersonalMaterial } from "@/actions/vault-actions";
@@ -26,52 +26,12 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
-type VaultMaterial = {
-    id: string;
-    title: string;
-    description?: string;
-    fileUrl: string;
-    sizeInBytes: number;
-    createdAt: string | Date;
-    subType: string;
-    downloads: number;
-    rating: number;
-    isTrending: boolean;
-    uploadedBy?: {
-        id: string;
-        fullName: string | null;
-        email: string | null;
-    };
-};
-
-type SharedMaterial = {
-    id: string;
-    title: string;
-    description?: string;
-    fileUrl: string;
-    isProtected: boolean;
-    subType: string;
-    downloads: number;
-    rating: number;
-    isTrending: boolean;
-    uploadedBy?: {
-        fullName: string | null;
-        email: string | null;
-    };
-    accessedBy?: Array<{
-        id: string;
-        student: {
-            id: string;
-            fullName: string | null;
-            email: string | null;
-        };
-    }>;
-};
+import { UnifiedMaterial } from "@/types/shared";
 
 export default function StudentVaultPage() {
     const [activeTab, setActiveTab] = useState<"MY_NOTES" | "EDUCATOR">("MY_NOTES");
-    const [materials, setMaterials] = useState<VaultMaterial[]>([]);
-    const [sharedMaterials, setSharedMaterials] = useState<SharedMaterial[]>([]);
+    const [materials, setMaterials] = useState<UnifiedMaterial[]>([]);
+    const [sharedMaterials, setSharedMaterials] = useState<UnifiedMaterial[]>([]);
     const [selectedEducator, setSelectedEducator] = useState<string>("ALL");
     const [storageUsed, setStorageUsed] = useState(0);
     const [storageLimit, setStorageLimit] = useState(52428800);
@@ -85,7 +45,24 @@ export default function StudentVaultPage() {
     const loadData = async () => {
         const vaultRes = await getMyVaultMaterials();
         if (vaultRes.success && vaultRes.data) {
-            setMaterials((vaultRes.data.materials ?? []) as VaultMaterial[]);
+            const mappedMaterials: UnifiedMaterial[] = (vaultRes.data.materials ?? []).map(m => ({
+                id: m.id,
+                title: m.title,
+                category: m.category || "GENERAL",
+                subType: m.subType || "PDF",
+                fileUrl: m.fileUrl,
+                description: m.description || undefined,
+                isPublic: m.isPublic,
+                isProtected: m.isProtected,
+                uploadedAt: m.createdAt,
+                sizeInBytes: m.sizeInBytes,
+                uploadedBy: m.uploadedBy ? {
+                   id: m.uploadedBy.id,
+                   fullName: m.uploadedBy.fullName,
+                   email: m.uploadedBy.email
+                } : undefined
+            }));
+            setMaterials(mappedMaterials);
             setStorageUsed(vaultRes.data.storageUsed || 0);
             setStorageLimit(vaultRes.data.storageLimit || 52428800);
             setManagedStudentsCount(vaultRes.data.managedStudentsCount || 1);
@@ -95,7 +72,7 @@ export default function StudentVaultPage() {
         const sharedRes = await getStudentSharedMaterials();
         if (sharedRes.success && sharedRes.data) {
             const sd = sharedRes.data;
-            setSharedMaterials((sd.materials ?? []) as SharedMaterial[]);
+            setSharedMaterials(sd.materials);
             setIsAdminView((current) => current || Boolean(sd.isAdminView));
         }
 
@@ -300,7 +277,7 @@ export default function StudentVaultPage() {
                                         </div>
                                     </div>
 
-                                    <button className="text-left w-full block group-hover:text-[var(--student-accent-strong)] transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
+                                    <button className="text-left w-full block group-hover:text-[var(--student-accent-strong)] transition-colors" onClick={() => setViewFileUrl(material.fileUrl ?? null)}>
                                         <div className="text-[9px] font-black text-[var(--student-accent-strong)] uppercase tracking-widest opacity-80 mb-1">{material.subType}</div>
                                         <h3 className="font-black text-slate-900 text-[15px] leading-tight line-clamp-2 min-h-[40px] tracking-tight mb-2 uppercase">
                                             {material.title}
@@ -318,7 +295,7 @@ export default function StudentVaultPage() {
                                             </div>
                                         </div>
                                         <span className="text-[9px] font-black text-slate-200 uppercase tracking-widest">
-                                            {new Date(material.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            {new Date(material.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </span>
                                     </div>
                                 </div>
@@ -392,7 +369,7 @@ export default function StudentVaultPage() {
                                             </button>
                                         </div>
 
-                                        <button className="text-left w-full block group-hover:text-indigo-600 transition-colors" onClick={() => setViewFileUrl(material.fileUrl)}>
+                                        <button className="text-left w-full block group-hover:text-indigo-600 transition-colors" onClick={() => setViewFileUrl(material.fileUrl ?? null)}>
                                             <div className="text-[9px] font-black text-indigo-600 uppercase tracking-widest opacity-80 mb-1">{material.subType}</div>
                                             <h3 className="font-black text-slate-900 text-[15px] leading-tight line-clamp-2 min-h-[40px] tracking-tight uppercase">
                                                 {material.title}
