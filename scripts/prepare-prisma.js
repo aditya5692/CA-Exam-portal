@@ -48,7 +48,7 @@ function updatePrismaSchema() {
 
     const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
     if (!fs.existsSync(schemaPath)) {
-        console.error('❌ [PreparePrisma] Could not find prisma/schema.prisma');
+        console.error('❌ [PreparePrisma] Could find prisma/schema.prisma');
         process.exit(1);
     }
 
@@ -71,7 +71,8 @@ function updatePrismaSchema() {
     
     if (currentMatch && currentMatch[1] !== targetProvider) {
         console.log(`🔄 [PreparePrisma] Switching Prisma provider: ${currentMatch[1]} -> ${targetProvider}`);
-        // Replace only the provider within the datasource block
+        // Replace only the provider within the datasource block. 
+        // Note: In Prisma 7 with prisma.config.ts, the 'url' property must NOT be in schema.prisma
         const updatedSchema = schema.replace(
             /(datasource\s+db\s*{[^}]*provider\s*=\s*")([^"]+)(")/,
             `$1${targetProvider}$3`
