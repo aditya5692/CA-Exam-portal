@@ -45,11 +45,19 @@ export async function saveUploadedFile(
          }
     }
 
-    const uploadDir = join(process.cwd(), "public", "uploads", ...subdirectories);
+    // Define base upload path relative to project root
+    const projectRoot = process.cwd();
+    const uploadBase = join(projectRoot, "public", "uploads");
+    
+    // Construct the specific target directory
+    const uploadDir = subdirectories.length > 0 
+        ? join(uploadBase, ...subdirectories) 
+        : uploadBase;
+
     await mkdir(uploadDir, { recursive: true });
 
     const fileName = `${randomUUID()}.${fileExtension}`;
-    const filePath = join(uploadDir, fileName);
+    const filePath = `${uploadDir}/${fileName}`;
     const bytes = await file.arrayBuffer();
 
     await writeFile(filePath, Buffer.from(bytes));
@@ -66,7 +74,9 @@ export async function removeSavedFileByUrl(fileUrl: string | null | undefined) {
         return;
     }
 
-    const filePath = join(process.cwd(), "public", ...fileUrl.split("/").filter(Boolean));
+    const projectRoot = process.cwd();
+    const publicDir = join(projectRoot, "public");
+    const filePath = join(publicDir, ...fileUrl.split("/").filter(Boolean));
 
     try {
         await unlink(filePath);
