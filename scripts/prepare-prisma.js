@@ -3,37 +3,36 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 function getDatabaseUrl() {
-    // 💡 PRIORITY CONFIGURATION: Always prefer local overrides for testing
     const envKeys = [
-        'LOCAL_DATABASE_URL',     // Priority 1: Direct Local Override (SQLite)
-        'DOKPLOY_DATABASE_URL',    // Priority 2: Dokploy Production (Internal)
-        'POSTGRES_INTERNAL_URL',
-        'DATABASE_URL',            // Priority 3: Standard Environment
+        'LOCAL_DATABASE_URL',
+        'DATABASE_URL',
         'POSTGRES_URL',
         'POSTGRES_PRISMA_URL',
-        'POSTGRESQL_URL',
-        'DATABASE_URI',
-        'POSTGRES_EXTERNAL_URL',
+        'DOKPLOY_DATABASE_URL',
+        'POSTGRES_INTERNAL_URL',
     ];
 
-    // Check process.env first (for CI/CD environments)
-    for (const key of envKeys) {
-        if (process.env[key] && process.env[key].trim()) {
-            return process.env[key].trim();
-        }
-    }
+    const getEnvValue = (key) => {
+        // 1. Check process.env (provided by OS or dotenv)
+        const procVal = process.env[key]?.trim();
+        if (procVal) return procVal;
 
-    // Check .env file directly (for local development fallback)
-    const envPath = path.join(process.cwd(), '.env');
-    if (fs.existsSync(envPath)) {
-        const envContent = fs.readFileSync(envPath, 'utf8');
-        for (const key of envKeys) {
-            const regex = new RegExp(`^${key}=["']?([^"'\r\n]+)["']?`, 'm');
-            const match = envContent.match(regex);
-            if (match && match[1]) {
-                return match[1].trim();
+        // 2. Manual fallback: Read .env directly
+        try {
+            const envPath = path.join(process.cwd(), '.env');
+            if (fs.existsSync(envPath)) {
+                const envContent = fs.readFileSync(envPath, 'utf8');
+                const regex = new RegExp(`^${key}=\\s*["']?([^"'\r\n]+)["']?`, 'm');
+                const match = envContent.match(regex);
+                if (match && match[1]) return match[1].trim();
             }
-        }
+        } catch (e) { /* ignore */ }
+        return null;
+    };
+
+    for (const key of envKeys) {
+        const val = getEnvValue(key);
+        if (val) return val;
     }
 
     return null;

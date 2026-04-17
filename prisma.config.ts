@@ -11,50 +11,41 @@ import path from 'path';
 function getActiveDatabaseUrl() {
   const envKeys = [
     'LOCAL_DATABASE_URL',
-    'DOKPLOY_DATABASE_URL',
-    'POSTGRES_INTERNAL_URL',
     'DATABASE_URL',
     'POSTGRES_URL',
     'POSTGRES_PRISMA_URL',
-    'POSTGRESQL_URL',
-    'DATABASE_URI',
-    'POSTGRES_EXTERNAL_URL',
+    'DOKPLOY_DATABASE_URL',
+    'POSTGRES_INTERNAL_URL',
   ];
 
   const getEnvValue = (key: string) => {
-    // 1. Check process.env (provided by OS or dotenv)
-    if (process.env[key] && process.env[key]!.trim()) {
-      return process.env[key]!.trim();
-    }
+    // 1. Check process.env
+    const procVal = process.env[key]?.trim();
+    if (procVal) return procVal;
 
-    // 2. Manual fallback: Read .env directly (handles weird path/loading issues)
+    // 2. Manual fallback for .env file
     try {
       const envPath = path.join(process.cwd(), '.env');
       if (fs.existsSync(envPath)) {
         const envContent = fs.readFileSync(envPath, 'utf8');
-        const regex = new RegExp(`^${key}=["']?([^"'\r\n]+)["']?`, 'm');
+        // Match both quoted and unquoted values, handling \r if present
+        const regex = new RegExp(`^${key}=\\s*["']?([^"'\r\n]+)["']?`, 'm');
         const match = envContent.match(regex);
-        if (match && match[1]) {
-          return match[1].trim();
-        }
+        if (match && match[1]) return match[1].trim();
       }
-    } catch (e) {
-      // Ignore filesystem errors during manual fallback
-    }
+    } catch (e) { /* ignore */ }
     return null;
   };
 
   try {
     const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
-    if (!fs.existsSync(schemaPath)) return getEnvValue('DATABASE_URL');
-
-    const schema = fs.readFileSync(schemaPath, 'utf8');
+    const schema = fs.existsSync(schemaPath) ? fs.readFileSync(schemaPath, 'utf8') : '';
     const isPostgres = schema.includes('provider = "postgresql"');
 
     if (isPostgres) {
-       // Search for ANY postgres-compatible URL in priority order
+       // When provider is postgresql, prioritize any postgres-compatible URL
        for (const key of envKeys) {
-         if (key === 'LOCAL_DATABASE_URL') continue; // Don't use sqlite for postgres provider
+         if (key === 'LOCAL_DATABASE_URL') continue;
          const val = getEnvValue(key);
          if (val && (val.startsWith('postgresql:') || val.startsWith('postgres:'))) {
            return val;
@@ -62,7 +53,7 @@ function getActiveDatabaseUrl() {
        }
     }
 
-    // Default: Return the first available key matching priority
+    // Default priority order
     for (const key of envKeys) {
        const val = getEnvValue(key);
        if (val) return val;
