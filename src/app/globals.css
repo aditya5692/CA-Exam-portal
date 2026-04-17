@@ -585,4 +585,13 @@
     background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
     background-size: 32px 32px;
   }
+
+  @keyframes pulse-emerald {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    50% { opacity: 0.7; transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  }
+
+  .animate-pulse-emerald {
+    animation: pulse-emerald 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
