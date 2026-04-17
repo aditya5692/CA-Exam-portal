@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    cpus: 1,
+  },
+  poweredByHeader: false,
   async redirects() {
     return [
       {
