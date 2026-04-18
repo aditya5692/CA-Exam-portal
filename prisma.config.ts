@@ -43,20 +43,20 @@ function getActiveDatabaseUrl() {
     const isPostgres = schema.includes('provider = "postgresql"');
 
     if (isPostgres) {
-       // When provider is postgresql, prioritize any postgres-compatible URL
-       for (const key of envKeys) {
-         if (key === 'LOCAL_DATABASE_URL') continue;
-         const val = getEnvValue(key);
-         if (val && (val.startsWith('postgresql:') || val.startsWith('postgres:'))) {
-           return val;
-         }
-       }
+      // When provider is postgresql, prioritize any postgres-compatible URL
+      for (const key of envKeys) {
+        if (key === 'LOCAL_DATABASE_URL') continue;
+        const val = getEnvValue(key);
+        if (val && (val.startsWith('postgresql:') || val.startsWith('postgres:'))) {
+          return val;
+        }
+      }
     }
 
     // Default priority order
     for (const key of envKeys) {
-       const val = getEnvValue(key);
-       if (val) return val;
+      const val = getEnvValue(key);
+      if (val) return val;
     }
 
     return null;
@@ -74,7 +74,7 @@ if (!databaseUrl) {
 export default defineConfig({
   schema: './prisma/schema.prisma',
   datasource: {
-    url: databaseUrl || '', // Prisma will throw a meaningful error if this is empty
+    url: databaseUrl || 'postgresql://aditya424:aditya424@financly-cadatabase-bxixqg:5432/financlycadatabase', // Prisma will throw a meaningful error if this is empty
   },
   migrations: {
     seed: 'tsx ./prisma/seed.ts',
