@@ -140,7 +140,8 @@ export function getActionErrorMessage(error: unknown, fallbackMessage: string) {
 
     if (
         error instanceof Prisma.PrismaClientInitializationError ||
-        error instanceof Prisma.PrismaClientRustPanicError
+        error instanceof Prisma.PrismaClientRustPanicError ||
+        isPrismaCode(error, "P1001")
     ) {
         return "The database is temporarily unavailable. Please try again.";
     }
